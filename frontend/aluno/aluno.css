@@ -1489,3 +1489,274 @@ body.sidebar-collapsed .logout-btn {
         align-self: flex-start;
     }
 }
+
+/* ============================================================
+   MODAL DE RESERVA
+   ============================================================ */
+
+#reservaModal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+}
+
+#reservaModal.open {
+    display: block;
+}
+
+.reserva-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(35, 24, 18, 0.62);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    animation: reservaFadeIn 0.2s ease;
+}
+
+.reserva-modal {
+    width: min(900px, 100%);
+    max-height: min(900px, calc(100vh - 48px));
+    overflow: auto;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+    animation: reservaModalIn 0.25s ease;
+}
+
+.reserva-modal-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 30px 32px;
+    border-bottom: 1px solid #eee4df;
+}
+
+.reserva-modal-header h2 {
+    margin: 6px 0 4px;
+    font-size: 28px;
+    color: #39251b;
+}
+
+.reserva-modal-header p {
+    margin: 0;
+    color: #766a63;
+}
+
+.reserva-close {
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 12px;
+    background: #f5eee9;
+    color: #39251b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reserva-close:hover {
+    background: #eadfd8;
+}
+
+.reserva-modal-body {
+    padding: 30px 32px;
+}
+
+.reserva-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+}
+
+.reserva-info > div {
+    padding: 18px;
+    background: #faf7f5;
+    border: 1px solid #eee4df;
+    border-radius: 16px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 10px;
+}
+
+.reserva-info svg {
+    grid-row: span 2;
+    color: #c65a32;
+}
+
+.reserva-info span {
+    font-size: 12px;
+    color: #82756e;
+}
+
+.reserva-info b {
+    color: #39251b;
+}
+
+.reserva-section-title {
+    margin-bottom: 18px;
+}
+
+.reserva-section-title h3 {
+    margin: 0 0 5px;
+    color: #39251b;
+}
+
+.reserva-section-title p {
+    margin: 0;
+    color: #766a63;
+}
+
+.reserva-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 20px;
+}
+
+.reserva-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 18px;
+}
+
+.reserva-field label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #4c3b32;
+}
+
+.reserva-field input,
+.reserva-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ddd0c8;
+    border-radius: 12px;
+    padding: 13px 14px;
+    background: #fff;
+    color: #39251b;
+    font: inherit;
+    outline: none;
+    transition: 0.2s;
+}
+
+.reserva-field input:focus,
+.reserva-field textarea:focus {
+    border-color: #c65a32;
+    box-shadow: 0 0 0 3px rgba(198, 90, 50, 0.12);
+}
+
+.reserva-field textarea {
+    resize: vertical;
+}
+
+.reserva-alert {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #f5ddd2;
+    color: #6d3927;
+    font-size: 13px;
+}
+
+.reserva-alert svg {
+    flex: 0 0 auto;
+}
+
+.reserva-modal-footer {
+    padding: 20px 32px;
+    border-top: 1px solid #eee4df;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.reserva-modal-footer .secondary {
+    background: #f0e9e4;
+    color: #4b3a31;
+}
+
+.reserva-modal-footer .secondary:hover {
+    background: #e5dbd4;
+}
+
+body.reserva-modal-open {
+    overflow: hidden;
+}
+
+.item-result-card.reservable {
+    cursor: pointer;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.item-result-card.reservable:hover {
+    transform: translateY(-2px);
+    border-color: #c65a32;
+    box-shadow: 0 12px 30px rgba(57, 37, 27, 0.1);
+}
+
+@keyframes reservaFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes reservaModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 700px) {
+    .reserva-overlay {
+        padding: 10px;
+    }
+
+    .reserva-modal {
+        max-height: calc(100vh - 20px);
+        border-radius: 18px;
+    }
+
+    .reserva-modal-header,
+    .reserva-modal-body,
+    .reserva-modal-footer {
+        padding: 22px;
+    }
+
+    .reserva-info {
+        grid-template-columns: 1fr;
+    }
+
+    .reserva-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .reserva-modal-footer {
+        flex-direction: column-reverse;
+    }
+
+    .reserva-modal-footer button {
+        width: 100%;
+    }
+}

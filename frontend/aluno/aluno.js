@@ -26,6 +26,9 @@ let emprestimos = [];
 
 let movimentos = [];
 
+let reservaItemSelecionado = null;
+let reservasCarregadas = false;
+
 // ============================================================
 // CALENDÁRIO
 // ============================================================
@@ -530,10 +533,123 @@ function hojeLetivo() {
 // RESERVAS
 // ============================================================
 
-function obterItensReservaveis(tipo) {
-    return ITENS_PESQUISA.filter(
-        (item) => item.tipo === tipo && item.podeReservar === true,
-    );
+async function carregarReservas() {
+    if (!usuarioLogado?.id) {
+        reservas = [];
+        reservasCarregadas = false;
+        return false;
+    }
+
+    try {
+        const resposta = await fetch(
+            `${API_URL}/aluno/reservas/${encodeURIComponent(usuarioLogado.id)}`,
+        );
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok || !resultado.sucesso) {
+            throw new Error(
+                resultado.mensagem ||
+                    "Não foi possível carregar suas reservas.",
+            );
+        }
+
+        reservas = Array.isArray(resultado.reservas) ? resultado.reservas : [];
+
+        reservasCarregadas = true;
+
+        console.log("Reservas carregadas:", reservas);
+
+        return true;
+    } catch (erro) {
+        console.error("Erro ao carregar reservas:", erro);
+
+        reservas = [];
+        reservasCarregadas = false;
+
+        showToast("Não foi possível carregar suas reservas.");
+
+        return false;
+    }
+}
+
+function formatarDataHoraReserva(valor) {
+    if (!valor) {
+        return "Não informado";
+    }
+
+    const texto = String(valor).trim();
+
+    const match = texto.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+
+    if (!match) {
+        return escapeHtml(texto);
+    }
+
+    return `${match[3]}/${match[2]}/${match[1]} às ${match[4]}:${match[5]}`;
+}
+
+function classeStatusReserva(status) {
+    const valor = String(status || "")
+        .trim()
+        .toUpperCase();
+
+    if (valor === "PENDENTE") {
+        return "pending";
+    }
+
+    if (
+        valor === "APROVADA" ||
+        valor === "APROVADO" ||
+        valor === "CONFIRMADA" ||
+        valor === "CONFIRMADO"
+    ) {
+        return "approved";
+    }
+
+    if (
+        valor === "CANCELADA" ||
+        valor === "CANCELADO" ||
+        valor === "REJEITADA" ||
+        valor === "REJEITADO"
+    ) {
+        return "cancelled";
+    }
+
+    if (
+        valor === "CONCLUIDA" ||
+        valor === "CONCLUÍDA" ||
+        valor === "FINALIZADA" ||
+        valor === "FINALIZADO"
+    ) {
+        return "finished";
+    }
+
+    return "";
+}
+
+function textoStatusReserva(status) {
+    const valor = String(status || "")
+        .trim()
+        .toUpperCase();
+
+    const mapa = {
+        PENDENTE: "Pendente",
+        APROVADA: "Aprovada",
+        APROVADO: "Aprovada",
+        CONFIRMADA: "Confirmada",
+        CONFIRMADO: "Confirmada",
+        CANCELADA: "Cancelada",
+        CANCELADO: "Cancelada",
+        REJEITADA: "Rejeitada",
+        REJEITADO: "Rejeitada",
+        CONCLUIDA: "Concluída",
+        CONCLUÍDA: "Concluída",
+        FINALIZADA: "Finalizada",
+        FINALIZADO: "Finalizada",
+    };
+
+    return mapa[valor] || status || "Não informado";
 }
 
 function viewReservas() {
@@ -541,17 +657,29 @@ function viewReservas() {
         .map(
             (r) => `
                 <tr>
-                    <td>${escapeHtml(r.tipo)}</td>
-
                     <td>
-                        <b>${escapeHtml(r.item)}</b>
+                        ${escapeHtml(r.tipo || "Item")}
                     </td>
 
-                    <td>${escapeHtml(r.data)}</td>
+                    <td>
+                        <b>
+                            ${escapeHtml(
+                                r.nome || r.item || r.produtoID || "Item",
+                            )}
+                        </b>
+                    </td>
 
                     <td>
-                        <span class="tag">
-                            Ativa
+                        ${escapeHtml(formatarDataHoraReserva(r.dataInicio))}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(formatarDataHoraReserva(r.dataFim))}
+                    </td>
+
+                    <td>
+                        <span class="tag ${classeStatusReserva(r.status)}">
+                            ${escapeHtml(textoStatusReserva(r.status))}
                         </span>
                     </td>
                 </tr>
@@ -561,192 +689,559 @@ function viewReservas() {
 
     return `
         <div class="head">
-            <h1>Minhas Reservas</h1>
+
+            <h1>
+                Minhas Reservas
+            </h1>
 
             <p class="sub">
-                Consulte suas reservas e reserve apenas os itens permitidos.
+                Consulte as reservas vinculadas à sua conta.
             </p>
+
         </div>
 
-        <div class="two">
+        <div class="card">
 
-            <div class="card">
-                <h2>Reservas ativas</h2>
+            <div class="scroll">
 
-                <div class="scroll">
-                    <table>
-                        <thead>
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Item</th>
+                            <th>Retirada</th>
+                            <th>Devolução</th>
+                            <th>Situação</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        ${
+                            rows ||
+                            `
                             <tr>
-                                <th>Tipo</th>
-                                <th>Item</th>
-                                <th>Data</th>
-                                <th>Situação</th>
+                                <td colspan="5">
+                                    Você ainda não possui reservas.
+                                </td>
                             </tr>
-                        </thead>
+                            `
+                        }
 
-                        <tbody>
-                            ${
-                                rows ||
-                                `
-                                <tr>
-                                    <td colspan="4">
-                                        Nenhuma reserva ativa.
-                                    </td>
-                                </tr>
-                                `
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                    </tbody>
+
+                </table>
+
             </div>
 
-            <div class="card">
+        </div>
 
-                <h2>Nova reserva</h2>
+        <div class="note">
 
-                <div class="form">
+            ${icon("search")}
+
+            <span>
+                Para fazer uma reserva, acesse "Pesquisar item",
+                encontre um livro ou computador disponível e clique nele.
+            </span>
+
+        </div>
+    `;
+}
+
+// ============================================================
+// MODAL DE RESERVA
+// ============================================================
+
+function criarModalReserva() {
+    if ($("#reservaModal")) {
+        return;
+    }
+
+    const modal = document.createElement("div");
+
+    modal.id = "reservaModal";
+
+    modal.innerHTML = `
+        <div class="reserva-overlay" onclick="fecharReserva(event)">
+
+            <div
+                class="reserva-modal"
+                onclick="event.stopPropagation()"
+            >
+
+                <div class="reserva-modal-header">
 
                     <div>
-                        <label for="reserveType">
-                            Tipo
-                        </label>
-
-                        <select
-                            id="reserveType"
-                            onchange="fillReserveItems()"
-                        >
-                            <option value="Livro">
-                                Livro
-                            </option>
-
-                            <option value="Computador">
-                                Computador
-                            </option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="reserveItem">
+                        <span class="item-type" id="reservaTipo">
                             Item
-                        </label>
+                        </span>
 
-                        <select id="reserveItem"></select>
-                    </div>
+                        <h2 id="reservaNome">
+                            Reserva
+                        </h2>
 
-                    <div>
-                        <label for="reserveDate">
-                            Data
-                        </label>
-
-                        <input
-                            id="reserveDate"
-                            type="date"
-                        >
+                        <p id="reservaDetalhes">
+                            Escolha o período da reserva.
+                        </p>
                     </div>
 
                     <button
-                        class="btn"
                         type="button"
-                        onclick="reservar()"
+                        class="reserva-close"
+                        onclick="fecharReserva()"
+                        aria-label="Fechar"
                     >
-                        Reservar
+                        ${icon("x")}
                     </button>
 
                 </div>
 
-                <div class="note">
-                    ${icon("info")}
+                <div class="reserva-modal-body">
 
-                    <span>
-                        Alunos podem reservar somente livros da Biblioteca
-                        e computadores do Laboratório de Informática.
-                    </span>
+                    <div class="reserva-info">
+
+                        <div>
+                            ${icon("hash")}
+
+                            <span>
+                                Código
+                            </span>
+
+                            <b id="reservaCodigo">
+                                -
+                            </b>
+                        </div>
+
+                        <div>
+                            ${icon("map-pin")}
+
+                            <span>
+                                Local
+                            </span>
+
+                            <b id="reservaLocal">
+                                -
+                            </b>
+                        </div>
+
+                        <div>
+                            ${icon("package")}
+
+                            <span>
+                                Disponível
+                            </span>
+
+                            <b id="reservaDisponivel">
+                                -
+                            </b>
+                        </div>
+
+                    </div>
+
+                    <div class="reserva-section-title">
+                        <h3>
+                            Período da reserva
+                        </h3>
+
+                        <p>
+                            Informe quando você irá retirar e devolver o item.
+                        </p>
+                    </div>
+
+                    <div class="reserva-fields">
+
+                        <div class="reserva-field">
+
+                            <label for="reservaDataRetirada">
+                                Data da retirada
+                            </label>
+
+                            <input
+                                id="reservaDataRetirada"
+                                type="date"
+                            >
+
+                        </div>
+
+                        <div class="reserva-field">
+
+                            <label for="reservaHoraRetirada">
+                                Hora da retirada
+                            </label>
+
+                            <input
+                                id="reservaHoraRetirada"
+                                type="time"
+                            >
+
+                        </div>
+
+                        <div class="reserva-field">
+
+                            <label for="reservaDataDevolucao">
+                                Data da devolução
+                            </label>
+
+                            <input
+                                id="reservaDataDevolucao"
+                                type="date"
+                            >
+
+                        </div>
+
+                        <div class="reserva-field">
+
+                            <label for="reservaHoraDevolucao">
+                                Hora da devolução
+                            </label>
+
+                            <input
+                                id="reservaHoraDevolucao"
+                                type="time"
+                            >
+
+                        </div>
+
+                    </div>
+
+                    <div class="reserva-field">
+
+                        <label for="reservaMotivo">
+                            Motivo da reserva
+                        </label>
+
+                        <textarea
+                            id="reservaMotivo"
+                            rows="3"
+                            maxlength="500"
+                            placeholder="Informe o motivo da utilização..."
+                        ></textarea>
+
+                    </div>
+
+                    <div class="reserva-field">
+
+                        <label for="reservaObservacao">
+                            Observação
+                        </label>
+
+                        <textarea
+                            id="reservaObservacao"
+                            rows="2"
+                            maxlength="500"
+                            placeholder="Alguma observação? Opcional."
+                        ></textarea>
+
+                    </div>
+
+                    <div class="reserva-alert">
+
+                        ${icon("info")}
+
+                        <span>
+                            A reserva será enviada para o sistema e ficará
+                            registrada na planilha.
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="reserva-modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn secondary"
+                        onclick="fecharReserva()"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn"
+                        id="confirmarReservaBtn"
+                        onclick="confirmarReserva()"
+                    >
+                        ${icon("bookmark-check")}
+                        Confirmar reserva
+                    </button>
+
                 </div>
 
             </div>
 
         </div>
     `;
+
+    document.body.appendChild(modal);
+
+    inicializarIcones();
 }
 
-function fillReserveItems() {
-    const type = $("#reserveType");
-
-    const select = $("#reserveItem");
-
-    if (!type || !select) {
-        return;
-    }
-
-    const itens = obterItensReservaveis(type.value);
-
-    if (itens.length === 0) {
-        select.innerHTML = `<option value="">Nenhum item disponível</option>`;
-
-        return;
-    }
-
-    select.innerHTML = itens
-        .map(
-            (item) =>
-                `<option value="${escapeHtml(item.produtoID)}">
-                    ${escapeHtml(item.nome)}
-                    ${item.codigo ? ` — ${escapeHtml(item.codigo)}` : ""}
-                </option>`,
-        )
-        .join("");
-}
-
-function reservar() {
-    const type = $("#reserveType")?.value;
-
-    const produtoID = $("#reserveItem")?.value;
-
-    const date = $("#reserveDate")?.value;
-
-    if (!produtoID) {
-        showToast("Nenhum item disponível para reserva.");
-
-        return;
-    }
-
-    if (!date) {
-        showToast("Escolha a data da reserva.");
-
-        return;
-    }
-
+function abrirReserva(produtoID) {
     const item = ITENS_PESQUISA.find(
         (produto) => String(produto.produtoID) === String(produtoID),
     );
 
     if (!item) {
         showToast("Item não encontrado.");
-
         return;
     }
 
     if (!item.podeReservar) {
         showToast("Este item não está disponível para reserva.");
-
         return;
     }
 
-    /*
-        A gravação real na aba 08_RESERVAS será feita
-        quando a rota de reservas estiver conectada.
+    if (!item.localID) {
+        showToast("O local deste item não foi identificado.");
+        return;
+    }
 
-        Não fazemos uma gravação falsa/local aqui.
-    */
+    reservaItemSelecionado = item;
 
-    showToast(
-        "O item foi selecionado. A gravação da reserva será conectada à planilha.",
-    );
+    criarModalReserva();
+
+    const modal = $("#reservaModal");
+
+    if (!modal) {
+        return;
+    }
+
+    $("#reservaTipo").textContent = item.tipo || "Item";
+
+    $("#reservaNome").textContent = item.nome || "Item";
+
+    $("#reservaDetalhes").textContent = item.autor
+        ? `Autor: ${item.autor}`
+        : "Informe o período da reserva.";
+
+    $("#reservaCodigo").textContent = item.codigo || item.produtoID || "-";
+
+    $("#reservaLocal").textContent = item.local || "Não informado";
+
+    $("#reservaDisponivel").textContent = String(item.disponivel ?? 0);
+
+    const hoje = new Date();
+
+    const ano = hoje.getFullYear();
+
+    const mes = pad(hoje.getMonth() + 1);
+
+    const dia = pad(hoje.getDate());
+
+    const dataMinima = `${ano}-${mes}-${dia}`;
+
+    const dataRetirada = $("#reservaDataRetirada");
+
+    const dataDevolucao = $("#reservaDataDevolucao");
+
+    const horaRetirada = $("#reservaHoraRetirada");
+
+    const horaDevolucao = $("#reservaHoraDevolucao");
+
+    if (dataRetirada) {
+        dataRetirada.min = dataMinima;
+        dataRetirada.value = "";
+    }
+
+    if (dataDevolucao) {
+        dataDevolucao.min = dataMinima;
+        dataDevolucao.value = "";
+    }
+
+    if (horaRetirada) {
+        horaRetirada.value = "";
+    }
+
+    if (horaDevolucao) {
+        horaDevolucao.value = "";
+    }
+
+    const motivo = $("#reservaMotivo");
+    const observacao = $("#reservaObservacao");
+
+    if (motivo) {
+        motivo.value = "";
+    }
+
+    if (observacao) {
+        observacao.value = "";
+    }
+
+    if (dataRetirada) {
+        dataRetirada.onchange = () => {
+            if (dataDevolucao) {
+                dataDevolucao.min = dataRetirada.value || dataMinima;
+
+                if (
+                    dataDevolucao.value &&
+                    dataDevolucao.value < dataDevolucao.min
+                ) {
+                    dataDevolucao.value = dataDevolucao.min;
+                }
+            }
+        };
+    }
+
+    modal.classList.add("open");
+
+    document.body.classList.add("reserva-modal-open");
+
+    setTimeout(() => {
+        dataRetirada?.focus();
+    }, 100);
+
+    inicializarIcones();
 }
 
-// ============================================================
-// EMPRÉSTIMOS
-// ============================================================
+function fecharReserva(event) {
+    if (
+        event &&
+        event.target &&
+        event.target.id !== "reservaModal" &&
+        !event.target.classList.contains("reserva-overlay")
+    ) {
+        return;
+    }
+
+    const modal = $("#reservaModal");
+
+    if (modal) {
+        modal.classList.remove("open");
+    }
+
+    document.body.classList.remove("reserva-modal-open");
+
+    reservaItemSelecionado = null;
+}
+
+async function confirmarReserva() {
+    if (!reservaItemSelecionado) {
+        showToast("Nenhum item foi selecionado.");
+        return;
+    }
+
+    if (!usuarioLogado?.id) {
+        showToast("Usuário não identificado.");
+        return;
+    }
+
+    const dataRetirada = $("#reservaDataRetirada")?.value;
+
+    const horaRetirada = $("#reservaHoraRetirada")?.value;
+
+    const dataDevolucao = $("#reservaDataDevolucao")?.value;
+
+    const horaDevolucao = $("#reservaHoraDevolucao")?.value;
+
+    const motivo = $("#reservaMotivo")?.value.trim() || "";
+
+    const observacao = $("#reservaObservacao")?.value.trim() || "";
+
+    if (!dataRetirada || !horaRetirada || !dataDevolucao || !horaDevolucao) {
+        showToast("Preencha a data e a hora da retirada e da devolução.");
+        return;
+    }
+
+    const inicio = new Date(`${dataRetirada}T${horaRetirada}:00`);
+
+    const fim = new Date(`${dataDevolucao}T${horaDevolucao}:00`);
+
+    const agora = new Date();
+
+    if (Number.isNaN(inicio.getTime()) || Number.isNaN(fim.getTime())) {
+        showToast("Informe datas e horários válidos.");
+        return;
+    }
+
+    if (inicio <= agora) {
+        showToast("A retirada precisa ser em uma data e horário futuros.");
+        return;
+    }
+
+    if (fim <= inicio) {
+        showToast("A devolução precisa acontecer depois da retirada.");
+        return;
+    }
+
+    const botao = $("#confirmarReservaBtn");
+
+    if (botao) {
+        botao.disabled = true;
+        botao.innerHTML = `
+            ${icon("loader-circle")}
+            Enviando...
+        `;
+
+        inicializarIcones();
+    }
+
+    try {
+        const resposta = await fetch(`${API_URL}/aluno/reservas`, {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+            },
+
+            body: JSON.stringify({
+                usuarioID: usuarioLogado.id,
+
+                produtoID: reservaItemSelecionado.produtoID,
+
+                localID: reservaItemSelecionado.localID,
+
+                dataRetirada,
+                horaRetirada,
+
+                dataDevolucao,
+                horaDevolucao,
+
+                motivo,
+                observacao,
+            }),
+        });
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok || !resultado.sucesso) {
+            throw new Error(
+                resultado.mensagem ||
+                    resultado.erro ||
+                    "Não foi possível criar a reserva.",
+            );
+        }
+
+        showToast("Reserva criada com sucesso.");
+
+        fecharReserva();
+
+        await carregarReservas();
+
+        await carregarItensPesquisa();
+
+        go("reservas");
+    } catch (erro) {
+        console.error("Erro ao criar reserva:", erro);
+
+        showToast(erro.message || "Não foi possível criar a reserva.");
+    } finally {
+        if (botao) {
+            botao.disabled = false;
+
+            botao.innerHTML = `
+                ${icon("bookmark-check")}
+                Confirmar reserva
+            `;
+
+            inicializarIcones();
+        }
+    }
+}
 
 function viewEmprestimos() {
     const rows = emprestimos
@@ -949,13 +1444,9 @@ function statusClasse(status) {
 
 function pesquisarItens() {
     const input = $("#itemSearch");
-
     const tipo = $("#itemType");
-
     const status = $("#itemStatus");
-
     const resultados = $("#itemResults");
-
     const quantidade = $("#itemCount");
 
     if (!input || !tipo || !status || !resultados) {
@@ -963,9 +1454,7 @@ function pesquisarItens() {
     }
 
     const termo = input.value.trim().toLowerCase();
-
     const tipoSelecionado = tipo.value;
-
     const statusSelecionado = status.value;
 
     const filtrados = ITENS_PESQUISA.filter((item) => {
@@ -982,12 +1471,15 @@ function pesquisarItens() {
             .join(" ")
             .toLowerCase();
 
+        // Pesquisa por nome/código/local
         const bateTexto = !termo || textoBusca.includes(termo);
 
+        // Filtro por tipo
         const bateTipo = !tipoSelecionado || item.tipo === tipoSelecionado;
 
+        // Filtro por situação
         const bateStatus =
-            !statusSelecionado || item.status === statusSelecionado;
+            !statusSelecionado || item.situacaoTexto === statusSelecionado;
 
         return bateTexto && bateTipo && bateStatus;
     });
@@ -1002,98 +1494,104 @@ function pesquisarItens() {
         ? filtrados
               .map(
                   (item) => `
-                <article class="item-result-card">
+                    <article
+    class="item-result-card ${item.podeReservar ? "reservable" : ""}"
+    ${
+        item.podeReservar
+            ? `onclick="abrirReserva('${escapeHtml(item.produtoID)}')"`
+            : ""
+    }
+    ${
+        item.podeReservar
+            ? `role="button" tabindex="0" title="Clique para reservar"`
+            : ""
+    }
+>
 
-                    <div class="item-result-icon">
-                        ${icon(item.tipo === "Livro" ? "book-open" : "monitor")}
-                    </div>
+                        <div class="item-result-icon">
+                            ${icon(
+                                item.tipo === "Livro" ? "book-open" : "monitor",
+                            )}
+                        </div>
 
-                    <div class="item-result-main">
+                        <div class="item-result-main">
 
-                        <div class="item-result-top">
+                            <div class="item-result-top">
 
-                            <div>
+                                <div>
+                                    <span class="item-type">
+                                        ${escapeHtml(item.tipo)}
+                                    </span>
 
-                                <span class="item-type">
-                                    ${escapeHtml(item.tipo)}
+                                    <h3>
+                                        ${escapeHtml(item.nome)}
+                                    </h3>
+                                </div>
+
+                                <span
+                                    class="item-status ${statusClasse(
+                                        item.situacaoTexto,
+                                    )}"
+                                >
+                                    ${escapeHtml(item.situacaoTexto)}
                                 </span>
-
-                                <h3>
-                                    ${escapeHtml(item.nome)}
-                                </h3>
 
                             </div>
 
-                            <span
-                                class="item-status ${statusClasse(
-                                    item.situacaoTexto,
-                                )}"
-                            >
-                                ${escapeHtml(item.situacaoTexto)}
-                            </span>
-
-                        </div>
-
-                        <p>
-                            ${escapeHtml(
-                                item.detalhe || "Sem informações adicionais.",
-                            )}
-                        </p>
-
-                        <div class="item-result-meta">
-
-                            <span>
-                                ${icon("hash")}
-
+                            <p>
                                 ${escapeHtml(
-                                    item.codigo ||
-                                        item.produtoID ||
-                                        "Sem código",
+                                    item.detalhe ||
+                                        "Sem informações adicionais.",
                                 )}
-                            </span>
+                            </p>
 
-                            <span>
-                                ${icon("map-pin")}
+                            <div class="item-result-meta">
 
-                                ${escapeHtml(item.local || "Não informado")}
-                            </span>
+                                <span>
+                                    ${icon("hash")}
+                                    ${escapeHtml(
+                                        item.codigo ||
+                                            item.produtoID ||
+                                            "Sem código",
+                                    )}
+                                </span>
 
-                            ${
-                                item.disponivel !== undefined
-                                    ? `
-                                    <span>
-                                        ${icon("package")}
+                                <span>
+                                    ${icon("map-pin")}
+                                    ${escapeHtml(item.local || "Não informado")}
+                                </span>
 
-                                        ${escapeHtml(String(item.disponivel))}
-                                        disponível
-                                    </span>
-                                `
-                                    : ""
-                            }
+                                <span>
+                                    ${icon("package")}
+                                    ${escapeHtml(String(item.disponivel ?? 0))}
+                                    disponível
+                                </span>
+
+                            </div>
 
                         </div>
 
-                    </div>
-
-                </article>
-            `,
+                    </article>
+                `,
               )
               .join("")
         : `
-                <div class="search-empty">
+            <div class="search-empty">
 
-                    ${icon("search-x")}
+                ${icon("search-x")}
 
-                    <strong>
-                        Nenhum item encontrado
-                    </strong>
+                <strong>
+                    Nenhum item encontrado
+                </strong>
 
-                    <p>
-                        Tente outro nome, código, tipo ou local.
-                    </p>
+                <p>
+                    Não existem itens com essa situação.
+                </p>
 
-                </div>
-            `;
+            </div>
+        `;
+
+    inicializarIcones();
 }
 
 function limparPesquisaItens() {
@@ -1264,8 +1762,8 @@ function viewPesquisar() {
             ${icon("info")}
 
             <span>
-                Nesta área o aluno pode consultar apenas livros e computadores.
-                A reserva continua sendo feita pelo menu Reservas.
+               Nesta área o aluno pode consultar livros e computadores.
+Clique em um item disponível para iniciar uma reserva.
             </span>
 
         </div>
@@ -1879,10 +2377,6 @@ function draw() {
 
     content.innerHTML = views[page]();
 
-    if (page === "reservas") {
-        fillReserveItems();
-    }
-
     if (page === "pesquisar") {
         pesquisarItens();
     }
@@ -1947,6 +2441,8 @@ async function iniciarPainel() {
     }
 
     await carregarItensPesquisa();
+
+    await carregarReservas();
 
     atualizarUsuarioLateral();
 
