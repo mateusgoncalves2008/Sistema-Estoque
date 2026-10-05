@@ -1,159 +1,46 @@
-javascript;
 const API_URL = "http://localhost:3000/api";
 
-/* =========================================================
-   USUÁRIO LOGADO
-========================================================= */
-
 let usuarioLogado = null;
-
-try {
-    usuarioLogado = JSON.parse(sessionStorage.getItem("usuarioLogado"));
-} catch (erro) {
-    console.error("Erro ao ler usuário:", erro);
-}
-
-if (!usuarioLogado) {
-    window.location.href = "../login/index.html";
-}
-
-/* =========================================================
-   PROTEÇÃO DO PAINEL
-========================================================= */
-
-if (
-    usuarioLogado &&
-    String(usuarioLogado.tipoUsuario || "").toUpperCase() !== "ALUNO"
-) {
-    alert("Acesso não autorizado.");
-    window.location.href = "../login/index.html";
-}
-
-/* =========================================================
-   ELEMENTOS
-========================================================= */
-
-const nav = document.getElementById("nav");
-const view = document.getElementById("v");
-
-const sidebar = document.getElementById("sidebar");
-const toggleSidebar = document.getElementById("toggleSidebar");
-const mobileMenu = document.getElementById("mobileMenu");
-const sidebarOverlay = document.getElementById("sidebarOverlay");
-
-const logoutButton = document.getElementById("logoutButton");
-
-const sidebarNome = document.getElementById("sidebarNome");
-const avatarInicial = document.getElementById("avatarInicial");
-
-/* =========================================================
-   ÍCONES
-========================================================= */
-
-const IC = {
-    inicio: "⌂",
-
-    reservas: "▣",
-
-    emprestimos: "▤",
-
-    historico: "▥",
-
-    perfil: "◉",
-
-    calendario: "□",
-
-    cardapio: "♨",
-};
-
-/* =========================================================
-   MENU
-========================================================= */
-
-const MENU = [
-    ["inicio", "Início"],
-
-    ["reservas", "Minhas Reservas"],
-
-    ["emprestimos", "Meus Empréstimos"],
-
-    ["historico", "Histórico"],
-
-    ["perfil", "Meu Perfil"],
-
-    ["calendario", "Calendário"],
-
-    ["cardapio", "Cardápio"],
-];
-
-/* =========================================================
-   ESTADO
-========================================================= */
-
-let page = "inicio";
-
-const today = new Date();
-
-const cal = {
-    view: "Mês",
-
-    cur: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
-};
-
-/* =========================================================
-   DADOS
-========================================================= */
-
 let ALUNO = {
     nome: "Aluno",
-
-    idade: "",
-
-    ano: "",
-
-    turma: "",
-
-    turno: "",
-
-    email: "",
-
-    matricula: "",
-
-    status: "",
+    idade: "Não informado",
+    ano: "Não informado",
+    turma: "Não informado",
+    turno: "Não informado",
+    email: "Não informado",
+    matricula: "Não informado",
 };
 
-let reservas = [];
+let reservas = [
+    { tipo: "Livro", item: "Física", data: "06/10/2026" },
+    { tipo: "Computador", item: "PC-014", data: "07/10/2026" },
+];
 
-let emprestimos = [];
+const emprestimos = [
+    {
+        tipo: "Livro",
+        item: "Matemática",
+        retirada: "28/09/2026",
+        devolucao: "12/10/2026",
+    },
+];
 
-let moves = [];
-
-let hist = {
-    Livro: 0,
-
-    Computador: 0,
-};
-
-/* =========================================================
-   DADOS TEMPORÁRIOS
-   SERÃO SUBSTITUÍDOS PELA API
-========================================================= */
+const movimentos = [
+    ["Livro", "Matemática", "28/09/2026"],
+    ["Computador", "PC-014", "25/09/2026"],
+    ["Livro", "História", "20/09/2026"],
+];
 
 const CAT = {
     Livro: ["Matemática", "História", "Geografia", "Física", "Dom Casmurro"],
-
     Computador: ["PC-003", "PC-008", "PC-014", "PC-021"],
 };
 
 const CARD = {
     1: ["Arroz", "Feijão", "Frango", "Salada", "Fruta"],
-
     2: ["Macarrão", "Carne", "Salada", "Banana"],
-
     3: ["Arroz", "Feijão", "Peixe", "Legumes", "Laranja"],
-
     4: ["Arroz", "Feijão", "Carne moída", "Salada", "Melancia"],
-
     5: ["Arroz", "Feijão", "Frango assado", "Purê", "Maçã"],
 };
 
@@ -184,486 +71,436 @@ const MESES = [
 
 const TIPOS = {
     letivo: ["Dia letivo", "#4f6b43"],
-
-    feriado: ["Feriado", "#c65a32"],
-
+    feriado: ["Feriado", "#c2452d"],
     recesso: ["Recesso", "#8a6bbe"],
-
     evento: ["Evento escolar", "#2f6fb5"],
-
     reuniao: ["Reunião", "#7a8b2e"],
-
     prova: ["Prova", "#d9a441"],
-
     escola: ["Evento da escola", "#e07b39"],
 };
 
+/*
+    Exemplos de eventos.
+    Depois vamos trocar isso pelos dados vindos da aba
+    do calendário da planilha.
+*/
 const EV = {
-    "2026-10-08": ["prova", "Prova de Matemática"],
-
+    "2026-10-08": ["feriado", "Feriado"],
     "2026-10-12": ["feriado", "Nossa Senhora Aparecida"],
-
     "2026-10-15": ["evento", "Dia do Professor"],
-
     "2026-10-20": ["reuniao", "Reunião de pais"],
-
     "2026-10-24": ["escola", "Feira de Ciências"],
-
     "2026-10-28": ["recesso", "Dia do Servidor Público"],
-
     "2026-11-02": ["feriado", "Finados"],
-
     "2026-11-05": ["prova", "Prova de História"],
-
     "2026-11-20": ["feriado", "Consciência Negra"],
-
     "2026-12-18": ["escola", "Formatura do 3º Ano"],
+    "2027-01-01": ["feriado", "Confraternização Universal"],
 };
 
-/* =========================================================
-   UTILITÁRIOS
-========================================================= */
+const MENU = [
+    ["inicio", "Início", "house"],
+    ["reservas", "Reservas", "bookmark"],
+    ["emprestimos", "Empréstimos", "book-open"],
+    ["historico", "Histórico", "history"],
+    ["perfil", "Meu Perfil", "user-round"],
+    ["calendario", "Calendário", "calendar-days"],
+    ["cardapio", "Cardápio", "utensils"],
+];
 
-const pad = (n) => String(n).padStart(2, "0");
+const today = new Date();
 
-const key = (d) =>
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const cal = {
+    view: "Mês",
+    cur: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
+};
+
+let page = "inicio";
 
 const $ = (selector) => document.querySelector(selector);
 
-function toast(message) {
-    const element = document.getElementById("toast");
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
-    if (!element) return;
+function pad(n) {
+    return String(n).padStart(2, "0");
+}
 
-    element.textContent = message;
+function key(date) {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
 
-    element.classList.add("show");
+function showToast(message) {
+    const toast = $("#toast");
 
-    clearTimeout(toast.timeout);
+    if (!toast) return;
 
-    toast.timeout = setTimeout(() => {
-        element.classList.remove("show");
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    clearTimeout(showToast.timer);
+
+    showToast.timer = setTimeout(() => {
+        toast.classList.remove("show");
     }, 2600);
 }
 
-/* =========================================================
-   CARREGAR PERFIL REAL
-========================================================= */
+function inicializarIcones() {
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+}
 
-async function carregarPerfil() {
-    if (!usuarioLogado || !usuarioLogado.id) {
-        return;
+function obterUsuarioLogado() {
+    const salvo = sessionStorage.getItem("usuarioLogado");
+
+    if (!salvo) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(salvo);
+    } catch (erro) {
+        console.error("Erro ao ler usuarioLogado:", erro);
+        sessionStorage.removeItem("usuarioLogado");
+        return null;
+    }
+}
+
+async function carregarPerfilAluno() {
+    usuarioLogado = obterUsuarioLogado();
+
+    if (!usuarioLogado) {
+        window.location.href = "../login/index.html";
+        return false;
+    }
+
+    if (
+        String(usuarioLogado.tipoUsuario || "").toUpperCase() !== "ALUNO" &&
+        String(usuarioLogado.perfil || "").toUpperCase() !== "ALUNO"
+    ) {
+        showToast("Este painel é exclusivo para alunos.");
+        return false;
+    }
+
+    const usuarioID = usuarioLogado.id;
+
+    if (!usuarioID) {
+        console.error("UsuarioID não encontrado no login.");
+        return false;
     }
 
     try {
         const resposta = await fetch(
-            `${API_URL}/aluno/perfil/${encodeURIComponent(usuarioLogado.id)}`,
+            `${API_URL}/aluno/perfil/${encodeURIComponent(usuarioID)}`,
         );
 
-        const dados = await resposta.json();
+        const resultado = await resposta.json();
 
-        if (!resposta.ok || !dados.sucesso) {
+        if (!resposta.ok || !resultado.sucesso || !resultado.aluno) {
             throw new Error(
-                dados.mensagem || "Não foi possível carregar o perfil.",
+                resultado.mensagem || "Não foi possível carregar o perfil.",
             );
         }
 
-        const aluno = dados.aluno;
-
         ALUNO = {
-            nome: aluno.nome || "Aluno",
-
-            idade: aluno.idade || "",
-
-            ano: aluno.ano || "",
-
-            turma: aluno.turma || "",
-
-            turno: aluno.turno || "",
-
-            email: aluno.email || "",
-
-            matricula: aluno.matricula || "",
-
-            status: aluno.status || "",
+            ...ALUNO,
+            ...resultado.aluno,
         };
 
-        if (sidebarNome) {
-            sidebarNome.textContent = ALUNO.nome;
-        }
+        atualizarUsuarioLateral();
 
-        if (avatarInicial && ALUNO.nome) {
-            avatarInicial.textContent = ALUNO.nome
-                .trim()
-                .charAt(0)
-                .toUpperCase();
-        }
-
-        atualizarInterface();
+        return true;
     } catch (erro) {
-        console.error("Erro ao carregar perfil:", erro);
+        console.error("Erro ao carregar perfil do aluno:", erro);
 
-        toast("Não foi possível carregar seus dados.");
+        ALUNO = {
+            ...ALUNO,
+            nome: usuarioLogado.nome || "Aluno",
+            email: usuarioLogado.email || "Não informado",
+        };
+
+        atualizarUsuarioLateral();
+
+        showToast("Perfil carregado com dados disponíveis no login.");
+
+        return true;
     }
 }
 
-/* =========================================================
-   MENU
-========================================================= */
+function atualizarUsuarioLateral() {
+    const nome = ALUNO.nome || usuarioLogado?.nome || "Aluno";
 
-function desenharMenu() {
-    if (!nav) return;
+    const nomeEl = $("#sidebarUserName");
+    const avatarEl = $("#userAvatar");
 
-    nav.innerHTML = MENU.map((item) => {
-        const codigo = item[0];
-        const nome = item[1];
-
-        return `
-            <button
-                class="nav-button ${codigo === page ? "active" : ""}"
-                onclick="go('${codigo}')"
-                title="${nome}"
-            >
-
-                <span class="nav-icon">
-                    ${IC[codigo]}
-                </span>
-
-                <span class="nav-text">
-                    ${nome}
-                </span>
-
-            </button>
-        `;
-    }).join("");
-}
-
-/* =========================================================
-   NAVEGAÇÃO
-========================================================= */
-
-function go(p) {
-    page = p;
-
-    atualizarInterface();
-
-    fecharMenuMobile();
-}
-
-function atualizarInterface() {
-    desenharMenu();
-
-    if (view && VIEWS[page]) {
-        view.innerHTML = VIEWS[page]();
+    if (nomeEl) {
+        nomeEl.textContent = nome;
+        nomeEl.title = nome;
     }
 
-    if (page === "reservas") {
-        fillItens();
-    }
-
-    const main = document.getElementById("main");
-
-    if (main) {
-        main.scrollTop = 0;
+    if (avatarEl) {
+        avatarEl.textContent = nome.trim().charAt(0).toUpperCase() || "A";
     }
 }
 
-/* =========================================================
-   SIDEBAR DESKTOP
-========================================================= */
+function fazerLogout() {
+    sessionStorage.removeItem("usuarioLogado");
+    window.location.href = "../login/index.html";
+}
 
-function carregarEstadoSidebar() {
-    const estado = localStorage.getItem("painelAlunoSidebar");
+function configurarSidebar() {
+    const saved = localStorage.getItem("painelAlunoSidebar");
 
-    if (estado === "collapsed") {
+    if (saved === "collapsed") {
         document.body.classList.add("sidebar-collapsed");
+        atualizarIconeSidebar();
+    }
+
+    const toggle = $("#sidebarToggle");
+
+    if (toggle) {
+        toggle.addEventListener("click", () => {
+            document.body.classList.toggle("sidebar-collapsed");
+
+            const collapsed =
+                document.body.classList.contains("sidebar-collapsed");
+
+            localStorage.setItem(
+                "painelAlunoSidebar",
+                collapsed ? "collapsed" : "expanded",
+            );
+
+            atualizarIconeSidebar();
+        });
+    }
+
+    const mobileBtn = $("#mobileMenuBtn");
+    const overlay = $("#mobileOverlay");
+
+    if (mobileBtn) {
+        mobileBtn.addEventListener("click", () => {
+            document.body.classList.add("mobile-menu-open");
+        });
+    }
+
+    if (overlay) {
+        overlay.addEventListener("click", fecharMenuMobile);
+    }
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            fecharMenuMobile();
+        }
+    });
+
+    const logout = $("#logoutBtn");
+
+    if (logout) {
+        logout.addEventListener("click", fazerLogout);
     }
 }
 
-if (toggleSidebar) {
-    toggleSidebar.addEventListener("click", () => {
-        document.body.classList.toggle("sidebar-collapsed");
+function atualizarIconeSidebar() {
+    const button = $("#sidebarToggle");
 
-        const recolhida = document.body.classList.contains("sidebar-collapsed");
+    if (!button) return;
 
-        localStorage.setItem(
-            "painelAlunoSidebar",
-            recolhida ? "collapsed" : "expanded",
-        );
-    });
-}
+    const collapsed = document.body.classList.contains("sidebar-collapsed");
 
-/* =========================================================
-   MENU MOBILE
-========================================================= */
+    button.innerHTML = collapsed
+        ? '<i data-lucide="panel-left-open"></i>'
+        : '<i data-lucide="panel-left-close"></i>';
 
-function abrirMenuMobile() {
-    document.body.classList.add("mobile-menu-open");
+    button.setAttribute(
+        "aria-label",
+        collapsed ? "Expandir menu" : "Recolher menu",
+    );
+
+    button.setAttribute("title", collapsed ? "Expandir menu" : "Recolher menu");
+
+    inicializarIcones();
 }
 
 function fecharMenuMobile() {
     document.body.classList.remove("mobile-menu-open");
 }
 
-if (mobileMenu) {
-    mobileMenu.addEventListener("click", abrirMenuMobile);
+function icon(name) {
+    return `<i data-lucide="${name}"></i>`;
 }
 
-if (sidebarOverlay) {
-    sidebarOverlay.addEventListener("click", fecharMenuMobile);
-}
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-if (logoutButton) {
-    logoutButton.addEventListener("click", () => {
-        sessionStorage.removeItem("usuarioLogado");
-
-        window.location.href = "../login/index.html";
-    });
-}
-
-/* =========================================================
-   INÍCIO
-========================================================= */
-
-function schoolMenuDay() {
-    const w = today.getDay();
-
-    return w >= 1 && w <= 5 ? w : 1;
+function go(nextPage) {
+    page = nextPage;
+    fecharMenuMobile();
+    draw();
 }
 
 function viewInicio() {
-    const w = schoolMenuDay();
+    const primeiroNome = (ALUNO.nome || "Aluno").trim().split(/\s+/)[0];
 
-    const reservasAtivas = reservas.length;
+    const w = hojeLetivo();
 
-    const emprestimosAtivos = emprestimos.length;
+    const proximosEventos = Object.keys(EV)
+        .map((data) => [new Date(`${data}T12:00:00`), EV[data]])
+        .filter((item) => item[0] >= new Date(today.toDateString()))
+        .sort((a, b) => a[0] - b[0]);
+
+    const proximo = proximosEventos[0];
 
     return `
-
         <div class="hero">
-
-            <div class="hero-content">
-
-                <h1>
-                    Olá, ${ALUNO.nome.split(" ")[0]}
-                </h1>
-
+            <div>
+                <h1>Olá, ${escapeHtml(primeiroNome)}</h1>
                 <p>
-                    ${ALUNO.ano || "Aluno"}
-                    ${ALUNO.turma ? ` • Turma ${ALUNO.turma}` : ""}
-                    ${ALUNO.turno ? ` • ${ALUNO.turno}` : ""}
+                    ${escapeHtml(ALUNO.ano || "Ano não informado")}
+                    · Turma ${escapeHtml(ALUNO.turma || "Não informada")}
+                    · ${escapeHtml(ALUNO.turno || "Turno não informado")}
                 </p>
-
             </div>
-
 
             <div class="stats">
-
                 <div class="stat">
-
-                    <b>
-                        ${hist.Livro}
-                    </b>
-
-                    <span>
-                        Livros lidos
-                    </span>
-
+                    <b>12</b>
+                    <span>Livros lidos</span>
                 </div>
 
-
                 <div class="stat">
-
-                    <b>
-                        ${hist.Computador}
-                    </b>
-
-                    <span>
-                        Computadores
-                    </span>
-
+                    <b>8</b>
+                    <span>Computadores</span>
                 </div>
-
             </div>
-
         </div>
 
-
         <div class="grid">
-
             <div class="card">
-
-                <div class="card-label">
-                    ${IC.reservas}
+                <div class="lab">
+                    ${icon("bookmark")}
                     Minhas reservas
                 </div>
 
-                <div class="card-big">
-                    ${reservasAtivas}
-                    ${reservasAtivas === 1 ? "ativa" : "ativas"}
+                <div class="big">
+                    ${reservas.length} ativa${reservas.length === 1 ? "" : "s"}
                 </div>
 
                 <p>
                     Livros e computadores reservados.
                 </p>
-
             </div>
 
-
             <div class="card">
-
-                <div class="card-label">
-                    ${IC.emprestimos}
+                <div class="lab">
+                    ${icon("book-open")}
                     Meus empréstimos
                 </div>
 
-                <div class="card-big">
-                    ${emprestimosAtivos}
-                    ${emprestimosAtivos === 1 ? "ativo" : "ativos"}
+                <div class="big">
+                    ${emprestimos.length} ativo${emprestimos.length === 1 ? "" : "s"}
                 </div>
 
                 <p>
-                    Itens atualmente emprestados.
+                    ${
+                        emprestimos.length
+                            ? `Devolução prevista em ${escapeHtml(emprestimos[0].devolucao)}.`
+                            : "Você não possui empréstimos ativos."
+                    }
                 </p>
-
             </div>
-
 
             <div class="card">
-
-                <div class="card-label">
-                    ${IC.calendario}
-                    Calendário
+                <div class="lab">
+                    ${icon("calendar-days")}
+                    Próximo evento
                 </div>
 
-                <div class="card-big">
-                    ${MESES[today.getMonth()]}
+                <div class="big">
+                    ${proximo ? escapeHtml(proximo[1][1]) : "Sem eventos"}
                 </div>
 
                 <p>
-                    Consulte as datas e eventos escolares.
+                    ${
+                        proximo
+                            ? `${proximo[0].getDate()} de ${MESES[proximo[0].getMonth()].toLowerCase()}`
+                            : "Nenhum evento cadastrado."
+                    }
                 </p>
-
             </div>
-
 
             <div class="card">
-
-                <div class="card-label">
-                    ${IC.cardapio}
-                    Cardápio
+                <div class="lab">
+                    ${icon("utensils")}
+                    Cardápio ${w >= 1 && w <= 5 ? "de hoje" : "da semana"}
                 </div>
 
-                <div class="card-big">
-                    ${DIAS[w]}
+                <div class="big">
+                    ${
+                        w >= 1 && w <= 5
+                            ? escapeHtml(CARD[w].slice(0, 2).join(" e "))
+                            : "Consulte o cardápio"
+                    }
                 </div>
 
                 <p>
-                    Consulte o cardápio da escola.
+                    ${
+                        w >= 1 && w <= 5
+                            ? escapeHtml(CARD[w].join(", "))
+                            : "Veja o cardápio completo no menu."
+                    }
                 </p>
-
             </div>
-
         </div>
-
     `;
 }
 
-/* =========================================================
-   RESERVAS
-========================================================= */
+function hojeLetivo() {
+    const day = today.getDay();
+    return day;
+}
 
 function viewReservas() {
     const rows = reservas
         .map(
-            (reserva) => `
-
-            <tr>
-
-                <td>
-                    ${reserva.t}
-                </td>
-
-                <td>
-                    <b>
-                        ${reserva.n}
-                    </b>
-                </td>
-
-                <td>
-                    ${reserva.d}
-                </td>
-
-                <td>
-                    <span class="tag">
-                        Ativa
-                    </span>
-                </td>
-
-            </tr>
-
-        `,
+            (r) => `
+                <tr>
+                    <td>${escapeHtml(r.tipo)}</td>
+                    <td><b>${escapeHtml(r.item)}</b></td>
+                    <td>${escapeHtml(r.data)}</td>
+                    <td><span class="tag">Ativa</span></td>
+                </tr>
+            `,
         )
         .join("");
 
     return `
-
-        <div class="page-head">
-
-            <h1>
-                Minhas Reservas
-            </h1>
-
+        <div class="head">
+            <h1>Minhas Reservas</h1>
             <p class="sub">
-                Consulte suas reservas e reserve itens permitidos.
+                Consulte suas reservas e reserve apenas os itens permitidos.
             </p>
-
         </div>
 
-
         <div class="two">
-
             <div class="card">
-
-                <h2>
-                    Reservas ativas
-                </h2>
+                <h2>Reservas ativas</h2>
 
                 <div class="scroll">
-
                     <table>
-
                         <thead>
-
                             <tr>
-
-                                <th>
-                                    Tipo
-                                </th>
-
-                                <th>
-                                    Item
-                                </th>
-
-                                <th>
-                                    Data
-                                </th>
-
-                                <th>
-                                    Situação
-                                </th>
-
+                                <th>Tipo</th>
+                                <th>Item</th>
+                                <th>Data</th>
+                                <th>Situação</th>
                             </tr>
-
                         </thead>
 
                         <tbody>
-
                             ${
                                 rows ||
                                 `
@@ -674,490 +511,443 @@ function viewReservas() {
                                 </tr>
                                 `
                             }
-
                         </tbody>
-
                     </table>
-
                 </div>
-
             </div>
-
 
             <div class="card">
+                <h2>Nova reserva</h2>
 
-                <h2>
-                    Nova reserva
-                </h2>
-
-                <div
-                    class="form"
-                    style="margin-top:16px"
-                >
-
+                <div class="form">
                     <div>
+                        <label for="reserveType">Tipo</label>
 
-                        <label>
-                            Tipo
-                        </label>
-
-                        <select
-                            id="rt"
-                            onchange="fillItens()"
-                        >
-
-                            <option>
-                                Livro
-                            </option>
-
-                            <option>
-                                Computador
-                            </option>
-
+                        <select id="reserveType" onchange="fillReserveItems()">
+                            <option value="Livro">Livro</option>
+                            <option value="Computador">Computador</option>
                         </select>
-
                     </div>
-
 
                     <div>
-
-                        <label>
-                            Item
-                        </label>
-
-                        <select id="ri"></select>
-
+                        <label for="reserveItem">Item</label>
+                        <select id="reserveItem"></select>
                     </div>
-
 
                     <div>
-
-                        <label>
-                            Data
-                        </label>
-
-                        <input
-                            id="rd"
-                            type="date"
-                        >
-
+                        <label for="reserveDate">Data</label>
+                        <input id="reserveDate" type="date">
                     </div>
 
-
-                    <button
-                        class="btn"
-                        onclick="reservar()"
-                    >
+                    <button class="btn" type="button" onclick="reservar()">
                         Reservar
                     </button>
-
                 </div>
-
 
                 <div class="note">
-
-                    Alunos podem reservar apenas
-                    livros da Biblioteca e
-                    computadores do Laboratório
-                    de Informática.
-
+                    ${icon("info")}
+                    <span>
+                        Alunos podem reservar somente livros da Biblioteca
+                        e computadores do Laboratório de Informática.
+                    </span>
                 </div>
-
             </div>
-
         </div>
-
     `;
 }
 
-function fillItens() {
-    const tipo = document.getElementById("rt");
+function fillReserveItems() {
+    const type = $("#reserveType");
+    const select = $("#reserveItem");
 
-    const itens = document.getElementById("ri");
+    if (!type || !select) return;
 
-    if (!tipo || !itens) return;
-
-    itens.innerHTML = CAT[tipo.value]
-        .map((item) => `<option>${item}</option>`)
+    select.innerHTML = (CAT[type.value] || [])
+        .map((item) => `<option>${escapeHtml(item)}</option>`)
         .join("");
 }
 
 function reservar() {
-    const data = document.getElementById("rd");
+    const type = $("#reserveType")?.value;
+    const item = $("#reserveItem")?.value;
+    const date = $("#reserveDate")?.value;
 
-    const tipo = document.getElementById("rt");
-
-    const item = document.getElementById("ri");
-
-    if (!data || !data.value) {
-        toast("Escolha a data da reserva.");
-
+    if (!date) {
+        showToast("Escolha a data da reserva.");
         return;
     }
 
-    const [y, m, d] = data.value.split("-");
+    const [year, month, day] = date.split("-");
 
     reservas.push({
-        t: tipo.value,
-
-        n: item.value,
-
-        d: `${d}/${m}/${y}`,
+        tipo: type,
+        item: item,
+        data: `${day}/${month}/${year}`,
     });
 
-    toast("Reserva realizada.");
+    showToast("Reserva registrada.");
 
-    atualizarInterface();
+    draw();
 }
-
-/* =========================================================
-   EMPRÉSTIMOS
-========================================================= */
 
 function viewEmprestimos() {
     const rows = emprestimos
         .map(
             (r) => `
-
-            <tr>
-
-                <td>
-                    ${r.t}
-                </td>
-
-                <td>
-                    <b>
-                        ${r.n}
-                    </b>
-                </td>
-
-                <td>
-                    ${r.s}
-                </td>
-
-                <td>
-                    ${r.p}
-                </td>
-
-                <td>
-                    <span class="tag orange">
-                        Em andamento
-                    </span>
-                </td>
-
-            </tr>
-
-        `,
+                <tr>
+                    <td>${escapeHtml(r.tipo)}</td>
+                    <td><b>${escapeHtml(r.item)}</b></td>
+                    <td>${escapeHtml(r.retirada)}</td>
+                    <td>${escapeHtml(r.devolucao)}</td>
+                    <td><span class="tag">Em andamento</span></td>
+                </tr>
+            `,
         )
         .join("");
 
     return `
-
-        <div class="page-head">
-
-            <h1>
-                Meus Empréstimos
-            </h1>
-
+        <div class="head">
+            <h1>Meus Empréstimos</h1>
             <p class="sub">
-                Itens que estão com você neste momento.
+                Itens que estão atualmente com você.
             </p>
-
         </div>
 
-
         <div class="card">
-
             <div class="scroll">
-
                 <table>
-
                     <thead>
-
                         <tr>
-
                             <th>Tipo</th>
                             <th>Item</th>
                             <th>Retirada</th>
                             <th>Devolução prevista</th>
                             <th>Situação</th>
-
                         </tr>
-
                     </thead>
 
                     <tbody>
-
                         ${
                             rows ||
                             `
                             <tr>
                                 <td colspan="5">
-                                    Você não tem empréstimos ativos.
+                                    Você não possui empréstimos ativos.
                                 </td>
                             </tr>
                             `
                         }
-
                     </tbody>
-
                 </table>
-
             </div>
-
         </div>
-
     `;
 }
-
-/* =========================================================
-   HISTÓRICO
-========================================================= */
 
 function viewHistorico() {
     return `
-
-        <div class="page-head">
-
-            <h1>
-                Histórico
-            </h1>
-
+        <div class="head">
+            <h1>Histórico</h1>
             <p class="sub">
-                Consulte seu histórico de utilização.
+                Veja o resumo das suas atividades.
             </p>
-
         </div>
 
-
-        <div
-            class="grid"
-            style="margin-bottom:24px"
-        >
-
+        <div class="grid">
             <div class="card">
-
-                <div class="card-label">
-                    ${IC.reservas}
+                <div class="lab">
+                    ${icon("book-open")}
                     Livros
                 </div>
 
-                <div class="card-big">
-                    Você leu
-                    ${hist.Livro}
-                    livros
+                <div class="big">
+                    Você leu 12 livros
                 </div>
-
             </div>
 
-
             <div class="card">
-
-                <div class="card-label">
-                    ${IC.perfil}
+                <div class="lab">
+                    ${icon("monitor")}
                     Computadores
                 </div>
 
-                <div class="card-big">
-                    Você utilizou
-                    ${hist.Computador}
-                    computadores
+                <div class="big">
+                    Você utilizou 8 computadores
                 </div>
-
             </div>
-
         </div>
 
-
-        <div class="card">
-
-            <h2>
-                Últimas movimentações
-            </h2>
+        <div class="card" style="margin-top:18px">
+            <h2>Últimas movimentações</h2>
 
             <div style="margin-top:8px">
-
-                ${
-                    moves.length
-                        ? moves
-                              .map(
-                                  (m) => `
-
-                            <div class="move">
-
-                                <div>
-                                    <b>
-                                        ${m[0]}:
-                                    </b>
-
-                                    ${m[1]}
+                ${movimentos
+                    .map(
+                        (m) => `
+                            <div class="row">
+                                <div class="d">
+                                    ${escapeHtml(m[0])}
                                 </div>
 
-                                <span>
-                                    ${m[2]}
+                                <div class="t">
+                                    ${escapeHtml(m[1])}
+                                </div>
+
+                                <span class="tag">
+                                    ${escapeHtml(m[2])}
                                 </span>
-
                             </div>
-
                         `,
-                              )
-                              .join("")
-                        : `
-                        <p class="sub">
-                            Nenhuma movimentação registrada.
-                        </p>
-                        `
-                }
-
+                    )
+                    .join("")}
             </div>
-
         </div>
-
     `;
 }
 
-/* =========================================================
-   PERFIL
-========================================================= */
-
 function viewPerfil() {
-    const f = (nome, valor) => `
-
+    const field = (label, value) => `
         <div class="field">
-
-            <small>
-                ${nome}
-            </small>
-
-            <b>
-                ${valor || "-"}
-            </b>
-
+            <small>${escapeHtml(label)}</small>
+            <b>${escapeHtml(value || "Não informado")}</b>
         </div>
-
     `;
 
     return `
-
-        <div class="page-head">
-
-            <h1>
-                Meu Perfil
-            </h1>
-
+        <div class="head">
+            <h1>Meu Perfil</h1>
             <p class="sub">
-                Seus dados cadastrados.
-                Para alterar seus dados,
-                procure a Secretaria.
+                Seus dados cadastrados. Para alterações, procure a Secretaria.
             </p>
-
         </div>
-
 
         <div class="prof">
-
-            ${f("Nome completo", ALUNO.nome)}
-
-            ${f("Matrícula", ALUNO.matricula)}
-
-            ${f("Idade", ALUNO.idade)}
-
-            ${f("Ano", ALUNO.ano)}
-
-            ${f("Turma", ALUNO.turma)}
-
-            ${f("Turno", ALUNO.turno)}
-
-            ${f("E-mail", ALUNO.email)}
-
-            ${f("Status", ALUNO.status)}
+            ${field("Nome completo", ALUNO.nome)}
+            ${field("Idade", ALUNO.idade)}
+            ${field("Ano", ALUNO.ano)}
+            ${field("Turma", ALUNO.turma)}
+            ${field("Turno", ALUNO.turno)}
+            ${field("E-mail", ALUNO.email)}
+            ${field("Matrícula", ALUNO.matricula)}
 
             <div class="field">
-
-                <small>
-                    Senha
-                </small>
-
-                <b style="letter-spacing:.2em">
+                <small>Senha</small>
+                <b style="letter-spacing:.18em">
                     ••••••••••••
                 </b>
-
             </div>
-
         </div>
-
 
         <div class="note">
-
-            Por segurança, sua senha não é exibida.
-            O sistema armazena apenas uma versão protegida
-            da senha.
-
+            ${icon("lock")}
+            <span>
+                Por segurança, a senha é armazenada de forma protegida
+                e não pode ser exibida.
+            </span>
         </div>
-
     `;
 }
 
-/* =========================================================
-   CALENDÁRIO
-========================================================= */
-
-function evOf(d) {
-    const evento = EV[key(d)];
+function eventoDoDia(date) {
+    const evento = EV[key(date)];
 
     if (evento) {
         return evento;
     }
 
-    const w = d.getDay();
+    const day = date.getDay();
 
-    return w > 0 && w < 6 ? ["letivo", "Dia letivo"] : null;
+    if (day >= 1 && day <= 5) {
+        return ["letivo", "Dia letivo"];
+    }
+
+    return ["fimSemana", "Fim de semana"];
+}
+
+function corEvento(tipo) {
+    if (tipo === "fimSemana") {
+        return "#9a8b82";
+    }
+
+    return TIPOS[tipo]?.[1] || "#9a8b82";
+}
+
+function nomeTipoEvento(tipo) {
+    if (tipo === "fimSemana") return "Fim de semana";
+
+    return TIPOS[tipo]?.[0] || "Evento";
+}
+
+function tooltipEvento(evento) {
+    return `${nomeTipoEvento(evento[0])}: ${evento[1]}`;
+}
+
+function monthGrid(year, month) {
+    const first = new Date(year, month, 1);
+    const offset = (first.getDay() + 6) % 7;
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    let html = `
+        <div class="cal">
+            ${["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
+                .map((day) => `<div class="dh">${day}</div>`)
+                .join("")}
+    `;
+
+    for (let i = 0; i < offset; i++) {
+        html += `<div class="c out"></div>`;
+    }
+
+    for (let day = 1; day <= totalDays; day++) {
+        const date = new Date(year, month, day);
+        const evento = eventoDoDia(date);
+
+        const weekend = date.getDay() === 0 || date.getDay() === 6;
+        const isToday = key(date) === key(today);
+        const isSpecial = evento[0] !== "letivo" && evento[0] !== "fimSemana";
+
+        const tooltip = tooltipEvento(evento);
+
+        html += `
+            <div
+                class="c ${weekend ? "we" : ""} ${isToday ? "today" : ""} ${isSpecial ? "event-day" : ""}"
+                ${isSpecial ? `title="${escapeHtml(tooltip)}"` : ""}
+                aria-label="${escapeHtml(tooltip)}"
+            >
+                <b>${day}</b>
+
+                ${
+                    isSpecial
+                        ? `
+                            <div class="ev">
+                                <i
+                                    class="dot"
+                                    style="--c:${corEvento(evento[0])}"
+                                ></i>
+                                <span>${escapeHtml(evento[1])}</span>
+                            </div>
+                        `
+                        : ""
+                }
+            </div>
+        `;
+    }
+
+    html += `</div>`;
+
+    return html;
+}
+
+function miniMonth(year, month) {
+    const offset = (new Date(year, month, 1).getDay() + 6) % 7;
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    let html = `
+        <div
+            class="mini"
+            onclick="cal.view='Mês';cal.cur=new Date(${year},${month},1);draw()"
+        >
+            <h2>${MESES[month]}</h2>
+
+            <div class="mg">
+    `;
+
+    for (let i = 0; i < offset; i++) {
+        html += "<i></i>";
+    }
+
+    for (let day = 1; day <= totalDays; day++) {
+        const date = new Date(year, month, day);
+        const evento = eventoDoDia(date);
+
+        const special = evento[0] !== "letivo" && evento[0] !== "fimSemana";
+
+        html += `
+            <i
+                ${
+                    special
+                        ? `class="e" style="--c:${corEvento(evento[0])}" title="${escapeHtml(tooltipEvento(evento))}"`
+                        : ""
+                }
+            >
+                ${day}
+            </i>
+        `;
+    }
+
+    html += `
+            </div>
+        </div>
+    `;
+
+    return html;
+}
+
+function dayRow(date) {
+    const evento = eventoDoDia(date);
+
+    return `
+        <div class="row">
+            <div class="d">
+                ${DIAS[date.getDay()]}, ${date.getDate()}/${pad(date.getMonth() + 1)}
+            </div>
+
+            <div class="t">
+                ${escapeHtml(evento[1])}
+            </div>
+
+            <span
+                class="ev"
+                title="${escapeHtml(tooltipEvento(evento))}"
+            >
+                <i
+                    class="dot"
+                    style="--c:${corEvento(evento[0])}"
+                ></i>
+                ${escapeHtml(nomeTipoEvento(evento[0]))}
+            </span>
+        </div>
+    `;
 }
 
 function viewCalendario() {
     const c = cal.cur;
-
     const v = cal.view;
 
     const tabs = ["Ano", "Mês", "Semana", "Dia"]
         .map(
-            (x) => `
-
+            (item) => `
                 <button
-                    class="${x === v ? "on" : ""}"
-                    onclick="setView('${x}')"
+                    class="${item === v ? "on" : ""}"
+                    onclick="setView('${item}')"
                 >
-                    ${x}
+                    ${item}
                 </button>
-
             `,
         )
         .join("");
 
-    const yrs = [2026, 2027]
+    const years = [2026, 2027]
         .map(
-            (y) => `
-
+            (year) => `
                 <option
-                    ${y === c.getFullYear() ? "selected" : ""}
+                    value="${year}"
+                    ${year === c.getFullYear() ? "selected" : ""}
                 >
-                    ${y}
+                    ${year}
                 </option>
-
             `,
         )
         .join("");
 
-    const mons = MESES.map(
-        (m, i) => `
-
+    const months = MESES.map(
+        (month, index) => `
                 <option
-                    value="${i}"
-                    ${i === c.getMonth() ? "selected" : ""}
+                    value="${index}"
+                    ${index === c.getMonth() ? "selected" : ""}
                 >
-                    ${m}
+                    ${month}
                 </option>
-
             `,
     ).join("");
 
@@ -1167,84 +957,64 @@ function viewCalendario() {
         body = monthGrid(c.getFullYear(), c.getMonth());
     } else if (v === "Ano") {
         body = `
-
             <div class="yr">
-
-                ${MESES.map((m, i) => miniMonth(c.getFullYear(), i)).join("")}
-
+                ${MESES.map((_, index) =>
+                    miniMonth(c.getFullYear(), index),
+                ).join("")}
             </div>
-
         `;
     } else if (v === "Semana") {
-        const s = new Date(c);
-
-        s.setDate(c.getDate() - ((c.getDay() + 6) % 7));
+        const start = new Date(c);
+        start.setDate(c.getDate() - ((c.getDay() + 6) % 7));
 
         body = `
-
             <div class="card" style="padding:0">
-
-                ${[...Array(7)]
-                    .map((_, i) => {
-                        const d = new Date(s);
-
-                        d.setDate(s.getDate() + i);
-
-                        return dayRow(d);
-                    })
-                    .join("")}
-
+                ${Array.from({ length: 7 }, (_, index) => {
+                    const date = new Date(start);
+                    date.setDate(start.getDate() + index);
+                    return dayRow(date);
+                }).join("")}
             </div>
-
         `;
     } else {
         body = `
-
             <div class="card" style="padding:0">
-
                 ${dayRow(c)}
-
             </div>
-
         `;
     }
 
-    const legend = Object.values(TIPOS)
+    const legend = [
+        ["feriado", "Feriado"],
+        ["recesso", "Recesso"],
+        ["evento", "Evento escolar"],
+        ["reuniao", "Reunião"],
+        ["prova", "Prova"],
+        ["escola", "Evento da escola"],
+        ["letivo", "Dia letivo"],
+    ]
         .map(
-            (t) => `
-
+            ([type, label]) => `
                 <span>
-
                     <i
                         class="dot"
-                        style="--c:${t[1]}"
+                        style="--c:${corEvento(type)}"
                     ></i>
-
-                    ${t[0]}
-
+                    ${label}
                 </span>
-
             `,
         )
         .join("");
 
     return `
-
-        <div class="page-head">
-
-            <h1>
-                Calendário escolar
-            </h1>
-
+        <div class="head">
+            <h1>Calendário escolar</h1>
             <p class="sub">
-                Consulte as datas e eventos escolares.
+                Passe o mouse sobre uma data marcada para ver o que acontece.
             </p>
-
         </div>
 
-
         <div class="bar">
-
             <div class="seg">
                 ${tabs}
             </div>
@@ -1253,341 +1023,172 @@ function viewCalendario() {
 
             <button
                 class="btn sm"
-                onclick="shift(-1)"
+                type="button"
+                onclick="shiftCalendar(-1)"
             >
                 Anterior
             </button>
 
-
-            <select
-                id="cm"
-                onchange="pick()"
-            >
-                ${mons}
+            <select id="calendarMonth" onchange="pickCalendar()">
+                ${months}
             </select>
 
-
-            <select
-                id="cy"
-                onchange="pick()"
-            >
-                ${yrs}
+            <select id="calendarYear" onchange="pickCalendar()">
+                ${years}
             </select>
-
 
             <button
                 class="btn sm"
-                onclick="shift(1)"
+                type="button"
+                onclick="shiftCalendar(1)"
             >
                 Próximo
             </button>
-
         </div>
 
-
         ${body}
-
 
         <div class="legend">
             ${legend}
         </div>
-
     `;
 }
-
-function monthGrid(y, m) {
-    const first = new Date(y, m, 1);
-
-    const off = (first.getDay() + 6) % 7;
-
-    const n = new Date(y, m + 1, 0).getDate();
-
-    let html = `
-
-        <div class="cal">
-
-            ${["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
-                .map((d) => `<div class="dh">${d}</div>`)
-                .join("")}
-
-    `;
-
-    for (let i = 0; i < off; i++) {
-        html += `<div class="c out"></div>`;
-    }
-
-    for (let d = 1; d <= n; d++) {
-        const dt = new Date(y, m, d);
-
-        const e = evOf(dt);
-
-        const we = dt.getDay() % 6 === 0;
-
-        const isT = key(dt) === key(today);
-
-        const show = e && e[0] !== "letivo";
-
-        html += `
-
-            <div
-                class="c
-                    ${we ? "we" : ""}
-                    ${isT ? "today" : ""}
-                "
-            >
-
-                <b>
-                    ${d}
-                </b>
-
-                ${
-                    show
-                        ? `
-                            <div class="ev">
-
-                                <i
-                                    class="dot"
-                                    style="--c:${TIPOS[e[0]][1]}"
-                                ></i>
-
-                                <span>
-                                    ${e[1]}
-                                </span>
-
-                            </div>
-                        `
-                        : ""
-                }
-
-            </div>
-
-        `;
-    }
-
-    return html + "</div>";
-}
-
-function miniMonth(y, m) {
-    const off = (new Date(y, m, 1).getDay() + 6) % 7;
-
-    const n = new Date(y, m + 1, 0).getDate();
-
-    let html = `
-
-        <div
-            class="mini"
-            onclick="
-                cal.view='Mês';
-                cal.cur=new Date(${y},${m},1);
-                atualizarInterface();
-            "
-        >
-
-            <h2>
-                ${MESES[m]}
-            </h2>
-
-            <div class="mg">
-
-    `;
-
-    for (let i = 0; i < off; i++) {
-        html += "<i></i>";
-    }
-
-    for (let d = 1; d <= n; d++) {
-        const e = evOf(new Date(y, m, d));
-
-        html +=
-            e && e[0] !== "letivo"
-                ? `
-
-                <i
-                    class="e"
-                    style="--c:${TIPOS[e[0]][1]}"
-                >
-                    ${d}
-                </i>
-
-            `
-                : `<i>${d}</i>`;
-    }
-
-    return html + "</div></div>";
-}
-
-function dayRow(d) {
-    const e = evOf(d) || ["recesso", "Fim de semana"];
-
-    const t = TIPOS[e[0]];
-
-    return `
-
-        <div class="move">
-
-            <div>
-
-                <b>
-                    ${DIAS[d.getDay()]},
-                    ${d.getDate()}/${pad(d.getMonth() + 1)}
-                </b>
-
-            </div>
-
-            <div>
-                ${e[1]}
-            </div>
-
-            <span>
-
-                <i
-                    class="dot"
-                    style="--c:${t[1]}"
-                ></i>
-
-                ${e[1] === "Fim de semana" ? "Sem aula" : t[0]}
-
-            </span>
-
-        </div>
-
-    `;
-}
-
-function setView(x) {
-    cal.view = x;
-
-    atualizarInterface();
-}
-
-function pick() {
-    cal.cur = new Date(
-        Number(document.getElementById("cy").value),
-        Number(document.getElementById("cm").value),
-        1,
-    );
-
-    atualizarInterface();
-}
-
-function shift(n) {
-    const c = cal.cur;
-
-    const v = cal.view;
-
-    if (v === "Mês") {
-        cal.cur = new Date(c.getFullYear(), c.getMonth() + n, 1);
-    } else if (v === "Ano") {
-        cal.cur = new Date(c.getFullYear() + n, c.getMonth(), 1);
-    } else {
-        cal.cur = new Date(
-            c.getFullYear(),
-            c.getMonth(),
-            c.getDate() + n * (v === "Semana" ? 7 : 1),
-        );
-    }
-
-    atualizarInterface();
-}
-
-/* =========================================================
-   CARDÁPIO
-========================================================= */
 
 function viewCardapio() {
-    const w = today.getDay();
+    const todayDay = today.getDay();
 
     return `
-
-        <div class="page-head">
-
-            <h1>
-                Cardápio da semana
-            </h1>
-
+        <div class="head">
+            <h1>Cardápio da semana</h1>
             <p class="sub">
-                Consulte a merenda de cada dia.
+                Consulte a merenda prevista para cada dia.
             </p>
-
         </div>
 
-
         <div class="menu">
-
             ${[1, 2, 3, 4, 5]
                 .map(
-                    (d) => `
-
-                        <div
-                            class="day
-                                ${d === w ? "hoje" : ""}
-                            "
-                        >
-
+                    (day) => `
+                        <div class="day ${day === todayDay ? "hoje" : ""}">
                             <h2>
-
-                                ${DIAS[d]}
+                                ${DIAS[day]}
 
                                 ${
-                                    d === w
-                                        ? `
-                                            <span class="tag orange">
-                                                Hoje
-                                            </span>
-                                        `
+                                    day === todayDay
+                                        ? `<span class="tag orange">Hoje</span>`
                                         : ""
                                 }
-
                             </h2>
 
-
                             <ul>
-
-                                ${CARD[d]
-                                    .map((item) => `<li>${item}</li>`)
+                                ${CARD[day]
+                                    .map(
+                                        (item) =>
+                                            `<li>${escapeHtml(item)}</li>`,
+                                    )
                                     .join("")}
-
                             </ul>
-
                         </div>
-
                     `,
                 )
                 .join("")}
-
         </div>
-
     `;
 }
 
-/* =========================================================
-   VIEWS
-========================================================= */
+function setView(view) {
+    cal.view = view;
+    draw();
+}
 
-const VIEWS = {
-    inicio: viewInicio,
+function pickCalendar() {
+    const month = Number($("#calendarMonth").value);
+    const year = Number($("#calendarYear").value);
 
-    reservas: viewReservas,
+    cal.cur = new Date(year, month, 1);
 
-    emprestimos: viewEmprestimos,
+    draw();
+}
 
-    historico: viewHistorico,
+function shiftCalendar(amount) {
+    const c = cal.cur;
 
-    perfil: viewPerfil,
+    if (cal.view === "Mês") {
+        cal.cur = new Date(c.getFullYear(), c.getMonth() + amount, 1);
+    } else if (cal.view === "Ano") {
+        cal.cur = new Date(c.getFullYear() + amount, c.getMonth(), 1);
+    } else if (cal.view === "Semana") {
+        cal.cur = new Date(
+            c.getFullYear(),
+            c.getMonth(),
+            c.getDate() + amount * 7,
+        );
+    } else {
+        cal.cur = new Date(c.getFullYear(), c.getMonth(), c.getDate() + amount);
+    }
 
-    calendario: viewCalendario,
+    draw();
+}
 
-    cardapio: viewCardapio,
-};
+function draw() {
+    const nav = $("#nav");
+    const content = $("#pageContent");
 
-/* =========================================================
-   INICIALIZAÇÃO
-========================================================= */
+    if (!nav || !content) return;
 
-carregarEstadoSidebar();
+    nav.innerHTML = MENU.map(
+        ([id, label, iconName]) => `
+                <button
+                    type="button"
+                    class="nav-item ${id === page ? "active" : ""}"
+                    onclick="go('${id}')"
+                >
+                    ${icon(iconName)}
+                    <span>${label}</span>
+                </button>
+            `,
+    ).join("");
 
-desenharMenu();
+    const views = {
+        inicio: viewInicio,
+        reservas: viewReservas,
+        emprestimos: viewEmprestimos,
+        historico: viewHistorico,
+        perfil: viewPerfil,
+        calendario: viewCalendario,
+        cardapio: viewCardapio,
+    };
 
-atualizarInterface();
+    content.innerHTML = views[page]();
 
-carregarPerfil();
+    if (page === "reservas") {
+        fillReserveItems();
+    }
+
+    inicializarIcones();
+
+    const main = document.querySelector(".main-content");
+
+    if (main) {
+        main.scrollTop = 0;
+    }
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+    });
+}
+
+async function iniciarPainel() {
+    configurarSidebar();
+
+    await carregarPerfilAluno();
+
+    atualizarUsuarioLateral();
+
+    draw();
+
+    inicializarIcones();
+}
+
+document.addEventListener("DOMContentLoaded", iniciarPainel);
