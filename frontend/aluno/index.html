@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <title>Painel do Aluno</title>
+
+        <link rel="stylesheet" href="aluno.css" />
+    </head>
+
+    <body>
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>HAUY</h2>
+                <span>Estoque Escolar</span>
+            </div>
+
+            <nav>
+                <button class="menu-item active" data-section="inicio">
+                    Início
+                </button>
+
+                <button class="menu-item" data-section="perfil">
+                    Meu Perfil
+                </button>
+
+                <button class="menu-item" data-section="reservas">
+                    Minhas Reservas
+                </button>
+
+                <button class="menu-item" data-section="emprestimos">
+                    Meus Empréstimos
+                </button>
+
+                <button class="menu-item" data-section="calendario">
+                    Calendário
+                </button>
+
+                <button class="menu-item" data-section="cardapio">
+                    Cardápio
+                </button>
+            </nav>
+
+            <button id="btnSair" class="btn-sair">Sair</button>
+        </aside>
+
+        <main class="main-content">
+            <!-- INÍCIO -->
+            <section id="inicio" class="section active">
+                <div class="page-header">
+                    <h1>Olá, <span id="nomeAlunoInicio">Aluno</span>!</h1>
+                    <p>Bem-vindo ao seu painel.</p>
+                </div>
+
+                <div class="cards">
+                    <div class="card">
+                        <span class="card-title">Livros lidos</span>
+                        <strong id="totalLivros">0</strong>
+                    </div>
+
+                    <div class="card">
+                        <span class="card-title">Computadores utilizados</span>
+                        <strong id="totalComputadores">0</strong>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MEU PERFIL -->
+            <section id="perfil" class="section">
+                <div class="page-header">
+                    <h1>Meu Perfil</h1>
+                    <p>Confira seus dados cadastrados.</p>
+                </div>
+
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="avatar">
+                            <span id="avatarInicial">A</span>
+                        </div>
+
+                        <div>
+                            <h2 id="perfilNome">Carregando...</h2>
+                            <p id="perfilTipo">Aluno</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-grid">
+                        <div class="profile-field">
+                            <label>Nome Completo</label>
+                            <span id="perfilNomeCompleto">-</span>
+                        </div>
+
+                        <div class="profile-field">
+                            <label>Matrícula</label>
+                            <span id="perfilMatricula">-</span>
+                        </div>
+
+                        <div class="profile-field">
+                            <label>Idade</label>
+                            <span id="perfilIdade">-</span>
+                        </div>
+
+                        <div class="profile-field">
+                            <label>Ano</label>
+                            <span id="perfilAno">-</span>
+                        </div>
+
+                        <div class="profile-field">
+                            <label>Turma</label>
+                            <span id="perfilTurma">-</span>
+                        </div>
+
+                        <div class="profile-field">
+                            <label>Turno</label>
+                            <span id="perfilTurno">-</span>
+                        </div>
+
+                        <div class="profile-field">
+                            <label>E-mail</label>
+                            <span id="perfilEmail">-</span>
+                        </div>
+
+                        <div class="profile-field">
+                            <label>Status</label>
+                            <span id="perfilStatus">-</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RESERVAS -->
+            <section id="reservas" class="section">
+                <div class="page-header">
+                    <h1>Minhas Reservas</h1>
+                    <p>Veja suas reservas de livros e computadores.</p>
+                </div>
+
+                <div id="listaReservas">
+                    <p>Nenhuma reserva encontrada.</p>
+                </div>
+            </section>
+
+            <!-- EMPRÉSTIMOS -->
+            <section id="emprestimos" class="section">
+                <div class="page-header">
+                    <h1>Meus Empréstimos</h1>
+                    <p>Veja os itens que estão ou já estiveram com você.</p>
+                </div>
+
+                <div id="listaEmprestimos">
+                    <p>Nenhum empréstimo encontrado.</p>
+                </div>
+            </section>
+
+            <!-- CALENDÁRIO -->
+            <section id="calendario" class="section">
+                <div class="page-header">
+                    <h1>Calendário Escolar</h1>
+                    <p>Consulte aulas, eventos e feriados.</p>
+                </div>
+
+                <div class="empty-section">
+                    Calendário será conectado em seguida.
+                </div>
+            </section>
+
+            <!-- CARDÁPIO -->
+            <section id="cardapio" class="section">
+                <div class="page-header">
+                    <h1>Cardápio</h1>
+                    <p>Confira o cardápio da escola.</p>
+                </div>
+
+                <div class="empty-section">
+                    Cardápio será conectado em seguida.
+                </div>
+            </section>
+        </main>
+
+        <script src="aluno.js"></script>
+    </body>
+</html>
