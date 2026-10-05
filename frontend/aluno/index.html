@@ -1,183 +1,128 @@
-<!doctype html>
+```html
+<!DOCTYPE html>
 <html lang="pt-BR">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>Painel do Aluno</title>
+    <title>Painel do Aluno | Hauy Petruceli Mayrink</title>
 
-        <link rel="stylesheet" href="aluno.css" />
-    </head>
+    <link rel="stylesheet" href="./aluno.css">
+</head>
 
-    <body>
-        <aside class="sidebar">
-            <div class="logo">
-                <h2>HAUY</h2>
-                <span>Estoque Escolar</span>
+<body>
+
+<div class="app">
+
+    <!-- BARRA LATERAL -->
+    <aside id="sidebar">
+
+        <div class="sidebar-top">
+
+            <div class="brand">
+
+                <div class="logo-box">
+                    <img
+                        src="../img/logo-_cor.png"
+                        alt="Logo da E.E. Hauy Petruceli Mayrink"
+                    >
+                </div>
+
+                <div class="brand-text">
+                    <strong>Hauy Petruceli</strong>
+                    <span>Mayrink</span>
+                </div>
+
             </div>
 
-            <nav>
-                <button class="menu-item active" data-section="inicio">
-                    Início
-                </button>
+            <button
+                id="toggleSidebar"
+                class="toggle-sidebar"
+                type="button"
+                aria-label="Recolher menu"
+                title="Recolher menu"
+            >
+                <span></span>
+                <span></span>
+            </button>
 
-                <button class="menu-item" data-section="perfil">
-                    Meu Perfil
-                </button>
+        </div>
 
-                <button class="menu-item" data-section="reservas">
-                    Minhas Reservas
-                </button>
+        <nav id="nav" class="sidebar-nav"></nav>
 
-                <button class="menu-item" data-section="emprestimos">
-                    Meus Empréstimos
-                </button>
+        <div class="sidebar-bottom">
 
-                <button class="menu-item" data-section="calendario">
-                    Calendário
-                </button>
+            <div class="user-mini">
 
-                <button class="menu-item" data-section="cardapio">
-                    Cardápio
-                </button>
-            </nav>
-
-            <button id="btnSair" class="btn-sair">Sair</button>
-        </aside>
-
-        <main class="main-content">
-            <!-- INÍCIO -->
-            <section id="inicio" class="section active">
-                <div class="page-header">
-                    <h1>Olá, <span id="nomeAlunoInicio">Aluno</span>!</h1>
-                    <p>Bem-vindo ao seu painel.</p>
+                <div id="avatarInicial" class="avatar">
+                    A
                 </div>
 
-                <div class="cards">
-                    <div class="card">
-                        <span class="card-title">Livros lidos</span>
-                        <strong id="totalLivros">0</strong>
-                    </div>
-
-                    <div class="card">
-                        <span class="card-title">Computadores utilizados</span>
-                        <strong id="totalComputadores">0</strong>
-                    </div>
-                </div>
-            </section>
-
-            <!-- MEU PERFIL -->
-            <section id="perfil" class="section">
-                <div class="page-header">
-                    <h1>Meu Perfil</h1>
-                    <p>Confira seus dados cadastrados.</p>
+                <div class="user-mini-info">
+                    <strong id="sidebarNome">Aluno</strong>
+                    <span>Aluno</span>
                 </div>
 
-                <div class="profile-card">
-                    <div class="profile-header">
-                        <div class="avatar">
-                            <span id="avatarInicial">A</span>
-                        </div>
+            </div>
 
-                        <div>
-                            <h2 id="perfilNome">Carregando...</h2>
-                            <p id="perfilTipo">Aluno</p>
-                        </div>
-                    </div>
+            <button
+                id="logoutButton"
+                class="logout-button"
+                type="button"
+                title="Sair"
+            >
+                <span class="logout-icon">↪</span>
+                <span class="logout-text">Sair</span>
+            </button>
 
-                    <div class="profile-grid">
-                        <div class="profile-field">
-                            <label>Nome Completo</label>
-                            <span id="perfilNomeCompleto">-</span>
-                        </div>
+        </div>
 
-                        <div class="profile-field">
-                            <label>Matrícula</label>
-                            <span id="perfilMatricula">-</span>
-                        </div>
+    </aside>
 
-                        <div class="profile-field">
-                            <label>Idade</label>
-                            <span id="perfilIdade">-</span>
-                        </div>
 
-                        <div class="profile-field">
-                            <label>Ano</label>
-                            <span id="perfilAno">-</span>
-                        </div>
+    <!-- CONTEÚDO -->
+    <main id="main">
 
-                        <div class="profile-field">
-                            <label>Turma</label>
-                            <span id="perfilTurma">-</span>
-                        </div>
+        <div class="mobile-topbar">
 
-                        <div class="profile-field">
-                            <label>Turno</label>
-                            <span id="perfilTurno">-</span>
-                        </div>
+            <button
+                id="mobileMenu"
+                type="button"
+                aria-label="Abrir menu"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
 
-                        <div class="profile-field">
-                            <label>E-mail</label>
-                            <span id="perfilEmail">-</span>
-                        </div>
+            <div class="mobile-brand">
+                <img
+                    src="../img/logo-_cor.png"
+                    alt="Logo"
+                >
 
-                        <div class="profile-field">
-                            <label>Status</label>
-                            <span id="perfilStatus">-</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
+                <span>Painel do Aluno</span>
+            </div>
 
-            <!-- RESERVAS -->
-            <section id="reservas" class="section">
-                <div class="page-header">
-                    <h1>Minhas Reservas</h1>
-                    <p>Veja suas reservas de livros e computadores.</p>
-                </div>
+        </div>
 
-                <div id="listaReservas">
-                    <p>Nenhuma reserva encontrada.</p>
-                </div>
-            </section>
+        <div class="page-container" id="v"></div>
 
-            <!-- EMPRÉSTIMOS -->
-            <section id="emprestimos" class="section">
-                <div class="page-header">
-                    <h1>Meus Empréstimos</h1>
-                    <p>Veja os itens que estão ou já estiveram com você.</p>
-                </div>
+    </main>
 
-                <div id="listaEmprestimos">
-                    <p>Nenhum empréstimo encontrado.</p>
-                </div>
-            </section>
+</div>
 
-            <!-- CALENDÁRIO -->
-            <section id="calendario" class="section">
-                <div class="page-header">
-                    <h1>Calendário Escolar</h1>
-                    <p>Consulte aulas, eventos e feriados.</p>
-                </div>
 
-                <div class="empty-section">
-                    Calendário será conectado em seguida.
-                </div>
-            </section>
+<!-- OVERLAY MOBILE -->
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-            <!-- CARDÁPIO -->
-            <section id="cardapio" class="section">
-                <div class="page-header">
-                    <h1>Cardápio</h1>
-                    <p>Confira o cardápio da escola.</p>
-                </div>
 
-                <div class="empty-section">
-                    Cardápio será conectado em seguida.
-                </div>
-            </section>
-        </main>
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
 
-        <script src="aluno.js"></script>
-    </body>
+
+<script src="./aluno.js"></script>
+
+</body>
 </html>
+```

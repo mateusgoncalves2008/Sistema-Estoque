@@ -2,7 +2,7 @@
 // LOGIN - SISTEMA DE ESTOQUE HAUY
 // ============================================================
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = "https://SEU-BACKEND.onrender.com/api";
 
 // ============================================================
 // QUANDO A PÁGINA CARREGAR
