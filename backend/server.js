@@ -8,33 +8,31 @@ dotenv.config({
 const express = require("express");
 const cors = require("cors");
 
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
+
 const authRoutes = require("./routes/auth");
 const cadastroRoutes = require("./routes/cadastro");
-
-const sheets = require("./database/googleSheets");
+const produtosRoutes = require("./routes/produtos");
 
 const app = express();
 
 const PORT = process.env.PORT || 3000;
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
 app.use(cors());
 app.use(express.json());
 
 app.use("/api", authRoutes);
 app.use("/api", cadastroRoutes);
+app.use("/api", produtosRoutes);
 
-console.log(">>> ROTAS DE CADASTRO CONECTADAS AO EXPRESS <<<");
-
-// ================================
-// ROTA PRINCIPAL
-// ================================
-
-app.get("/", (req, res) => {
-    res.json({
-        sistema: "Sistema de Estoque - Escola Hauy Petruceli Mayrink",
-        status: "online",
-    });
+app.listen(PORT, () => {
+    console.log("");
+    console.log("==========================================");
+    console.log(" SISTEMA DE ESTOQUE HAUY");
+    console.log("==========================================");
+    console.log(`Servidor: http://localhost:${PORT}`);
+    console.log(`Planilha configurada: ${SPREADSHEET_ID ? "SIM" : "NÃO"}`);
+    console.log("==========================================");
 });
 
 // ================================
