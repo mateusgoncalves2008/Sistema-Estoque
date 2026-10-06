@@ -1,0 +1,927 @@
+<!doctype html>
+
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+            name="viewport"
+        />
+        <title>Painel da Secretaria</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap"
+            rel="stylesheet"
+        />
+
+        <link href="./secretaria.css" rel="stylesheet" />
+    </head>
+    <body>
+        <svg aria-hidden="true" height="0" style="position: absolute" width="0">
+            <defs>
+                <symbol id="ic-inicio" viewbox="0 0 24 24">
+                    <path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z"></path>
+                </symbol>
+                <symbol id="ic-turmas" viewbox="0 0 24 24">
+                    <path d="M3 21V9l9-6 9 6v12M9 21v-7h6v7"></path>
+                </symbol>
+                <symbol id="ic-professores" viewbox="0 0 24 24">
+                    <circle cx="12" cy="8" r="4"></circle>
+                    <path d="M4 21a8 8 0 0116 0M8 3h8"></path>
+                </symbol>
+                <symbol id="ic-usuarios" viewbox="0 0 24 24">
+                    <circle cx="9" cy="8" r="3.5"></circle>
+                    <path
+                        d="M2 20a7 7 0 0114 0M16 4a3.5 3.5 0 010 7M22 20a6 6 0 00-4-5.6"
+                    ></path>
+                </symbol>
+                <symbol id="ic-acervo" viewbox="0 0 24 24">
+                    <path
+                        d="M3 7l9-4 9 4-9 4zM3 12l9 4 9-4M3 17l9 4 9-4"
+                    ></path>
+                </symbol>
+                <symbol id="ic-reservas" viewbox="0 0 24 24">
+                    <rect height="16" rx="2" width="18" x="3" y="5"></rect>
+                    <path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"></path>
+                </symbol>
+                <symbol id="ic-emprestimos" viewbox="0 0 24 24">
+                    <path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 016 0v2"></path>
+                </symbol>
+                <symbol id="ic-movs" viewbox="0 0 24 24">
+                    <path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"></path>
+                </symbol>
+                <symbol id="ic-avisos" viewbox="0 0 24 24">
+                    <path
+                        d="M6 8a6 6 0 0112 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 004 0"
+                    ></path>
+                </symbol>
+                <symbol id="ic-calendario" viewbox="0 0 24 24">
+                    <rect height="16" rx="2" width="18" x="3" y="5"></rect>
+                    <path d="M3 10h18M8 3v4M16 3v4"></path>
+                </symbol>
+                <symbol id="ic-cardapio" viewbox="0 0 24 24">
+                    <path
+                        d="M6 3v8a2 2 0 002 2v8M10 3v8M6 7h4M17 21V3c-2 1-3 4-3 8h3"
+                    ></path>
+                </symbol>
+                <symbol id="ic-relatorios" viewbox="0 0 24 24">
+                    <path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path>
+                </symbol>
+                <symbol id="ic-config" viewbox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"
+                    ></path>
+                </symbol>
+            </defs>
+        </svg>
+
+        <div class="app">
+            <aside>
+                <div class="brand">
+                    Secretaria<small>Painel de gestão escolar</small>
+                </div>
+
+                <nav>
+                    <button class="on" data-p="inicio">
+                        <svg class="i" viewbox="0 0 24 24">
+                            <use href="#ic-inicio"></use>
+                        </svg>
+                        <span>Início</span>
+                    </button>
+
+                    <button data-p="turmas">
+                        <svg class="i" viewbox="0 0 24 24">
+                            <use href="#ic-turmas"></use>
+                        </svg>
+                        <span>Turmas e Séries</span>
+                    </button>
+
+                    <button data-p="professores">
+                        <svg class="i" viewbox="0 0 24 24">
+                            <use href="#ic-professores"></use>
+                        </svg>
+                        <span>Professores</span>
+                    </button>
+
+                    <button data-p="usuarios">
+                        <svg class="i" viewbox="0 0 24 24">
+                            <use href="#ic-usuarios"></use>
+                        </svg>
+                        <span>Usuários</span>
+                    </button>
+
+                    <button data-p="acervo">
+                        <svg class="i" viewbox="0 0 24 24">
+                            <use href="#ic-acervo"></use>
+                        </svg>
+                        <span>Acervo e Estoque</span>
+                    </button>
+
+                    <button data-p="reservas">
+                        <svg class="i" viewbox="0 0 24 24">
+                            <use href="#ic-reservas"></use>
+                        </svg>
+                        <span>Reservas</span>
+                    </button>
+
+                    <button data-p="emprestimos">
+                        <svg class="i" viewbox="0 0 24 24">
+                            <use href="#ic-emprestimos"></use>
+                        </svg>
+                        <span>Empréstimos</span>
+                    </button>
+
+                    <button data-p="movs">
+                        <svg class="i" viewbox="0 0 24 24">
+                            <use href="#ic-movs"></use>
+                        </svg>
+                        <span>Movimentações</span>
+                    </button>
+
+                    <button data-p="avisos">
+                        <svg class="i" viewbox="0 0 24 24">
+                            <use href="#ic-avisos"></use>
+                        </svg>
+                        <span>Avisos</span>
+                    </button>
+
+                    <button data-p="calendario">
+                        <svg class="i" viewbox="0 0 24 24">
+                            <use href="#ic-calendario"></use>
+                        </svg>
+                        <span>Calendário</span>
+                    </button>
+
+                    <button data-p="cardapio">
+                        <svg class="i" viewbox="0 0 24 24">
+                            <use href="#ic-cardapio"></use>
+                        </svg>
+                        <span>Cardápio</span>
+                    </button>
+
+                    <button data-p="relatorios">
+                        <svg class="i" viewbox="0 0 24 24">
+                            <use href="#ic-relatorios"></use>
+                        </svg>
+                        <span>Relatórios</span>
+                    </button>
+
+                    <button data-p="config">
+                        <svg class="i" viewbox="0 0 24 24">
+                            <use href="#ic-config"></use>
+                        </svg>
+                        <span>Configurações</span>
+                    </button>
+                </nav>
+
+                <button class="out" onclick="sair()">
+                    <svg class="i" viewbox="0 0 24 24">
+                        <path
+                            d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"
+                        ></path>
+                    </svg>
+                    <span>Sair</span>
+                </button>
+            </aside>
+
+            <main>
+                <div class="wrap">
+                    <!-- INÍCIO -->
+                    <section class="page on" id="p-inicio">
+                        <div class="hero">
+                            <div>
+                                <small id="hdate"> </small>
+                                <h1>Olá, Secretaria</h1>
+                                <p id="hmsg"></p>
+                            </div>
+                            <div class="clk" id="clk"></div>
+                        </div>
+
+                        <div class="qa">
+                            <button class="btn" data-go="turmas">
+                                Gerenciar turmas
+                            </button>
+                            <button class="btn" data-go="avisos">
+                                Novo aviso
+                            </button>
+                            <button class="btn" data-go="usuarios">
+                                Cadastrar usuário
+                            </button>
+                            <button class="btn" data-go="reservas">
+                                Aprovar reservas
+                            </button>
+                        </div>
+
+                        <div class="kpis">
+                            <div class="kpi" style="--c: #b5542b">
+                                <small>Alunos matriculados</small>
+                                <b data-n="0" id="ki-al">0</b>
+                                <span id="ki-al2"></span>
+                            </div>
+
+                            <div class="kpi" style="--c: #2f6fb5">
+                                <small>Professores</small>
+                                <b data-n="0" id="ki-pr">0</b>
+                                <span>em atividade</span>
+                            </div>
+
+                            <div class="kpi" style="--c: #4f8a2e">
+                                <small>Empréstimos ativos</small>
+                                <b data-n="0" id="ki-em">0</b>
+                                <span>em andamento ou atrasados</span>
+                            </div>
+
+                            <div class="kpi" style="--c: #c2452d">
+                                <small>Atrasos</small>
+                                <b data-n="0" id="ki-at">0</b>
+                                <span>precisam de cobrança</span>
+                            </div>
+
+                            <div class="kpi" style="--c: #d9a441">
+                                <small>Reservas pendentes</small>
+                                <b data-n="0" id="ki-rp">0</b>
+                                <span>aguardando aprovação</span>
+                            </div>
+                        </div>
+
+                        <div class="g2">
+                            <div class="card">
+                                <h2>Empréstimos por mês</h2>
+                                <div id="ch-emp"></div>
+                            </div>
+
+                            <div class="card">
+                                <h2>Uso por categoria</h2>
+                                <div id="ch-cat"></div>
+                            </div>
+                        </div>
+
+                        <div class="g2">
+                            <div class="card">
+                                <h2>Movimentações por semana</h2>
+                                <div id="ch-sem"></div>
+                            </div>
+
+                            <div class="card">
+                                <h2>Ocupação das turmas</h2>
+                                <div id="ch-oc"></div>
+                            </div>
+                        </div>
+
+                        <div class="g2">
+                            <div class="card">
+                                <h2>Alunos por série</h2>
+                                <div id="ch-ser"></div>
+                            </div>
+
+                            <div class="card">
+                                <h2>Últimas ações da Secretaria</h2>
+                                <div id="log-ini"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- TURMAS -->
+                    <section class="page" id="p-turmas">
+                        <div class="head">
+                            <div>
+                                <h1>Turmas e Séries</h1>
+                                <p class="sub">
+                                    Controle de matrículas, vagas e turnos do 1º
+                                    ao 3º ano.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="kpis">
+                            <div class="kpi" style="--c: #b5542b">
+                                <small>Alunos matriculados</small>
+                                <b data-n="0" id="kt-al">0</b>
+                                <span id="kt-al2"></span>
+                            </div>
+
+                            <div class="kpi" style="--c: #4f8a2e">
+                                <small>Vagas livres</small>
+                                <b data-n="0" id="kt-vg">0</b>
+                                <span>nas turmas abertas</span>
+                            </div>
+
+                            <div class="kpi" style="--c: #d9a441">
+                                <small>Turmas abertas</small>
+                                <b data-n="0" id="kt-tm">0</b>
+                                <span>manhã e tarde</span>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h2>Nova turma</h2>
+
+                            <div class="form">
+                                <div>
+                                    <label for="ts">Série</label>
+                                    <select id="ts"></select>
+                                </div>
+
+                                <div>
+                                    <label for="tn">Nome</label>
+                                    <input id="tn" placeholder="Turma 4" />
+                                </div>
+
+                                <div>
+                                    <label for="tt">Turno</label>
+                                    <select id="tt">
+                                        <option>Manhã</option>
+                                        <option>Tarde</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="tc">Capacidade</label>
+                                    <input
+                                        id="tc"
+                                        min="1"
+                                        type="number"
+                                        value="35"
+                                    />
+                                </div>
+
+                                <button class="btn" onclick="addT()">
+                                    Abrir turma
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="sr" id="series"></div>
+                    </section>
+
+                    <!-- PROFESSORES -->
+                    <section class="page" id="p-professores">
+                        <div class="head">
+                            <div>
+                                <h1>Professores</h1>
+                                <p class="sub">
+                                    Cadastre professores e atribua turmas. Cada
+                                    turma equivale a 4 aulas semanais.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="g2">
+                            <!-- CADASTRO DO PROFESSOR -->
+                            <div class="card">
+                                <h2>Novo professor</h2>
+
+                                <div class="form">
+                                    <div>
+                                        <label for="pn">Nome</label>
+                                        <input
+                                            id="pn"
+                                            type="text"
+                                            placeholder="Nome completo"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label for="pe">E-mail</label>
+                                        <input
+                                            id="pe"
+                                            type="email"
+                                            placeholder="professor@escola.com"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label for="ps">Senha provisória</label>
+                                        <input
+                                            id="ps"
+                                            type="password"
+                                            placeholder="Senha provisória"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label for="pm">MASP</label>
+                                        <input
+                                            id="pm"
+                                            type="text"
+                                            placeholder="1234567-8"
+                                        />
+                                    </div>
+
+                                    <button
+                                        class="btn"
+                                        type="button"
+                                        onclick="addProf()"
+                                    >
+                                        Cadastrar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- VINCULAR PROFESSOR -->
+                            <div class="card">
+                                <h2>Vincular professor à turma</h2>
+
+                                <div class="form">
+                                    <div>
+                                        <label for="pp">Professor</label>
+                                        <select id="pp">
+                                            <option value="">
+                                                Selecione o professor
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="pt">Turma</label>
+                                        <select id="pt">
+                                            <option value="">
+                                                Selecione a turma
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="pdv">Disciplina</label>
+                                        <select id="pdv">
+                                            <option value="">
+                                                Selecione a disciplina
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="pa">Aulas semanais</label>
+                                        <input
+                                            id="pa"
+                                            type="number"
+                                            min="1"
+                                            max="40"
+                                            value="4"
+                                        />
+                                    </div>
+
+                                    <button class="btn" onclick="assign()">
+                                        Vincular professor
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="g2">
+                            <div class="card">
+                                <h2>Carga horária semanal (aulas)</h2>
+                                <div id="ch-prof"></div>
+                            </div>
+
+                            <div class="card" id="t-prof"></div>
+                        </div>
+                    </section>
+
+                    <!-- USUÁRIOS -->
+                    <section class="page" id="p-usuarios">
+                        <div class="head">
+                            <div>
+                                <h1>Usuários</h1>
+                                <p class="sub">
+                                    Cadastre, edite e desative alunos e
+                                    professores. Senhas nunca são exibidas.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h2>Novo usuário</h2>
+
+                            <div class="form">
+                                <div>
+                                    <label for="un">Nome</label>
+                                    <input id="un" />
+                                </div>
+
+                                <div>
+                                    <label for="up">Perfil</label>
+                                    <select id="up">
+                                        <option>Aluno</option>
+                                        <option>Professor</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="ut">Turma / Disciplina</label>
+                                    <input id="ut" />
+                                </div>
+
+                                <div>
+                                    <label for="uu">Turno</label>
+                                    <select id="uu">
+                                        <option>Manhã</option>
+                                        <option>Tarde</option>
+                                    </select>
+                                </div>
+
+                                <button class="btn" onclick="addUser()">
+                                    Cadastrar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card" style="margin-top: 20px">
+                            <div class="bar">
+                                <input
+                                    aria-label="Buscar"
+                                    id="uq"
+                                    oninput="uList()"
+                                    placeholder="Buscar por nome"
+                                />
+
+                                <select
+                                    aria-label="Perfil"
+                                    id="uf"
+                                    onchange="uList()"
+                                >
+                                    <option value="">Todos os perfis</option>
+                                    <option>Aluno</option>
+                                    <option>Professor</option>
+                                </select>
+                            </div>
+
+                            <div id="ut2"></div>
+                        </div>
+                    </section>
+
+                    <!-- ACERVO -->
+                    <section class="page" id="p-acervo">
+                        <div class="head">
+                            <div>
+                                <h1>Acervo e Estoque</h1>
+                                <p class="sub">
+                                    Produtos, categorias e locais, com ajuste de
+                                    quantidade.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="g2">
+                            <div class="card">
+                                <h2>Quantidade por item</h2>
+                                <div id="ch-acervo"></div>
+                            </div>
+
+                            <div class="card">
+                                <h2>Atenção ao estoque</h2>
+                                <div id="low"></div>
+                            </div>
+                        </div>
+
+                        <div class="card" id="t-acervo"></div>
+                    </section>
+
+                    <!-- RESERVAS -->
+                    <section class="page" id="p-reservas">
+                        <div class="head">
+                            <div>
+                                <h1>Reservas</h1>
+                                <p class="sub">
+                                    Aprove, cancele ou remaneje as reservas de
+                                    toda a escola.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="card" id="t-res"></div>
+                    </section>
+
+                    <!-- EMPRÉSTIMOS -->
+                    <section class="page" id="p-emprestimos">
+                        <div class="head">
+                            <div>
+                                <h1>Empréstimos e Devoluções</h1>
+                                <p class="sub">
+                                    Registre devoluções e acompanhe os atrasos.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="g2">
+                            <div class="card">
+                                <h2>Atrasos por turma</h2>
+                                <div id="ch-atr"></div>
+                            </div>
+
+                            <div class="card">
+                                <h2>Resumo</h2>
+                                <div id="resumo"></div>
+                            </div>
+                        </div>
+
+                        <div class="card" id="t-emp"></div>
+                    </section>
+
+                    <!-- MOVIMENTAÇÕES -->
+                    <section class="page" id="p-movs">
+                        <div class="head">
+                            <div>
+                                <h1>Movimentações</h1>
+                                <p class="sub">
+                                    Histórico completo da escola. Registros
+                                    nunca são apagados.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="bar">
+                                <select
+                                    aria-label="Tipo"
+                                    id="mf"
+                                    onchange="mList()"
+                                >
+                                    <option value="">Todos os tipos</option>
+                                    <option>Retirada</option>
+                                    <option>Devolução</option>
+                                    <option>Reserva</option>
+                                </select>
+                            </div>
+
+                            <div id="mt"></div>
+                        </div>
+                    </section>
+
+                    <!-- AVISOS -->
+                    <section class="page" id="p-avisos">
+                        <div class="head">
+                            <div>
+                                <h1>Avisos e Comunicados</h1>
+                                <p class="sub">
+                                    Publique comunicados para alunos e
+                                    professores.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h2>Novo aviso</h2>
+
+                            <div class="form">
+                                <div>
+                                    <label for="at">Título</label>
+                                    <input id="at" />
+                                </div>
+
+                                <div>
+                                    <label for="ad">Destino</label>
+                                    <select id="ad">
+                                        <option>Todos</option>
+                                        <option>Alunos</option>
+                                        <option>Professores</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="au">Prioridade</label>
+                                    <select id="au">
+                                        <option>Normal</option>
+                                        <option>Urgente</option>
+                                    </select>
+                                </div>
+
+                                <div style="grid-column: 1/-1">
+                                    <label for="ax">Mensagem</label>
+                                    <input id="ax" />
+                                </div>
+
+                                <button class="btn" onclick="addAv()">
+                                    Publicar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="avisos" style="margin-top: 20px"></div>
+                    </section>
+
+                    <!-- CALENDÁRIO -->
+                    <section class="page" id="p-calendario">
+                        <div class="head">
+                            <div>
+                                <h1>Calendário escolar</h1>
+                                <p class="sub">
+                                    Qualquer alteração aparece na hora para
+                                    alunos e professores.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h2>Novo evento</h2>
+
+                            <div class="form">
+                                <div>
+                                    <label for="cd">Data</label>
+                                    <input id="cd" type="date" />
+                                </div>
+
+                                <div>
+                                    <label for="ct">Tipo</label>
+                                    <select id="ct">
+                                        <option value="feriado">Feriado</option>
+                                        <option value="recesso">Recesso</option>
+                                        <option value="prova">Prova</option>
+                                        <option value="reuniao">Reunião</option>
+                                        <option value="evento">
+                                            Evento escolar
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="cn">Descrição</label>
+                                    <input id="cn" />
+                                </div>
+
+                                <button class="btn" onclick="addEv()">
+                                    Adicionar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div
+                            class="card"
+                            id="t-cal"
+                            style="margin-top: 20px"
+                        ></div>
+                    </section>
+
+                    <!-- CARDÁPIO -->
+                    <section class="page" id="p-cardapio">
+                        <div class="head">
+                            <div>
+                                <h1>Cardápio</h1>
+                                <p class="sub">
+                                    Um item por linha. Alunos e professores só
+                                    consultam.
+                                </p>
+                            </div>
+
+                            <button class="btn" onclick="saveMenu()">
+                                Salvar cardápio
+                            </button>
+                        </div>
+
+                        <div class="mn">
+                            <div class="card">
+                                <h2>Segunda</h2>
+                                <textarea
+                                    aria-label="Segunda"
+                                    data-d="Segunda"
+                                ></textarea>
+                            </div>
+
+                            <div class="card">
+                                <h2>Terça</h2>
+                                <textarea
+                                    aria-label="Terça"
+                                    data-d="Terça"
+                                ></textarea>
+                            </div>
+
+                            <div class="card">
+                                <h2>Quarta</h2>
+                                <textarea
+                                    aria-label="Quarta"
+                                    data-d="Quarta"
+                                ></textarea>
+                            </div>
+
+                            <div class="card">
+                                <h2>Quinta</h2>
+                                <textarea
+                                    aria-label="Quinta"
+                                    data-d="Quinta"
+                                ></textarea>
+                            </div>
+
+                            <div class="card">
+                                <h2>Sexta</h2>
+                                <textarea
+                                    aria-label="Sexta"
+                                    data-d="Sexta"
+                                ></textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- RELATÓRIOS -->
+                    <section class="page" id="p-relatorios">
+                        <div class="head">
+                            <div>
+                                <h1>Relatórios</h1>
+                                <p class="sub">
+                                    Indicadores de uso do acervo e do
+                                    laboratório.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="g2">
+                            <div class="card">
+                                <h2>Empréstimos por mês</h2>
+                                <div id="r1"></div>
+                            </div>
+
+                            <div class="card">
+                                <h2>Movimentações por semana</h2>
+                                <div id="r2"></div>
+                            </div>
+                        </div>
+
+                        <div class="g2">
+                            <div class="card">
+                                <h2>Uso por categoria</h2>
+                                <div id="r3"></div>
+                            </div>
+
+                            <div class="card">
+                                <h2>Atrasos por turma</h2>
+                                <div id="r4"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- CONFIGURAÇÕES -->
+                    <section class="page" id="p-config">
+                        <div class="head">
+                            <div>
+                                <h1>Configurações</h1>
+                                <p class="sub">
+                                    Regras de empréstimo e reservas permitidas
+                                    aos alunos.
+                                </p>
+                            </div>
+
+                            <button class="btn" onclick="saveCfg()">
+                                Salvar
+                            </button>
+                        </div>
+
+                        <div class="g2">
+                            <div class="card">
+                                <h2>Regras</h2>
+
+                                <div class="form">
+                                    <div>
+                                        <label for="cp">
+                                            Prazo de empréstimo (dias)
+                                        </label>
+                                        <input id="cp" min="1" type="number" />
+                                    </div>
+
+                                    <div>
+                                        <label for="cl">
+                                            Limite de itens por pessoa
+                                        </label>
+                                        <input id="cl" min="1" type="number" />
+                                    </div>
+                                </div>
+
+                                <h2 style="margin-top: 22px">
+                                    Alunos podem reservar
+                                </h2>
+
+                                <label class="sw">
+                                    <input data-k="Livros" type="checkbox" />
+                                    Livros
+                                </label>
+
+                                <label class="sw">
+                                    <input
+                                        data-k="Computadores"
+                                        type="checkbox"
+                                    />
+                                    Computadores
+                                </label>
+
+                                <label class="sw">
+                                    <input
+                                        data-k="Equipamentos"
+                                        type="checkbox"
+                                    />
+                                    Equipamentos
+                                </label>
+                            </div>
+
+                            <div class="card">
+                                <h2>Registro de ações</h2>
+                                <div id="audit"></div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+
+        <div id="toast"></div>
+
+        <script src="./secretaria.js"></script>
+    </body>
+</html>

@@ -14,6 +14,7 @@ const authRoutes = require("./routes/auth");
 const cadastroRoutes = require("./routes/cadastro");
 const produtosRoutes = require("./routes/produtos");
 const reservasRoutes = require("./routes/reservas");
+const secretariaRoutes = require("./routes/secretaria");
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use("/api", authRoutes);
 app.use("/api", cadastroRoutes);
 app.use("/api", produtosRoutes);
 app.use("/api", reservasRoutes);
+app.use("/api", secretariaRoutes);
 
 // ============================================================
 // TESTE DO GOOGLE SHEETS
