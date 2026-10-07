@@ -115,7 +115,6 @@ async function carregarDadosSecretaria() {
         "08_RESERVAS!A:L",
         "09_EMPRESTIMOS!A:K",
         "10_DEVOLUCOES!A:K",
-        "11_FORNECEDORES!A:H",
         "12_SETORES!A:F",
         "13_LOGS!A:H",
         "14_CONFIGURACOES!A:F",
@@ -892,7 +891,10 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
     try {
         const { professorID, turmaID, disciplinaID, aulasSemanais } = req.body;
 
-        console.log("📌 DADOS RECEBIDOS:");
+        console.log("");
+        console.log("==========================================");
+        console.log("🔗 NOVO VÍNCULO PROFESSOR/TURMA");
+        console.log("==========================================");
         console.log("Professor:", professorID);
         console.log("Turma:", turmaID);
         console.log("Disciplina:", disciplinaID);
@@ -924,7 +926,7 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
         if (!aulas || aulas < 1) {
             return res.status(400).json({
                 sucesso: false,
-                erro: "Informe uma quantidade válida de aulas semanais.",
+                erro: "Informe uma quantidade válida de aulas.",
             });
         }
 
@@ -936,16 +938,15 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
 
         const turmas = dados["19_TURMAS"] || [];
 
-        console.log("📚 TURMAS DA PLANILHA:");
-        console.log(turmas);
-
         const disciplinas = dados["20_DISCIPLINAS"] || [];
 
         const vinculos = dados["21_PROFESSOR_TURMAS"] || [];
 
-        // ==========================================
-        // VERIFICAR PROFESSOR
-        // ==========================================
+        console.log("📊 Dados carregados.");
+        console.log("Professores:", usuarios.length);
+        console.log("Turmas:", turmas.length);
+        console.log("Disciplinas:", disciplinas.length);
+        console.log("Vínculos atuais:", vinculos.length);
 
         const professor = usuarios
             .slice(1)
@@ -957,15 +958,14 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             );
 
         if (!professor) {
+            console.log("❌ Professor não encontrado.");
             return res.status(404).json({
                 sucesso: false,
                 erro: "Professor não encontrado ou está inativo.",
             });
         }
 
-        // ==========================================
-        // VERIFICAR CADASTRO DO PROFESSOR
-        // ==========================================
+        console.log("✅ Professor encontrado:", professor[0]);
 
         const cadastroProfessor = autorizados
             .slice(1)
@@ -977,53 +977,51 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             );
 
         if (!cadastroProfessor) {
-            return res.status(400).json({
-                sucesso: false,
-                erro: "O professor não possui cadastro autorizado ativo.",
-            });
+            console.log("⚠️ Cadastro autorizado não encontrado.");
+        } else {
+            console.log("✅ Cadastro autorizado:", cadastroProfessor[0]);
         }
-
-        // ==========================================
-        // VERIFICAR TURMA
-        // ==========================================
 
         const turma = turmas
             .slice(1)
             .find(
                 (linha) =>
                     texto(linha[0]) === texto(turmaID) &&
-                    normalizar(linha[6]) === "ativo",
+                    ["aberta", "ativo"].includes(normalizar(linha[6])),
             );
 
         if (!turma) {
+            console.log("❌ Turma não encontrada:", turmaID);
+
             return res.status(404).json({
                 sucesso: false,
                 erro: "Turma não encontrada ou está inativa.",
             });
         }
 
-        // ==========================================
-        // VERIFICAR DISCIPLINA
-        // ==========================================
+        console.log("✅ Turma encontrada:", turma[0], turma[1]);
 
         const disciplina = disciplinas
             .slice(1)
             .find(
                 (linha) =>
                     texto(linha[0]) === texto(disciplinaID) &&
-                    normalizar(linha[3]) === "ativo",
+                    (!linha[3] ||
+                        ["ativa", "ativo", "aberta"].includes(
+                            normalizar(linha[3]),
+                        )),
             );
 
         if (!disciplina) {
+            console.log("❌ Disciplina não encontrada:", disciplinaID);
+
             return res.status(404).json({
                 sucesso: false,
                 erro: "Disciplina não encontrada ou está inativa.",
             });
         }
 
-        // ==========================================
-        // VERIFICAR DUPLICIDADE
-        // ==========================================
+        console.log("✅ Disciplina encontrada:", disciplina[0], disciplina[1]);
 
         const jaExiste = vinculos
             .slice(1)
@@ -1036,62 +1034,58 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             );
 
         if (jaExiste) {
+            console.log("⚠️ Este vínculo já existe.");
+
             return res.status(409).json({
                 sucesso: false,
                 erro: "Este professor já está vinculado a esta turma e disciplina.",
             });
         }
 
-        // ==========================================
-        // GERAR ID DO VÍNCULO
-        // ==========================================
-
         const vinculoID = gerarID("VINC", vinculos, 0);
 
-        // ==========================================
-        // SALVAR NA PLANILHA
-        // ==========================================
+        const dadosParaGravar = [
+            vinculoID,
+            professorID,
+            turmaID,
+            disciplinaID,
+            aulas,
+            "ATIVO",
+        ];
 
-        await sheets.spreadsheets.values.append({
+        console.log("");
+        console.log("🚀 GRAVANDO NA 21_PROFESSOR_TURMAS");
+        console.log("ID:", vinculoID);
+        console.log("Dados:", dadosParaGravar);
+
+        const resultado = await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-
             range: "21_PROFESSOR_TURMAS!A:F",
-
             valueInputOption: "USER_ENTERED",
-
+            insertDataOption: "INSERT_ROWS",
             requestBody: {
-                values: [
-                    [
-                        vinculoID,
-                        professorID,
-                        turmaID,
-                        disciplinaID,
-                        aulas,
-                        "ATIVO",
-                    ],
-                ],
+                values: [dadosParaGravar],
             },
         });
 
-        // ==========================================
-        // LIMPAR CACHE
-        // ==========================================
+        console.log("✅ GRAVAÇÃO REALIZADA!");
+        console.log("Range gravado:", resultado.data?.updates?.updatedRange);
 
         limparCache();
 
-        // ==========================================
-        // RESPOSTA
-        // ==========================================
-
-        res.json({
+        return res.json({
             sucesso: true,
             mensagem: "Professor vinculado à turma com sucesso.",
             vinculoID,
+            dados: dadosParaGravar,
+            range: resultado.data?.updates?.updatedRange || "",
         });
     } catch (erro) {
-        console.error("❌ Erro ao vincular professor à turma:", erro);
+        console.error("");
+        console.error("❌ ERRO AO GRAVAR VÍNCULO:");
+        console.error(erro);
 
-        res.status(500).json({
+        return res.status(500).json({
             sucesso: false,
             erro: erro.message,
         });
@@ -1517,6 +1511,7 @@ router.post("/secretaria/devolucoes", async (req, res) => {
                 ],
             },
         });
+        console.log("✅ APPEND REALIZADO COM SUCESSO!");
 
         limparCache();
 
