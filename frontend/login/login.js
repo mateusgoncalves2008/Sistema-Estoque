@@ -2,7 +2,7 @@
 // LOGIN - SISTEMA DE ESTOQUE HAUY
 // ============================================================
 
-const API_URL = "https://SEU-BACKEND.onrender.com/api";
+const API_URL = "http://localhost:3000/api";
 
 // ============================================================
 // QUANDO A PÁGINA CARREGAR
@@ -305,57 +305,37 @@ async function realizarLogin() {
 
 function redirecionarUsuario(usuario) {
     const tipoUsuario = String(usuario.tipoUsuario || "").toUpperCase();
-
     const perfil = String(usuario.perfil || "").toUpperCase();
 
-    // --------------------------------------------------------
     // ADMIN
-    // --------------------------------------------------------
-
     if (perfil === "ADMIN" || tipoUsuario === "ADMIN") {
-        window.location.href = "../adm/index.html";
+        window.location.href = "./frontend/adm/index.html";
         return;
     }
 
-    // --------------------------------------------------------
     // RESPONSÁVEL PELO SETOR
-    // --------------------------------------------------------
-
     if (perfil === "LIDER" || tipoUsuario === "LIDER") {
-        window.location.href = "../responsavel/index.html";
+        window.location.href = "./frontend/responsavel/index.html";
         return;
     }
 
-    // --------------------------------------------------------
     // PROFESSOR
-    // --------------------------------------------------------
-
     if (tipoUsuario === "PROFESSOR" || perfil === "PROFESSOR") {
-        window.location.href = "../professor/index.html";
+        window.location.href = "./frontend/professor/index.html";
         return;
     }
 
-    // --------------------------------------------------------
     // ALUNO
-    // --------------------------------------------------------
-
     if (tipoUsuario === "ALUNO" || perfil === "ALUNO") {
-        window.location.href = "../aluno/index.html";
+        window.location.href = "./frontend/aluno/index.html";
         return;
     }
 
-    // --------------------------------------------------------
-    // FUNCIONÁRIO / SECRETARIA
-    // --------------------------------------------------------
-
+    // SECRETARIA
     if (tipoUsuario === "FUNCIONARIO") {
-        window.location.href = "../secretaria/index.html";
+        window.location.href = "./frontend/secretaria/index.html";
         return;
     }
-
-    // --------------------------------------------------------
-    // CASO NÃO ENCONTRE O PERFIL
-    // --------------------------------------------------------
 
     console.error("Perfil de usuário não reconhecido:", usuario);
 
@@ -426,7 +406,7 @@ function verificarUsuarioLogado() {
 function fazerLogout() {
     sessionStorage.removeItem("usuarioLogado");
 
-    window.location.href = "../login/index.html";
+    window.location.href = "./index.html";
 }
 
 // ============================================================

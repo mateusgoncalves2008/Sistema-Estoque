@@ -1,128 +1,93 @@
-```html
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Painel do Aluno — E.E. Hauy Petruceli Mayrink</title>
 
-    <title>Painel do Aluno | Hauy Petruceli Mayrink</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
+        <script src="https://unpkg.com/lucide@latest"></script>
 
-    <link rel="stylesheet" href="./aluno.css">
-</head>
+        <link rel="stylesheet" href="./aluno.css" />
+    </head>
 
-<body>
+    <body>
+        <div class="app-shell">
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-top">
+                    <div class="school-brand">
+                        <div class="logo-box">
+                            <img
+                                src="../img/logo_cor.png"
+                                alt="Logo da E.E. Hauy Petruceli Mayrink"
+                            />
+                        </div>
 
-<div class="app">
+                        <div class="school-name">
+                            <strong>Hauy Petruceli</strong>
+                            <span>Mayrink</span>
+                        </div>
+                    </div>
 
-    <!-- BARRA LATERAL -->
-    <aside id="sidebar">
-
-        <div class="sidebar-top">
-
-            <div class="brand">
-
-                <div class="logo-box">
-                    <img
-                        src="../img/logo-_cor.png"
-                        alt="Logo da E.E. Hauy Petruceli Mayrink"
+                    <button
+                        type="button"
+                        class="sidebar-toggle"
+                        id="sidebarToggle"
+                        aria-label="Recolher menu"
+                        title="Recolher menu"
                     >
+                        <i data-lucide="panel-left-close"></i>
+                    </button>
                 </div>
 
-                <div class="brand-text">
-                    <strong>Hauy Petruceli</strong>
-                    <span>Mayrink</span>
+                <nav class="sidebar-nav" id="nav"></nav>
+
+                <div class="sidebar-bottom">
+                    <div class="user-mini">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <div class="user-mini-info">
+                            <strong id="sidebarUserName">Aluno</strong>
+                            <span>Aluno</span>
+                        </div>
+                    </div>
+
+                    <button type="button" class="logout-btn" id="logoutBtn">
+                        <i data-lucide="log-out"></i>
+                        <span>Sair</span>
+                    </button>
                 </div>
+            </aside>
 
-            </div>
+            <div class="mobile-overlay" id="mobileOverlay"></div>
 
-            <button
-                id="toggleSidebar"
-                class="toggle-sidebar"
-                type="button"
-                aria-label="Recolher menu"
-                title="Recolher menu"
-            >
-                <span></span>
-                <span></span>
-            </button>
+            <main class="main-content">
+                <header class="mobile-topbar">
+                    <button
+                        type="button"
+                        class="mobile-menu-btn"
+                        id="mobileMenuBtn"
+                        aria-label="Abrir menu"
+                    >
+                        <i data-lucide="menu"></i>
+                    </button>
 
+                    <div class="mobile-brand">
+                        <img src="../img/logo_cor.png" alt="" />
+                        <span>Hauy Petruceli Mayrink</span>
+                    </div>
+                </header>
+
+                <div class="page-wrap" id="pageContent"></div>
+            </main>
         </div>
 
-        <nav id="nav" class="sidebar-nav"></nav>
+        <div class="toast" id="toast"></div>
 
-        <div class="sidebar-bottom">
-
-            <div class="user-mini">
-
-                <div id="avatarInicial" class="avatar">
-                    A
-                </div>
-
-                <div class="user-mini-info">
-                    <strong id="sidebarNome">Aluno</strong>
-                    <span>Aluno</span>
-                </div>
-
-            </div>
-
-            <button
-                id="logoutButton"
-                class="logout-button"
-                type="button"
-                title="Sair"
-            >
-                <span class="logout-icon">↪</span>
-                <span class="logout-text">Sair</span>
-            </button>
-
-        </div>
-
-    </aside>
-
-
-    <!-- CONTEÚDO -->
-    <main id="main">
-
-        <div class="mobile-topbar">
-
-            <button
-                id="mobileMenu"
-                type="button"
-                aria-label="Abrir menu"
-            >
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-
-            <div class="mobile-brand">
-                <img
-                    src="../img/logo-_cor.png"
-                    alt="Logo"
-                >
-
-                <span>Painel do Aluno</span>
-            </div>
-
-        </div>
-
-        <div class="page-container" id="v"></div>
-
-    </main>
-
-</div>
-
-
-<!-- OVERLAY MOBILE -->
-<div id="sidebarOverlay" class="sidebar-overlay"></div>
-
-
-<!-- TOAST -->
-<div id="toast" class="toast"></div>
-
-
-<script src="./aluno.js"></script>
-
-</body>
+        <script src="./aluno.js"></script>
+    </body>
 </html>
-```

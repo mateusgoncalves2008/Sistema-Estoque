@@ -8,38 +8,39 @@ dotenv.config({
 const express = require("express");
 const cors = require("cors");
 
+const sheets = require("./database/googleSheets");
+
 const authRoutes = require("./routes/auth");
 const cadastroRoutes = require("./routes/cadastro");
-
-const sheets = require("./database/googleSheets");
+const produtosRoutes = require("./routes/produtos");
+const reservasRoutes = require("./routes/reservas");
+const secretariaRoutes = require("./routes/secretaria");
 
 const app = express();
 
 const PORT = process.env.PORT || 3000;
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
+// ============================================================
+// MIDDLEWARES
+// ============================================================
+
 app.use(cors());
 app.use(express.json());
 
+// ============================================================
+// ROTAS
+// ============================================================
+
 app.use("/api", authRoutes);
 app.use("/api", cadastroRoutes);
+app.use("/api", produtosRoutes);
+app.use("/api", reservasRoutes);
+app.use("/api", secretariaRoutes);
 
-console.log(">>> ROTAS DE CADASTRO CONECTADAS AO EXPRESS <<<");
-
-// ================================
-// ROTA PRINCIPAL
-// ================================
-
-app.get("/", (req, res) => {
-    res.json({
-        sistema: "Sistema de Estoque - Escola Hauy Petruceli Mayrink",
-        status: "online",
-    });
-});
-
-// ================================
+// ============================================================
 // TESTE DO GOOGLE SHEETS
-// ================================
+// ============================================================
 
 app.get("/api/teste-planilha", async (req, res) => {
     console.log("➡️ Rota /api/teste-planilha acessada");
@@ -74,9 +75,9 @@ app.get("/api/teste-planilha", async (req, res) => {
     }
 });
 
-// ================================
-// ROTA DE TESTE DO SERVIDOR
-// ================================
+// ============================================================
+// TESTE DO SERVIDOR
+// ============================================================
 
 app.get("/api/teste", (req, res) => {
     res.json({
@@ -85,9 +86,9 @@ app.get("/api/teste", (req, res) => {
     });
 });
 
-// ================================
+// ============================================================
 // INICIAR SERVIDOR
-// ================================
+// ============================================================
 
 app.listen(PORT, () => {
     console.log("");
@@ -96,6 +97,7 @@ app.listen(PORT, () => {
     console.log("==========================================");
     console.log(`Servidor: http://localhost:${PORT}`);
     console.log(`Planilha configurada: ${SPREADSHEET_ID ? "SIM" : "NÃO"}`);
+    console.log("Rotas de reservas: CONECTADAS");
     console.log("==========================================");
     console.log("");
 });
