@@ -306,6 +306,16 @@ function redirecionarUsuario(usuario) {
     const tipoUsuario = String(usuario.tipoUsuario || "").toUpperCase();
     const perfil = String(usuario.perfil || "").toUpperCase();
 
+    const ehSecretaria = ["SECRETARIA", "FUNCIONARIO", "FUNCIONÁRIO"].some(
+        (nome) => tipoUsuario === nome || perfil === nome,
+    );
+
+    // SECRETARIA
+    if (ehSecretaria) {
+        window.location.href = "./frontend/secretaria/index.html";
+        return;
+    }
+
     // ADMIN
     if (perfil === "ADMIN" || tipoUsuario === "ADMIN") {
         window.location.href = "./frontend/adm/index.html";
@@ -327,12 +337,6 @@ function redirecionarUsuario(usuario) {
     // ALUNO
     if (tipoUsuario === "ALUNO" || perfil === "ALUNO") {
         window.location.href = "./frontend/aluno/index.html";
-        return;
-    }
-
-    // SECRETARIA
-    if (tipoUsuario === "FUNCIONARIO") {
-        window.location.href = "./frontend/secretaria/index.html";
         return;
     }
 
@@ -550,7 +554,7 @@ async function verificarMatricula() {
 
         const camposAluno = document.querySelectorAll(".campo-aluno");
 
-        if (tipo === "PROFESSOR") {
+        if (tipo === "PROFESSOR" || tipo === "SECRETARIA") {
             camposAluno.forEach((campo) => {
                 campo.style.display = "none";
             });
