@@ -2,8 +2,7 @@
 // LOGIN - SISTEMA DE ESTOQUE HAUY
 // ============================================================
 
-const API_URL = "http://localhost:3000/api";
-
+const API_URL = "/api";
 // ============================================================
 // QUANDO A PÁGINA CARREGAR
 // ============================================================
@@ -292,7 +291,7 @@ async function realizarLogin() {
 
         mostrarMensagem(
             "loginMessage",
-            "Não foi possível conectar ao servidor. Verifique se o Node.js está funcionando.",
+            "Não foi possível conectar ao servidor. Tente novamente em alguns instantes.",
         );
 
         carregarBotao("loginButton", false, "Entrar");
