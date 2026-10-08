@@ -1,5 +1,4 @@
-const API_URL = "http://localhost:3000/api";
-
+const API_URL = "/api";
 let professoresReais = [];
 let turmasReais = [];
 let disciplinasReais = [];
@@ -42,8 +41,6 @@ let cfg = {
    API
 ========================================================= */
 
-const API = "http://localhost:3000/api";
-
 function obterUsuarioLogado() {
     const bruto = sessionStorage.getItem("usuarioLogado");
 
@@ -67,7 +64,7 @@ function headersAPI() {
 }
 
 async function api(url, opcoes = {}) {
-    const resposta = await fetch(API + url, {
+    const resposta = await fetch(API_URL + url, {
         ...opcoes,
         headers: {
             ...headersAPI(),
@@ -1650,7 +1647,6 @@ async function assign() {
                 aulasSemanais,
             }),
         });
-        
 
         toast(resultado.mensagem || "Professor vinculado com sucesso.");
 

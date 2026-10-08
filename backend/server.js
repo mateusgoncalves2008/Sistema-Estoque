@@ -29,6 +29,18 @@ app.use(cors());
 app.use(express.json());
 
 // ============================================================
+// SITE (FRONTEND)
+// ============================================================
+
+// Telas do site (pasta frontend)
+app.use("/frontend", express.static(path.join(__dirname, "../frontend")));
+
+// Página inicial (index.html da raiz do projeto)
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "../index.html"));
+});
+
+// ============================================================
 // ROTAS
 // ============================================================
 
