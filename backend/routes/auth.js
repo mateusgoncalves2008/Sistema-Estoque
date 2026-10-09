@@ -64,7 +64,7 @@ router.post("/login", async (req, res) => {
         if (!usuario) {
             return res.status(401).json({
                 sucesso: false,
-                mensagem: "E-mail ou senha inválidos.",
+                mensagem: "O e-mail informado está incorreto.",
             });
         }
 
@@ -110,7 +110,7 @@ router.post("/login", async (req, res) => {
         if (hashDigitado !== senhaHash) {
             return res.status(401).json({
                 sucesso: false,
-                mensagem: "E-mail ou senha inválidos.",
+                mensagem: "A senha informada está incorreta.",
             });
         }
 

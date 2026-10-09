@@ -42,6 +42,8 @@ function inicializarLogin() {
 // ============================================================
 
 function mostrarLogin() {
+    limparCadastro();
+
     const loginView = document.getElementById("loginView");
     const registerView = document.getElementById("registerView");
 
@@ -252,6 +254,8 @@ async function realizarLogin() {
         });
 
         const resultado = await resposta.json();
+        console.log("Status:", resposta.status);
+        console.log("Resposta:", resultado);
 
         // ----------------------------------------------------
         // ERRO
@@ -260,11 +264,10 @@ async function realizarLogin() {
         if (!resposta.ok || !resultado.sucesso) {
             mostrarMensagem(
                 "loginMessage",
-                resultado.mensagem || "E-mail ou senha inválidos.",
+                resultado.mensagem || "Não foi possível realizar o login.",
             );
 
             carregarBotao("loginButton", false, "Entrar");
-
             return;
         }
 
@@ -306,6 +309,16 @@ function redirecionarUsuario(usuario) {
     const tipoUsuario = String(usuario.tipoUsuario || "").toUpperCase();
     const perfil = String(usuario.perfil || "").toUpperCase();
 
+    const ehSecretaria = ["SECRETARIA", "FUNCIONARIO", "FUNCIONÁRIO"].some(
+        (nome) => tipoUsuario === nome || perfil === nome,
+    );
+
+    // SECRETARIA
+    if (ehSecretaria) {
+        window.location.href = "./frontend/secretaria/index.html";
+        return;
+    }
+
     // ADMIN
     if (perfil === "ADMIN" || tipoUsuario === "ADMIN") {
         window.location.href = "./frontend/adm/index.html";
@@ -327,12 +340,6 @@ function redirecionarUsuario(usuario) {
     // ALUNO
     if (tipoUsuario === "ALUNO" || perfil === "ALUNO") {
         window.location.href = "./frontend/aluno/index.html";
-        return;
-    }
-
-    // SECRETARIA
-    if (tipoUsuario === "FUNCIONARIO") {
-        window.location.href = "./frontend/secretaria/index.html";
         return;
     }
 
@@ -550,7 +557,7 @@ async function verificarMatricula() {
 
         const camposAluno = document.querySelectorAll(".campo-aluno");
 
-        if (tipo === "PROFESSOR") {
+        if (tipo === "PROFESSOR" || tipo === "SECRETARIA") {
             camposAluno.forEach((campo) => {
                 campo.style.display = "none";
             });
@@ -845,6 +852,43 @@ function voltarEtapaCadastro() {
     if (registerStep1) {
         registerStep1.classList.add("active");
     }
+
+    limparMensagem("registerMessage");
+}
+
+// **********************************
+// LIMPA CADASTRO
+//***********************************
+
+function limparCadastro() {
+    // Limpa todos os campos do cadastro
+    const campos = [
+        "matricula",
+        "nome",
+        "ano",
+        "turma",
+        "turno",
+        "idade",
+        "cadastroEmail",
+        "cadastroSenha",
+        "confirmarSenha",
+    ];
+
+    campos.forEach((id) => {
+        const campo = document.getElementById(id);
+        if (campo) campo.value = "";
+    });
+
+    // Apaga a autorização temporária
+    sessionStorage.removeItem("cadastroAutorizacao");
+    sessionStorage.removeItem("tipoCadastro");
+
+    // Volta para a primeira etapa
+    const etapa1 = document.getElementById("registerStep1");
+    const etapa2 = document.getElementById("registerStep2");
+
+    if (etapa1) etapa1.classList.add("active");
+    if (etapa2) etapa2.classList.remove("active");
 
     limparMensagem("registerMessage");
 }

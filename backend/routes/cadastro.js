@@ -84,11 +84,13 @@ router.post("/verificar-matricula", async (req, res) => {
         console.log("9. Registro encontrado?", !!registro);
 
         if (!registro) {
-            console.log("10. Matrícula não encontrada.");
+            const ehMASP = /^\d{7}-\d$/.test(identificador);
 
             return res.status(404).json({
                 sucesso: false,
-                mensagem: "Matrícula não encontrada ou não autorizada.",
+                mensagem: ehMASP
+                    ? "O MASP informado está incorreto."
+                    : "A matrícula informada está incorreta.",
             });
         }
 
@@ -313,9 +315,7 @@ router.post("/cadastro", async (req, res) => {
 
         const usuarios = respostaUsuarios.data.values || [];
 
-        // ==================================================
         // VERIFICAR E-MAIL DUPLICADO
-        // ==================================================
 
         const emailExiste = usuarios.some((linha) => {
             const emailExistente = String(linha[2] || "")
@@ -328,7 +328,8 @@ router.post("/cadastro", async (req, res) => {
         if (emailExiste) {
             return res.status(409).json({
                 sucesso: false,
-                mensagem: "Este e-mail já está cadastrado.",
+                mensagem:
+                    "Este e-mail já está cadastrado. Utilize outro e-mail para criar sua conta.",
             });
         }
 

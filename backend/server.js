@@ -102,14 +102,20 @@ app.get("/api/teste", (req, res) => {
 // INICIAR SERVIDOR
 // ============================================================
 
-app.listen(PORT, () => {
-    console.log("");
-    console.log("==========================================");
-    console.log(" SISTEMA DE ESTOQUE HAUY");
-    console.log("==========================================");
-    console.log(`Servidor: http://localhost:${PORT}`);
-    console.log(`Planilha configurada: ${SPREADSHEET_ID ? "SIM" : "NÃO"}`);
-    console.log("Rotas de reservas: CONECTADAS");
-    console.log("==========================================");
-    console.log("");
-});
+// Só abre a porta quando o arquivo é executado diretamente
+// (local ou Render). Na Vercel, o app é apenas exportado.
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log("");
+        console.log("==========================================");
+        console.log(" SISTEMA DE ESTOQUE HAUY");
+        console.log("==========================================");
+        console.log(`Servidor: http://localhost:${PORT}`);
+        console.log(`Planilha configurada: ${SPREADSHEET_ID ? "SIM" : "NÃO"}`);
+        console.log("Rotas de reservas: CONECTADAS");
+        console.log("==========================================");
+        console.log("");
+    });
+}
+
+module.exports = app;
