@@ -6,18 +6,38 @@ const caminhoLocal = path.join(__dirname, "..", "google-credentials.json");
 
 const caminhoRender = "/etc/secrets/google-credentials.json";
 
-let credentialsPath;
+let authConfig;
 
-if (fs.existsSync(caminhoRender)) {
-    credentialsPath = caminhoRender;
+if (process.env.GOOGLE_CREDENTIALS) {
+    // Vercel: a credencial vem de uma variável de ambiente
+    let credentials;
+
+    try {
+        credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+    } catch (erro) {
+        throw new Error(
+            "A variável GOOGLE_CREDENTIALS não é um JSON válido: " +
+                erro.message,
+        );
+    }
+
+    if (credentials.private_key) {
+        credentials.private_key = credentials.private_key.replace(/\\n/g, "\n");
+    }
+
+    authConfig = { credentials };
+} else if (fs.existsSync(caminhoRender)) {
+    // Render: Secret File
+    authConfig = { keyFile: caminhoRender };
 } else if (fs.existsSync(caminhoLocal)) {
-    credentialsPath = caminhoLocal;
+    // Seu computador
+    authConfig = { keyFile: caminhoLocal };
 } else {
     throw new Error("Credencial do Google não encontrada.");
 }
 
 const auth = new google.auth.GoogleAuth({
-    keyFile: credentialsPath,
+    ...authConfig,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 });
 

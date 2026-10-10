@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Painel do Aluno — E.E. Hauy Petruceli Mayrink</title>
+        <title>E.E. Hauy Petruceli Mayrink</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,6 +17,21 @@
     </head>
 
     <body>
+        <!-- Tela de carregamento -->
+        <div id="tela-carregamento" role="status" aria-live="polite">
+            <div class="cartao">
+                <img alt="Educação Constrói" src="../img/logo_cor.png" />
+                <h1>Sistema de Estoque</h1>
+
+                <div class="tijolos">
+                    <span></span><span></span><span></span><span></span>
+                    <span></span><span></span><span></span><span></span>
+                </div>
+
+                <p class="texto">Carregando</p>
+            </div>
+        </div>
+
         <div class="app-shell">
             <aside class="sidebar" id="sidebar">
                 <div class="sidebar-top">
@@ -87,6 +102,7 @@
         </div>
 
         <div class="toast" id="toast"></div>
+        <script src="carregamento.js"></script>
 
         <script src="./aluno.js"></script>
     </body>

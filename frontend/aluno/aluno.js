@@ -204,8 +204,7 @@ async function carregarPerfilAluno() {
     usuarioLogado = obterUsuarioLogado();
 
     if (!usuarioLogado) {
-        window.location.href = "../login/index.html";
-
+        window.location.href = "/";
         return false;
     }
 
@@ -285,7 +284,7 @@ function atualizarUsuarioLateral() {
 function fazerLogout() {
     sessionStorage.removeItem("usuarioLogado");
 
-    window.location.href = "../login/index.html";
+    window.location.href = "/";
 }
 
 // ============================================================
@@ -2431,23 +2430,23 @@ async function carregarItensPesquisa() {
 // ============================================================
 
 async function iniciarPainel() {
-    configurarSidebar();
+    try {
+        configurarSidebar();
 
-    const perfilCarregado = await carregarPerfilAluno();
+        const perfilCarregado = await carregarPerfilAluno();
 
-    if (!perfilCarregado) {
-        return;
+        if (!perfilCarregado) return;
+
+        await Promise.all([carregarItensPesquisa(), carregarReservas()]);
+
+        atualizarUsuarioLateral();
+        draw();
+        inicializarIcones();
+    } catch (erro) {
+        console.error("Erro ao carregar o painel:", erro);
+    } finally {
+        esconderCarregamento();
     }
-
-    await carregarItensPesquisa();
-
-    await carregarReservas();
-
-    atualizarUsuarioLateral();
-
-    draw();
-
-    inicializarIcones();
 }
 
 document.addEventListener("DOMContentLoaded", iniciarPainel);
