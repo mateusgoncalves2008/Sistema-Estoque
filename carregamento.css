@@ -1,0 +1,155 @@
+:root {
+    --tijolo: #bb542c;
+    --tijolo-escuro: #622c17;
+    --verde: #6a7939;
+    --creme: #fbf4ec;
+}
+
+#tela-carregamento {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    background: linear-gradient(160deg, #221006, #3c1c0e, #2e3814);
+    transition:
+        opacity 0.6s ease,
+        visibility 0.6s ease;
+}
+
+#tela-carregamento.oculta {
+        display: none;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.cartao {
+    width: min(88vw, 380px);
+    padding: 32px 28px;
+    text-align: center;
+    background: var(--creme);
+    border-radius: 22px;
+    border-bottom: 6px solid var(--tijolo);
+    box-shadow: 0 24px 60px #0007;
+    animation: entrada 0.7s ease both;
+}
+
+.cartao img {
+    width: 170px;
+    max-width: 60%;
+    height: auto;
+    animation: flutuar 3s ease-in-out infinite;
+}
+
+.cartao h1 {
+    margin-top: 14px;
+    font-size: 1.05rem;
+    color: var(--tijolo-escuro);
+}
+
+.tijolos {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    margin: 22px 0 14px;
+}
+
+.tijolos span {
+    height: 14px;
+    border-radius: 2px;
+    background: #bb542c30;
+    animation: assentar 1.6s ease-in-out infinite;
+}
+
+.tijolos span:nth-child(2) {
+    animation-delay: 0.12s;
+}
+.tijolos span:nth-child(3) {
+    animation-delay: 0.24s;
+}
+.tijolos span:nth-child(4) {
+    animation-delay: 0.36s;
+}
+.tijolos span:nth-child(5) {
+    animation-delay: 0.48s;
+}
+.tijolos span:nth-child(6) {
+    animation-delay: 0.6s;
+}
+.tijolos span:nth-child(7) {
+    animation-delay: 0.72s;
+}
+.tijolos span:nth-child(8) {
+    animation-delay: 0.84s;
+}
+
+.texto {
+    font-size: 0.9rem;
+    color: var(--verde);
+    font-weight: 600;
+}
+
+.texto::after {
+    content: "";
+    animation: pontos 1.4s steps(4, end) infinite;
+}
+
+@keyframes assentar {
+    0%,
+    100% {
+        background: #bb542c30;
+        transform: none;
+    }
+    30%,
+    60% {
+        background: var(--tijolo);
+        transform: translateY(-3px);
+    }
+}
+
+@keyframes flutuar {
+    0%,
+    100% {
+        transform: none;
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes entrada {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes pontos {
+    0% {
+        content: "";
+    }
+    25% {
+        content: ".";
+    }
+    50% {
+        content: "..";
+    }
+    75%,
+    100% {
+        content: "...";
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #tela-carregamento *,
+    #tela-carregamento *::after {
+        animation: none !important;
+    }
+}
