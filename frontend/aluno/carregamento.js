@@ -7,8 +7,8 @@ function esconderCarregamento() {
     const espera = Math.max(0, 1800 - (Date.now() - inicioCarregamento));
 
     setTimeout(() => {
-        tela.style.display = "none";
+        tela.classList.add("oculta");
+
+        setTimeout(() => tela.remove(), 700);
     }, espera);
 }
-
-window.addEventListener("load", esconderCarregamento);
