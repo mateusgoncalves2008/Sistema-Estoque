@@ -78,7 +78,7 @@ const EV = {
     "2026-10-08": ["feriado", "Feriado"],
     "2026-10-12": ["feriado", "Nossa Senhora Aparecida"],
     "2026-10-15": ["evento", "Dia do Professor"],
-    "2026-10-20": ["reuniao", "Reunião de pais"],
+    "2026-10-01": ["reuniao", "Reunião de pais"],
     "2026-10-24": ["escola", "Feira de Ciências"],
     "2026-10-28": ["recesso", "Dia do Servidor Público"],
     "2026-11-02": ["feriado", "Finados"],
@@ -411,29 +411,35 @@ function viewInicio() {
     ).length;
 
     return `
-        <div class="hero">
-            <div>
-                <h1>Olá, ${escapeHtml(primeiroNome)}</h1>
+        
+<div class="hero">
+    <div class="hero-info">
+        <h1>Olá, ${escapeHtml(primeiroNome)}</h1>
 
-                <p>
-                    ${escapeHtml(ALUNO.ano || "Ano não informado")}
-                    · Turma ${escapeHtml(ALUNO.turma || "Não informada")}
-                    · ${escapeHtml(ALUNO.turno || "Turno não informado")}
-                </p>
+        <p>
+            ${escapeHtml(ALUNO.ano || "Ano não informado")}
+            · Turma ${escapeHtml(ALUNO.turma || "Não informada")}
+            · ${escapeHtml(ALUNO.turno || "Turno não informado")}
+        </p>
+    </div>
+
+    <div class="hero-direita">
+        <div class="stats">
+            <div class="stat">
+                <b>${livrosLidos}</b>
+                <span>Livros lidos</span>
             </div>
 
-            <div class="stats">
-                <div class="stat">
-                    <b>${livrosLidos}</b>
-                    <span>Livros lidos</span>
-                </div>
-
-                <div class="stat">
-                    <b>${computadoresUsados}</b>
-                    <span>Computadores</span>
-                </div>
+            <div class="stat">
+                <b>${computadoresUsados}</b>
+                <span>Computadores</span>
             </div>
         </div>
+
+        <div class="hero-relogio" id="relogioAluno">00:00:00</div>
+    </div>
+</div>
+
 
         <div class="grid">
 
@@ -1492,10 +1498,10 @@ function pesquisarItens() {
         ? filtrados
               .map(
                   (item) => `
-                    <article
-    class="item-result-card ${item.podeReservar ? "reservable" : ""}"
-    ${
-        item.podeReservar
+             <article
+                        class="item-result-card ${item.podeReservar ? "reservable" : ""}"
+                    ${
+            item.podeReservar
             ? `onclick="abrirReserva('${escapeHtml(item.produtoID)}')"`
             : ""
     }
@@ -2448,5 +2454,21 @@ async function iniciarPainel() {
         esconderCarregamento();
     }
 }
+
+function atualizarRelogioAluno() {
+    const relogio = document.getElementById("relogioAluno");
+    if (!relogio) return;
+
+    const agora = new Date();
+
+    relogio.textContent = [
+        String(agora.getHours()).padStart(2, "0"),
+        String(agora.getMinutes()).padStart(2, "0"),
+        String(agora.getSeconds()).padStart(2, "0"),
+    ].join(":");
+}
+
+atualizarRelogioAluno();
+setInterval(atualizarRelogioAluno, 1000);
 
 document.addEventListener("DOMContentLoaded", iniciarPainel);

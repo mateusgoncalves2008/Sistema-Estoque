@@ -1,3 +1,4 @@
+kkkkkkkkkkkkkkkkkk;
 const express = require("express");
 const crypto = require("crypto");
 
@@ -289,6 +290,118 @@ router.get("/aluno/perfil/:usuarioID", async (req, res) => {
         return res.status(500).json({
             sucesso: false,
             mensagem: "Erro interno ao buscar perfil do aluno.",
+        });
+    }
+});
+
+/* GET /api/professor/perfil/:usuarioID */
+router.get("/professor/perfil/:usuarioID", async (req, res) => {
+    try {
+        const { usuarioID } = req.params;
+
+        if (!usuarioID) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "UsuarioID não informado.",
+            });
+        }
+
+        // Buscar usuário
+        const respostaUsuarios = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "01_USUARIOS!A2:K",
+        });
+
+        const usuarios = respostaUsuarios.data.values || [];
+
+        const usuario = usuarios.find(
+            (linha) =>
+                String(linha[0] || "").trim() === String(usuarioID).trim(),
+        );
+
+        if (!usuario) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: "Usuário não encontrado.",
+            });
+        }
+
+        const [
+            id,
+            nome,
+            email,
+            senhaHash,
+            salt,
+            tipoUsuario,
+            perfil,
+            setorID,
+            status,
+        ] = usuario;
+
+        if (
+            String(tipoUsuario || "")
+                .trim()
+                .toUpperCase() !== "PROFESSOR"
+        ) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Este usuário não é um professor.",
+            });
+        }
+
+        if (
+            String(status || "")
+                .trim()
+                .toUpperCase() !== "ATIVO"
+        ) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Este usuário está inativo.",
+            });
+        }
+
+        // Buscar cadastro autorizado
+        const respostaCadastros = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "17_CADASTROS_AUTORIZADOS!A2:J",
+        });
+
+        const cadastros = respostaCadastros.data.values || [];
+
+        const cadastro = cadastros.find(
+            (linha) =>
+                String(linha[3] || "").trim() === String(usuarioID).trim() &&
+                String(linha[1] || "")
+                    .trim()
+                    .toUpperCase() === "PROFESSOR" &&
+                String(linha[9] || "")
+                    .trim()
+                    .toUpperCase() === "CADASTRADO",
+        );
+
+        if (!cadastro) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: "Cadastro autorizado do professor não encontrado.",
+            });
+        }
+
+        return res.json({
+            sucesso: true,
+            professor: {
+                usuarioID: id || "",
+                nome: nome || cadastro[4] || "",
+                idade: cadastro[8] || "",
+                masp: cadastro[2] || "",
+                email: email || "",
+            },
+        });
+    } catch (erro) {
+        console.error("Erro ao buscar perfil do professor:", erro);
+
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: "Erro interno ao buscar perfil do professor.",
         });
     }
 });

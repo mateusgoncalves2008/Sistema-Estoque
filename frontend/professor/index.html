@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>E.E. Hauy Petruceli Mayrink</title>
+        <link rel="stylesheet" href="professor.css" />
+        <link rel="stylesheet" href="pesquisa.css" />
+    </head>
+
+    <body>
+        <div class="app">
+            <button
+                class="mobile-toggle"
+                id="mobileToggle"
+                aria-label="Abrir menu"
+            >
+                ☰ Menu
+            </button>
+
+            <aside class="sidebar" id="sidebar">
+                <div class="logo">
+                    <div class="logo-img">
+                        <!-- Coloque aqui o caminho da logo da escola, se tiver -->
+                        <span><img src="../img/logo_cor.png" alt="" /></span>
+                    </div>
+                    <div>
+                        <strong>Hauy Petruceli</strong>
+                        <small>Mayrink</small>
+                    </div>
+                </div>
+
+                <nav class="menu" id="menu">
+                    <button class="active" data-page="inicio">
+                        <i data-lucide="house"></i> Início
+                    </button>
+                    <button data-page="reservas">
+                        <i data-lucide="bookmark"></i> Minhas reservas
+                    </button>
+                    <button data-page="emprestimos">
+                        <i data-lucide="book-open"></i> Empréstimos
+                    </button>
+                    <button data-page="historico">
+                        <i data-lucide="history"></i> Histórico
+                    </button>
+                    <button data-page="pesquisar">
+                        <i data-lucide="search"></i> Pesquisar item
+                    </button>
+                    <button data-page="perfil">
+                        <i data-lucide="user-round"></i> Meu perfil
+                    </button>
+                    <button data-page="calendario">
+                        <i data-lucide="calendar-days"></i> Calendário
+                    </button>
+                </nav>
+
+                <div class="sidebar-bottom">
+                    <div class="user">
+                        <div class="avatar" id="avatar">P</div>
+                        <div>
+                            <strong id="nomeUsuario">Professor</strong>
+                            <small>Professor</small>
+                        </div>
+                    </div>
+                    <button class="logout" id="sair">
+                        <i data-lucide="log-out"></i> Sair
+                    </button>
+                </div>
+            </aside>
+
+            <main class="main">
+                <section class="page active" id="page-inicio">
+                    <header class="hero">
+                        <div>
+                            <h1>Olá, <span id="nomeHero">Professor</span></h1>
+                            <p>
+                                Organize suas aulas e acompanhe seus recursos
+                                escolares.
+                            </p>
+                        </div>
+
+                        <div class="hero-stats">
+                            <div class="hero-stat">
+                                <strong id="totalReservas">0</strong>
+                                <span>Reservas ativas</span>
+                            </div>
+                            <div class="hero-stat">
+                                <strong id="totalEmprestimos">0</strong>
+                                <span>Empréstimos</span>
+                            </div>
+                            <div class="clock" id="clock">00:00:00</div>
+                        </div>
+                    </header>
+
+                    <div class="cards">
+                        <article class="card">
+                            <div class="card-label">
+                                <i data-lucide="bookmark"></i> Minhas reservas
+                            </div>
+                            <h2 id="reservasAtivas">0 ativas</h2>
+                            <p>
+                                Acompanhe suas solicitações de locais, materiais
+                                e equipamentos.
+                            </p>
+                        </article>
+
+                        <article class="card">
+                            <div class="card-label">
+                                <i data-lucide="book-open"></i> Meus empréstimos
+                            </div>
+                            <h2 id="emprestimosAtivos">0 ativos</h2>
+                            <p>
+                                Consulte os itens retirados e suas devoluções.
+                            </p>
+                        </article>
+
+                        <article class="card">
+                            <div class="card-label">
+                                <i data-lucide="calendar-days"></i> Próximo
+                                evento
+                            </div>
+                            <h2>Agenda escolar</h2>
+                            <p>
+                                Consulte os próximos compromissos e atividades
+                                da escola.
+                            </p>
+                        </article>
+
+                        <article class="card">
+                            <div class="card-label">
+                                <i data-lucide="clipboard-list"></i> Recursos
+                                escolares
+                            </div>
+                            <h2>Consulte o estoque</h2>
+                            <p>
+                                Pesquise locais, materiais e equipamentos
+                                disponíveis.
+                            </p>
+                        </article>
+                    </div>
+                </section>
+                <section class="page" id="page-pesquisar">
+                    <div id="pesquisaContainer"></div>
+                </section>
+
+                <section class="page" id="page-reservas">
+                    <header class="reservas-header">
+                        <h1>Minhas Reservas</h1>
+                        <p>Consulte as reservas vinculadas à sua conta.</p>
+                    </header>
+
+                    <div class="reservas-card">
+                        <div class="table-wrap">
+                            <table class="tabela-reservas">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Item</th>
+                                        <th>Retirada</th>
+                                        <th>Devolução</th>
+                                        <th>Situação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaReservas">
+                                    <tr>
+                                        <td colspan="5">Não a reservas</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="reservas-nota">
+                        <i data-lucide="search"></i>
+                        <span>
+                            Para fazer uma reserva, acesse "Pesquisar item",
+                            encontre um livro ou computador disponível e clique
+                            nele.
+                        </span>
+                    </div>
+                </section>
+
+                <section class="page" id="page-emprestimos">
+                    <div id="tabelaEmprestimos"></div>
+                </section>
+
+                <section class="page" id="page-historico">
+                    <div id="conteudoHistorico">
+                        <p class="empty">Carregando histórico...</p>
+                    </div>
+                </section>
+
+                <section class="page" id="page-perfil">
+                    <div class="perfil-cabecalho">
+                        <h1>Meu Perfil</h1>
+                        <p>
+                            Seus dados cadastrados. Para alterações, procure a
+                            Secretaria.
+                        </p>
+                    </div>
+
+                    <div class="perfil-grade">
+                        <article class="perfil-campo">
+                            <span>Nome completo</span>
+                            <strong id="perfilNome">Carregando...</strong>
+                        </article>
+
+                        <article class="perfil-campo">
+                            <span>Idade</span>
+                            <strong id="perfilIdade">Carregando...</strong>
+                        </article>
+
+                        <article class="perfil-campo">
+                            <span>MASP</span>
+                            <strong id="perfilMasp">Carregando...</strong>
+                        </article>
+
+                        <article class="perfil-campo">
+                            <span>E-mail</span>
+                            <strong id="perfilEmail">Carregando...</strong>
+                        </article>
+
+                        <article class="perfil-campo">
+                            <span>Senha</span>
+                            <strong>••••••••••••</strong>
+                        </article>
+                    </div>
+
+                    <div class="perfil-aviso">
+                        <i data-lucide="lock"></i>
+                        <span
+                            >A senha é armazenada de forma protegida e não pode
+                            ser exibida.</span
+                        >
+                    </div>
+                </section>
+
+                <section class="page" id="page-calendario">
+                    <div id="calendarioProfessor">
+                        <div class="cal-prof-loading">
+                            Carregando calendário...
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <div class="toast" id="toast"></div>
+        <script src="pesquisa.js"></script>
+        <script src="https://unpkg.com/lucide@latest"></script>
+        <script src="professor.js"></script>
+    </body>
+</html>
