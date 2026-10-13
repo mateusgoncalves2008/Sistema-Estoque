@@ -15,6 +15,8 @@ const cadastroRoutes = require("./routes/cadastro");
 const produtosRoutes = require("./routes/produtos");
 const reservasRoutes = require("./routes/reservas");
 const secretariaRoutes = require("./routes/secretaria");
+const emprestimosRoutes = require("./routes/emprestimos");
+const professorItensRoutes = require("./routes/professorItens");
 
 const app = express();
 
@@ -49,13 +51,15 @@ app.use("/api", cadastroRoutes);
 app.use("/api", produtosRoutes);
 app.use("/api", reservasRoutes);
 app.use("/api", secretariaRoutes);
+app.use("/api", emprestimosRoutes);
+app.use("/api", professorItensRoutes);
 
 // ============================================================
 // TESTE DO GOOGLE SHEETS
 // ============================================================
 
 app.get("/api/teste-planilha", async (req, res) => {
-    console.log("➡️ Rota /api/teste-planilha acessada");
+    console.log("Rota /api/teste-planilha acessada");
 
     try {
         if (!SPREADSHEET_ID) {

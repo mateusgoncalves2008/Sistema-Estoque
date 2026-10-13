@@ -2,3 +2,7 @@ node_modules
 .env
 backend/.env
 backend/google-credentials.json
+
+backend_backup/google-credentials.json
+*credentials*.json
+*.env
