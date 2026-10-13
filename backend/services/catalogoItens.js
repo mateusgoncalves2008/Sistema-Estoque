@@ -197,7 +197,6 @@ async function buscarCatalogo() {
 
             // Só salas (categoria Laboratório) são reserváveis por enquanto
             const podeReservar =
-                grupo === "Salas" &&
                 situacao.codigo === "DISPONIVEL" &&
                 estoque.disponivel > estoque.reservado;
 

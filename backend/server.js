@@ -54,6 +54,12 @@ app.use("/api", secretariaRoutes);
 app.use("/api", emprestimosRoutes);
 app.use("/api", professorItensRoutes);
 
+
+
+
+
+
+
 // ============================================================
 // TESTE DO GOOGLE SHEETS
 // ============================================================
@@ -81,7 +87,7 @@ app.get("/api/teste-planilha", async (req, res) => {
             dados: resposta.data.values || [],
         });
     } catch (erro) {
-        console.error("❌ Erro ao acessar o Google Sheets:");
+        console.error("Erro ao acessar o Google Sheets:");
         console.error(erro);
 
         res.status(500).json({

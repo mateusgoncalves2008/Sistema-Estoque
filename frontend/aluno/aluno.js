@@ -78,7 +78,7 @@ const EV = {
     "2026-10-08": ["feriado", "Feriado"],
     "2026-10-12": ["feriado", "Nossa Senhora Aparecida"],
     "2026-10-15": ["evento", "Dia do Professor"],
-    "2026-10-20": ["reuniao", "Reunião de pais"],
+    "2026-10-01": ["reuniao", "Reunião de pais"],
     "2026-10-24": ["escola", "Feira de Ciências"],
     "2026-10-28": ["recesso", "Dia do Servidor Público"],
     "2026-11-02": ["feriado", "Finados"],

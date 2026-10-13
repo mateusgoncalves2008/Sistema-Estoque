@@ -272,6 +272,8 @@
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -338,4 +340,453 @@
     background: var(--primary);
     border-color: var(--primary);
     color: #fff;
+}
+
+/* Modal de reserva estilizado */
+.modal-reserva {
+    background: #fffdf9;
+    border-radius: 20px;
+    padding: 28px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.modal-reserva-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.modal-reserva-tipo {
+    display: block;
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+}
+
+.modal-reserva-header h2 {
+    color: var(--brown);
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.modal-fechar {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    line-height: 1;
+}
+
+.modal-fechar:hover {
+    background: var(--primary-pale);
+    color: var(--primary);
+}
+
+.modal-reserva-sub {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--brown);
+    margin: 0 0 4px;
+}
+
+.modal-reserva-hint {
+    font-size: 0.85rem;
+    color: var(--primary);
+    margin: 0 0 16px;
+}
+
+.modal-reserva-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.modal-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.modal-campo label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--brown);
+}
+
+.modal-campo input,
+.modal-campo textarea {
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font: inherit;
+    font-size: 0.9rem;
+    background: #fff;
+    color: var(--brown);
+    transition: border-color 0.15s;
+}
+
+.modal-campo input:focus,
+.modal-campo textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.modal-campo textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.modal-reserva-acoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.btn-modal-cancelar {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-modal-cancelar:hover {
+    background: var(--primary-pale);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-modal-confirmar {
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.btn-modal-confirmar:hover {
+    opacity: 0.88;
+}
+
+.btn-modal-confirmar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* IDENTIDADE VISUAL DA ESCOLA */
+:root {
+    --marrom: #3b261d;
+    --terracota: #b95435;
+    --bege: #f6f0e8;
+    --branco: #fffdf9;
+    --texto: #38271f;
+    --borda: #e7d9cb;
+}
+
+body {
+    background:
+        radial-gradient(
+            ellipse at 90% 0%,
+            rgba(185, 84, 53, 0.055),
+            transparent 34%
+        ),
+        var(--bege);
+}
+
+.sidebar {
+    background: linear-gradient(180deg, #3b261d, #4a2d21);
+    box-shadow: 8px 0 28px rgba(59, 38, 29, 0.08);
+}
+
+.logo {
+    padding: 8px 5px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.logo-img {
+    border-radius: 15px;
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.13);
+}
+
+.menu {
+    gap: 7px;
+}
+
+.menu button {
+    min-height: 45px;
+    border: 1px solid transparent;
+}
+
+.menu button:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff8f1;
+}
+
+.menu button.active {
+    background: var(--terracota);
+    box-shadow: 0 6px 15px rgba(185, 84, 53, 0.24);
+}
+
+.logout {
+    border-radius: 10px;
+}
+
+.avatar {
+    background: #d9ad85;
+    color: var(--marrom);
+}
+
+.main {
+    padding: 32px clamp(20px, 3vw, 46px);
+}
+
+.hero {
+    min-height: 205px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 23px;
+    padding: clamp(25px, 3vw, 38px);
+    background: linear-gradient(
+        105deg,
+        rgba(51, 32, 23, 0.96),
+        rgba(91, 48, 32, 0.91) 57%,
+        rgba(185, 84, 53, 0.82)
+    );
+    box-shadow: 0 15px 36px rgba(76, 45, 29, 0.13);
+}
+
+.hero h1 {
+    font-size: clamp(27px, 2.5vw, 36px);
+    letter-spacing: -1.2px;
+}
+
+.hero p {
+    max-width: 440px;
+    line-height: 1.7;
+}
+
+.hero-stats {
+    position: relative;
+    z-index: 1;
+    gap: clamp(14px, 2vw, 30px);
+}
+
+.hero-stat {
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hero-stat strong {
+    font-size: 32px;
+}
+
+.cards {
+    gap: 18px;
+}
+
+.card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 19px;
+    padding: 24px;
+    box-shadow: 0 7px 22px rgba(65, 43, 29, 0.045);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: var(--terracota);
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 13px 28px rgba(65, 43, 29, 0.08);
+}
+
+.card-label {
+    color: #816b5d;
+}
+
+.card-label svg {
+    color: var(--terracota);
+}
+
+.card h2,
+.reservas-header h1,
+.panel h2 {
+    color: var(--marrom);
+}
+
+.reservas-card,
+.panel {
+    border-radius: 19px;
+    box-shadow: 0 7px 22px rgba(65, 43, 29, 0.04);
+}
+
+.primary-btn {
+    background: var(--terracota);
+    box-shadow: 0 5px 12px rgba(185, 84, 53, 0.16);
+    transition:
+        transform 0.18s,
+        background 0.18s;
+}
+
+.primary-btn:hover {
+    background: #a7482d;
+    transform: translateY(-1px);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    box-shadow: 0 0 0 3px rgba(185, 84, 53, 0.12);
+}
+
+th {
+    background: #f8f0e8;
+}
+
+tr:hover td {
+    background: #fffaf4;
+}
+
+@media (max-width: 1050px) {
+    .main {
+        padding: 24px;
+    }
+
+    .hero {
+        min-height: 190px;
+    }
+}
+
+@media (max-width: 700px) {
+    .main {
+        padding: 66px 14px 18px;
+    }
+
+    .mobile-toggle {
+        background: var(--marrom);
+        box-shadow: 0 4px 12px rgba(59, 38, 29, 0.2);
+    }
+
+    .hero {
+        border-radius: 18px;
+        padding: 23px 18px;
+    }
+
+    .hero-stats {
+        align-items: stretch;
+    }
+
+    .hero-stat {
+        flex: 1;
+    }
+
+    .clock {
+        width: 100%;
+        text-align: left;
+    }
+
+    .card {
+        padding: 20px;
+    }
+}
+
+/* IDENTIDADE VISUAL DA ESCOLA — PESQUISA */
+.search-results-head h2,
+.item-result-top h3 {
+    color: #3b261d;
+}
+
+.search-input-wrap input {
+    border: 1px solid #e7d9cb;
+    border-radius: 13px;
+    box-shadow: 0 5px 16px rgba(65, 43, 29, 0.035);
+}
+
+.search-input-wrap input:focus {
+    outline: none;
+    border-color: #b95435;
+    box-shadow: 0 0 0 3px rgba(185, 84, 53, 0.11);
+}
+
+.filtro-btn {
+    border-radius: 12px;
+}
+
+.filtro-btn.active {
+    background: #b95435;
+    border-color: #b95435;
+}
+
+.item-result-card {
+    border-radius: 17px;
+    background: #fffdf9;
+    box-shadow: 0 6px 18px rgba(65, 43, 29, 0.045);
+}
+
+.item-result-card:hover,
+.item-result-card.reservable:hover {
+    border-color: #c8876e;
+    box-shadow: 0 12px 26px rgba(65, 43, 29, 0.09);
+}
+
+.item-result-icon {
+    background: #f3e1d7;
+    color: #a7482d;
+}
+
+.item-type,
+.item-result-meta svg {
+    color: #b95435;
+}
+
+.search-empty {
+    background: #fffdf9;
+    border-color: #d9b6a4;
+}
+
+.search-note {
+    color: #887568;
+}
+
+@media (max-width: 700px) {
+    .item-result-card {
+        padding: 14px;
+        gap: 11px;
+    }
+
+    .item-result-top {
+        flex-wrap: wrap;
+    }
 }
