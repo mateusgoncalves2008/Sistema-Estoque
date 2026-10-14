@@ -13,9 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function inicializarLogin() {
     // Inicializa os ícones Lucide, caso estejam disponíveis
-    if (window.lucide) {
-        lucide.createIcons();
-    }
+    atualizarIcones();
 
     // Recupera o e-mail salvo, se "Lembrar de mim" estiver ativo
     const emailSalvo = localStorage.getItem("emailLembrado");
@@ -76,9 +74,7 @@ function mostrarCadastro() {
 
     limparMensagem("loginMessage");
 
-    if (window.lucide) {
-        lucide.createIcons();
-    }
+    atualizarIcones();
 }
 
 // ============================================================
@@ -177,9 +173,7 @@ function alternarSenha(idCampo, botao) {
         }
     }
 
-    if (window.lucide) {
-        lucide.createIcons();
-    }
+    atualizarIcones();
 }
 
 // ============================================================
@@ -326,8 +320,11 @@ function redirecionarUsuario(usuario) {
     }
 
     // RESPONSÁVEL PELO SETOR
-    if (perfil === "LIDER" || tipoUsuario === "LIDER") {
-        window.location.href = "./frontend/responsavel/index.html";
+    if (
+        ["LIDER", "RESPONSAVEL", "RESPONSÁVEL"].includes(perfil) ||
+        ["LIDER", "RESPONSAVEL", "RESPONSÁVEL"].includes(tipoUsuario)
+    ) {
+        window.location.href = "/frontend/responsavel/index.html";
         return;
     }
 
@@ -420,9 +417,12 @@ function fazerLogout() {
 // ============================================================
 
 function atualizarIcones() {
-    if (window.lucide) {
-        lucide.createIcons();
-    }
+    document.querySelectorAll("[data-lucide]").forEach((elemento) => {
+        const nome = elemento.getAttribute("data-lucide");
+
+        elemento.classList.add(`icon-${nome}`);
+        elemento.removeAttribute("data-lucide");
+    });
 }
 
 // ============================================================
@@ -587,9 +587,7 @@ async function verificarMatricula() {
             registerStep2.classList.add("active");
         }
 
-        if (window.lucide) {
-            lucide.createIcons();
-        }
+        atualizarIcones();
 
         console.log(">>> ETAPA 2 ATIVADA <<<");
     } catch (erro) {
@@ -892,3 +890,35 @@ function limparCadastro() {
 
     limparMensagem("registerMessage");
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    document
+        .getElementById("btnMostrarCadastro")
+        ?.addEventListener("click", mostrarCadastro);
+
+    document
+        .getElementById("loginButton")
+        ?.addEventListener("click", realizarLogin);
+
+    document
+        .getElementById("verifyButton")
+        ?.addEventListener("click", verificarMatricula);
+
+    document
+        .getElementById("registerButton")
+        ?.addEventListener("click", enviarCadastro);
+
+    document
+        .getElementById("btnVoltarLogin1")
+        ?.addEventListener("click", mostrarLogin);
+
+    document
+        .getElementById("btnVoltarLogin2")
+        ?.addEventListener("click", mostrarLogin);
+
+    document
+        .getElementById("btnAlternarSenha")
+        ?.addEventListener("click", function () {
+            alternarSenha("senha", this);
+        });
+});

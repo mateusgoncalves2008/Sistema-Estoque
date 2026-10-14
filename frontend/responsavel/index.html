@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Painel do Responsável</title>
+        <link rel="stylesheet" href="style.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        />
+    </head>
+    <body>
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="fa-solid fa-boxes-stacked"></i>
+                <div>
+                    <strong>Estoque Hauy</strong>
+                    <small>Área do responsável</small>
+                </div>
+            </div>
+
+            <div class="sector">
+                <small>SETOR ATUAL</small>
+                <strong id="sectorName">Carregando setor...</strong>
+                <span id="userName">Usuário autenticado</span>
+            </div>
+
+            <nav>
+                <button class="nav active" data-page="inicio">
+                    <i class="fa-solid fa-chart-pie"></i> Visão geral
+                </button>
+                <button class="nav" data-page="estoque">
+                    <i class="fa-solid fa-box"></i> Estoque
+                </button>
+                <button class="nav" data-page="movimentacoes">
+                    <i class="fa-solid fa-right-left"></i> Movimentações
+                </button>
+                <button class="nav" data-page="solicitacoes">
+                    <i class="fa-solid fa-clipboard-list"></i> Solicitações
+                </button>
+            </nav>
+
+            <div class="side-bottom">
+                <p>
+                    <i class="fa-solid fa-shield-halved"></i>
+                    Acesso restrito ao setor autorizado.
+                </p>
+                <button id="logoutButton" class="logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
+                </button>
+            </div>
+        </aside>
+
+        <main>
+            <header>
+                <div>
+                    <small class="eyebrow">SISTEMA DE CONTROLE ESCOLAR</small>
+                    <h1 id="pageTitle">Visão geral</h1>
+                    <p id="pageSubtitle">
+                        Acompanhe o estoque e as atividades do seu setor.
+                    </p>
+                </div>
+                <button id="refreshButton" class="refresh" title="Atualizar">
+                    <i class="fa-solid fa-rotate"></i>
+                </button>
+            </header>
+
+            <div id="notice" class="notice hidden" role="status"></div>
+
+            <section id="page-inicio" class="page">
+                <div class="welcome">
+                    <div>
+                        <small>PAINEL DO SETOR</small>
+                        <h2>Olá, <span id="welcomeName">responsável</span>.</h2>
+                        <p>Confira abaixo um resumo dos dados do seu setor.</p>
+                    </div>
+                    <i class="fa-solid fa-warehouse"></i>
+                </div>
+
+                <div class="stats">
+                    <article>
+                        <i class="fa-solid fa-boxes-stacked blue"></i>
+                        <span>Total de itens</span>
+                        <strong id="totalItens">—</strong>
+                        <small>Itens registrados no setor</small>
+                    </article>
+                    <article>
+                        <i class="fa-solid fa-circle-check green"></i>
+                        <span>Disponíveis</span>
+                        <strong id="itensDisponiveis">—</strong>
+                        <small>Itens disponíveis para uso</small>
+                    </article>
+                    <article>
+                        <i class="fa-solid fa-clock orange"></i>
+                        <span>Solicitações pendentes</span>
+                        <strong id="solicitacoesPendentes">—</strong>
+                        <small>Aguardando tratamento</small>
+                    </article>
+                    <article>
+                        <i
+                            class="fa-solid fa-arrow-right-arrow-left purple"
+                        ></i>
+                        <span>Movimentações</span>
+                        <strong id="totalMovimentacoes">—</strong>
+                        <small>Registros encontrados</small>
+                    </article>
+                </div>
+
+                <div class="columns">
+                    <article class="panel">
+                        <div class="panel-title">
+                            <div>
+                                <h3>Movimentações recentes</h3>
+                                <p>Últimas atividades registradas</p>
+                            </div>
+                            <button class="text-btn" data-go="movimentacoes">
+                                Ver todas
+                            </button>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Item</th>
+                                        <th>Tipo</th>
+                                        <th>Quantidade</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentMoves">
+                                    <tr>
+                                        <td colspan="4" class="empty">
+                                            Carregando...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+
+                    <article class="panel">
+                        <div class="panel-title">
+                            <div>
+                                <h3>Acesso rápido</h3>
+                                <p>Atalhos do seu setor</p>
+                            </div>
+                        </div>
+                        <button class="quick" data-go="estoque">
+                            <i class="fa-solid fa-box-open"></i>
+                            <span
+                                ><b>Consultar estoque</b
+                                ><small>Ver itens e quantidades</small></span
+                            >
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button class="quick" data-go="movimentacoes">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span
+                                ><b>Movimentações</b
+                                ><small
+                                    >Acompanhar entradas e saídas</small
+                                ></span
+                            >
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button class="quick" data-go="solicitacoes">
+                            <i class="fa-solid fa-list-check"></i>
+                            <span
+                                ><b>Solicitações</b
+                                ><small
+                                    >Consultar pedidos recebidos</small
+                                ></span
+                            >
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </article>
+                </div>
+            </section>
+
+            <section id="page-estoque" class="page hidden">
+                <article class="panel">
+                    <div class="panel-title wrap">
+                        <div>
+                            <h3>Estoque do setor</h3>
+                            <p>Itens vinculados ao setor autorizado</p>
+                        </div>
+                        <input
+                            id="stockSearch"
+                            type="search"
+                            placeholder="Buscar item..."
+                        />
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Produto</th>
+                                    <th>Categoria</th>
+                                    <th>Quantidade</th>
+                                    <th>Disponível</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stockRows">
+                                <tr>
+                                    <td colspan="6" class="empty">
+                                        Nenhum item carregado.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+            </section>
+
+            <section id="page-movimentacoes" class="page hidden">
+                <article class="panel">
+                    <div class="panel-title wrap">
+                        <div>
+                            <h3>Movimentações</h3>
+                            <p>Histórico de entradas, saídas e ajustes</p>
+                        </div>
+                        <input
+                            id="moveSearch"
+                            type="search"
+                            placeholder="Buscar movimentação..."
+                        />
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Item</th>
+                                    <th>Tipo</th>
+                                    <th>Quantidade</th>
+                                    <th>Observação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="moveRows">
+                                <tr>
+                                    <td colspan="5" class="empty">
+                                        Nenhuma movimentação carregada.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+            </section>
+
+            <section id="page-solicitacoes" class="page hidden">
+                <article class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <h3>Solicitações</h3>
+                            <p>Pedidos relacionados ao seu setor</p>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Solicitante</th>
+                                    <th>Item</th>
+                                    <th>Quantidade</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="requestRows">
+                                <tr>
+                                    <td colspan="5" class="empty">
+                                        Nenhuma solicitação carregada.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+            </section>
+
+            <footer>
+                <span>Escola Estadual Hauy Petruceli Mayrink</span>
+                <span id="lastUpdated">Aguardando integração com a API</span>
+            </footer>
+        </main>
+
+        <script src="script.js"></script>
+    </body>
+</html>
