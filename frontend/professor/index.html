@@ -191,36 +191,55 @@
                 </section>
 
                 <section class="page" id="page-perfil">
-                    <div class="panel">
-                        <h2>Meu perfil</h2>
-                        <form id="formPerfil" class="form-grid">
-                            <div class="field">
-                                <label for="nome">Nome</label>
-                                <input id="nome" value="Professor" required />
-                            </div>
-                            <div class="field">
-                                <label for="masp">MASP</label>
-                                <input
-                                    id="masp"
-                                    placeholder="MASP do professor"
-                                />
-                            </div>
-                            <div>
-                                <button class="primary-btn" type="submit">
-                                    Atualizar dados exibidos
-                                </button>
-                            </div>
-                        </form>
+                    <div class="perfil-cabecalho">
+                        <h1>Meu Perfil</h1>
+                        <p>
+                            Seus dados cadastrados. Para alterações, procure a
+                            Secretaria.
+                        </p>
+                    </div>
+
+                    <div class="perfil-grade">
+                        <article class="perfil-campo">
+                            <span>Nome completo</span>
+                            <strong id="perfilNome">Carregando...</strong>
+                        </article>
+
+                        <article class="perfil-campo">
+                            <span>Idade</span>
+                            <strong id="perfilIdade">Carregando...</strong>
+                        </article>
+
+                        <article class="perfil-campo">
+                            <span>MASP</span>
+                            <strong id="perfilMasp">Carregando...</strong>
+                        </article>
+
+                        <article class="perfil-campo">
+                            <span>E-mail</span>
+                            <strong id="perfilEmail">Carregando...</strong>
+                        </article>
+
+                        <article class="perfil-campo">
+                            <span>Senha</span>
+                            <strong>••••••••••••</strong>
+                        </article>
+                    </div>
+
+                    <div class="perfil-aviso">
+                        <i data-lucide="lock"></i>
+                        <span
+                            >A senha é armazenada de forma protegida e não pode
+                            ser exibida.</span
+                        >
                     </div>
                 </section>
 
                 <section class="page" id="page-calendario">
-                    <div class="panel">
-                        <h2>Calendário</h2>
-                        <p class="empty">
-                            A agenda será integrada às datas e reservas da
-                            escola em uma próxima etapa.
-                        </p>
+                    <div id="calendarioProfessor">
+                        <div class="cal-prof-loading">
+                            Carregando calendário...
+                        </div>
                     </div>
                 </section>
             </main>

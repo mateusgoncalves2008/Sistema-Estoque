@@ -2,9 +2,382 @@ const API_URL = "/api";
 let reservas = [];
 let emprestimos = [];
 let historicoProfessor = [];
-
+let eventosCalendarioProfessor = [];
+let filtroCalendarioProfessor = "geral";
+let calendarioProfessorCarregado = false;
 let ITENS_PESQUISA = [];
 
+let mesCalendarioProfessor = new Date().getMonth();
+let anoCalendarioProfessor = new Date().getFullYear();
+
+const CORES_CAL_PROF = {
+    FERIADO: "#c94736",
+    RECESSO: "#9860ce",
+    EVENTO: "#3475bf",
+    REUNIAO: "#788d32",
+    PROVA: "#d9a441",
+    ESCOLA: "#e77d36",
+    LETIVO: "#52784c",
+};
+
+function escaparCalProf(valor) {
+    return String(valor ?? "").replace(
+        /[&<>"']/g,
+        (c) =>
+            ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+            })[c],
+    );
+}
+
+function dataCalProf(valor) {
+    const partes = String(valor || "").split("/");
+    if (partes.length !== 3) return null;
+
+    const dia = Number(partes[0]);
+    const mes = Number(partes[1]);
+    const ano = Number(partes[2]);
+
+    const data = new Date(ano, mes - 1, dia);
+
+    if (
+        data.getFullYear() !== ano ||
+        data.getMonth() !== mes - 1 ||
+        data.getDate() !== dia
+    )
+        return null;
+
+    data.setHours(0, 0, 0, 0);
+    return data;
+}
+
+function chaveCalProf(data) {
+    return [
+        data.getFullYear(),
+        String(data.getMonth() + 1).padStart(2, "0"),
+        String(data.getDate()).padStart(2, "0"),
+    ].join("-");
+}
+
+function eventosVisiveisCalProf() {
+    const eventos = Array.isArray(eventosCalendarioProfessor)
+        ? eventosCalendarioProfessor
+        : [];
+
+    if (filtroCalendarioProfessor === "reservas") {
+        return [];
+    }
+
+    return eventos
+        .filter(
+            (e) =>
+                filtroCalendarioProfessor === "geral" ||
+                filtroCalendarioProfessor === "eventos",
+        )
+        .map((e) => {
+            const tipo = String(e.tipo || "EVENTO").toUpperCase();
+            return {
+                data: dataCalProf(e.data),
+                dataFim: dataCalProf(e.dataFim || e.data),
+                titulo: e.titulo || "Evento escolar",
+                descricao: e.descricao || "",
+                tipo,
+                cor: CORES_CAL_PROF[tipo] || CORES_CAL_PROF.EVENTO,
+                categoria:
+                    tipo === "FERIADO"
+                        ? "Feriado"
+                        : tipo === "REUNIAO"
+                          ? "Reunião"
+                          : tipo === "RECESSO"
+                            ? "Recesso"
+                            : tipo === "PROVA"
+                              ? "Prova"
+                              : "Evento escolar",
+            };
+        })
+        .filter((e) => e.data);
+}
+
+function carregarCalendarioProfessor() {
+    const area = document.getElementById("calendarioProfessor");
+    if (!area) return;
+
+    area.innerHTML = `
+        <div class="cal-prof-loading">Carregando calendário escolar...</div>
+    `;
+
+    fetch(`${API_URL}/professor/calendario`)
+        .then((resposta) =>
+            resposta.json().then((dados) => {
+                if (!resposta.ok || !dados.sucesso) {
+                    throw new Error(
+                        dados.mensagem || "Erro ao carregar calendário.",
+                    );
+                }
+                return dados;
+            }),
+        )
+        .then((dados) => {
+            eventosCalendarioProfessor = dados.eventos || [];
+            calendarioProfessorCarregado = true;
+            renderizarCalendarioProfessor();
+        })
+        .catch((erro) => {
+            console.error("Erro no calendário:", erro);
+            area.innerHTML = `
+                <div class="cal-prof-empty">
+                    Não foi possível carregar os eventos da escola.
+                    Verifique a conexão e tente abrir o calendário novamente.
+                    <br><br>
+                    <button class="primary-btn" onclick="carregarCalendarioProfessor()">
+                        Tentar novamente
+                    </button>
+                </div>
+            `;
+        });
+}
+
+function renderizarCalendarioProfessor() {
+    const area = document.getElementById("calendarioProfessor");
+    if (!area) return;
+
+    const eventos = eventosVisiveisCalProf();
+    const primeiroDia = new Date(
+        anoCalendarioProfessor,
+        mesCalendarioProfessor,
+        1,
+    );
+    const inicio = new Date(primeiroDia);
+    inicio.setDate(1 - ((primeiroDia.getDay() + 6) % 7));
+
+    const hoje = chaveCalProf(new Date());
+    const meses = [
+        "Janeiro",
+        "Fevereiro",
+        "Março",
+        "Abril",
+        "Maio",
+        "Junho",
+        "Julho",
+        "Agosto",
+        "Setembro",
+        "Outubro",
+        "Novembro",
+        "Dezembro",
+    ];
+
+    const anos = Array.from(
+        { length: 7 },
+        (_, i) => new Date().getFullYear() - 2 + i,
+    );
+
+    let diasHTML = "";
+
+    for (let i = 0; i < 42; i++) {
+        const data = new Date(inicio);
+        data.setDate(inicio.getDate() + i);
+
+        const chave = chaveCalProf(data);
+        const doMes = data.getMonth() === mesCalendarioProfessor;
+        const doFimDeSemana = data.getDay() === 0 || data.getDay() === 6;
+
+        const doDia = eventos.filter(
+            (e) => e.data && e.data <= data && (e.dataFim || e.data) >= data,
+        );
+
+        diasHTML += `
+            <button
+                type="button"
+                class="cal-prof-day
+                    ${!doMes ? "outside" : ""}
+                    ${doFimDeSemana ? "weekend" : ""}
+                    ${chave === hoje ? "today" : ""}"
+                aria-label="${escaparCalProf(
+                    `${data.getDate()} de ${meses[data.getMonth()]}, ${doDia.map((e) => e.titulo).join(", ") || "sem eventos"}`,
+                )}"
+                title="${escaparCalProf(doDia.map((e) => `${e.categoria}: ${e.titulo}`).join(" | "))}"
+            >
+                <span class="cal-prof-number">${data.getDate()}</span>
+                ${doDia
+                    .slice(0, 3)
+                    .map(
+                        (e) => `
+                    <span class="cal-prof-event" style="--event-color:${e.cor}">
+                        <i class="cal-prof-dot"></i>
+                        <span class="cal-prof-event-label">${escaparCalProf(e.titulo)}</span>
+                    </span>
+                `,
+                    )
+                    .join("")}
+                ${doDia.length > 3 ? `<span class="cal-prof-event">+${doDia.length - 3} eventos</span>` : ""}
+            </button>
+        `;
+    }
+
+    const proximos = eventos
+        .filter((e) => e.dataFim >= new Date(new Date().setHours(0, 0, 0, 0)))
+        .sort((a, b) => a.data - b.data)
+        .slice(0, 6);
+
+    const listaHTML = proximos.length
+        ? proximos
+              .map(
+                  (e) => `
+        <div class="cal-prof-upcoming">
+            <div class="cal-prof-datebox">
+                <strong>${String(e.data.getDate()).padStart(2, "0")}</strong>
+                <span>${meses[e.data.getMonth()].slice(0, 3)}</span>
+            </div>
+            <div class="cal-prof-upcoming-info">
+                <strong>
+                    <i class="cal-prof-dot" style="display:inline-block; background:${e.cor}"></i>
+                    ${escaparCalProf(e.titulo)}
+                </strong>
+                <span>${escaparCalProf(e.categoria)}${e.descricao ? " · " + escaparCalProf(e.descricao) : ""}</span>
+            </div>
+        </div>
+    `,
+              )
+              .join("")
+        : `
+        <div class="cal-prof-empty-list">
+            ${
+                filtroCalendarioProfessor === "reservas"
+                    ? "As reservas aprovadas aparecerão aqui quando a aprovação estiver disponível."
+                    : "Nenhum próximo evento cadastrado."
+            }
+        </div>
+    `;
+
+    const legenda = [
+        ["LETIVO", "Dia letivo"],
+        ["FERIADO", "Feriado"],
+        ["RECESSO", "Recesso"],
+        ["EVENTO", "Evento escolar"],
+        ["REUNIAO", "Reunião"],
+        ["PROVA", "Prova"],
+        ["ESCOLA", "Evento da escola"],
+    ]
+        .map(
+            ([tipo, nome]) => `
+        <span>
+            <i class="cal-prof-dot" style="--event-color:${CORES_CAL_PROF[tipo]}"></i>
+            ${nome}
+        </span>
+    `,
+        )
+        .join("");
+
+    area.innerHTML = `
+        <header class="cal-prof-header">
+            <h1>Calendário escolar</h1>
+            <p>Confira os eventos, reservas e datas importantes da escola.</p>
+        </header>
+
+        <div class="cal-prof-toolbar">
+            <div class="cal-prof-filters">
+                ${[
+                    ["geral", "Geral"],
+                    ["reservas", "Reservas de salas"],
+                    ["eventos", "Eventos"],
+                ]
+                    .map(
+                        ([id, nome]) => `
+                    <button
+                        type="button"
+                        class="${filtroCalendarioProfessor === id ? "active" : ""}"
+                        onclick="filtrarCalendarioProfessor('${id}')"
+                    >${nome}</button>
+                `,
+                    )
+                    .join("")}
+            </div>
+
+            <div class="cal-prof-spacer"></div>
+
+            <button type="button" onclick="moverMesCalendarioProfessor(-1)">Anterior</button>
+
+            <select aria-label="Mês" onchange="selecionarMesCalendarioProfessor(this.value)">
+                ${meses
+                    .map(
+                        (mes, i) => `
+                    <option value="${i}" ${i === mesCalendarioProfessor ? "selected" : ""}>
+                        ${mes}
+                    </option>
+                `,
+                    )
+                    .join("")}
+            </select>
+
+            <select aria-label="Ano" onchange="selecionarAnoCalendarioProfessor(this.value)">
+                ${anos
+                    .map(
+                        (ano) => `
+                    <option value="${ano}" ${ano === anoCalendarioProfessor ? "selected" : ""}>
+                        ${ano}
+                    </option>
+                `,
+                    )
+                    .join("")}
+            </select>
+
+            <button type="button" onclick="moverMesCalendarioProfessor(1)">Próximo</button>
+        </div>
+
+        <div class="cal-prof-layout">
+            <section class="cal-prof-main" aria-label="Calendário mensal">
+                <div class="cal-prof-weekdays">
+                    ${["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
+                        .map((d) => `<div>${d}</div>`)
+                        .join("")}
+                </div>
+                <div class="cal-prof-grid">${diasHTML}</div>
+                <div class="cal-prof-note">
+                    <strong>Detalhes dos eventos</strong>
+                    Passe o mouse sobre uma data marcada para consultar seus detalhes.
+                </div>
+            </section>
+
+            <aside class="cal-prof-side">
+                <h2>Próximos eventos</h2>
+                <div class="cal-prof-event-list">${listaHTML}</div>
+                <div class="cal-prof-legend">${legenda}</div>
+            </aside>
+        </div>
+    `;
+}
+
+function filtrarCalendarioProfessor(filtro) {
+    filtroCalendarioProfessor = filtro;
+    renderizarCalendarioProfessor();
+}
+
+function moverMesCalendarioProfessor(direcao) {
+    const data = new Date(
+        anoCalendarioProfessor,
+        mesCalendarioProfessor + direcao,
+        1,
+    );
+
+    mesCalendarioProfessor = data.getMonth();
+    anoCalendarioProfessor = data.getFullYear();
+
+    renderizarCalendarioProfessor();
+}
+
+function selecionarMesCalendarioProfessor(mes) {
+    mesCalendarioProfessor = Number(mes);
+    renderizarCalendarioProfessor();
+}
+
+function selecionarAnoCalendarioProfessor(ano) {
+    anoCalendarioProfessor = Number(ano);
+    renderizarCalendarioProfessor();
+}
 
 function aviso(texto) {
     const toast = document.getElementById("toast");
@@ -42,6 +415,14 @@ function abrirPagina(nome) {
 
     if (nome === "historico") {
         carregarHistoricoProfessor();
+    }
+
+    if (nome === "perfil") {
+        carregarPerfilProfessor();
+    }
+
+    if (nome === "calendario") {
+        carregarCalendarioProfessor();
     }
 }
 
@@ -181,18 +562,6 @@ const campoBusca = document.getElementById("busca");
 if (campoBusca) {
     campoBusca.addEventListener("input", atualizarTabelas);
 }
-document.getElementById("formPerfil").addEventListener("submit", (e) => {
-    e.preventDefault();
-
-    const nome = document.getElementById("nome").value.trim() || "Professor";
-    document.getElementById("nomeUsuario").textContent = nome;
-    document.getElementById("nomeHero").textContent = nome;
-    document.getElementById("avatar").textContent = nome
-        .charAt(0)
-        .toUpperCase();
-
-    aviso("Nome atualizado nesta tela.");
-});
 
 document.getElementById("sair").addEventListener("click", () => {
     aviso("Para sair de verdade, conectaremos ao login existente.");
@@ -421,7 +790,44 @@ async function carregarHistoricoProfessor() {
     }
 }
 
+async function carregarPerfilProfessor() {
+    const usuario = JSON.parse(
+        sessionStorage.getItem("usuarioLogado") || "null",
+    );
 
-// ============================================================
-// TELA PESQUISAR
-// ============================================================
+    if (!usuario?.id) {
+        aviso("Não foi possível identificar o professor.");
+        return;
+    }
+
+    try {
+        const resposta = await fetch(
+            `${API_URL}/professor/perfil/${encodeURIComponent(usuario.id)}`,
+        );
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok || !resultado.sucesso) {
+            throw new Error(resultado.mensagem || "Erro ao carregar perfil.");
+        }
+
+        const p = resultado.professor;
+
+        document.getElementById("perfilNome").textContent =
+            p.nome || "Não informado";
+
+        document.getElementById("perfilIdade").textContent =
+            p.idade || "Não informado";
+
+        document.getElementById("perfilMasp").textContent =
+            p.masp || "Não informado";
+
+        document.getElementById("perfilEmail").textContent =
+            p.email || "Não informado";
+
+        if (window.lucide) lucide.createIcons();
+    } catch (erro) {
+        console.error("Erro ao carregar perfil:", erro);
+        aviso("Não foi possível carregar os dados do perfil.");
+    }
+}

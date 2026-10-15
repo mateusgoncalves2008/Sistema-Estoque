@@ -232,7 +232,7 @@ function aplicarFiltros() {
 }
 
 function cardDoItem(item) {
-    const reservavel = item.podeReservar;
+    const reservavel = true;
     return `
         <article
             class="item-result-card ${reservavel ? "reservable" : ""}"
@@ -321,29 +321,61 @@ function abrirModalReserva(produtoID, localID, nome) {
     overlay.id = "modalReservaSala";
     overlay.className = "modal-overlay";
     overlay.innerHTML = `
-        <div class="modal-card" role="dialog" aria-modal="true">
-            <h2>Reservar ${escapeHtml(nome)}</h2>
+        <div class="modal-reserva" role="dialog" aria-modal="true">
+            <div class="modal-reserva-header">
+                <div>
+                    <span class="modal-reserva-tipo">Reserva</span>
+                    <h2>${escapeHtml(nome)}</h2>
+                </div>
+                <button class="modal-fechar" id="fecharModalBtn" type="button">&#x2715;</button>
+            </div>
+
             <form id="formReservaSala">
-                <label>Retirada<input type="date" name="dataRetirada" min="${hojeISO()}" required /></label>
-                <label>Hora de retirada<input type="time" name="horaRetirada" required /></label>
-                <label>Devolução<input type="date" name="dataDevolucao" min="${hojeISO()}" required /></label>
-                <label>Hora de devolução<input type="time" name="horaDevolucao" required /></label>
-                <label>Motivo<input type="text" name="motivo" placeholder="Ex.: aula de informática" /></label>
-                <div class="modal-acoes">
-                    <button type="button" class="btn sm" id="cancelarReservaSala">Cancelar</button>
-                    <button type="submit" class="btn sm primary" id="confirmarReservaSala">Reservar</button>
+                <p class="modal-reserva-sub">Período da reserva</p>
+                <p class="modal-reserva-hint">Informe quando você irá retirar e devolver o item.</p>
+
+                <div class="modal-reserva-grid">
+                    <div class="modal-campo">
+                        <label>Data da retirada</label>
+                        <input type="date" name="dataRetirada" min="${hojeISO()}" required />
+                    </div>
+                    <div class="modal-campo">
+                        <label>Hora da retirada</label>
+                        <input type="time" name="horaRetirada" required />
+                    </div>
+                    <div class="modal-campo">
+                        <label>Data da devolução</label>
+                        <input type="date" name="dataDevolucao" min="${hojeISO()}" required />
+                    </div>
+                    <div class="modal-campo">
+                        <label>Hora da devolução</label>
+                        <input type="time" name="horaDevolucao" required />
+                    </div>
+                </div>
+
+                <div class="modal-campo">
+                    <label>Motivo da reserva</label>
+                    <textarea name="motivo" rows="3" placeholder="Informe o motivo da utilização..."></textarea>
+                </div>
+
+                <div class="modal-reserva-acoes">
+                    <button type="button" class="btn-modal-cancelar" id="cancelarReservaSala">Cancelar</button>
+                    <button type="submit" class="btn-modal-confirmar" id="confirmarReservaSala">Reservar</button>
                 </div>
             </form>
         </div>`;
 
     document.body.appendChild(overlay);
+
     overlay.addEventListener("click", (e) => {
         if (e.target === overlay) fecharModalReserva();
     });
     document
+        .getElementById("fecharModalBtn")
+        .addEventListener("click", fecharModalReserva);
+    document
         .getElementById("cancelarReservaSala")
         .addEventListener("click", fecharModalReserva);
-
     document
         .getElementById("formReservaSala")
         .addEventListener("submit", (e) => {
@@ -375,7 +407,12 @@ async function confirmarReservaSala(produtoID, localID, form) {
                 usuarioID: usuarioLogado.id,
                 produtoID,
                 localID,
-                ...dados,
+                dataRetirada: dados.dataRetirada,
+                horaRetirada: dados.horaRetirada,
+                dataDevolucao: dados.dataDevolucao,
+                horaDevolucao: dados.horaDevolucao,
+                motivo: dados.motivo || "",
+                observacao: "",
             }),
         });
         const resultado = await resposta.json();

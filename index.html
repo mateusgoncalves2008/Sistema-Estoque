@@ -6,9 +6,7 @@
         <title>E.E. Hauy Petruceli Mayrink</title>
 
         <link rel="stylesheet" href="./frontend/login/login.css" />
-
-        <script src="https://unpkg.com/lucide@latest"></script>
-
+        <link rel="stylesheet" href="/icons/lucide.css" />
     </head>
     <body>
         <!-- ==================================================
@@ -154,7 +152,7 @@
                                 <button
                                     type="button"
                                     class="password-button"
-                                    onclick="alternarSenha('senha', this)"
+                                    id="btnAlternarSenha"
                                     aria-label="Mostrar senha"
                                 >
                                     <i data-lucide="eye"></i>
@@ -168,7 +166,6 @@
                             id="loginButton"
                             type="button"
                             class="main-button"
-                            onclick="realizarLogin()"
                         >
                             <span id="loginButtonText">
                                 Entrar no sistema
@@ -182,7 +179,7 @@
                         <div class="register-link">
                             Ainda não possui uma conta?
 
-                            <button type="button" onclick="mostrarCadastro()">
+                            <button id="btnMostrarCadastro" type="button">
                                 Criar minha conta
                             </button>
                         </div>
@@ -241,7 +238,7 @@
                                 id="verifyButton"
                                 type="button"
                                 class="main-button"
-                                onclick="verificarMatricula()"
+                                
                             >
                                 <span id="verifyButtonText">
                                     Verificar matrícula / MASP
@@ -253,7 +250,7 @@
                             <button
                                 type="button"
                                 class="back-button register-back"
-                                onclick="mostrarLogin()"
+                                id="btnVoltarLogin1"
                             >
                                 <i data-lucide="arrow-left"></i>
                                 Voltar ao login
@@ -487,7 +484,6 @@
                                     id="registerButton"
                                     type="button"
                                     class="main-button"
-                                    onclick="enviarCadastro()"
                                 >
                                     <span id="registerButtonText">
                                         Criar minha conta
@@ -499,7 +495,7 @@
                                 <button
                                     type="button"
                                     class="back-button register-back"
-                                    onclick="mostrarLogin()"
+                                    id="btnVoltarLogin2"
                                 >
                                     <i data-lucide="arrow-left"></i>
                                     Voltar ao login

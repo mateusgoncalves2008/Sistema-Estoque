@@ -492,4 +492,388 @@ router.post("/cadastro", async (req, res) => {
 console.log(">>> CADASTRO.JS FOI CARREGADO <<<");
 console.log(">>> ROTA /verificar-matricula REGISTRADA <<<");
 
+/* =========================================================
+   AUTORIZAR RESPONSÁVEL — SOMENTE ADM AUTENTICADO
+   POST /api/autorizar-responsavel
+========================================================= */
+
+function somenteADM(req, res, next) {
+    const usuario = req.session?.usuario;
+
+    if (
+        !usuario ||
+        String(usuario.tipoUsuario || "").toUpperCase() !== "ADMIN" ||
+        String(usuario.perfil || "").toUpperCase() !== "ADMIN"
+    ) {
+        return res.status(403).json({
+            sucesso: false,
+            mensagem: "Acesso permitido somente ao ADM.",
+        });
+    }
+
+    next();
+}
+
+function normalizar(valor) {
+    return String(valor || "").trim();
+}
+
+function gerarID(prefixo, linhas, expressao) {
+    const numeros = linhas.map((linha) => {
+        const match = normalizar(linha[0]).match(expressao);
+        return match ? Number(match[1]) : 0;
+    });
+
+    return `${prefixo}${String(Math.max(0, ...numeros) + 1).padStart(5, "0")}`;
+}
+
+function dataAtual() {
+    return new Date().toLocaleString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+    });
+}
+
+router.post("/autorizar-responsavel", somenteADM, async (req, res) => {
+    try {
+        const setorID = normalizar(req.body?.setorID);
+        const email = normalizar(req.body?.email).toLowerCase();
+
+        if (!setorID || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "Informe um SetorID e um e-mail válido.",
+            });
+        }
+
+        const [setoresResp, usuariosResp, autorizacoesResp] = await Promise.all(
+            [
+                sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: "12_SETORES!A2:E",
+                }),
+                sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: "01_USUARIOS!A2:K",
+                }),
+                sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: "18_AUTORIZACOES_RESPONSAVEIS!A2:G",
+                }),
+            ],
+        );
+
+        const setores = setoresResp.data.values || [];
+        const usuarios = usuariosResp.data.values || [];
+        const autorizacoes = autorizacoesResp.data.values || [];
+
+        const setor = setores.find((linha) => normalizar(linha[0]) === setorID);
+
+        if (!setor || normalizar(setor[4]).toUpperCase() !== "ATIVO") {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: "Setor não encontrado ou inativo.",
+            });
+        }
+
+        if (normalizar(setor[2])) {
+            return res.status(409).json({
+                sucesso: false,
+                mensagem: "Este setor já possui um responsável vinculado.",
+            });
+        }
+
+        if (
+            usuarios.some(
+                (linha) => normalizar(linha[2]).toLowerCase() === email,
+            )
+        ) {
+            return res.status(409).json({
+                sucesso: false,
+                mensagem: "Este e-mail já possui uma conta.",
+            });
+        }
+
+        const autorizacaoExistente = autorizacoes.some(
+            (linha) =>
+                normalizar(linha[2]).toLowerCase() === email &&
+                normalizar(linha[3]).toUpperCase() === "PENDENTE",
+        );
+
+        if (autorizacaoExistente) {
+            return res.status(409).json({
+                sucesso: false,
+                mensagem: "Este e-mail já está autorizado para esse setor.",
+            });
+        }
+
+        const autorizacaoID = gerarID("AUT-", autorizacoes, /^AUT-(\d+)$/);
+
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "18_AUTORIZACOES_RESPONSAVEIS!A:G",
+            valueInputOption: "RAW",
+            insertDataOption: "INSERT_ROWS",
+            requestBody: {
+                values: [
+                    [
+                        autorizacaoID,
+                        setorID,
+                        email,
+                        "PENDENTE",
+                        dataAtual(),
+                        normalizar(req.session.usuario.id),
+                        "",
+                    ],
+                ],
+            },
+        });
+
+        return res.status(201).json({
+            sucesso: true,
+            mensagem: "Responsável autorizado para criar a conta.",
+            autorizacaoID,
+            setorID,
+            email,
+        });
+    } catch (erro) {
+        console.error("Erro ao autorizar responsável:", erro);
+
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: "Erro interno ao autorizar responsável.",
+        });
+    }
+});
+
+/* =========================================================
+   CRIAR CONTA DO RESPONSÁVEL
+   POST /api/cadastro-responsavel
+========================================================= */
+
+router.post("/cadastro-responsavel", somenteADM, async (req, res) => {
+    try {
+        const nome = normalizar(req.body?.nome);
+        const email = normalizar(req.body?.email).toLowerCase();
+        const senha = req.body?.senha;
+        const confirmacaoSenha = req.body?.confirmacaoSenha;
+        const setorID = normalizar(req.body?.setorID);
+
+        if (
+            !nome ||
+            !email ||
+            !setorID ||
+            typeof senha !== "string" ||
+            typeof confirmacaoSenha !== "string"
+        ) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "Preencha nome, e-mail, senha, confirmação e setor.",
+            });
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "E-mail inválido.",
+            });
+        }
+
+        if (senha.length < 12 || senha.length > 128) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "A senha deve ter entre 12 e 128 caracteres.",
+            });
+        }
+
+        if (senha !== confirmacaoSenha) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "As senhas não coincidem.",
+            });
+        }
+
+        const [usuariosResp, setoresResp] = await Promise.all([
+            sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEET_ID,
+                range: "01_USUARIOS!A2:K",
+            }),
+            sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEET_ID,
+                range: "12_SETORES!A2:E",
+            }),
+        ]);
+
+        const usuarios = usuariosResp.data.values || [];
+        const setores = setoresResp.data.values || [];
+
+        if (
+            usuarios.some(
+                (linha) => normalizar(linha[2]).toLowerCase() === email,
+            )
+        ) {
+            return res.status(409).json({
+                sucesso: false,
+                mensagem: "Este e-mail já possui uma conta.",
+            });
+        }
+
+        const indiceSetor = setores.findIndex(
+            (linha) => normalizar(linha[0]) === setorID,
+        );
+
+        if (indiceSetor === -1) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: "Setor não encontrado.",
+            });
+        }
+
+        const setor = setores[indiceSetor];
+
+        if (normalizar(setor[4]).toUpperCase() !== "ATIVO") {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem:
+                    "Não é possível cadastrar responsável em setor inativo.",
+            });
+        }
+
+        if (normalizar(setor[2])) {
+            return res.status(409).json({
+                sucesso: false,
+                mensagem: "Este setor já possui um responsável.",
+            });
+        }
+
+        const usuarioID = gerarID("USR-", usuarios, /^USR-(\d+)$/);
+
+        const salt = crypto.randomBytes(16).toString("hex");
+        const senhaHash = crypto
+            .createHash("sha256")
+            .update(`${salt}:${senha}`)
+            .digest("hex");
+
+        const metadados = await sheets.spreadsheets.get({
+            spreadsheetId: SPREADSHEET_ID,
+            fields: "sheets(properties(sheetId,title))",
+        });
+
+        const idsAbas = Object.fromEntries(
+            (metadados.data.sheets || []).map((aba) => [
+                aba.properties.title,
+                aba.properties.sheetId,
+            ]),
+        );
+
+        for (const nomeAba of ["01_USUARIOS", "12_SETORES"]) {
+            if (idsAbas[nomeAba] === undefined) {
+                throw new Error(`Aba não encontrada: ${nomeAba}`);
+            }
+        }
+
+        const paraCelulas = (valores) =>
+            valores.map((valor) => ({
+                userEnteredValue: {
+                    stringValue: String(valor ?? ""),
+                },
+            }));
+
+        const valoresUsuario = [
+            usuarioID,
+            nome,
+            email,
+            senhaHash,
+            salt,
+            "RESPONSAVEL",
+            "RESPONSAVEL",
+            setorID,
+            "ATIVO",
+            dataAtual(),
+            "",
+        ];
+
+        await sheets.spreadsheets.batchUpdate({
+            spreadsheetId: SPREADSHEET_ID,
+            requestBody: {
+                requests: [
+                    {
+                        appendCells: {
+                            sheetId: idsAbas["01_USUARIOS"],
+                            rows: [
+                                {
+                                    values: paraCelulas(valoresUsuario),
+                                },
+                            ],
+                            fields: "userEnteredValue",
+                        },
+                    },
+                    {
+                        updateCells: {
+                            range: {
+                                sheetId: idsAbas["12_SETORES"],
+                                startRowIndex: indiceSetor + 1,
+                                startColumnIndex: 2,
+                            },
+                            rows: [
+                                {
+                                    values: paraCelulas([usuarioID]),
+                                },
+                            ],
+                            fields: "userEnteredValue",
+                        },
+                    },
+                ],
+            },
+        });
+
+        return res.status(201).json({
+            sucesso: true,
+            mensagem: "Responsável cadastrado e vinculado ao setor.",
+            usuario: {
+                id: usuarioID,
+                nome,
+                email,
+                tipoUsuario: "RESPONSAVEL",
+                perfil: "RESPONSAVEL",
+                setorID,
+            },
+        });
+    } catch (erro) {
+        console.error("Erro no cadastro do responsável:", erro);
+
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: "Erro interno ao cadastrar responsável.",
+        });
+    }
+});
+
+router.get("/setores-disponiveis", somenteADM, async (req, res) => {
+    try {
+        const resposta = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "12_SETORES!A2:E",
+        });
+
+        const setores = (resposta.data.values || [])
+            .filter(
+                (linha) =>
+                    normalizar(linha[4]).toUpperCase() === "ATIVO" &&
+                    !normalizar(linha[2]),
+            )
+            .map((linha) => ({
+                setorID: linha[0],
+                nome: linha[1],
+            }));
+
+        res.json({ sucesso: true, setores });
+    } catch (erro) {
+        console.error("Erro ao consultar setores:", erro.message);
+        res.status(500).json({
+            sucesso: false,
+            mensagem: "Não foi possível carregar os setores.",
+        });
+    }
+});
+
 module.exports = router;
