@@ -1780,7 +1780,7 @@ body.reserva-modal-open {
             rgba(60, 28, 14, 0.7) 55%,
             rgba(46, 56, 20, 0.78)
         ),
-        url("img/fundo-login.png") center/cover no-repeat;
+        url("../img/fundo-grande.png") center/cover no-repeat;
     transition:
         opacity 0.6s ease,
         visibility 0.6s ease;
@@ -1788,6 +1788,7 @@ body.reserva-modal-open {
 #tela-carregamento.oculta {
     opacity: 0;
     visibility: hidden;
+    background-size: contain;
 }
 
 .cartao {
@@ -1908,5 +1909,117 @@ body.reserva-modal-open {
     * {
         animation-duration: 0.01s !important;
         animation-iteration-count: 1 !important;
+    }
+}
+
+.hero {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.hero-direita {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.hero-relogio {
+    color: #fff;
+    font-size: clamp(28px, 3vw, 46px);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    animation: flutuarRelogio 3s ease-in-out infinite;
+}
+
+@keyframes flutuarRelogio {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@media (max-width: 650px) {
+    .hero {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .hero-direita {
+        width: 100%;
+        justify-content: space-between;
+        gap: 16px;
+    }
+}
+
+.hero {
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(90deg, rgba(45, 24, 15, 0.82), rgba(45, 24, 15, 0.38)),
+        url("../img/fundo-login.png") center/cover no-repeat;
+    border-radius: 20px;
+    padding: 28px 32px;
+    color: white;
+    height: 11rem;
+}
+
+/* Barra lateral fixa */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Área dos botões com rolagem */
+.sidebar-nav {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Perfil e botão Sair logo após o menu */
+.sidebar-bottom {
+    margin-top: auto;
+    flex-shrink: 0;
+}
+
+/* Rolagem mais discreta */
+.sidebar-nav::-webkit-scrollbar {
+    width: 5px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: #bb542c80;
+    border-radius: 10px;
+}
+
+/* Evita que o conteúdo principal fique atrás da barra */
+.main-content {
+    min-width: 0;
+}
+/* Reserva espaço para a barra lateral fixa */
+.app-shell {
+    padding-left: var(--sidebar-width, 280px);
+}
+
+/* Mantém o conteúdo dentro do espaço disponível */
+.main-content {
+    width: 100%;
+    min-width: 0;
+}
+
+/* No celular, remove o espaço reservado */
+@media (max-width: 760px) {
+    .app-shell {
+        padding-left: 0;
     }
 }

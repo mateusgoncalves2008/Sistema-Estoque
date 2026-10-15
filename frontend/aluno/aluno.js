@@ -78,7 +78,7 @@ const EV = {
     "2026-10-08": ["feriado", "Feriado"],
     "2026-10-12": ["feriado", "Nossa Senhora Aparecida"],
     "2026-10-15": ["evento", "Dia do Professor"],
-    "2026-10-20": ["reuniao", "Reunião de pais"],
+    "2026-10-01": ["reuniao", "Reunião de pais"],
     "2026-10-24": ["escola", "Feira de Ciências"],
     "2026-10-28": ["recesso", "Dia do Servidor Público"],
     "2026-11-02": ["feriado", "Finados"],
@@ -170,7 +170,9 @@ function showToast(message) {
 
 function inicializarIcones() {
     if (window.lucide) {
-        lucide.createIcons();
+        window.lucide.createIcons();
+    } else {
+        console.error("Lucide não foi carregado.");
     }
 }
 
@@ -411,29 +413,35 @@ function viewInicio() {
     ).length;
 
     return `
-        <div class="hero">
-            <div>
-                <h1>Olá, ${escapeHtml(primeiroNome)}</h1>
+        
+<div class="hero">
+    <div class="hero-info">
+        <h1>Olá, ${escapeHtml(primeiroNome)}</h1>
 
-                <p>
-                    ${escapeHtml(ALUNO.ano || "Ano não informado")}
-                    · Turma ${escapeHtml(ALUNO.turma || "Não informada")}
-                    · ${escapeHtml(ALUNO.turno || "Turno não informado")}
-                </p>
+        <p>
+            ${escapeHtml(ALUNO.ano || "Ano não informado")}
+            · Turma ${escapeHtml(ALUNO.turma || "Não informada")}
+            · ${escapeHtml(ALUNO.turno || "Turno não informado")}
+        </p>
+    </div>
+
+    <div class="hero-direita">
+        <div class="stats">
+            <div class="stat">
+                <b>${livrosLidos}</b>
+                <span>Livros lidos</span>
             </div>
 
-            <div class="stats">
-                <div class="stat">
-                    <b>${livrosLidos}</b>
-                    <span>Livros lidos</span>
-                </div>
-
-                <div class="stat">
-                    <b>${computadoresUsados}</b>
-                    <span>Computadores</span>
-                </div>
+            <div class="stat">
+                <b>${computadoresUsados}</b>
+                <span>Computadores</span>
             </div>
         </div>
+
+        <div class="hero-relogio" id="relogioAluno">00:00:00</div>
+    </div>
+</div>
+
 
         <div class="grid">
 
@@ -568,6 +576,38 @@ async function carregarReservas() {
         showToast("Não foi possível carregar suas reservas.");
 
         return false;
+    }
+}
+
+async function carregarEmprestimos() {
+    const usuarioID = usuarioLogado?.id;
+
+    if (!usuarioID) {
+        emprestimos = [];
+        return;
+    }
+
+    try {
+        const resposta = await fetch(
+            `${API_URL}/aluno/emprestimos/${encodeURIComponent(usuarioID)}`,
+            {
+                credentials: "include",
+            },
+        );
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok || !resultado.sucesso) {
+            throw new Error(
+                resultado.mensagem ||
+                    "Não foi possível carregar os empréstimos.",
+            );
+        }
+
+        emprestimos = resultado.emprestimos || [];
+    } catch (erro) {
+        console.error("Erro ao carregar empréstimos:", erro);
+        emprestimos = [];
     }
 }
 
@@ -762,12 +802,9 @@ function criarModalReserva() {
     modal.id = "reservaModal";
 
     modal.innerHTML = `
-        <div class="reserva-overlay" onclick="fecharReserva(event)">
+       <div class="reserva-overlay">
 
-            <div
-                class="reserva-modal"
-                onclick="event.stopPropagation()"
-            >
+              <div class="reserva-modal">
 
                 <div class="reserva-modal-header">
 
@@ -788,7 +825,6 @@ function criarModalReserva() {
                     <button
                         type="button"
                         class="reserva-close"
-                        onclick="fecharReserva()"
                         aria-label="Fechar"
                     >
                         ${icon("x")}
@@ -949,23 +985,14 @@ function criarModalReserva() {
 
                 <div class="reserva-modal-footer">
 
-                    <button
-                        type="button"
-                        class="btn secondary"
-                        onclick="fecharReserva()"
-                    >
-                        Cancelar
-                    </button>
+                    <button type="button" class="btn secondary reserva-cancelar">
+    Cancelar
+</button>
 
-                    <button
-                        type="button"
-                        class="btn"
-                        id="confirmarReservaBtn"
-                        onclick="confirmarReserva()"
-                    >
-                        ${icon("bookmark-check")}
-                        Confirmar reserva
-                    </button>
+                    <button type="button" class="btn" id="confirmarReservaBtn">
+    ${icon("bookmark-check")}
+    Confirmar reserva
+</button>
 
                 </div>
 
@@ -975,6 +1002,26 @@ function criarModalReserva() {
     `;
 
     document.body.appendChild(modal);
+    const overlay = modal.querySelector(".reserva-overlay");
+    const caixa = modal.querySelector(".reserva-modal");
+
+    overlay.addEventListener("click", fecharReserva);
+
+    caixa.addEventListener("click", (event) => {
+        event.stopPropagation();
+    });
+
+    modal
+        .querySelector(".reserva-close")
+        .addEventListener("click", () => fecharReserva());
+
+    modal
+        .querySelector(".reserva-cancelar")
+        .addEventListener("click", () => fecharReserva());
+
+    modal
+        .querySelector("#confirmarReservaBtn")
+        .addEventListener("click", confirmarReserva);
 
     inicializarIcones();
 }
@@ -1492,16 +1539,12 @@ function pesquisarItens() {
         ? filtrados
               .map(
                   (item) => `
-                    <article
+             <article
     class="item-result-card ${item.podeReservar ? "reservable" : ""}"
     ${
         item.podeReservar
-            ? `onclick="abrirReserva('${escapeHtml(item.produtoID)}')"`
-            : ""
-    }
-    ${
-        item.podeReservar
-            ? `role="button" tabindex="0" title="Clique para reservar"`
+            ? `data-produto-id="${escapeHtml(item.produtoID)}"
+           role="button" tabindex="0" title="Clique para reservar"`
             : ""
     }
 >
@@ -1588,6 +1631,13 @@ function pesquisarItens() {
 
             </div>
         `;
+    resultados.addEventListener("click", (event) => {
+        const card = event.target.closest("[data-produto-id]");
+
+        if (card && resultados.contains(card)) {
+            abrirReserva(card.dataset.produtoId);
+        }
+    });
 
     inicializarIcones();
 }
@@ -1649,7 +1699,6 @@ function viewPesquisar() {
                         type="search"
                         placeholder="Digite o nome, código ou palavra-chave..."
                         autocomplete="off"
-                        oninput="pesquisarItens()"
                     >
 
                 </div>
@@ -1666,7 +1715,6 @@ function viewPesquisar() {
 
                     <select
                         id="itemType"
-                        onchange="pesquisarItens()"
                     >
 
                         <option value="">
@@ -1693,7 +1741,6 @@ function viewPesquisar() {
 
                     <select
                         id="itemStatus"
-                        onchange="pesquisarItens()"
                     >
 
                         <option value="">
@@ -1719,7 +1766,6 @@ function viewPesquisar() {
                 <button
                     class="btn sm search-clear"
                     type="button"
-                    onclick="limparPesquisaItens()"
                 >
                     ${icon("rotate-ccw")}
                     Limpar
@@ -1965,9 +2011,12 @@ function miniMonth(year, month) {
 
     let html = `
         <div
-            class="mini"
-            onclick="cal.view='Mês';cal.cur=new Date(${year},${month},1);draw()"
-        >
+    class="mini"
+    data-calendar-month="${month}"
+    data-calendar-year="${year}"
+    role="button"
+    tabindex="0"
+>
 
             <h2>
                 ${MESES[month]}
@@ -2052,11 +2101,12 @@ function viewCalendario() {
         .map(
             (item) => `
                 <button
-                    class="${item === v ? "on" : ""}"
-                    onclick="setView('${item}')"
-                >
-                    ${item}
-                </button>
+    class="${item === v ? "on" : ""}"
+    data-calendar-view="${item}"
+    type="button"
+>
+    ${item}
+</button>
             `,
         )
         .join("");
@@ -2178,35 +2228,23 @@ function viewCalendario() {
 
             <div class="sp"></div>
 
-            <button
-                class="btn sm"
-                type="button"
-                onclick="shiftCalendar(-1)"
-            >
-                Anterior
-            </button>
+            <button class="btn sm" type="button" data-calendar-shift="-1">
+    Anterior
+</button>
 
-            <select
-                id="calendarMonth"
-                onchange="pickCalendar()"
-            >
-                ${months}
-            </select>
+            
+<select id="calendarMonth">
+    ${months}
+</select>
 
-            <select
-                id="calendarYear"
-                onchange="pickCalendar()"
-            >
-                ${years}
-            </select>
+<select id="calendarYear">
+    ${years}
+</select>
 
-            <button
-                class="btn sm"
-                type="button"
-                onclick="shiftCalendar(1)"
-            >
-                Próximo
-            </button>
+
+            <button class="btn sm" type="button" data-calendar-shift="1">
+    Próximo
+</button>
 
         </div>
 
@@ -2340,7 +2378,7 @@ function draw() {
                 <button
                     type="button"
                     class="nav-item ${id === page ? "active" : ""}"
-                    onclick="go('${id}')"
+                    data-page="${id}"
                 >
                     ${icon(iconName)}
 
@@ -2376,6 +2414,7 @@ function draw() {
     content.innerHTML = views[page]();
 
     if (page === "pesquisar") {
+        conectarEventosPesquisa();
         pesquisarItens();
     }
 
@@ -2437,9 +2476,15 @@ async function iniciarPainel() {
 
         if (!perfilCarregado) return;
 
-        await Promise.all([carregarItensPesquisa(), carregarReservas()]);
+        await Promise.all([
+            carregarItensPesquisa(),
+            carregarReservas(),
+            carregarEmprestimos(),
+        ]);
 
         atualizarUsuarioLateral();
+        conectarEventosMenu();
+        conectarEventosCalendario();
         draw();
         inicializarIcones();
     } catch (erro) {
@@ -2449,4 +2494,101 @@ async function iniciarPainel() {
     }
 }
 
+function atualizarRelogioAluno() {
+    const relogio = document.getElementById("relogioAluno");
+    if (!relogio) return;
+
+    const agora = new Date();
+
+    relogio.textContent = [
+        String(agora.getHours()).padStart(2, "0"),
+        String(agora.getMinutes()).padStart(2, "0"),
+        String(agora.getSeconds()).padStart(2, "0"),
+    ].join(":");
+}
+
+atualizarRelogioAluno();
+setInterval(atualizarRelogioAluno, 1000);
+
 document.addEventListener("DOMContentLoaded", iniciarPainel);
+
+function conectarEventosPesquisa() {
+    $("#itemSearch")?.addEventListener("input", pesquisarItens);
+    $("#itemType")?.addEventListener("change", pesquisarItens);
+    $("#itemStatus")?.addEventListener("change", pesquisarItens);
+
+    document
+        .querySelector(".search-clear")
+        ?.addEventListener("click", limparPesquisaItens);
+}
+
+function conectarEventosMenu() {
+    const nav = $("#nav");
+
+    if (!nav || nav.dataset.eventosConectados) return;
+
+    nav.dataset.eventosConectados = "true";
+
+    nav.addEventListener("click", (event) => {
+        const botao = event.target.closest(".nav-item");
+
+        if (!botao || !nav.contains(botao)) return;
+
+        go(botao.dataset.page);
+    });
+}
+
+function conectarEventosCalendario() {
+    const content = document.querySelector("#pageContent");
+
+    if (!content || content.dataset.calendarioConectado) return;
+
+    content.dataset.calendarioConectado = "true";
+
+    content.addEventListener("click", (event) => {
+        const tab = event.target.closest("[data-calendar-view]");
+        if (tab) {
+            setView(tab.dataset.calendarView);
+            return;
+        }
+
+        const shift = event.target.closest("[data-calendar-shift]");
+        if (shift) {
+            shiftCalendar(Number(shift.dataset.calendarShift));
+            return;
+        }
+
+        const mini = event.target.closest("[data-calendar-month]");
+        if (mini) {
+            cal.view = "Mês";
+            cal.cur = new Date(
+                Number(mini.dataset.calendarYear),
+                Number(mini.dataset.calendarMonth),
+                1,
+            );
+            draw();
+        }
+    });
+
+    content.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+
+        const mini = event.target.closest("[data-calendar-month]");
+        if (!mini) return;
+
+        event.preventDefault();
+        cal.view = "Mês";
+        cal.cur = new Date(
+            Number(mini.dataset.calendarYear),
+            Number(mini.dataset.calendarMonth),
+            1,
+        );
+        draw();
+    });
+
+    content.addEventListener("change", (event) => {
+        if (event.target.matches("#calendarMonth, #calendarYear")) {
+            pickCalendar();
+        }
+    });
+}
