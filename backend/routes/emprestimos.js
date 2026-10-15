@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 const sheets = require("../database/googleSheets");
@@ -16,7 +15,7 @@ function normalizar(valor) {
         .toUpperCase();
 }
 
-async function buscarDadosHistorico(usuarioID) {
+async function buscarDadosEmprestimos(usuarioID) {
     const [empRes, prodRes, catRes, subRes] = await Promise.all([
         sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
@@ -36,9 +35,9 @@ async function buscarDadosHistorico(usuarioID) {
         }),
     ]);
 
-    const produtos = new Map();
     const categorias = new Map();
     const subcategorias = new Map();
+    const produtos = new Map();
 
     for (const l of (catRes.data.values || []).slice(1)) {
         if (l[0]) categorias.set(texto(l[0]), texto(l[1]));
@@ -47,7 +46,6 @@ async function buscarDadosHistorico(usuarioID) {
     for (const l of (subRes.data.values || []).slice(1)) {
         if (l[0]) {
             subcategorias.set(texto(l[0]), {
-                categoriaID: texto(l[1]),
                 nome: texto(l[2]),
             });
         }
@@ -57,21 +55,23 @@ async function buscarDadosHistorico(usuarioID) {
         if (!l[0]) continue;
 
         const categoriaID = texto(l[4]);
-        const sub = subcategorias.get(texto(l[5]));
+        const subcategoriaID = texto(l[5]);
+        const categoria = categorias.get(categoriaID) || "";
+        const subcategoria = subcategorias.get(subcategoriaID)?.nome || "";
 
         produtos.set(texto(l[0]), {
-            id: texto(l[0]),
             nome: texto(l[2]) || texto(l[1]) || texto(l[0]),
-            categoria: categorias.get(categoriaID) || "",
-            subcategoria: sub?.nome || "",
+            categoria,
+            subcategoria,
         });
     }
 
-    const movimentos = (empRes.data.values || [])
+    return (empRes.data.values || [])
         .slice(1)
-        .filter((l) =>
-            texto(l[2]) === usuarioID &&
-            ["ABERTO", "ATRASADO", "DEVOLVIDO"].includes(normalizar(l[8]))
+        .filter(
+            (l) =>
+                texto(l[2]) === texto(usuarioID) &&
+                ["ABERTO", "ATRASADO"].includes(normalizar(l[8])),
         )
         .map((l) => {
             const produtoID = texto(l[3]);
@@ -82,7 +82,7 @@ async function buscarDadosHistorico(usuarioID) {
             };
 
             const classificacao = normalizar(
-                `${produto.categoria} ${produto.subcategoria} ${produto.nome}`
+                `${produto.categoria} ${produto.subcategoria} ${produto.nome}`,
             );
 
             let tipo = "Outros";
@@ -94,47 +94,34 @@ async function buscarDadosHistorico(usuarioID) {
                 tipo = "Livro";
             } else if (
                 classificacao.includes("INFORMATICA") &&
-                (
-                    classificacao.includes("DESKTOP") ||
-                    classificacao.includes("NOTEBOOK") ||
-                    classificacao.includes("COMPUTADOR") ||
-                    classificacao.includes("PC")
-                )
+                /DESKTOP|NOTEBOOK|COMPUTADOR|PC/.test(classificacao)
             ) {
                 tipo = "Computador";
             } else if (
-                classificacao.includes("EQUIPAMENTO") ||
-                classificacao.includes("PROJETOR") ||
-                classificacao.includes("CAIXA DE SOM")
+                /EQUIPAMENTO|PROJETOR|CAIXA DE SOM/.test(classificacao)
             ) {
                 tipo = "Equipamento";
-            } else if (
-                classificacao.includes("MATERIAL") ||
-                classificacao.includes("TESOURA") ||
-                classificacao.includes("COLA")
-            ) {
+            } else if (/MATERIAL|TESOURA|COLA/.test(classificacao)) {
                 tipo = "Material";
             }
 
             return {
                 id: texto(l[0]),
-                item: produto.nome,
                 produtoID,
+                item: produto.nome,
                 tipo,
-                data: texto(l[1]),
+                retirada: texto(l[1]),
+                devolucao: texto(l[6]),
                 quantidade: texto(l[5]),
-                devolucaoPrevista: texto(l[6]),
-                dataDevolucao: texto(l[7]),
                 status: normalizar(l[8]),
                 observacao: texto(l[10]),
             };
-        });
-
-    return movimentos.reverse();
+        })
+        .reverse();
 }
 
-// Empréstimos ativos e atrasados
-router.get("/professor/emprestimos/:usuarioID", async (req, res) => {
+// Rotas compartilhadas: aluno e professor.
+async function responderEmprestimos(req, res) {
     try {
         const usuarioID = texto(req.params.usuarioID);
 
@@ -145,46 +132,24 @@ router.get("/professor/emprestimos/:usuarioID", async (req, res) => {
             });
         }
 
-        const todos = await buscarDadosHistorico(usuarioID);
-        const emprestimos = todos.filter((m) =>
-            ["ABERTO", "ATRASADO"].includes(m.status)
-        );
+        const emprestimos = await buscarDadosEmprestimos(usuarioID);
 
-        return res.json({ sucesso: true, emprestimos });
+        return res.json({
+            sucesso: true,
+            total: emprestimos.length,
+            emprestimos,
+        });
     } catch (erro) {
         console.error("Erro ao buscar empréstimos:", erro);
+
         return res.status(500).json({
             sucesso: false,
             mensagem: "Erro ao consultar os empréstimos.",
         });
     }
-});
+}
 
-// Histórico completo de empréstimos
-router.get("/professor/historico/:usuarioID", async (req, res) => {
-    try {
-        const usuarioID = texto(req.params.usuarioID);
-
-        if (!usuarioID) {
-            return res.status(400).json({
-                sucesso: false,
-                mensagem: "ID do usuário não informado.",
-            });
-        }
-
-        const movimentos = await buscarDadosHistorico(usuarioID);
-
-        return res.json({
-            sucesso: true,
-            movimentos,
-        });
-    } catch (erro) {
-        console.error("Erro ao buscar histórico:", erro);
-        return res.status(500).json({
-            sucesso: false,
-            mensagem: "Erro ao consultar o histórico.",
-        });
-    }
-});
+router.get("/aluno/emprestimos/:usuarioID", responderEmprestimos);
+router.get("/professor/emprestimos/:usuarioID", responderEmprestimos);
 
 module.exports = router;
