@@ -7,25 +7,6 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const cacheAbas = new Map();
 const TEMPO_CACHE = 30 * 1000;
 
-async function lerAba(intervalo) {
-    const agora = Date.now();
-    const salvo = cacheAbas.get(intervalo);
-
-    if (salvo && agora - salvo.tempo < TEMPO_CACHE) {
-        return salvo.dados;
-    }
-
-    const resposta = await sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEET_ID,
-        range: intervalo,
-    });
-
-    const dados = resposta.data.values || [];
-    cacheAbas.set(intervalo, { dados, tempo: agora });
-
-    return dados;
-}
-
 function normalizar(valor) {
     return String(valor ?? "")
         .trim()

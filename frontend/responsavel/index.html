@@ -3,7 +3,8 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Painel do Responsável</title>
+        <title>Painel do Responsável | Estoque Hauy</title>
+
         <link rel="stylesheet" href="style.css" />
         <link
             rel="stylesheet"
@@ -11,13 +12,20 @@
         />
     </head>
     <body>
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="brand">
-                <i class="fa-solid fa-boxes-stacked"></i>
+                <img src="../img/logo_cor.png" alt="Logo da escola" />
                 <div>
                     <strong>Estoque Hauy</strong>
                     <small>Área do responsável</small>
                 </div>
+                <button
+                    id="sidebarToggle"
+                    class="icon-btn"
+                    aria-label="Recolher menu"
+                >
+                    <i class="fa-solid fa-bars"></i>
+                </button>
             </div>
 
             <div class="sector">
@@ -28,32 +36,37 @@
 
             <nav>
                 <button class="nav active" data-page="inicio">
-                    <i class="fa-solid fa-chart-pie"></i> Visão geral
+                    <i class="fa-solid fa-chart-pie"></i
+                    ><span>Visão geral</span>
                 </button>
                 <button class="nav" data-page="estoque">
-                    <i class="fa-solid fa-box"></i> Estoque
+                    <i class="fa-solid fa-boxes-stacked"></i
+                    ><span>Estoque</span>
                 </button>
                 <button class="nav" data-page="movimentacoes">
-                    <i class="fa-solid fa-right-left"></i> Movimentações
+                    <i class="fa-solid fa-right-left"></i
+                    ><span>Movimentações</span>
                 </button>
                 <button class="nav" data-page="solicitacoes">
-                    <i class="fa-solid fa-clipboard-list"></i> Solicitações
+                    <i class="fa-solid fa-clipboard-list"></i
+                    ><span>Solicitações</span>
                 </button>
             </nav>
 
             <div class="side-bottom">
                 <p>
                     <i class="fa-solid fa-shield-halved"></i>
-                    Acesso restrito ao setor autorizado.
+                    <span>Acesso restrito ao setor autorizado.</span>
                 </p>
                 <button id="logoutButton" class="logout">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i
+                    ><span>Sair</span>
                 </button>
             </div>
         </aside>
 
         <main>
-            <header>
+            <header class="topbar">
                 <div>
                     <small class="eyebrow">SISTEMA DE CONTROLE ESCOLAR</small>
                     <h1 id="pageTitle">Visão geral</h1>
@@ -61,121 +74,253 @@
                         Acompanhe o estoque e as atividades do seu setor.
                     </p>
                 </div>
-                <button id="refreshButton" class="refresh" title="Atualizar">
-                    <i class="fa-solid fa-rotate"></i>
-                </button>
-            </header>
 
+                <div class="top-actions">
+                    <button
+                        id="refreshButton"
+                        class="refresh"
+                        title="Atualizar dados"
+                    >
+                        <i class="fa-solid fa-rotate"></i>
+                    </button>
+                </div>
+            </header>
             <div id="notice" class="notice hidden" role="status"></div>
 
             <section id="page-inicio" class="page">
-                <div class="welcome">
-                    <div>
-                        <small>PAINEL DO SETOR</small>
+                <div class="hero">
+                    <img
+                        class="hero-photo"
+                        src="../img/fundo-login.png"
+                        alt=""
+                    />
+                    <div class="hero-shade"></div>
+
+                    <div class="hero-content">
+                        <small id="heroSector">PAINEL DO SETOR</small>
                         <h2>Olá, <span id="welcomeName">responsável</span>.</h2>
-                        <p>Confira abaixo um resumo dos dados do seu setor.</p>
+                        <p>
+                            Veja o que está acontecendo no seu setor em um só
+                            lugar.
+                        </p>
+                        <span class="hero-tag">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span id="heroLocation">Setor autorizado</span>
+                        </span>
                     </div>
-                    <i class="fa-solid fa-warehouse"></i>
+                    <div class="hero-clock">
+                        <strong id="clockTime">--:--:--</strong>
+                        <small id="clockDate">Carregando data...</small>
+                    </div>
                 </div>
 
                 <div class="stats">
-                    <article>
-                        <i class="fa-solid fa-boxes-stacked blue"></i>
-                        <span>Total de itens</span>
-                        <strong id="totalItens">—</strong>
-                        <small>Itens registrados no setor</small>
+                    <article class="stat-card">
+                        <span class="stat-icon brown"
+                            ><i class="fa-solid fa-boxes-stacked"></i
+                        ></span>
+                        <div>
+                            <small>Total em estoque</small
+                            ><strong id="totalItens">—</strong
+                            ><span>Unidades registradas</span>
+                        </div>
                     </article>
-                    <article>
-                        <i class="fa-solid fa-circle-check green"></i>
-                        <span>Disponíveis</span>
-                        <strong id="itensDisponiveis">—</strong>
-                        <small>Itens disponíveis para uso</small>
+
+                    <article class="stat-card">
+                        <span class="stat-icon green"
+                            ><i class="fa-solid fa-circle-check"></i
+                        ></span>
+                        <div>
+                            <small>Disponíveis</small
+                            ><strong id="itensDisponiveis">—</strong
+                            ><span>Prontas para uso</span>
+                        </div>
                     </article>
-                    <article>
-                        <i class="fa-solid fa-clock orange"></i>
-                        <span>Solicitações pendentes</span>
-                        <strong id="solicitacoesPendentes">—</strong>
-                        <small>Aguardando tratamento</small>
+
+                    <article class="stat-card">
+                        <span class="stat-icon orange"
+                            ><i class="fa-solid fa-clock"></i
+                        ></span>
+                        <div>
+                            <small>Pedidos pendentes</small
+                            ><strong id="solicitacoesPendentes">—</strong
+                            ><span>Aguardando análise</span>
+                        </div>
                     </article>
-                    <article>
-                        <i
-                            class="fa-solid fa-arrow-right-arrow-left purple"
-                        ></i>
-                        <span>Movimentações</span>
-                        <strong id="totalMovimentacoes">—</strong>
-                        <small>Registros encontrados</small>
+
+                    <article class="stat-card">
+                        <span class="stat-icon purple"
+                            ><i class="fa-solid fa-right-left"></i
+                        ></span>
+                        <div>
+                            <small>Movimentações</small
+                            ><strong id="totalMovimentacoes">—</strong
+                            ><span>Registros recebidos</span>
+                        </div>
+                    </article>
+
+                    <article class="stat-card">
+                        <span class="stat-icon blue"
+                            ><i class="fa-solid fa-lock"></i
+                        ></span>
+                        <div>
+                            <small>Reservados</small
+                            ><strong id="itensReservados">—</strong
+                            ><span>Unidades reservadas</span>
+                        </div>
+                    </article>
+
+                    <article class="stat-card">
+                        <span class="stat-icon red"
+                            ><i class="fa-solid fa-ban"></i
+                        ></span>
+                        <div>
+                            <small>Indisponíveis</small
+                            ><strong id="itensIndisponiveis">—</strong
+                            ><span>Unidades indisponíveis</span>
+                        </div>
                     </article>
                 </div>
 
-                <div class="columns">
-                    <article class="panel">
+                <div class="charts-grid">
+                    <article class="panel chart-panel">
+                        <div class="panel-title">
+                            <div>
+                                <h3>Disponibilidade do estoque</h3>
+                                <p>Distribuição das unidades registradas</p>
+                            </div>
+                            <i class="fa-solid fa-chart-pie panel-symbol"></i>
+                        </div>
+                        <div class="donut-area">
+                            <div id="stockDonut" class="donut">
+                                <div>
+                                    <strong id="availabilityPercent">—%</strong
+                                    ><small>disponíveis</small>
+                                </div>
+                            </div>
+                            <div class="legend">
+                                <p>
+                                    <i class="dot dot-green"></i>Disponíveis
+                                    <b id="legendAvailable">—</b>
+                                </p>
+                                <p>
+                                    <i class="dot dot-blue"></i>Reservados
+                                    <b id="legendReserved">—</b>
+                                </p>
+                                <p>
+                                    <i class="dot dot-orange"></i>Indisponíveis
+                                    <b id="legendUnavailable">—</b>
+                                </p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="panel chart-panel">
+                        <div class="panel-title">
+                            <div>
+                                <h3>Estoque por categoria</h3>
+                                <p>Unidades por categoria</p>
+                            </div>
+                            <i
+                                class="fa-solid fa-chart-column panel-symbol"
+                            ></i>
+                        </div>
+                        <div id="categoryChart" class="bar-chart">
+                            <p class="empty-state">Carregando dados...</p>
+                        </div>
+                    </article>
+
+                    <article class="panel chart-panel">
                         <div class="panel-title">
                             <div>
                                 <h3>Movimentações recentes</h3>
-                                <p>Últimas atividades registradas</p>
+                                <p>Atividades nos últimos 7 dias</p>
                             </div>
-                            <button class="text-btn" data-go="movimentacoes">
-                                Ver todas
-                            </button>
+                            <i class="fa-solid fa-chart-line panel-symbol"></i>
                         </div>
-                        <div class="table-wrap">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Data</th>
-                                        <th>Item</th>
-                                        <th>Tipo</th>
-                                        <th>Quantidade</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="recentMoves">
-                                    <tr>
-                                        <td colspan="4" class="empty">
-                                            Carregando...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div id="movementChart" class="period-chart">
+                            <p class="empty-state">Carregando dados...</p>
+                        </div>
+                    </article>
+
+                    <article class="panel chart-panel">
+                        <div class="panel-title">
+                            <div>
+                                <h3>Solicitações por status</h3>
+                                <p>Pedidos recebidos pelo setor</p>
+                            </div>
+                            <i
+                                class="fa-solid fa-chart-simple panel-symbol"
+                            ></i>
+                        </div>
+                        <div id="requestChart" class="status-chart">
+                            <p class="empty-state">Carregando dados...</p>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="dashboard-columns">
+                    <article class="panel">
+                        <div class="panel-title">
+                            <div>
+                                <h3>Alertas do setor</h3>
+                                <p>Itens que precisam de atenção</p>
+                            </div>
+                            <i class="fa-solid fa-bell panel-symbol"></i>
+                        </div>
+                        <div id="alertsList" class="alerts-list">
+                            <p class="empty-state">Carregando alertas...</p>
                         </div>
                     </article>
 
                     <article class="panel">
                         <div class="panel-title">
                             <div>
-                                <h3>Acesso rápido</h3>
-                                <p>Atalhos do seu setor</p>
+                                <h3>Solicitações recentes</h3>
+                                <p>Últimos pedidos registrados</p>
                             </div>
+                            <button class="text-btn" data-go="solicitacoes">
+                                Ver todas
+                            </button>
                         </div>
-                        <button class="quick" data-go="estoque">
-                            <i class="fa-solid fa-box-open"></i>
-                            <span
-                                ><b>Consultar estoque</b
-                                ><small>Ver itens e quantidades</small></span
-                            >
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </button>
-                        <button class="quick" data-go="movimentacoes">
-                            <i class="fa-solid fa-arrows-rotate"></i>
-                            <span
-                                ><b>Movimentações</b
-                                ><small
-                                    >Acompanhar entradas e saídas</small
-                                ></span
-                            >
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </button>
-                        <button class="quick" data-go="solicitacoes">
-                            <i class="fa-solid fa-list-check"></i>
-                            <span
-                                ><b>Solicitações</b
-                                ><small
-                                    >Consultar pedidos recebidos</small
-                                ></span
-                            >
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </button>
+                        <div id="recentRequests" class="recent-list">
+                            <p class="empty-state">
+                                Carregando solicitações...
+                            </p>
+                        </div>
                     </article>
                 </div>
+
+                <article class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <h3>Últimas movimentações</h3>
+                            <p>Entradas, saídas e ajustes</p>
+                        </div>
+                        <button class="text-btn" data-go="movimentacoes">
+                            Ver todas
+                        </button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Item</th>
+                                    <th>Tipo</th>
+                                    <th>Quantidade</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentMoves">
+                                <tr>
+                                    <td colspan="4" class="empty">
+                                        Carregando...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
             </section>
 
             <section id="page-estoque" class="page hidden">
@@ -284,7 +429,7 @@
 
             <footer>
                 <span>Escola Estadual Hauy Petruceli Mayrink</span>
-                <span id="lastUpdated">Aguardando integração com a API</span>
+                <span id="lastUpdated">Aguardando dados da API</span>
             </footer>
         </main>
 
