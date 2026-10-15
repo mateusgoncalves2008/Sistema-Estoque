@@ -330,11 +330,22 @@
                             <h3>Estoque do setor</h3>
                             <p>Itens vinculados ao setor autorizado</p>
                         </div>
-                        <input
-                            id="stockSearch"
-                            type="search"
-                            placeholder="Buscar item..."
-                        />
+
+                        <div class="stock-toolbar">
+                            <input
+                                id="stockSearch"
+                                type="search"
+                                placeholder="Buscar por código, produto ou categoria..."
+                            />
+
+                            <select id="stockCategoryFilter">
+                                <option value="">Todas as categorias</option>
+                            </select>
+
+                            <select id="stockStatusFilter">
+                                <option value="">Todos os status</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="table-wrap">
                         <table>
@@ -413,11 +424,12 @@
                                     <th>Item</th>
                                     <th>Quantidade</th>
                                     <th>Status</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="requestRows">
                                 <tr>
-                                    <td colspan="5" class="empty">
+                                    <td colspan="6" class="empty">
                                         Nenhuma solicitação carregada.
                                     </td>
                                 </tr>

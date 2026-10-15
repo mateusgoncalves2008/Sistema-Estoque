@@ -235,6 +235,318 @@ function exigirResponsavel(req, res, next) {
     next();
 }
 
+function numero(valor) {
+    const n = Number(String(valor ?? "0").replace(",", "."));
+    return Number.isFinite(n) ? n : 0;
+}
+
+function texto(valor) {
+    return String(valor ?? "").trim();
+}
+
+function dataAtual() {
+    const data = new Date();
+    const dia = String(data.getDate()).padStart(2, "0");
+    const mes = String(data.getMonth() + 1).padStart(2, "0");
+    const ano = data.getFullYear();
+
+    return `${dia}/${mes}/${ano}`;
+}
+
+function gerarEmprestimoID(emprestimos) {
+    const maior = emprestimos.slice(1).reduce((max, linha) => {
+        const numeroID = Number(
+            String(linha[0] || "").match(/(\d+)$/)?.[1] || 0,
+        );
+        return Math.max(max, numeroID);
+    }, 0);
+
+    return `EMP-${String(maior + 1).padStart(5, "0")}`;
+}
+
+async function atualizarReserva(reservaID, acao, usuario) {
+    const resposta = await sheets.spreadsheets.values.batchGet({
+        spreadsheetId: SPREADSHEET_ID,
+        ranges: [
+            "08_RESERVAS!A:L",
+            "06_ESTOQUE_LOCAIS!A:H",
+            "05_LOCAIS!A:G",
+            "09_EMPRESTIMOS!A:L",
+        ],
+    });
+
+    const reservas = resposta.data.valueRanges[0].values || [];
+    const estoques = resposta.data.valueRanges[1].values || [];
+    const locais = resposta.data.valueRanges[2].values || [];
+    const emprestimos = resposta.data.valueRanges[3].values || [];
+
+    const indice = reservas.findIndex(
+        (l, i) => i > 0 && texto(l[0]) === texto(reservaID),
+    );
+
+    if (indice < 1) {
+        const e = new Error("Reserva não encontrada.");
+        e.status = 404;
+        throw e;
+    }
+
+    const r = reservas[indice];
+    const status = normalizar(r[9]);
+    const produtoID = texto(r[3]);
+    const localID = texto(r[4]);
+    const quantidade = numero(r[5]);
+
+    const localResponsavel = locais
+        .slice(1)
+        .find(
+            (l) =>
+                texto(l[0]) === texto(usuario.localID) &&
+                texto(l[4]) === texto(usuario.id),
+        );
+
+    if (!localResponsavel || texto(localResponsavel[0]) !== localID) {
+        const e = new Error("Esta reserva não pertence ao seu setor.");
+        e.status = 403;
+        throw e;
+    }
+
+    if (quantidade <= 0) {
+        const e = new Error("Quantidade da reserva inválida.");
+        e.status = 400;
+        throw e;
+    }
+
+    const indiceEstoque = estoques.findIndex(
+        (l, i) => i > 0 && texto(l[1]) === produtoID && texto(l[2]) === localID,
+    );
+
+    if (indiceEstoque < 1) {
+        const e = new Error("Estoque do produto não encontrado.");
+        e.status = 404;
+        throw e;
+    }
+
+    const estoque = estoques[indiceEstoque];
+    let reservado = numero(estoque[4]);
+    let disponivel = numero(estoque[5]);
+
+    const linhaReserva = indice + 1;
+    const linhaEstoque = indiceEstoque + 1;
+    let novoStatus = "";
+    const atualizacoes = [];
+    let novoEmprestimo = null;
+
+    if (acao === "aprovar") {
+        if (status !== "PENDENTE") {
+            const e = new Error(
+                "Somente reservas pendentes podem ser aprovadas.",
+            );
+            e.status = 409;
+            throw e;
+        }
+
+        if (disponivel < quantidade) {
+            const e = new Error("Estoque disponível insuficiente.");
+            e.status = 409;
+            throw e;
+        }
+
+        const reservaJaConvertida = emprestimos
+            .slice(1)
+            .some((linha) => texto(linha[11]) === texto(reservaID));
+
+        if (reservaJaConvertida) {
+            const e = new Error(
+                "Esta reserva já possui um empréstimo registrado.",
+            );
+            e.status = 409;
+            throw e;
+        }
+
+        reservado += quantidade;
+        disponivel -= quantidade;
+        novoStatus = "APROVADA";
+
+        novoEmprestimo = [
+            gerarEmprestimoID(emprestimos), // A: EmprestimoID
+            dataAtual(), // B: DataEmprestimo
+            texto(r[2]), // C: UsuarioID
+            produtoID, // D: ProdutoID
+            localID, // E: LocalID
+            quantidade, // F: Quantidade
+            texto(r[7]), // G: DataPrevista
+            "", // H: DataDevolucao
+            "ABERTO", // I: Status
+            texto(usuario.id), // J: ResponsavelID
+            texto(r[11] || r[8]), // K: Observacao
+            texto(reservaID), // L: ReservaID
+        ];
+    } else if (acao === "recusar") {
+        if (status !== "PENDENTE") {
+            const e = new Error(
+                "Somente reservas pendentes podem ser recusadas.",
+            );
+            e.status = 409;
+            throw e;
+        }
+
+        novoStatus = "RECUSADA";
+    } else if (acao === "cancelar") {
+        if (!["PENDENTE", "APROVADA"].includes(status)) {
+            const e = new Error(
+                "Esta reserva não pode ser cancelada neste status.",
+            );
+            e.status = 409;
+            throw e;
+        }
+
+        if (status === "APROVADA") {
+            if (reservado < quantidade) {
+                const e = new Error(
+                    "Quantidade reservada inconsistente no estoque.",
+                );
+                e.status = 409;
+                throw e;
+            }
+
+            reservado -= quantidade;
+            disponivel += quantidade;
+        }
+
+        novoStatus = "CANCELADA";
+    } else if (acao === "concluir") {
+        if (status !== "APROVADA") {
+            const e = new Error(
+                "Somente reservas aprovadas podem ser concluídas.",
+            );
+            e.status = 409;
+            throw e;
+        }
+
+        if (reservado < quantidade) {
+            const e = new Error(
+                `Estoque inconsistente: reserva pede ${quantidade}, mas há ${reservado} reservado.`,
+            );
+            e.status = 409;
+            throw e;
+        }
+
+        const emprestimosDaReserva = emprestimos
+            .slice(1)
+            .map((linha, i) => ({
+                linha,
+                numeroLinha: i + 2,
+            }))
+            .filter((item) => texto(item.linha[11]) === texto(reservaID));
+
+        if (emprestimosDaReserva.length !== 1) {
+            const e = new Error(
+                emprestimosDaReserva.length === 0
+                    ? "Empréstimo desta reserva não encontrado. Verifique a coluna L (ReservaID) na aba 09_EMPRESTIMOS."
+                    : "Há mais de um empréstimo vinculado a esta reserva. Verifique a planilha antes de concluir.",
+            );
+            e.status = 409;
+            throw e;
+        }
+
+        const emprestimo = emprestimosDaReserva[0];
+        const statusEmprestimo = normalizar(emprestimo.linha[8]);
+
+        if (!["ABERTO", "ATRASADO"].includes(statusEmprestimo)) {
+            const e = new Error(
+                `O empréstimo não pode ser devolvido porque está com status ${statusEmprestimo}.`,
+            );
+            e.status = 409;
+            throw e;
+        }
+
+        atualizacoes.push({
+            range: `09_EMPRESTIMOS!H${emprestimo.numeroLinha}:I${emprestimo.numeroLinha}`,
+            values: [[dataAtual(), "DEVOLVIDO"]],
+        });
+
+        reservado -= quantidade;
+        disponivel += quantidade;
+        novoStatus = "CONCLUIDO";
+    } else {
+        const e = new Error("Ação inválida.");
+        e.status = 400;
+        throw e;
+    }
+
+    if (["aprovar", "cancelar", "concluir"].includes(acao)) {
+        atualizacoes.push({
+            range: `06_ESTOQUE_LOCAIS!E${linhaEstoque}:F${linhaEstoque}`,
+            values: [[reservado, disponivel]],
+        });
+
+        atualizacoes.push({
+            range: `06_ESTOQUE_LOCAIS!H${linhaEstoque}`,
+            values: [[dataAtual()]],
+        });
+    }
+
+    atualizacoes.push({
+        range: `08_RESERVAS!J${linhaReserva}`,
+        values: [[novoStatus]],
+    });
+
+    if (novoEmprestimo) {
+        const linhaNova = emprestimos.length + 1;
+
+        atualizacoes.push({
+            range: `09_EMPRESTIMOS!A${linhaNova}:L${linhaNova}`,
+            values: [novoEmprestimo],
+        });
+    }
+
+    await sheets.spreadsheets.values.batchUpdate({
+        spreadsheetId: SPREADSHEET_ID,
+        requestBody: {
+            valueInputOption: "USER_ENTERED",
+            data: atualizacoes,
+        },
+    });
+
+    return { reservaID, status: novoStatus };
+}
+
+for (const acao of ["aprovar", "recusar", "cancelar", "concluir"]) {
+    router.patch(
+        `/responsavel/solicitacoes/:reservaID/${acao}`,
+        exigirResponsavel,
+        async (req, res) => {
+            try {
+                const vinculo = await carregarVinculo(req.session.usuario);
+
+                const resultado = await atualizarReserva(
+                    req.params.reservaID,
+                    acao,
+                    {
+                        id: vinculo.usuario.id,
+                        localID: vinculo.local.id,
+                    },
+                );
+
+                return res.json({
+                    sucesso: true,
+                    mensagem: `Reserva ${resultado.status.toLowerCase()} com sucesso.`,
+                    ...resultado,
+                });
+            } catch (erro) {
+                console.error(`Erro ao ${acao} reserva:`, erro.message);
+
+                return res.status(erro.status || 500).json({
+                    sucesso: false,
+                    mensagem: erro.status
+                        ? erro.message
+                        : "Não foi possível atualizar a reserva.",
+                });
+            }
+        },
+    );
+}
+
 router.get("/responsavel/dashboard", exigirResponsavel, async (req, res) => {
     try {
         const vinculo = await carregarVinculo(req.session.usuario);

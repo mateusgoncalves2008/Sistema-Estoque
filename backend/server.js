@@ -8,10 +8,6 @@ dotenv.config({
 const cors = require("cors");
 const express = require("express");
 
-if (process.env.NODE_ENV === "production") {
-    app.set("trust proxy", 1);
-}
-
 const helmet = require("helmet");
 const session = require("express-session");
 const authRoutes = require("./routes/auth");

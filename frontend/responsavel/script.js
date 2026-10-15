@@ -389,20 +389,88 @@ function renderStock(filter = "") {
     const tbody = el("stockRows");
     if (!tbody) return;
 
-    const search = normalizeText(filter);
+    const categoriaSelecionada = el("stockCategoryFilter")?.value || "";
+
+    const statusSelecionado = el("stockStatusFilter")?.value || "";
+
+    const categorias = [
+        ...new Set(
+            state.stock
+                .map((item) => getValue(item, ["categoria", "Categoria"], ""))
+                .filter(Boolean),
+        ),
+    ];
+
+    const status = [
+        ...new Set(
+            state.stock
+                .map((item) => getValue(item, ["status", "Status"], ""))
+                .filter(Boolean),
+        ),
+    ];
+
+    const preencherFiltro = (id, valores, selecionado, titulo) => {
+        const select = el(id);
+        if (!select) return;
+
+        select.innerHTML =
+            `<option value="">${titulo}</option>` +
+            valores
+                .map(
+                    (valor) =>
+                        `<option value="${escapeHTML(valor)}">${escapeHTML(valor)}</option>`,
+                )
+                .join("");
+
+        select.value = selecionado;
+    };
+
+    preencherFiltro(
+        "stockCategoryFilter",
+        categorias,
+        categoriaSelecionada,
+        "Todas as categorias",
+    );
+
+    preencherFiltro(
+        "stockStatusFilter",
+        status,
+        statusSelecionado,
+        "Todos os status",
+    );
+
+    const busca = normalizeText(filter);
 
     const rows = state.stock.filter((item) => {
-        return normalizeText(JSON.stringify(item)).includes(search);
+        const codigo = normalizeText(
+            getValue(item, ["produtoID", "ProdutoID", "estoqueID"], ""),
+        );
+
+        const produto = normalizeText(
+            getValue(item, ["produto", "Produto", "nome", "Nome"], ""),
+        );
+
+        const categoria = getValue(item, ["categoria", "Categoria"], "");
+
+        const situacao = getValue(item, ["status", "Status"], "");
+
+        const correspondeBusca =
+            !busca ||
+            codigo.includes(busca) ||
+            produto.includes(busca) ||
+            normalizeText(categoria).includes(busca);
+
+        const correspondeCategoria =
+            !categoriaSelecionada || categoria === categoriaSelecionada;
+
+        const correspondeStatus =
+            !statusSelecionado || situacao === statusSelecionado;
+
+        return correspondeBusca && correspondeCategoria && correspondeStatus;
     });
 
     if (!rows.length) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="empty">
-                    Nenhum item encontrado.
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="6" class="empty">Nenhum item encontrado.</td></tr>`;
         return;
     }
 
@@ -410,38 +478,12 @@ function renderStock(filter = "") {
         .map(
             (item) => `
         <tr>
-            <td>${escapeHTML(
-                getValue(item, [
-                    "produtoID",
-                    "ProdutoID",
-                    "codigo",
-                    "Codigo",
-                    "id",
-                ]),
-            )}</td>
-            <td>${escapeHTML(
-                getValue(item, [
-                    "produto",
-                    "Produto",
-                    "nome",
-                    "Nome",
-                    "nomeProduto",
-                ]),
-            )}</td>
+            <td>${escapeHTML(getValue(item, ["produtoID", "ProdutoID", "codigo", "Codigo", "id"]))}</td>
+            <td>${escapeHTML(getValue(item, ["produto", "Produto", "nome", "Nome", "nomeProduto"]))}</td>
             <td>${escapeHTML(getValue(item, ["categoria", "Categoria"]))}</td>
-            <td>${escapeHTML(
-                getValue(item, ["quantidade", "Quantidade", "total"]),
-            )}</td>
-            <td>${escapeHTML(
-                getValue(item, [
-                    "disponivel",
-                    "Disponivel",
-                    "quantidadeDisponivel",
-                ]),
-            )}</td>
-            <td>${statusBadge(
-                getValue(item, ["status", "Status"], "Disponível"),
-            )}</td>
+            <td>${escapeHTML(getValue(item, ["quantidade", "Quantidade", "total"]))}</td>
+            <td>${escapeHTML(getValue(item, ["disponivel", "Disponivel", "quantidadeDisponivel"]))}</td>
+            <td>${statusBadge(getValue(item, ["status", "Status"], "Disponível"))}</td>
         </tr>
     `,
         )
@@ -517,7 +559,7 @@ function renderRequests() {
     if (!rows.length) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="5" class="empty">
+                <td colspan="6" class="empty">
                     Nenhuma solicitação encontrada.
                 </td>
             </tr>`;
@@ -525,36 +567,109 @@ function renderRequests() {
     }
 
     tbody.innerHTML = rows
-        .map(
-            (item) => `
-        <tr>
-            <td>${formatDate(
-                getValue(item, [
-                    "dataSolicitacao",
-                    "DataSolicitacao",
-                    "data",
-                    "Data",
-                ]),
-            )}</td>
-            <td>${escapeHTML(
-                getValue(item, [
-                    "solicitante",
-                    "Solicitante",
-                    "nomeUsuario",
-                    "usuario",
-                ]),
-            )}</td>
-            <td>${escapeHTML(
-                getValue(item, ["produto", "Produto", "nomeProduto", "item"]),
-            )}</td>
-            <td>${escapeHTML(getValue(item, ["quantidade", "Quantidade"]))}</td>
-            <td>${statusBadge(
-                getValue(item, ["status", "Status"], "Pendente"),
-            )}</td>
-        </tr>
-    `,
-        )
+        .map((item) => {
+            const status = normalizeText(item.status);
+            const id = escapeHTML(item.reservaID || "");
+            let actions = "";
+
+            if (status === "pendente") {
+                actions = `
+                <button class="request-action approve"
+                    data-action="aprovar" data-id="${id}">
+                    Aprovar
+                </button>
+                <button class="request-action reject"
+                    data-action="recusar" data-id="${id}">
+                    Recusar
+                </button>
+                <button class="request-action cancel"
+                    data-action="cancelar" data-id="${id}">
+                    Cancelar
+                </button>`;
+            } else if (status === "aprovada") {
+                actions = `
+                <button class="request-action cancel"
+                    data-action="cancelar" data-id="${id}">
+                    Cancelar
+                </button>
+                <button class="request-action finish"
+                    data-action="concluir" data-id="${id}">
+                    Concluir devolução
+                </button>`;
+            }
+
+            return `
+            <tr>
+                <td>${formatDate(item.dataSolicitacao)}</td>
+                <td>${escapeHTML(item.solicitante)}</td>
+                <td>${escapeHTML(item.produto)}</td>
+                <td>${escapeHTML(item.quantidade)}</td>
+                <td>${statusBadge(item.status)}</td>
+                <td class="request-actions">
+                    ${actions || "—"}
+                </td>
+            </tr>`;
+        })
         .join("");
+}
+
+async function executarAcaoReserva(acao, reservaID) {
+    const confirmacoes = {
+        aprovar: "Deseja aprovar esta reserva?",
+        recusar: "Deseja recusar esta solicitação?",
+        cancelar: "Deseja cancelar esta reserva?",
+        concluir: "Confirma que o item foi devolvido?",
+    };
+
+    if (!confirmacoes[acao] || !reservaID) return;
+    if (!window.confirm(confirmacoes[acao])) return;
+
+    const linha = [...document.querySelectorAll("#requestRows tr")].find((tr) =>
+        tr.querySelector(`button[data-id="${CSS.escape(reservaID)}"]`),
+    );
+
+    const botoes = linha
+        ? [...linha.querySelectorAll("button[data-action]")]
+        : [];
+
+    botoes.forEach((botao) => {
+        botao.disabled = true;
+        botao.dataset.textoOriginal = botao.textContent;
+        botao.textContent = "Processando...";
+    });
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/responsavel/solicitacoes/${encodeURIComponent(reservaID)}/${acao}`,
+            {
+                method: "PATCH",
+                credentials: "include",
+                headers: { Accept: "application/json" },
+            },
+        );
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.sucesso) {
+            throw new Error(
+                data.mensagem || "Não foi possível atualizar a reserva.",
+            );
+        }
+
+        showNotice(data.mensagem || "Reserva atualizada com sucesso.");
+
+        // Busca novamente os dados atualizados no servidor.
+        await carregarPainel();
+    } catch (error) {
+        showNotice(error.message || "Erro ao atualizar a reserva.", true);
+
+        // Se falhar, restaura os botões para permitir nova tentativa.
+        botoes.forEach((botao) => {
+            botao.disabled = false;
+            botao.textContent =
+                botao.dataset.textoOriginal || botao.textContent;
+        });
+    }
 }
 
 /* =====================================================
@@ -1050,6 +1165,21 @@ function iniciarEventos() {
 
     el("menuButton")?.addEventListener("click", () => {
         document.body.classList.toggle("mobile-menu-open");
+    });
+
+    el("stockCategoryFilter")?.addEventListener("change", () => {
+        renderStock(el("stockSearch")?.value || "");
+    });
+
+    el("stockStatusFilter")?.addEventListener("change", () => {
+        renderStock(el("stockSearch")?.value || "");
+    });
+
+    el("requestRows")?.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-action]");
+        if (!button) return;
+
+        executarAcaoReserva(button.dataset.action, button.dataset.id);
     });
 }
 

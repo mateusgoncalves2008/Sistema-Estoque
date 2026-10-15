@@ -1273,3 +1273,186 @@ footer {
     position: relative;
     z-index: 2;
 }
+
+/* ESTOQUE — CONTROLES E INDICADORES */
+
+.stock-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.stock-toolbar input,
+.stock-toolbar select {
+    min-height: 40px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    color: var(--text);
+    font: inherit;
+}
+
+.stock-toolbar input {
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+.stock-toolbar select {
+    flex: 0 1 190px;
+    max-width: 100%;
+}
+
+.stock-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.stock-summary-card {
+    min-width: 0;
+    padding: 16px;
+    background: #fffaf5;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.stock-summary-card small {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.stock-summary-card strong {
+    display: block;
+    font-size: 24px;
+    overflow-wrap: anywhere;
+}
+
+.stock-summary-card span {
+    display: block;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.stock-code {
+    color: var(--orange);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.stock-product-name {
+    font-weight: 700;
+}
+
+.stock-product-category {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.stock-quantity {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.stock-details-btn,
+.stock-page-btn {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: white;
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.stock-details-btn:hover,
+.stock-page-btn:hover:not(:disabled) {
+    border-color: var(--orange);
+    color: var(--orange);
+}
+
+.stock-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.stock-pagination-info {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.stock-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stock-page-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.stock-empty {
+    padding: 30px 12px;
+    text-align: center;
+    color: var(--muted);
+}
+
+.stock-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.stock-detail-item {
+    padding: 13px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fffaf5;
+    min-width: 0;
+}
+
+.stock-detail-item small {
+    display: block;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-size: 10px;
+}
+
+.stock-detail-item strong {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+    .stock-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .stock-toolbar {
+        align-items: stretch;
+    }
+
+    .stock-toolbar input,
+    .stock-toolbar select {
+        width: 100%;
+        flex: 1 1 100%;
+    }
+
+    .stock-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}

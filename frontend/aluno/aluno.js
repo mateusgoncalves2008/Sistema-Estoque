@@ -579,6 +579,38 @@ async function carregarReservas() {
     }
 }
 
+async function carregarEmprestimos() {
+    const usuarioID = usuarioLogado?.id;
+
+    if (!usuarioID) {
+        emprestimos = [];
+        return;
+    }
+
+    try {
+        const resposta = await fetch(
+            `${API_URL}/aluno/emprestimos/${encodeURIComponent(usuarioID)}`,
+            {
+                credentials: "include",
+            },
+        );
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok || !resultado.sucesso) {
+            throw new Error(
+                resultado.mensagem ||
+                    "Não foi possível carregar os empréstimos.",
+            );
+        }
+
+        emprestimos = resultado.emprestimos || [];
+    } catch (erro) {
+        console.error("Erro ao carregar empréstimos:", erro);
+        emprestimos = [];
+    }
+}
+
 function formatarDataHoraReserva(valor) {
     if (!valor) {
         return "Não informado";
@@ -2444,7 +2476,11 @@ async function iniciarPainel() {
 
         if (!perfilCarregado) return;
 
-        await Promise.all([carregarItensPesquisa(), carregarReservas()]);
+        await Promise.all([
+            carregarItensPesquisa(),
+            carregarReservas(),
+            carregarEmprestimos(),
+        ]);
 
         atualizarUsuarioLateral();
         conectarEventosMenu();
