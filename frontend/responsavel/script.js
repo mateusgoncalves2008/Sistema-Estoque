@@ -255,39 +255,19 @@ function renderAll() {
 async function carregarPainel() {
     document.getElementById("notice").classList.add("hidden");
 
-    /*
-     * A conexão será configurada com as rotas reais do seu projeto.
-     * Não presuma que estes endpoints existem antes de verificarmos o backend.
-     */
-    const config = window.RESPONSAVEL_API;
-
-    if (!config?.me || !config?.dashboard) {
-        showNotice(
-            "A interface está criada. Falta conectar a autenticação existente e a rota do responsável no backend.",
-        );
-        document.getElementById("lastUpdated").textContent =
-            "Aguardando integração com a API";
-        renderAll();
-        return;
-    }
-
     try {
-        const [userResponse, dataResponse] = await Promise.all([
-            fetch(API_BASE + config.me, { credentials: "include" }),
-            fetch(API_BASE + config.dashboard, { credentials: "include" }),
-        ]);
+        const dataResponse = await fetch(`${API_BASE}/responsavel/dashboard`, {
+            credentials: "include",
+        });
 
-        const userData = await userResponse.json();
         const data = await dataResponse.json();
 
-        if (!userResponse.ok || !dataResponse.ok) {
-            throw new Error(
-                userData.erro || data.erro || "Falha ao carregar dados.",
-            );
+        if (!dataResponse.ok) {
+            throw new Error(data.mensagem || "Falha ao carregar dados.");
         }
 
-        state.user = userData.usuario || userData.user || userData;
-        state.sector = data.setor || data.local || null;
+        state.user = data.usuario || null;
+        state.sector = data.setor || null;
         state.stock = Array.isArray(data.estoque) ? data.estoque : [];
         state.movements = Array.isArray(data.movimentacoes)
             ? data.movimentacoes

@@ -236,11 +236,10 @@ async function realizarLogin() {
 
         const resposta = await fetch(`${API_URL}/login`, {
             method: "POST",
-
+            credentials: "include",
             headers: {
                 "Content-Type": "application/json",
             },
-
             body: JSON.stringify({
                 email: email,
                 senha: senha,

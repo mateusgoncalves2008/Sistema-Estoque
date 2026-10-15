@@ -8,15 +8,22 @@ dotenv.config({
 const cors = require("cors");
 const express = require("express");
 
+if (process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+}
+
 const helmet = require("helmet");
 const session = require("express-session");
 const authRoutes = require("./routes/auth");
+const debugRoutes = require("./routes/debug");
 const rateLimit = require("express-rate-limit");
 const sheets = require("./database/googleSheets");
 const cadastroRoutes = require("./routes/cadastro");
 const produtosRoutes = require("./routes/produtos");
 const reservasRoutes = require("./routes/reservas");
+
 const secretariaRoutes = require("./routes/secretaria");
+const responsavelRoutes = require("./routes/responsavel");
 const emprestimosRoutes = require("./routes/emprestimos");
 const professorItensRoutes = require("./routes/professorItens");
 
@@ -58,7 +65,7 @@ app.use(
         saveUninitialized: false,
         cookie: {
             httpOnly: true,
-            secure: true,
+            secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             maxAge: 30 * 60 * 1000,
         },
@@ -97,7 +104,10 @@ app.use("/api", produtosRoutes);
 app.use("/api", reservasRoutes);
 app.use("/api", secretariaRoutes);
 app.use("/api", emprestimosRoutes);
+app.use("/api", responsavelRoutes);
 app.use("/api", professorItensRoutes);
+app.use("/api", debugRoutes);
+
 // ============================================================
 // TESTE DO GOOGLE SHEETS
 // ============================================================
