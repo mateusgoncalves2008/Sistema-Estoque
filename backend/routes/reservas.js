@@ -572,8 +572,17 @@ router.get("/professor/reservas/:usuarioID", async (req, res) => {
 
 router.post("/aluno/reservas", async (req, res) => {
     try {
+        const sessao = req.session?.usuario;
+        if (!sessao?.id) {
+            return res.status(401).json({ sucesso: false, mensagem: "Faça login para criar uma reserva." });
+        }
+        if (normalizar(sessao.tipoUsuario) !== "ALUNO") {
+            return res.status(403).json({ sucesso: false, mensagem: "Somente alunos podem fazer este tipo de reserva." });
+        }
+        // Usa a identidade da sessão, nunca o usuarioID enviado pelo navegador.
+        const usuarioID = String(sessao.id).trim();
+
         const {
-            usuarioID,
             produtoID,
             localID,
             dataRetirada,
@@ -925,8 +934,17 @@ router.post("/aluno/reservas", async (req, res) => {
 
 router.post("/professor/reservas", async (req, res) => {
     try {
+        const sessao = req.session?.usuario;
+        if (!sessao?.id) {
+            return res.status(401).json({ sucesso: false, mensagem: "Faça login para criar uma reserva." });
+        }
+        if (normalizar(sessao.tipoUsuario) !== "PROFESSOR") {
+            return res.status(403).json({ sucesso: false, mensagem: "Somente professores podem fazer este tipo de reserva." });
+        }
+        // Usa a identidade da sessão, nunca o usuarioID enviado pelo navegador.
+        const usuarioID = String(sessao.id).trim();
+
         const {
-            usuarioID,
             produtoID,
             localID,
             dataRetirada,
