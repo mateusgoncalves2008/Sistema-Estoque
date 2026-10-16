@@ -20,6 +20,7 @@ const reservasRoutes = require("./routes/reservas");
 
 const secretariaRoutes = require("./routes/secretaria");
 const responsavelRoutes = require("./routes/responsavel");
+const bloqueiosDenunciasRoutes = require("./routes/bloqueios-denuncias");
 const emprestimosRoutes = require("./routes/emprestimos");
 const professorItensRoutes = require("./routes/professorItens");
 
@@ -102,6 +103,7 @@ app.use("/api", reservasRoutes);
 app.use("/api", secretariaRoutes);
 app.use("/api", emprestimosRoutes);
 app.use("/api", responsavelRoutes);
+app.use("/api", bloqueiosDenunciasRoutes);
 app.use("/api", professorItensRoutes);
 app.use("/api", debugRoutes);
 
