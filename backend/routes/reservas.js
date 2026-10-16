@@ -156,6 +156,42 @@ async function buscarLocal(localID) {
     return null;
 }
 
+
+/**
+ * Verifica bloqueio ativo do usuário no setor correspondente ao local.
+ */
+async function verificarBloqueioSetor(usuarioID, local) {
+    const [bloqueiosResposta, setoresResposta] = await Promise.all([
+        sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "'22_BLOQUEIOS_SETOR'!A:J",
+        }),
+        sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "12_SETORES!A:E",
+        }),
+    ]);
+
+    const bloqueios = bloqueiosResposta.data.values || [];
+    const setores = setoresResposta.data.values || [];
+    const setor = setores.slice(1).find((linha) =>
+        normalizar(linha[1]) === normalizar(local.nome)
+    );
+
+    if (!setor) return null;
+
+    const bloqueio = bloqueios.slice(1).find((linha) =>
+        String(linha[4] || "").trim() === String(setor[0] || "").trim() &&
+        String(linha[6] || "").trim() === String(usuarioID).trim() &&
+        normalizar(linha[9]) === "ATIVO"
+    );
+
+    return bloqueio ? {
+        setorNome: String(bloqueio[5] || setor[1] || "").trim(),
+        motivo: String(bloqueio[8] || "").trim(),
+    } : null;
+}
+
 // ============================================================
 // LER CATEGORIAS
 // ============================================================
@@ -681,6 +717,14 @@ router.post("/aluno/reservas", async (req, res) => {
             });
         }
 
+        const bloqueioSetor = await verificarBloqueioSetor(usuarioID, local);
+        if (bloqueioSetor) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: `Sua reserva foi impedida porque você está bloqueado no setor "${bloqueioSetor.setorNome}". Motivo: ${bloqueioSetor.motivo}`,
+            });
+        }
+
         const localNome = normalizar(local.nome);
 
         // Livro → Biblioteca
@@ -1003,6 +1047,14 @@ router.post("/professor/reservas", async (req, res) => {
             return res.status(400).json({
                 sucesso: false,
                 mensagem: "Este local não está ativo.",
+            });
+        }
+
+        const bloqueioSetor = await verificarBloqueioSetor(usuarioID, local);
+        if (bloqueioSetor) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: `Sua reserva foi impedida porque você está bloqueado no setor "${bloqueioSetor.setorNome}". Motivo: ${bloqueioSetor.motivo}`,
             });
         }
 
