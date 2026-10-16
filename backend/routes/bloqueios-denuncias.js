@@ -58,7 +58,7 @@ async function garantirAbas() {
             });
             await sheets.spreadsheets.values.update({
                 spreadsheetId: SPREADSHEET_ID,
-                range: `'${aba.nome}'!A1:J1`,
+                range: `'${aba.nome}'!A1:${String.fromCharCode(64 + aba.cabecalho.length)}1`,
                 valueInputOption: "RAW",
                 requestBody: { values: [aba.cabecalho] }
             });
@@ -69,7 +69,7 @@ async function garantirAbas() {
             if (!(lidas.data.values || []).length) {
                 await sheets.spreadsheets.values.update({
                     spreadsheetId: SPREADSHEET_ID,
-                    range: `'${aba.nome}'!A1:J1`,
+                    range: `'${aba.nome}'!A1:${String.fromCharCode(64 + aba.cabecalho.length)}1`,
                     valueInputOption: "RAW",
                     requestBody: { values: [aba.cabecalho] }
                 });
