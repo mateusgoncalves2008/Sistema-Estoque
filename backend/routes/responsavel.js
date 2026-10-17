@@ -740,12 +740,44 @@ function gerarCodigoProduto(produtos, codigoLocal) {
  return prefixo + "-" + String(maior + 1).padStart(4, "0");
 }
 router.get("/responsavel/itens/opcoes", exigirResponsavel, async (req, res) => {
- try {
-  await carregarVinculo(req.session.usuario);
-  const [categorias, subcategorias] = await Promise.all([lerAba("03_CATEGORIAS!A:D"), lerAba("04_SUBCATEGORIAS!A:E")]);
-  return res.json({ sucesso: true, categorias: categorias.slice(1).filter(l => texto(l[0]) && normalizar(l[3] || "ATIVO") === "ATIVO").map(l => ({id:texto(l[0]),nome:texto(l[1])})), subcategorias: subcategorias.slice(1).filter(l => texto(l[0]) && normalizar(l[4] || "ATIVO") === "ATIVO").map(l => ({id:texto(l[0]),categoriaID:texto(l[1]),nome:texto(l[2])})) });
- } catch (erro) { console.error("Erro ao carregar opções do cadastro:", erro); return res.status(erro.status || 500).json({sucesso:false,mensagem:erro.status ? erro.message : "Não foi possível carregar categorias e subcategorias."}); }
+    try {
+        await carregarVinculo(req.session.usuario);
+
+        const [categorias, subcategorias] = await Promise.all([
+            lerAba("'03_CATEGORIAS'!A:D"),
+            lerAba("'04_SUBCATEGORIAS'!A:E"),
+        ]);
+
+        const categoriasAtivas = categorias.slice(1)
+            .filter((linha) => texto(linha[0]) && texto(linha[1]))
+            .filter((linha) => !texto(linha[3]) || normalizar(linha[3]) === "ATIVO")
+            .map((linha) => ({ id: texto(linha[0]), nome: texto(linha[1]) }));
+
+        const subcategoriasAtivas = subcategorias.slice(1)
+            .filter((linha) => texto(linha[0]) && texto(linha[1]) && texto(linha[2]))
+            .filter((linha) => !texto(linha[4]) || normalizar(linha[4]) === "ATIVO")
+            .map((linha) => ({
+                id: texto(linha[0]),
+                categoriaID: texto(linha[1]),
+                nome: texto(linha[2]),
+            }));
+
+        return res.json({
+            sucesso: true,
+            categorias: categoriasAtivas,
+            subcategorias: subcategoriasAtivas,
+        });
+    } catch (erro) {
+        console.error("Erro ao carregar opções do cadastro:", erro);
+        return res.status(erro.status || 500).json({
+            sucesso: false,
+            mensagem: erro.status
+                ? erro.message
+                : "Não foi possível ler as abas 03_CATEGORIAS e 04_SUBCATEGORIAS. Confira o acesso à planilha e os nomes das abas.",
+        });
+    }
 });
+
 router.post("/responsavel/itens", exigirResponsavel, async (req, res) => {
  try {
   const vinculo = await carregarVinculo(req.session.usuario);
