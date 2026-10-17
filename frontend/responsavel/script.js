@@ -481,7 +481,7 @@ function renderStock(filter = "") {
     });
 
     if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="empty">Nenhum item encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="empty">Nenhum item encontrado.</td></tr>`;
         return;
     }
 
@@ -494,7 +494,16 @@ function renderStock(filter = "") {
             <td>${escapeHTML(getValue(item, ["categoria", "Categoria"]))}</td>
             <td>${escapeHTML(getValue(item, ["quantidade", "Quantidade", "total"]))}</td>
             <td>${escapeHTML(getValue(item, ["disponivel", "Disponivel", "quantidadeDisponivel"]))}</td>
-            <td>${statusBadge(getValue(item, ["status", "Status"], "Disponível"))}</td>
+            <td>${statusBadge(getValue(item, ["statusLocal", "StatusLocal", "status", "Status"], "ATIVO"))}</td>
+            <td class="stock-actions">
+                ${normalizeText(getValue(item, ["statusLocal", "StatusLocal", "status", "Status"], "ATIVO")) === "inativo"
+                    ? '<span class="muted">Item inativo</span>'
+                    : `
+                        <button type="button" class="text-btn" data-stock-action="entrada" data-id="${escapeHTML(getValue(item, ["estoqueID", "EstoqueID"], ""))}">Entrada</button>
+                        <button type="button" class="text-btn" data-stock-action="saida" data-id="${escapeHTML(getValue(item, ["estoqueID", "EstoqueID"], ""))}">Saída</button>
+                        <button type="button" class="text-btn danger" data-stock-action="desativar" data-id="${escapeHTML(getValue(item, ["estoqueID", "EstoqueID"], ""))}">Desativar</button>
+                    `}
+            </td>
         </tr>
     `,
         )
@@ -1212,6 +1221,64 @@ function iniciarEventos() {
 
     el("stockStatusFilter")?.addEventListener("change", () => {
         renderStock(el("stockSearch")?.value || "");
+    });
+
+    el("stockRows")?.addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-stock-action]");
+        if (!button || button.disabled) return;
+
+        const estoqueID = button.dataset.id;
+        const acao = button.dataset.stockAction;
+        if (!estoqueID) {
+            showNotice("Não foi possível identificar o item do estoque.", true);
+            return;
+        }
+
+        if (acao === "desativar") {
+            if (!window.confirm("Desativar este item somente no seu setor? As quantidades serão preservadas.")) return;
+        }
+
+        let payload = {};
+        if (acao === "entrada" || acao === "saida") {
+            const respostaQuantidade = window.prompt("Informe a quantidade inteira:");
+            if (respostaQuantidade === null) return;
+            const quantidade = Number(respostaQuantidade.trim());
+            if (!Number.isSafeInteger(quantidade) || quantidade <= 0) {
+                showNotice("Informe uma quantidade inteira maior que zero.", true);
+                return;
+            }
+
+            const motivo = window.prompt("Informe o motivo da movimentação:");
+            if (motivo === null) return;
+            if (!motivo.trim()) {
+                showNotice("O motivo é obrigatório.", true);
+                return;
+            }
+            payload = { operacao: acao, quantidade, motivo: motivo.trim() };
+        }
+
+        button.disabled = true;
+        try {
+            const response = await fetch(
+                `${API_BASE}/responsavel/estoque/${encodeURIComponent(estoqueID)}/${acao === "desativar" ? "desativar" : "ajustar"}`,
+                {
+                    method: acao === "desativar" ? "PATCH" : "POST",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json", Accept: "application/json" },
+                    body: acao === "desativar" ? undefined : JSON.stringify(payload),
+                },
+            );
+            const data = await response.json();
+            if (!response.ok || data.sucesso === false) {
+                throw new Error(data.mensagem || data.erro || `Erro HTTP ${response.status}`);
+            }
+            showNotice(data.mensagem || "Estoque atualizado.");
+            await carregarPainel();
+        } catch (error) {
+            showNotice(error.message || "Não foi possível atualizar o estoque.", true);
+        } finally {
+            button.disabled = false;
+        }
     });
 
     el("requestRows")?.addEventListener("click", (event) => {
