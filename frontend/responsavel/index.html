@@ -357,27 +357,8 @@
                             </select>
                         </div>
                     </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Código</th>
-                                    <th>Produto</th>
-                                    <th>Categoria</th>
-                                    <th>Quantidade</th>
-                                    <th>Disponível</th>
-                                    <th>Status local</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="stockRows">
-                                <tr>
-                                    <td colspan="7" class="empty">
-                                        Nenhum item carregado.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div id="stockRows" class="stock-cards-list">
+                        <div class="stock-empty"><i class="fa-solid fa-box-open"></i><strong>Nenhum item carregado</strong></div>
                     </div>
                     <dialog id="newItemDialog" class="new-item-dialog">
                       <form id="newItemForm" class="new-item-form">
