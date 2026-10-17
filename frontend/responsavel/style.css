@@ -2046,7 +2046,6 @@ footer {
     }
 }
 
-
 .bloqueios-denuncias #blockedUserSearch {
     width: 220px;
     max-width: 100%;
@@ -2090,4 +2089,34 @@ footer {
         width: 100%;
         flex: 1 1 100%;
     }
+}
+
+/* Ação para desbloquear usuário na tabela de bloqueios */
+.bloqueios-denuncias .bd-unblock-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 8px 11px;
+    border: 1px solid #b8d9c2;
+    border-radius: 8px;
+    background: #eaf6ed;
+    color: #21683a;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        background 0.2s,
+        opacity 0.2s;
+}
+
+.bloqueios-denuncias .bd-unblock-button:hover {
+    background: #d8efdf;
+}
+
+.bloqueios-denuncias .bd-unblock-button:disabled {
+    opacity: 0.6;
+    cursor: wait;
 }

@@ -1191,6 +1191,47 @@ function iniciarEventos() {
 
     el("blockedUserSearch")?.addEventListener("input", renderBloqueios);
 
+    el("blockRows")?.addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-bloqueio-id]");
+        if (!button || button.disabled) return;
+
+        const bloqueioID = button.dataset.bloqueioId;
+        const nome = button.dataset.usuarioNome || "este usuário";
+        if (!bloqueioID) {
+            showNotice("Não foi possível identificar o bloqueio.", true);
+            return;
+        }
+        if (!window.confirm("Deseja desbloquear " + nome + " neste setor?"))
+            return;
+
+        button.disabled = true;
+        try {
+            const response = await fetch(
+                API_BASE +
+                    "/responsavel/bloqueios/" +
+                    encodeURIComponent(bloqueioID) +
+                    "/desbloquear",
+                {
+                    method: "PATCH",
+                    credentials: "include",
+                    headers: { Accept: "application/json" },
+                },
+            );
+            const data = await response.json();
+            if (!response.ok || !data.sucesso) {
+                throw new Error(
+                    data.mensagem || "Não foi possível desbloquear o usuário.",
+                );
+            }
+            showNotice(data.mensagem || "Usuário desbloqueado neste setor.");
+            await carregarBloqueiosDenuncias();
+        } catch (error) {
+            showNotice(error.message || "Erro ao desbloquear usuário.", true);
+        } finally {
+            button.disabled = false;
+        }
+    });
+
     el("newBlockButton")?.addEventListener("click", () => {
         abrirFormulario("bloqueio");
     });
@@ -1303,9 +1344,16 @@ function renderBloqueios() {
                     </span>
                 </td>
                 <td>
-                    <span class="bd-action-info" title="Registro de bloqueio">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </span>
+                    ${
+                        ativo
+                            ? `<button type="button" class="bd-unblock-button" data-bloqueio-id="${escapeHTML(item[0] || "")}" data-usuario-nome="${nome}" title="Desbloquear usuário">
+                                  <i class="fa-solid fa-lock-open"></i>
+                                  Desbloquear
+                              </button>`
+                            : `<span class="bd-action-info" title="Bloqueio inativo">
+                                  <i class="fa-solid fa-shield-halved"></i>
+                              </span>`
+                    }
                 </td>
             </tr>`;
         })
