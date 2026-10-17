@@ -167,6 +167,36 @@ router.post("/responsavel/bloqueios", exigirResponsavel, async (req, res) => {
     } catch(e) { return respostaErro(res, e, "Não foi possível registrar o bloqueio."); }
 });
 
+// Desbloqueia um usuário somente no setor do responsável autenticado.
+router.patch("/responsavel/bloqueios/:id/desbloquear", exigirResponsavel, async (req, res) => {
+    try {
+        const v = await carregarVinculo(req.session.usuario);
+        const id = texto(req.params.id);
+        if (!id) throw erro(400, "ID do bloqueio não informado.");
+
+        const linhas = await ler(`'${ABA_BLOQUEIOS}'!A:J`);
+        const indice = linhas.findIndex((l, i) =>
+            i > 0 && texto(l[0]) === id && texto(l[4]) === v.setor.id
+        );
+
+        if (indice < 1) throw erro(404, "Bloqueio não encontrado neste setor.");
+        if (normalizar(linhas[indice][9]) !== "ATIVO") {
+            throw erro(409, "Este bloqueio já está inativo.");
+        }
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `'${ABA_BLOQUEIOS}'!J${indice + 1}`,
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [["INATIVO"]] }
+        });
+
+        return res.json({ sucesso: true, mensagem: "Usuário desbloqueado neste setor.", bloqueioID: id });
+    } catch (e) {
+        return respostaErro(res, e, "Não foi possível desbloquear o usuário.");
+    }
+});
+
 // Denúncias ficam disponíveis para análise pela Secretaria.
 router.post("/responsavel/denuncias", exigirResponsavel, async (req, res) => {
     try {
