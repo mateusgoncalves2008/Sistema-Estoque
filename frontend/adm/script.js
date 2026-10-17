@@ -2,6 +2,10 @@ const API_BASE = "/api";
 
 const form = document.getElementById("formCadastro");
 const campoSetor = document.getElementById("setorID");
+const campoTipo = document.getElementById("tipoConta");
+const grupoSetor = document.getElementById("grupoSetor");
+const campoCPF = document.getElementById("cpf");
+const campoTelefone = document.getElementById("telefone");
 const mensagem = document.getElementById("mensagem");
 const botao = document.getElementById("btnCadastrar");
 
@@ -63,9 +67,13 @@ form.addEventListener("submit", async (evento) => {
     evento.preventDefault();
 
     const dados = {
+        tipoConta: campoTipo.value,
         nome: document.getElementById("nome").value.trim(),
+        cpf: campoCPF.value.replace(/\D/g, ""),
+        dataNascimento: document.getElementById("dataNascimento").value,
+        telefone: campoTelefone.value.replace(/\D/g, ""),
         email: document.getElementById("email").value.trim(),
-        setorID: campoSetor.value,
+        setorID: campoTipo.value === "RESPONSAVEL" ? campoSetor.value : "",
         senha: document.getElementById("senha").value,
         confirmacaoSenha: document.getElementById("confirmacaoSenha").value,
     };
@@ -79,7 +87,7 @@ form.addEventListener("submit", async (evento) => {
     mostrarMensagem("Cadastrando...");
 
     try {
-        const resposta = await fetch(`${API_BASE}/cadastro-responsavel`, {
+        const resposta = await fetch(`${API_BASE}/${dados.tipoConta === "SECRETARIA" ? "cadastro-secretaria" : "cadastro-responsavel"}`, {
             method: "POST",
             credentials: "include",
             headers: {
@@ -112,3 +120,23 @@ form.addEventListener("submit", async (evento) => {
 });
 
 carregarSetores();
+
+
+campoTipo.addEventListener("change", () => {
+    const exigeSetor = campoTipo.value === "RESPONSAVEL";
+    grupoSetor.hidden = !exigeSetor;
+    campoSetor.required = exigeSetor;
+    if (exigeSetor) carregarSetores();
+});
+
+campoCPF.addEventListener("input", () => {
+    const v = campoCPF.value.replace(/\D/g, "").slice(0, 11);
+    campoCPF.value = v.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+});
+
+campoTelefone.addEventListener("input", () => {
+    const v = campoTelefone.value.replace(/\D/g, "").slice(0, 11);
+    campoTelefone.value = v.length > 10 ? v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3") : v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+});
+
+campoTipo.dispatchEvent(new Event("change"));
