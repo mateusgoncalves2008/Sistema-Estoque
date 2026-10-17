@@ -2305,3 +2305,28 @@ footer {
 .stock-empty span{font-size:13px}
 @media(max-width:1050px){.stock-item-card{grid-template-columns:1fr}.stock-card-actions{justify-content:flex-start;padding-top:15px;border-top:1px solid #eee3da}.stock-toolbar{justify-content:flex-start}}
 @media(max-width:600px){.stock-item-card{padding:16px;gap:15px}.stock-card-main{gap:12px}.stock-card-icon{width:46px;height:46px;flex-basis:46px;border-radius:12px;font-size:19px}.stock-card-title-row h3{font-size:17px}.stock-card-metrics{gap:10px;font-size:13px}.stock-card-metrics .stock-metric-available{padding-left:10px}.stock-card-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.stock-action{padding:10px 8px;font-size:13px}.stock-action.deactivate{grid-column:1/-1}.stock-toolbar input,.stock-toolbar select{width:100%;max-width:none}}
+
+/* Botão principal de cadastro de item */
+.stock-toolbar #openNewItemButton{
+ position:relative;isolation:isolate;overflow:hidden;
+ display:inline-flex;align-items:center;justify-content:center;gap:10px;
+ min-height:46px;padding:11px 19px;border:1px solid #a84425;border-radius:12px;
+ background:linear-gradient(135deg,#d96a3f 0%,#bd4828 100%);color:#fff;
+ box-shadow:0 5px 12px #c9573030, inset 0 1px 0 #ffffff35;
+ font-weight:700;font-size:14px;letter-spacing:.1px;
+ transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;
+}
+.stock-toolbar #openNewItemButton::before{
+ content:"";position:absolute;inset:0;z-index:-1;
+ background:linear-gradient(110deg,transparent 20%,#ffffff24 48%,transparent 75%);
+ transform:translateX(-120%);transition:transform .45s ease;
+}
+.stock-toolbar #openNewItemButton i{
+ display:grid;place-items:center;width:23px;height:23px;border-radius:7px;
+ background:#ffffff25;font-size:12px;
+}
+.stock-toolbar #openNewItemButton:hover{transform:translateY(-2px);box-shadow:0 9px 18px #c9573040;filter:saturate(1.08)}
+.stock-toolbar #openNewItemButton:hover::before{transform:translateX(120%)}
+.stock-toolbar #openNewItemButton:active{transform:translateY(0);box-shadow:0 3px 8px #c9573028}
+.stock-toolbar #openNewItemButton:focus-visible{outline:3px solid #c9573055;outline-offset:3px}
+@media(max-width:600px){.stock-toolbar #openNewItemButton{width:100%;min-height:45px}}
