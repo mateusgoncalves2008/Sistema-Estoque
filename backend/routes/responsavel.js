@@ -501,6 +501,12 @@ async function atualizarReserva(reservaID, acao, usuario) {
     }
 
     const estoque = estoques[indiceEstoque];
+    if (acao === "aprovar" && normalizar(estoque[8] || "ATIVO") !== "ATIVO") {
+        const erro = new Error("Este item foi desativado neste local e não pode ter novas reservas aprovadas.");
+        erro.status = 409;
+        throw erro;
+    }
+
     let reservado = numero(estoque[4]);
     let disponivel = numero(estoque[5]);
 
