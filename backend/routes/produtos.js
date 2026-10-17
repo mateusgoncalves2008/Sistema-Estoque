@@ -229,7 +229,7 @@ router.get("/aluno/itens", async (req, res) => {
 
         const estoqueResponse = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: "06_ESTOQUE_LOCAIS!A:H",
+            range: "06_ESTOQUE_LOCAIS!A:I",
         });
 
         const estoqueLinhas = estoqueResponse.data.values || [];
@@ -248,6 +248,7 @@ router.get("/aluno/itens", async (req, res) => {
                 disponivel: numero(linha[5]),
                 indisponivel: numero(linha[6]),
                 ultimaAtualizacao: texto(linha[7]),
+                statusLocal: normalizar(linha[8] || "ATIVO"),
             };
 
             if (!estoquePorProduto.has(registro.produtoID)) {
@@ -408,6 +409,11 @@ router.get("/aluno/itens", async (req, res) => {
             for (const estoque of registrosEstoque) {
                 const local = locais.get(String(estoque.localID));
 
+                // Não disponibiliza aos usuários itens desativados neste setor.
+                if (estoque.statusLocal !== "ATIVO") {
+                    continue;
+                }
+
                 // Ignora local inexistente
                 if (!local) {
                     continue;
@@ -461,7 +467,7 @@ router.get("/aluno/itens", async (req, res) => {
                     podeReservar =
                         localNormalizado.includes("BIBLIOTECA") &&
                         situacaoCodigo === "DISPONIVEL" &&
-                        estoque.disponivel > estoque.reservado;
+                        estoque.disponivel > 0;
                 }
 
                 if (ehComputador) {
@@ -470,7 +476,7 @@ router.get("/aluno/itens", async (req, res) => {
                             "LABORATORIO DE INFORMATICA",
                         ) &&
                         situacaoCodigo === "DISPONIVEL" &&
-                        estoque.disponivel > estoque.reservado;
+                        estoque.disponivel > 0;
                 }
 
                 // ------------------------------------------------
