@@ -278,10 +278,28 @@ function atualizarUsuarioLateral() {
     }
 }
 
-function fazerLogout() {
-    sessionStorage.removeItem("usuarioLogado");
+async function fazerLogout() {
+    const botao = document.getElementById("logoutBtn");
+    if (botao) botao.disabled = true;
 
-    window.location.href = "/";
+    try {
+        const resposta = await fetch("/api/logout", {
+            method: "POST",
+            credentials: "include",
+        });
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok || !resultado.sucesso) {
+            throw new Error("Não foi possível sair.");
+        }
+
+        sessionStorage.removeItem("usuarioLogado");
+        window.location.replace("/");
+    } catch (erro) {
+        alert("Erro ao sair. Tente novamente.");
+        if (botao) botao.disabled = false;
+    }
 }
 
 // ============================================================

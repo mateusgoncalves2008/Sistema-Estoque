@@ -2090,7 +2090,6 @@ footer {
         flex: 1 1 100%;
     }
 }
-
 /* Ação para desbloquear usuário na tabela de bloqueios */
 .bloqueios-denuncias .bd-unblock-button {
     display: inline-flex;

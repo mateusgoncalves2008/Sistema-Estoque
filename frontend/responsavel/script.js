@@ -1150,7 +1150,6 @@ function iniciarEventos() {
 
     el("refreshButton")?.addEventListener("click", carregarPainel);
 
-    el("profileForm")?.addEventListener("submit", salvarPerfil);
     el("profileBirthDate")?.addEventListener("change", atualizarIdadePerfil);
     el("profileCPF")?.addEventListener("input", (event) => {
         const digits = event.target.value.replace(/\D/g, "").slice(0, 11);
@@ -1175,15 +1174,27 @@ function iniciarEventos() {
         renderMovements(event.target.value);
     });
 
-    el("logoutButton")?.addEventListener("click", () => {
-        const logoutUrl = window.RESPONSAVEL_API?.logoutUrl;
+    el("logoutButton")?.addEventListener("click", async () => {
+        const botao = el("logoutButton");
+        botao.disabled = true;
 
-        if (logoutUrl) {
-            window.location.href = logoutUrl;
-        } else {
-            showNotice(
-                "A saída ainda precisa ser ligada à rota de logout do sistema.",
-            );
+        try {
+            const resposta = await fetch("/api/logout", {
+                method: "POST",
+                credentials: "include",
+                headers: { Accept: "application/json" },
+            });
+
+            const resultado = await resposta.json();
+
+            if (!resposta.ok || !resultado.sucesso) {
+                throw new Error("Não foi possível encerrar a sessão.");
+            }
+
+            window.location.replace("/");
+        } catch (erro) {
+            showNotice(erro.message || "Erro ao sair do sistema.", true);
+            botao.disabled = false;
         }
     });
 
@@ -1232,6 +1243,7 @@ function iniciarEventos() {
                     "/responsavel/bloqueios/" +
                     encodeURIComponent(bloqueioID) +
                     "/desbloquear",
+
                 {
                     method: "PATCH",
                     credentials: "include",
@@ -1640,6 +1652,7 @@ function atualizarIdadePerfil() {
         hoje.getMonth() < nascimento.getMonth() ||
         (hoje.getMonth() === nascimento.getMonth() &&
             hoje.getDate() < nascimento.getDate());
+
     if (aniversarioAindaNaoChegou) idade--;
     setText("profileAge", idade >= 0 && idade <= 120 ? String(idade) : "");
 }
@@ -1684,7 +1697,6 @@ function formatarCPFPerfil(value) {
         .slice(0, 11);
     return digits
         .replace(/(\d{3})(\d)/, "$1.$2")
-        .replace(/(\d{3})(\d)/, "$1.$2")
         .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
@@ -1695,51 +1707,4 @@ function formatarTelefonePerfil(value) {
     return digits.length > 10
         ? digits.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3")
         : digits.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
-}
-
-async function salvarPerfil(event) {
-    event.preventDefault();
-    const dataNascimento = el("profileBirthDate").value;
-    const cpf = el("profileCPF").value.replace(/\D/g, "");
-    const telefone = el("profilePhone").value.replace(/\D/g, "");
-    if (cpf.length !== 11) {
-        showNotice("Informe um CPF com 11 números.", true);
-        return;
-    }
-    if (telefone.length < 10 || telefone.length > 11) {
-        showNotice("Informe um telefone com DDD.", true);
-        return;
-    }
-    if (
-        !dataNascimento ||
-        new Date(dataNascimento + "T12:00:00") > new Date()
-    ) {
-        showNotice("Informe uma data de nascimento válida.", true);
-        return;
-    }
-    const button = el("saveProfileButton");
-    button.disabled = true;
-    try {
-        const response = await fetch(`${API_BASE}/responsavel/perfil`, {
-            method: "PATCH",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-            body: JSON.stringify({ dataNascimento, cpf, telefone }),
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data.sucesso) {
-            throw new Error(
-                data.mensagem || "Não foi possível salvar seu perfil.",
-            );
-        }
-        showNotice(data.mensagem || "Perfil atualizado com sucesso.");
-        await carregarPerfil();
-    } catch (error) {
-        showNotice(error.message || "Erro ao salvar perfil.", true);
-    } finally {
-        button.disabled = false;
-    }
 }
