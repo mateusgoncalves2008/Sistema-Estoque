@@ -230,7 +230,7 @@ async function buscarCategoria(categoriaID) {
 async function buscarEstoque(produtoID, localID) {
     const resposta = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: "06_ESTOQUE_LOCAIS!A:H",
+        range: "06_ESTOQUE_LOCAIS!A:I",
     });
 
     const linhas = resposta.data.values || [];
@@ -249,6 +249,7 @@ async function buscarEstoque(produtoID, localID) {
                 disponivel: numero(linha[5]),
                 indisponivel: numero(linha[6]),
                 ultimaAtualizacao: linha[7] || "",
+                statusLocal: normalizar(linha[8] || "ATIVO"),
             };
         }
     }
@@ -778,10 +779,10 @@ router.post("/aluno/reservas", async (req, res) => {
             });
         }
 
-        if (estoque.disponivel <= 0) {
+        if (estoque.statusLocal !== "ATIVO") {
             return res.status(409).json({
                 sucesso: false,
-                mensagem: "Este item não está disponível no momento.",
+                mensagem: "Este item está desativado neste setor e não pode ser reservado.",
             });
         }
 
@@ -1104,7 +1105,15 @@ router.post("/professor/reservas", async (req, res) => {
             });
         }
 
-        const quantidadeDisponivel = estoque.disponivel - estoque.reservado;
+        if (estoque.statusLocal !== "ATIVO") {
+            return res.status(409).json({
+                sucesso: false,
+                mensagem: "Este item está desativado neste setor e não pode ser reservado.",
+            });
+        }
+
+        // A coluna Disponivel já deve representar o saldo após reservas.
+        const quantidadeDisponivel = estoque.disponivel;
 
         if (quantidadeDisponivel <= 0) {
             return res.status(409).json({
