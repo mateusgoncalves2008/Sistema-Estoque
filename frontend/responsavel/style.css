@@ -2235,3 +2235,26 @@ footer {
         grid-column: auto;
     }
 }
+
+/* Formulário de cadastro de item */
+.stock-toolbar #openNewItemButton{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:10px 14px;white-space:nowrap}
+.new-item-dialog{width:min(620px,calc(100% - 28px));max-height:90vh;padding:0;border:1px solid var(--border,#e6d8cc);border-radius:16px;color:var(--text,#3c291f);background:var(--white,#fffdfa);box-shadow:0 24px 70px #35221935;overflow:auto}
+.new-item-dialog::backdrop{background:#24160f9c;backdrop-filter:blur(3px)}
+.new-item-form{margin:0}
+.new-item-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px;border-bottom:1px solid var(--border,#e6d8cc);background:var(--beige,#f4eee7)}
+.new-item-header h2{margin:0 0 6px;font-size:1.25rem}
+.new-item-header p{margin:0;color:var(--muted,#8a786b);font-size:.9rem;line-height:1.45}
+.new-item-body{display:grid;gap:14px;padding:22px}
+.new-item-body label{display:grid;gap:7px;font-size:.9rem;font-weight:600}
+.new-item-body input,.new-item-body select,.new-item-body textarea{box-sizing:border-box;width:100%;min-width:0;padding:11px 12px;border:1px solid var(--border,#e6d8cc);border-radius:9px;background:#fff;color:var(--text,#3c291f);font:inherit}
+.new-item-body input:focus,.new-item-body select:focus,.new-item-body textarea:focus{outline:2px solid #c9573033;border-color:var(--orange,#c95730)}
+.new-item-body textarea{resize:vertical}
+.new-item-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.new-item-note{margin:0;padding:11px 12px;border-radius:9px;background:#f8f5f1;color:#756357;font-size:.82rem;line-height:1.5}
+.new-item-note i{color:var(--orange,#c95730);margin-right:5px}
+.new-item-actions{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px 22px;border-top:1px solid var(--border,#e6d8cc)}
+.new-item-actions button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:10px 14px;border-radius:9px;cursor:pointer;font:inherit;font-weight:600}
+.new-item-actions .secondary-button{border:1px solid var(--border,#e6d8cc);background:#fff;color:var(--text,#3c291f)}
+.new-item-actions .primary-button{border:1px solid var(--orange,#c95730);background:var(--orange,#c95730);color:#fff}
+.new-item-actions button:disabled{opacity:.6;cursor:wait}
+@media(max-width:560px){.new-item-header,.new-item-body{padding:16px}.new-item-grid{grid-template-columns:1fr}.new-item-actions{padding:14px 16px 16px}}
