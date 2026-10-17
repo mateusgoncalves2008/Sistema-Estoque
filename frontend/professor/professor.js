@@ -567,9 +567,30 @@ if (campoBusca) {
     campoBusca.addEventListener("input", atualizarTabelas);
 }
 
-document.getElementById("sair").addEventListener("click", () => {
-    aviso("Para sair de verdade, conectaremos ao login existente.");
+document.getElementById("sair")?.addEventListener("click", async (event) => {
+    const botao = event.currentTarget;
+    botao.disabled = true;
+
+    try {
+        const resposta = await fetch("/api/logout", {
+            method: "POST",
+            credentials: "include",
+        });
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok || !resultado.sucesso) {
+            throw new Error("Não foi possível sair.");
+        }
+
+        sessionStorage.removeItem("usuarioLogado");
+        window.location.replace("/");
+    } catch (erro) {
+        aviso("Erro ao sair. Tente novamente.");
+        botao.disabled = false;
+    }
 });
+
 atualizarTabelas();
 carregarPerfilProfessor();
 

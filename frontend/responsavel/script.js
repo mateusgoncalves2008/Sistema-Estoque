@@ -1174,15 +1174,27 @@ function iniciarEventos() {
         renderMovements(event.target.value);
     });
 
-    el("logoutButton")?.addEventListener("click", () => {
-        const logoutUrl = window.RESPONSAVEL_API?.logoutUrl;
+    el("logoutButton")?.addEventListener("click", async () => {
+        const botao = el("logoutButton");
+        botao.disabled = true;
 
-        if (logoutUrl) {
-            window.location.href = logoutUrl;
-        } else {
-            showNotice(
-                "A saída ainda precisa ser ligada à rota de logout do sistema.",
-            );
+        try {
+            const resposta = await fetch("/api/logout", {
+                method: "POST",
+                credentials: "include",
+                headers: { Accept: "application/json" },
+            });
+
+            const resultado = await resposta.json();
+
+            if (!resposta.ok || !resultado.sucesso) {
+                throw new Error("Não foi possível encerrar a sessão.");
+            }
+
+            window.location.replace("/");
+        } catch (erro) {
+            showNotice(erro.message || "Erro ao sair do sistema.", true);
+            botao.disabled = false;
         }
     });
 
