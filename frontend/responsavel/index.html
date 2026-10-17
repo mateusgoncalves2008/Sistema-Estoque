@@ -341,6 +341,7 @@
                         </div>
 
                         <div class="stock-toolbar">
+                            <button type="button" id="openNewItemButton" class="primary-button"><i class="fa-solid fa-plus"></i> Cadastrar item</button>
                             <input
                                 id="stockSearch"
                                 type="search"
@@ -378,6 +379,21 @@
                             </tbody>
                         </table>
                     </div>
+                    <dialog id="newItemDialog" class="new-item-dialog">
+                      <form id="newItemForm" class="new-item-form">
+                        <header class="new-item-header"><div><h2>Cadastrar novo item</h2><p>O produto e o estoque do seu setor serão salvos automaticamente.</p></div><button type="button" id="closeNewItemButton" class="icon-btn" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button></header>
+                        <div class="new-item-body">
+                          <label>Nome do item *<input name="nome" required maxlength="150" placeholder="Ex.: Computador 01"></label>
+                          <label>Categoria *<select name="categoriaID" id="newItemCategory" required><option value="">Carregando categorias...</option></select></label>
+                          <label>Subcategoria *<select name="subcategoriaID" id="newItemSubcategory" required disabled><option value="">Selecione uma categoria primeiro</option></select></label>
+                          <div class="new-item-grid"><label>Quantidade inicial *<input name="quantidade" type="number" min="0" step="1" value="0" required></label><label>Estoque mínimo *<input name="estoqueMinimo" type="number" min="0" step="1" value="0" required></label></div>
+                          <div class="new-item-grid"><label>Estado *<select name="estado" required><option value="NOVO">Novo</option><option value="BOM" selected>Bom</option><option value="DANIFICADO">Danificado</option><option value="INCOMPLETO">Incompleto</option></select></label><label>Status *<select name="status" required><option value="ATIVO" selected>Ativo</option><option value="INATIVO">Inativo</option></select></label></div>
+                          <label>Observação<textarea name="observacao" rows="3" maxlength="1000" placeholder="Detalhes adicionais (opcional)"></textarea></label>
+                          <p class="new-item-note"><i class="fa-solid fa-circle-info"></i> ID, código, data, setor e registro de estoque são gerados automaticamente.</p>
+                        </div>
+                        <footer class="new-item-actions"><button type="button" id="cancelNewItemButton" class="secondary-button">Cancelar</button><button type="submit" id="saveNewItemButton" class="primary-button"><i class="fa-solid fa-floppy-disk"></i> Salvar item</button></footer>
+                      </form>
+                    </dialog>
                 </article>
             </section>
 
