@@ -30,6 +30,7 @@ const pageInfo = {
         "Bloqueios e denúncias",
         "Gerencie bloqueios e encaminhe ocorrências à Secretaria.",
     ],
+    perfil: ["Meu Perfil", "Consulte e atualize seus dados pessoais."],
 };
 
 /* =====================================================
@@ -183,6 +184,9 @@ function openPage(page) {
 
     if (page === "bloqueios") {
         carregarBloqueiosDenuncias();
+    }
+    if (page === "perfil") {
+        carregarPerfil();
     }
 
     document.querySelectorAll(".page").forEach((section) => {
@@ -1146,6 +1150,23 @@ function iniciarEventos() {
 
     el("refreshButton")?.addEventListener("click", carregarPainel);
 
+    el("profileForm")?.addEventListener("submit", salvarPerfil);
+    el("profileBirthDate")?.addEventListener("change", atualizarIdadePerfil);
+    el("profileCPF")?.addEventListener("input", (event) => {
+        const digits = event.target.value.replace(/\D/g, "").slice(0, 11);
+        event.target.value = digits
+            .replace(/(\d{3})(\d)/, "$1.$2")
+            .replace(/(\d{3})(\d)/, "$1.$2")
+            .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    });
+    el("profilePhone")?.addEventListener("input", (event) => {
+        const digits = event.target.value.replace(/\D/g, "").slice(0, 11);
+        event.target.value =
+            digits.length > 10
+                ? digits.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3")
+                : digits.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+    });
+
     el("stockSearch")?.addEventListener("input", (event) => {
         renderStock(event.target.value);
     });
@@ -1601,4 +1622,124 @@ function abrirFormulario(tipo) {
                 }
             }
         });
+}
+
+/* =====================================================
+   MEU PERFIL
+===================================================== */
+function atualizarIdadePerfil() {
+    const value = el("profileBirthDate")?.value;
+    if (!value) {
+        setText("profileAge", "");
+        return;
+    }
+    const nascimento = new Date(value + "T12:00:00");
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
+    const aniversarioAindaNaoChegou =
+        hoje.getMonth() < nascimento.getMonth() ||
+        (hoje.getMonth() === nascimento.getMonth() &&
+            hoje.getDate() < nascimento.getDate());
+    if (aniversarioAindaNaoChegou) idade--;
+    setText("profileAge", idade >= 0 && idade <= 120 ? String(idade) : "");
+}
+
+async function carregarPerfil() {
+    try {
+        const response = await fetch(`${API_BASE}/responsavel/perfil`, {
+            method: "GET",
+            credentials: "include",
+            headers: { Accept: "application/json" },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.sucesso) {
+            throw new Error(
+                data.mensagem || "Não foi possível carregar seu perfil.",
+            );
+        }
+        const perfil = data.perfil || {};
+        setText("profileName", perfil.nome || "Meu perfil");
+        setText("profileUserID", perfil.usuarioID || "—");
+        setText("profileSector", perfil.setor || "—");
+        setText("profileStatus", perfil.status || "—");
+        el("profileFullName").value = perfil.nome || "";
+        el("profileEmail").value = perfil.email || "";
+        el("profileBirthDate").value = perfil.dataNascimento || "";
+        el("profileCPF").value = formatarCPFPerfil(perfil.cpf || "");
+        el("profilePhone").value = formatarTelefonePerfil(
+            perfil.telefone || "",
+        );
+        el("profileRole").value = perfil.perfil || perfil.tipoUsuario || "";
+        el("profileCreated").value = perfil.dataCadastro || "—";
+        el("profileLastLogin").value = perfil.ultimoLogin || "—";
+        atualizarIdadePerfil();
+    } catch (error) {
+        showNotice(error.message || "Erro ao carregar perfil.", true);
+    }
+}
+
+function formatarCPFPerfil(value) {
+    const digits = String(value || "")
+        .replace(/\D/g, "")
+        .slice(0, 11);
+    return digits
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
+
+function formatarTelefonePerfil(value) {
+    const digits = String(value || "")
+        .replace(/\D/g, "")
+        .slice(0, 11);
+    return digits.length > 10
+        ? digits.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3")
+        : digits.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+}
+
+async function salvarPerfil(event) {
+    event.preventDefault();
+    const dataNascimento = el("profileBirthDate").value;
+    const cpf = el("profileCPF").value.replace(/\D/g, "");
+    const telefone = el("profilePhone").value.replace(/\D/g, "");
+    if (cpf.length !== 11) {
+        showNotice("Informe um CPF com 11 números.", true);
+        return;
+    }
+    if (telefone.length < 10 || telefone.length > 11) {
+        showNotice("Informe um telefone com DDD.", true);
+        return;
+    }
+    if (
+        !dataNascimento ||
+        new Date(dataNascimento + "T12:00:00") > new Date()
+    ) {
+        showNotice("Informe uma data de nascimento válida.", true);
+        return;
+    }
+    const button = el("saveProfileButton");
+    button.disabled = true;
+    try {
+        const response = await fetch(`${API_BASE}/responsavel/perfil`, {
+            method: "PATCH",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            body: JSON.stringify({ dataNascimento, cpf, telefone }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.sucesso) {
+            throw new Error(
+                data.mensagem || "Não foi possível salvar seu perfil.",
+            );
+        }
+        showNotice(data.mensagem || "Perfil atualizado com sucesso.");
+        await carregarPerfil();
+    } catch (error) {
+        showNotice(error.message || "Erro ao salvar perfil.", true);
+    } finally {
+        button.disabled = false;
+    }
 }

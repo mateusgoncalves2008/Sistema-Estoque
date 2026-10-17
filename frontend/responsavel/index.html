@@ -56,6 +56,10 @@
                     <i class="fa-solid fa-shield-halved"></i>
                     <span>Bloqueios e denúncias</span>
                 </button>
+                <button class="nav" data-page="perfil">
+                    <i class="fa-solid fa-user"></i>
+                    <span>Meu Perfil</span>
+                </button>
             </nav>
 
             <div class="side-bottom">
@@ -554,6 +558,33 @@
                             </tbody>
                         </table>
                     </div>
+                </article>
+            </section>
+
+            <section id="page-perfil" class="page hidden">
+                <article class="panel profile-panel">
+                    <div class="profile-heading">
+                        <div class="profile-avatar"><i class="fa-solid fa-user"></i></div>
+                        <div><h2 id="profileName">Meu perfil</h2><p>Consulte e atualize seus dados pessoais.</p></div>
+                    </div>
+                    <div class="profile-summary">
+                        <div><small>ID do usuário</small><strong id="profileUserID">—</strong></div>
+                        <div><small>Setor</small><strong id="profileSector">—</strong></div>
+                        <div><small>Status da conta</small><strong id="profileStatus">—</strong></div>
+                    </div>
+                    <form id="profileForm" class="profile-form">
+                        <div class="profile-section-title"><h3>Dados pessoais</h3><p>Nome, e-mail e dados da conta são carregados do sistema.</p></div>
+                        <label>Nome completo<input id="profileFullName" type="text" readonly /></label>
+                        <label>E-mail<input id="profileEmail" type="email" readonly /></label>
+                        <label>Data de nascimento<input id="profileBirthDate" name="dataNascimento" type="date" required /></label>
+                        <label>Idade<input id="profileAge" type="text" readonly placeholder="Calculada automaticamente" /></label>
+                        <label>CPF<input id="profileCPF" name="cpf" type="text" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required /></label>
+                        <label>Telefone<input id="profilePhone" name="telefone" type="tel" inputmode="tel" maxlength="15" placeholder="(00) 00000-0000" required /></label>
+                        <label>Cargo/perfil<input id="profileRole" type="text" readonly /></label>
+                        <label>Data de cadastro<input id="profileCreated" type="text" readonly /></label>
+                        <label>Último acesso<input id="profileLastLogin" type="text" readonly /></label>
+                        <div class="profile-actions"><button type="submit" class="refresh" id="saveProfileButton"><i class="fa-solid fa-floppy-disk"></i> Salvar alterações</button></div>
+                    </form>
                 </article>
             </section>
 
