@@ -1161,9 +1161,10 @@ function iniciarEventos() {
     });
     el("profilePhone")?.addEventListener("input", (event) => {
         const digits = event.target.value.replace(/\D/g, "").slice(0, 11);
-        event.target.value = digits.length > 10
-            ? digits.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3")
-            : digits.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+        event.target.value =
+            digits.length > 10
+                ? digits.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3")
+                : digits.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
     });
 
     el("stockSearch")?.addEventListener("input", (event) => {
@@ -1221,12 +1222,17 @@ function iniciarEventos() {
             showNotice("Não foi possível identificar o bloqueio.", true);
             return;
         }
-        if (!window.confirm("Deseja desbloquear " + nome + " neste setor?")) return;
+        if (!window.confirm("Deseja desbloquear " + nome + " neste setor?"))
+            return;
 
         button.disabled = true;
         try {
             const response = await fetch(
-                API_BASE + "/responsavel/bloqueios/" + encodeURIComponent(bloqueioID) + "/desbloquear",
+                API_BASE +
+                    "/responsavel/bloqueios/" +
+                    encodeURIComponent(bloqueioID) +
+                    "/desbloquear",
+
                 {
                     method: "PATCH",
                     credentials: "include",
@@ -1235,7 +1241,9 @@ function iniciarEventos() {
             );
             const data = await response.json();
             if (!response.ok || !data.sucesso) {
-                throw new Error(data.mensagem || "Não foi possível desbloquear o usuário.");
+                throw new Error(
+                    data.mensagem || "Não foi possível desbloquear o usuário.",
+                );
             }
             showNotice(data.mensagem || "Usuário desbloqueado neste setor.");
             await carregarBloqueiosDenuncias();
@@ -1617,7 +1625,6 @@ function abrirFormulario(tipo) {
         });
 }
 
-
 /* =====================================================
    MEU PERFIL
 ===================================================== */
@@ -1632,7 +1639,9 @@ function atualizarIdadePerfil() {
     let idade = hoje.getFullYear() - nascimento.getFullYear();
     const aniversarioAindaNaoChegou =
         hoje.getMonth() < nascimento.getMonth() ||
-        (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() < nascimento.getDate());
+        (hoje.getMonth() === nascimento.getMonth() &&
+            hoje.getDate() < nascimento.getDate());
+
     if (aniversarioAindaNaoChegou) idade--;
     setText("profileAge", idade >= 0 && idade <= 120 ? String(idade) : "");
 }
@@ -1646,7 +1655,9 @@ async function carregarPerfil() {
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.sucesso) {
-            throw new Error(data.mensagem || "Não foi possível carregar seu perfil.");
+            throw new Error(
+                data.mensagem || "Não foi possível carregar seu perfil.",
+            );
         }
         const perfil = data.perfil || {};
         setText("profileName", perfil.nome || "Meu perfil");
@@ -1657,7 +1668,9 @@ async function carregarPerfil() {
         el("profileEmail").value = perfil.email || "";
         el("profileBirthDate").value = perfil.dataNascimento || "";
         el("profileCPF").value = formatarCPFPerfil(perfil.cpf || "");
-        el("profilePhone").value = formatarTelefonePerfil(perfil.telefone || "");
+        el("profilePhone").value = formatarTelefonePerfil(
+            perfil.telefone || "",
+        );
         el("profileRole").value = perfil.perfil || perfil.tipoUsuario || "";
         el("profileCreated").value = perfil.dataCadastro || "—";
         el("profileLastLogin").value = perfil.ultimoLogin || "—";
@@ -1668,14 +1681,18 @@ async function carregarPerfil() {
 }
 
 function formatarCPFPerfil(value) {
-    const digits = String(value || "").replace(/\D/g, "").slice(0, 11);
-    return digits.replace(/(\d{3})(\d)/, "$1.$2")
+    const digits = String(value || "")
+        .replace(/\D/g, "")
+        .slice(0, 11);
+    return digits
         .replace(/(\d{3})(\d)/, "$1.$2")
         .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
 function formatarTelefonePerfil(value) {
-    const digits = String(value || "").replace(/\D/g, "").slice(0, 11);
+    const digits = String(value || "")
+        .replace(/\D/g, "")
+        .slice(0, 11);
     return digits.length > 10
         ? digits.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3")
         : digits.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
@@ -1694,7 +1711,10 @@ async function salvarPerfil(event) {
         showNotice("Informe um telefone com DDD.", true);
         return;
     }
-    if (!dataNascimento || new Date(dataNascimento + "T12:00:00") > new Date()) {
+    if (
+        !dataNascimento ||
+        new Date(dataNascimento + "T12:00:00") > new Date()
+    ) {
         showNotice("Informe uma data de nascimento válida.", true);
         return;
     }
@@ -1704,12 +1724,17 @@ async function salvarPerfil(event) {
         const response = await fetch(`${API_BASE}/responsavel/perfil`, {
             method: "PATCH",
             credentials: "include",
-            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
             body: JSON.stringify({ dataNascimento, cpf, telefone }),
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.sucesso) {
-            throw new Error(data.mensagem || "Não foi possível salvar seu perfil.");
+            throw new Error(
+                data.mensagem || "Não foi possível salvar seu perfil.",
+            );
         }
         showNotice(data.mensagem || "Perfil atualizado com sucesso.");
         await carregarPerfil();
