@@ -729,7 +729,7 @@ function gerarIDSequencial(linhas, prefixo) {
 function gerarCodigoProduto(produtos, codigoLocal) {
  let prefixo = texto(codigoLocal).toUpperCase().replace(/-\d+$/, "").replace(/-+$/, "") || "IT-SETOR";
  prefixo = prefixo.replace(/[^A-Z0-9-]/g, "-");
- const regex = new RegExp("^" + seguro + "-(\\d+)$", "i");
+ const regex = new RegExp("^" + prefixo + "-(\\d+)$", "i");
  const maior = produtos.slice(1).reduce((max, linha) => Math.max(max, Number(texto(linha[1]).match(regex)?.[1] || 0)), 0);
  return prefixo + "-" + String(maior + 1).padStart(4, "0");
 }
