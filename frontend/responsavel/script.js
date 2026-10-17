@@ -392,6 +392,53 @@ function renderRecentMoves() {
         .join("");
 }
 
+/* Cadastro de item e criação automática do registro de estoque. */
+let opcoesCadastroItem = { categorias: [], subcategorias: [] };
+async function carregarOpcoesCadastroItem() {
+ const categoriaSelect=el("newItemCategory"), subcategoriaSelect=el("newItemSubcategory");
+ if(!categoriaSelect||!subcategoriaSelect) return;
+ try {
+  const response=await fetch(API_BASE+"/responsavel/itens/opcoes",{credentials:"include",headers:{Accept:"application/json"}});
+  const data=await response.json();
+  if(!response.ok||!data.sucesso) throw new Error(data.mensagem||"Não foi possível carregar categorias.");
+  opcoesCadastroItem=data;
+  categoriaSelect.innerHTML='<option value="">Selecione uma categoria</option>'+data.categorias.map(i=>'<option value="'+escapeHTML(i.id)+'">'+escapeHTML(i.nome)+'</option>').join("");
+  atualizarSubcategoriasCadastroItem();
+ } catch(erro) { categoriaSelect.innerHTML='<option value="">Erro ao carregar categorias</option>'; showNotice(erro.message||"Erro ao carregar opções.",true); }
+}
+function atualizarSubcategoriasCadastroItem() {
+ const categoriaID=el("newItemCategory")?.value||"", select=el("newItemSubcategory");
+ if(!select) return;
+ const lista=opcoesCadastroItem.subcategorias.filter(i=>i.categoriaID===categoriaID);
+ select.innerHTML='<option value="">'+(categoriaID?"Selecione uma subcategoria":"Selecione uma categoria primeiro")+'</option>'+lista.map(i=>'<option value="'+escapeHTML(i.id)+'">'+escapeHTML(i.nome)+'</option>').join("");
+ select.disabled=!categoriaID||lista.length===0;
+ if(categoriaID&&!lista.length) select.innerHTML='<option value="">Nenhuma subcategoria ativa nesta categoria</option>';
+}
+function abrirCadastroItem() {
+ const dialog=el("newItemDialog"), form=el("newItemForm");
+ if(!dialog||!form) return;
+ form.reset(); opcoesCadastroItem={categorias:[],subcategorias:[]};
+ if(el("newItemCategory")) el("newItemCategory").innerHTML='<option value="">Carregando categorias...</option>';
+ if(el("newItemSubcategory")) {el("newItemSubcategory").innerHTML='<option value="">Selecione uma categoria primeiro</option>';el("newItemSubcategory").disabled=true;}
+ if(typeof dialog.showModal==="function") dialog.showModal(); else {showNotice("Seu navegador não suporta o formulário.",true);return;}
+ carregarOpcoesCadastroItem();
+}
+async function salvarNovoItem(event) {
+ event.preventDefault();
+ const form=el("newItemForm"), botao=el("saveNewItemButton");
+ if(!form||!botao) return;
+ const payload=Object.fromEntries(new FormData(form).entries());
+ payload.quantidade=Number(payload.quantidade); payload.estoqueMinimo=Number(payload.estoqueMinimo);
+ botao.disabled=true;
+ try {
+  const response=await fetch(API_BASE+"/responsavel/itens",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(payload)});
+  const data=await response.json();
+  if(!response.ok||!data.sucesso) throw new Error(data.mensagem||"Não foi possível cadastrar o item.");
+  el("newItemDialog")?.close(); showNotice(data.mensagem||"Item cadastrado com sucesso."); await carregarPainel(); openPage("estoque");
+ } catch(erro) {showNotice(erro.message||"Erro ao cadastrar item.",true);}
+ finally {botao.disabled=false;}
+}
+
 /* =====================================================
    TABELA DE ESTOQUE
 ===================================================== */
@@ -1174,6 +1221,12 @@ function iniciarEventos() {
                 ? digits.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3")
                 : digits.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
     });
+
+    el("openNewItemButton")?.addEventListener("click", abrirCadastroItem);
+    el("closeNewItemButton")?.addEventListener("click", () => el("newItemDialog")?.close());
+    el("cancelNewItemButton")?.addEventListener("click", () => el("newItemDialog")?.close());
+    el("newItemCategory")?.addEventListener("change", atualizarSubcategoriasCadastroItem);
+    el("newItemForm")?.addEventListener("submit", salvarNovoItem);
 
     el("stockSearch")?.addEventListener("input", (event) => {
         renderStock(event.target.value);
