@@ -414,6 +414,19 @@ function atualizarSubcategoriasCadastroItem() {
  select.disabled=!categoriaID||lista.length===0;
  if(categoriaID&&!lista.length) select.innerHTML='<option value="">Nenhuma subcategoria ativa nesta categoria</option>';
 }
+function configurarFechamentoCadastroItem() {
+ const dialog=el("newItemDialog");
+ if(!dialog || dialog.dataset.clickOutsideConfigured==="true") return;
+ dialog.dataset.clickOutsideConfigured="true";
+ dialog.addEventListener("click", event => {
+  if(event.target===dialog) dialog.close();
+ });
+ dialog.addEventListener("click", event => {
+  const rect=dialog.getBoundingClientRect();
+  const clicouForaDoConteudo=event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom;
+  if(clicouForaDoConteudo) dialog.close();
+ });
+}
 function abrirCadastroItem() {
  const dialog=el("newItemDialog"), form=el("newItemForm");
  if(!dialog||!form) return;
@@ -421,6 +434,7 @@ function abrirCadastroItem() {
  if(el("newItemCategory")) el("newItemCategory").innerHTML='<option value="">Carregando categorias...</option>';
  if(el("newItemSubcategory")) {el("newItemSubcategory").innerHTML='<option value="">Selecione uma categoria primeiro</option>';el("newItemSubcategory").disabled=true;}
  if(typeof dialog.showModal==="function") dialog.showModal(); else {showNotice("Seu navegador não suporta o formulário.",true);return;}
+ configurarFechamentoCadastroItem();
  carregarOpcoesCadastroItem();
 }
 async function salvarNovoItem(event) {
