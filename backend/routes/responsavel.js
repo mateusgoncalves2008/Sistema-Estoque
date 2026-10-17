@@ -566,4 +566,125 @@ router.get("/responsavel/dashboard", exigirResponsavel, async (req, res) => {
     }
 });
 
+
+/* =====================================================
+   MEU PERFIL DO RESPONSÁVEL
+===================================================== */
+const PERFIS_RESPONSAVEIS = "23_PERFIS_RESPONSAVEIS";
+const CABECALHO_PERFIS = ["PerfilID", "UsuarioID", "DataNascimento", "CPF", "Telefone", "DataAtualizacao"];
+
+async function garantirAbaPerfis() {
+    const metadata = await sheets.spreadsheets.get({
+        spreadsheetId: SPREADSHEET_ID,
+        fields: "sheets.properties.title",
+    });
+    const existe = (metadata.data.sheets || []).some(
+        (aba) => aba.properties?.title === PERFIS_RESPONSAVEIS,
+    );
+    if (!existe) {
+        await sheets.spreadsheets.batchUpdate({
+            spreadsheetId: SPREADSHEET_ID,
+            requestBody: { requests: [{ addSheet: { properties: { title: PERFIS_RESPONSAVEIS } } }] },
+        });
+    }
+    const atual = await lerAba(`${PERFIS_RESPONSAVEIS}!A1:F1`);
+    if (!atual.length || !atual[0]?.some(Boolean)) {
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${PERFIS_RESPONSAVEIS}!A1:F1`,
+            valueInputOption: "RAW",
+            requestBody: { values: [CABECALHO_PERFIS] },
+        });
+    }
+}
+
+function dataPlanilhaParaISO(valor) {
+    const textoValor = String(valor || "").trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(textoValor)) return textoValor;
+    const br = textoValor.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    return br ? `${br[3]}-${br[2]}-${br[1]}` : "";
+}
+
+function dataHojeBR() {
+    return new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+}
+
+router.get("/responsavel/perfil", exigirResponsavel, async (req, res) => {
+    try {
+        const usuarioID = texto(req.session.usuario.id);
+        const [usuarios, setores] = await Promise.all([
+            lerAba("01_USUARIOS!A:K"),
+            lerAba("12_SETORES!A:E"),
+            garantirAbaPerfis(),
+        ]);
+        const usuario = usuarios.slice(1).find((linha) => texto(linha[0]) === usuarioID);
+        if (!usuario || normalizar(usuario[8]) !== "ATIVO") {
+            return res.status(403).json({ sucesso: false, mensagem: "A conta não está ativa." });
+        }
+        const setor = setores.slice(1).find((linha) => texto(linha[0]) === texto(usuario[7]));
+        const perfis = await lerAba(`${PERFIS_RESPONSAVEIS}!A:F`);
+        const registro = perfis.slice(1).find((linha) => texto(linha[1]) === usuarioID) || [];
+        return res.json({
+            sucesso: true,
+            perfil: {
+                usuarioID: usuario[0] || "",
+                nome: usuario[1] || "",
+                email: usuario[2] || "",
+                tipoUsuario: usuario[5] || "",
+                perfil: usuario[6] || "",
+                setor: setor?.[1] || "",
+                status: usuario[8] || "",
+                dataCadastro: usuario[9] || "",
+                ultimoLogin: usuario[10] || "",
+                dataNascimento: dataPlanilhaParaISO(registro[2]),
+                cpf: registro[3] || "",
+                telefone: registro[4] || "",
+            },
+        });
+    } catch (erro) {
+        console.error("Erro ao carregar perfil do responsável:", erro.message);
+        return res.status(500).json({ sucesso: false, mensagem: "Erro ao carregar o perfil. Verifique a conexão com a planilha." });
+    }
+});
+
+router.patch("/responsavel/perfil", exigirResponsavel, async (req, res) => {
+    try {
+        const usuarioID = texto(req.session.usuario.id);
+        const { dataNascimento, cpf, telefone } = req.body || {};
+        const cpfLimpo = String(cpf || "").replace(/\D/g, "");
+        const telefoneLimpo = String(telefone || "").replace(/\D/g, "");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dataNascimento || "")) ||
+            Number.isNaN(Date.parse(dataNascimento)) || new Date(dataNascimento + "T00:00:00") > new Date()) {
+            return res.status(400).json({ sucesso: false, mensagem: "Informe uma data de nascimento válida." });
+        }
+        if (!/^\d{11}$/.test(cpfLimpo)) {
+            return res.status(400).json({ sucesso: false, mensagem: "O CPF deve conter 11 números." });
+        }
+        if (!/^\d{10,11}$/.test(telefoneLimpo)) {
+            return res.status(400).json({ sucesso: false, mensagem: "O telefone deve conter DDD e 10 ou 11 números." });
+        }
+        await garantirAbaPerfis();
+        const usuarios = await lerAba("01_USUARIOS!A:K");
+        const usuario = usuarios.slice(1).find((linha) => texto(linha[0]) === usuarioID);
+        if (!usuario || normalizar(usuario[8]) !== "ATIVO") {
+            return res.status(403).json({ sucesso: false, mensagem: "A conta não está ativa." });
+        }
+        const perfis = await lerAba(`${PERFIS_RESPONSAVEIS}!A:F`);
+        const indice = perfis.findIndex((linha, i) => i > 0 && texto(linha[1]) === usuarioID);
+        const linhaPlanilha = indice > 0 ? indice + 1 : Math.max(perfis.length + 1, 2);
+        const perfilID = indice > 0 ? perfis[indice][0] : `PER-${String(linhaPlanilha - 1).padStart(5, "0")}`;
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${PERFIS_RESPONSAVEIS}!A${linhaPlanilha}:F${linhaPlanilha}`,
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [[perfilID, usuarioID, dataNascimento, cpfLimpo, telefoneLimpo, dataHojeBR()]] },
+        });
+        return res.json({ sucesso: true, mensagem: "Perfil atualizado com sucesso." });
+    } catch (erro) {
+        console.error("Erro ao salvar perfil do responsável:", erro.message);
+        return res.status(500).json({ sucesso: false, mensagem: "Não foi possível salvar o perfil na planilha." });
+    }
+});
+
+
 module.exports = router;
