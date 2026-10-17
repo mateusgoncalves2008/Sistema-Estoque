@@ -684,97 +684,10 @@ router.get("/responsavel/perfil", exigirResponsavel, async (req, res) => {
 });
 
 router.patch("/responsavel/perfil", exigirResponsavel, async (req, res) => {
-    try {
-        const usuarioID = texto(req.session.usuario.id);
-        const { dataNascimento, cpf, telefone } = req.body || {};
-
-        const cpfLimpo = String(cpf || "").replace(/\D/g, "");
-        const telefoneLimpo = String(telefone || "").replace(/\D/g, "");
-
-        if (
-            !/^\d{4}-\d{2}-\d{2}$/.test(String(dataNascimento || "")) ||
-            Number.isNaN(Date.parse(dataNascimento)) ||
-            new Date(dataNascimento + "T00:00:00") > new Date()
-        ) {
-            return res.status(400).json({
-                sucesso: false,
-                mensagem: "Informe uma data de nascimento válida.",
-            });
-        }
-
-        if (!/^\d{11}$/.test(cpfLimpo)) {
-            return res.status(400).json({
-                sucesso: false,
-                mensagem: "O CPF deve conter 11 números.",
-            });
-        }
-
-        if (!/^\d{10,11}$/.test(telefoneLimpo)) {
-            return res.status(400).json({
-                sucesso: false,
-                mensagem: "O telefone deve conter DDD e 10 ou 11 números.",
-            });
-        }
-
-        await garantirAbaPerfis();
-
-        const usuarios = await lerAba("01_USUARIOS!A:K");
-
-        const usuario = usuarios
-            .slice(1)
-            .find((linha) => texto(linha[0]) === usuarioID);
-
-        if (!usuario || normalizar(usuario[8]) !== "ATIVO") {
-            return res.status(403).json({
-                sucesso: false,
-                mensagem: "A conta não está ativa.",
-            });
-        }
-
-        const perfis = await lerAba(`${PERFIS_RESPONSAVEIS}!A:F`);
-
-        const indice = perfis.findIndex(
-            (linha, i) => i > 0 && texto(linha[1]) === usuarioID,
-        );
-
-        const linhaPlanilha =
-            indice > 0 ? indice + 1 : Math.max(perfis.length + 1, 2);
-
-        const perfilID =
-            indice > 0
-                ? perfis[indice][0]
-                : `PER-${String(linhaPlanilha - 1).padStart(5, "0")}`;
-
-        await sheets.spreadsheets.values.update({
-            spreadsheetId: SPREADSHEET_ID,
-            range: `${PERFIS_RESPONSAVEIS}!A${linhaPlanilha}:F${linhaPlanilha}`,
-            valueInputOption: "USER_ENTERED",
-            requestBody: {
-                values: [
-                    [
-                        perfilID,
-                        usuarioID,
-                        dataNascimento,
-                        cpfLimpo,
-                        telefoneLimpo,
-                        dataHojeBR(),
-                    ],
-                ],
-            },
-        });
-
-        return res.json({
-            sucesso: true,
-            mensagem: "Perfil atualizado com sucesso.",
-        });
-    } catch (erro) {
-        console.error("Erro ao salvar perfil do responsável:", erro.message);
-
-        return res.status(500).json({
-            sucesso: false,
-            mensagem: "Não foi possível salvar o perfil na planilha.",
-        });
-    }
+    return res.status(403).json({
+        sucesso: false,
+        mensagem: "Somente o ADM pode alterar os dados pessoais do perfil.",
+    });
 });
 
 module.exports = router;

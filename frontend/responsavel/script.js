@@ -1150,7 +1150,6 @@ function iniciarEventos() {
 
     el("refreshButton")?.addEventListener("click", carregarPainel);
 
-    el("profileForm")?.addEventListener("submit", salvarPerfil);
     el("profileBirthDate")?.addEventListener("change", atualizarIdadePerfil);
     el("profileCPF")?.addEventListener("input", (event) => {
         const digits = event.target.value.replace(/\D/g, "").slice(0, 11);
@@ -1696,51 +1695,4 @@ function formatarTelefonePerfil(value) {
     return digits.length > 10
         ? digits.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3")
         : digits.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
-}
-
-async function salvarPerfil(event) {
-    event.preventDefault();
-    const dataNascimento = el("profileBirthDate").value;
-    const cpf = el("profileCPF").value.replace(/\D/g, "");
-    const telefone = el("profilePhone").value.replace(/\D/g, "");
-    if (cpf.length !== 11) {
-        showNotice("Informe um CPF com 11 números.", true);
-        return;
-    }
-    if (telefone.length < 10 || telefone.length > 11) {
-        showNotice("Informe um telefone com DDD.", true);
-        return;
-    }
-    if (
-        !dataNascimento ||
-        new Date(dataNascimento + "T12:00:00") > new Date()
-    ) {
-        showNotice("Informe uma data de nascimento válida.", true);
-        return;
-    }
-    const button = el("saveProfileButton");
-    button.disabled = true;
-    try {
-        const response = await fetch(`${API_BASE}/responsavel/perfil`, {
-            method: "PATCH",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-            body: JSON.stringify({ dataNascimento, cpf, telefone }),
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data.sucesso) {
-            throw new Error(
-                data.mensagem || "Não foi possível salvar seu perfil.",
-            );
-        }
-        showNotice(data.mensagem || "Perfil atualizado com sucesso.");
-        await carregarPerfil();
-    } catch (error) {
-        showNotice(error.message || "Erro ao salvar perfil.", true);
-    } finally {
-        button.disabled = false;
-    }
 }
