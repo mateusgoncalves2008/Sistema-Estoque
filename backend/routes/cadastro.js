@@ -650,6 +650,39 @@ router.post("/autorizar-responsavel", somenteADM, async (req, res) => {
    POST /api/cadastro-responsavel
 ========================================================= */
 
+
+async function garantirAbaPerfilResponsaveis() {
+    const nomeAba = "23_PERFIS_RESPONSAVEIS";
+    const cabecalho = ["PerfilID", "UsuarioID", "DataNascimento", "CPF", "Telefone", "DataAtualizacao"];
+    const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID, fields: "sheets(properties(sheetId,title))" });
+    const aba = (meta.data.sheets || []).find(x => x.properties.title === nomeAba);
+    if (!aba) await sheets.spreadsheets.batchUpdate({ spreadsheetId: SPREADSHEET_ID, requestBody: { requests: [{ addSheet: { properties: { title: nomeAba } } }] } });
+    const atual = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: nomeAba + "!A1:F1" });
+    if (!(atual.data.values || []).length) await sheets.spreadsheets.values.update({ spreadsheetId: SPREADSHEET_ID, range: nomeAba + "!A1:F1", valueInputOption: "RAW", requestBody: { values: [cabecalho] } });
+}
+function validarDadosPessoais(body) {
+    const cpf = String(body?.cpf || "").replace(/\D/g, "");
+    const dataNascimento = normalizar(body?.dataNascimento);
+    const telefone = String(body?.telefone || "").replace(/\D/g, "");
+    if (cpf.length !== 11) return { erro: "Informe um CPF com 11 dígitos." };
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dataNascimento) || dataNascimento > new Date().toISOString().slice(0, 10)) return { erro: "Informe uma data de nascimento válida." };
+    if (telefone.length < 10 || telefone.length > 11) return { erro: "Informe um telefone com DDD." };
+    return { cpf, dataNascimento, telefone };
+}
+async function salvarPerfilCadastro(usuarioID, dados) {
+    const nomeAba = "23_PERFIS_RESPONSAVEIS";
+    await garantirAbaPerfilResponsaveis();
+    const resposta = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: nomeAba + "!A2:F" });
+    const numero = (resposta.data.values || []).reduce((maior, linha) => {
+        const match = String(linha[0] || "").match(/^PER-(\d+)$/);
+        return Math.max(maior, match ? Number(match[1]) : 0);
+    }, 0) + 1;
+    await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID, range: nomeAba + "!A:F", valueInputOption: "RAW", insertDataOption: "INSERT_ROWS",
+        requestBody: { values: [[ "PER-" + String(numero).padStart(5, "0"), usuarioID, dados.dataNascimento, dados.cpf, dados.telefone, dataAtual() ]] },
+    });
+}
+
 router.post("/cadastro-responsavel", somenteADM, async (req, res) => {
     try {
         const nome = normalizar(req.body?.nome);
@@ -657,6 +690,8 @@ router.post("/cadastro-responsavel", somenteADM, async (req, res) => {
         const senha = req.body?.senha;
         const confirmacaoSenha = req.body?.confirmacaoSenha;
         const setorID = normalizar(req.body?.setorID);
+        const dadosPessoais = validarDadosPessoais(req.body);
+        if (dadosPessoais.erro) return res.status(400).json({ sucesso: false, mensagem: dadosPessoais.erro });
 
         if (
             !nome ||
@@ -826,6 +861,7 @@ router.post("/cadastro-responsavel", somenteADM, async (req, res) => {
             },
         });
 
+        await salvarPerfilCadastro(usuarioID, dadosPessoais);
         return res.status(201).json({
             sucesso: true,
             mensagem: "Responsável cadastrado e vinculado ao setor.",
@@ -845,6 +881,34 @@ router.post("/cadastro-responsavel", somenteADM, async (req, res) => {
             sucesso: false,
             mensagem: "Erro interno ao cadastrar responsável.",
         });
+    }
+});
+
+
+router.post("/cadastro-secretaria", somenteADM, async (req, res) => {
+    try {
+        const nome = normalizar(req.body?.nome);
+        const email = normalizar(req.body?.email).toLowerCase();
+        const senha = req.body?.senha;
+        const confirmacaoSenha = req.body?.confirmacaoSenha;
+        const dadosPessoais = validarDadosPessoais(req.body);
+        if (dadosPessoais.erro) return res.status(400).json({ sucesso: false, mensagem: dadosPessoais.erro });
+        if (!nome || !email || typeof senha !== "string" || typeof confirmacaoSenha !== "string") return res.status(400).json({ sucesso: false, mensagem: "Preencha nome, e-mail, senha e confirmação." });
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ sucesso: false, mensagem: "E-mail inválido." });
+        if (senha.length < 12 || senha.length > 128) return res.status(400).json({ sucesso: false, mensagem: "A senha deve ter entre 12 e 128 caracteres." });
+        if (senha !== confirmacaoSenha) return res.status(400).json({ sucesso: false, mensagem: "As senhas não coincidem." });
+        const resp = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "01_USUARIOS!A2:K" });
+        const usuarios = resp.data.values || [];
+        if (usuarios.some(linha => normalizar(linha[2]).toLowerCase() === email)) return res.status(409).json({ sucesso: false, mensagem: "Este e-mail já possui uma conta." });
+        const usuarioID = gerarID("USR-", usuarios, /^USR-(\d+)$/);
+        const salt = crypto.randomBytes(16).toString("hex");
+        const senhaHash = crypto.createHash("sha256").update(`${salt}:${senha}`).digest("hex");
+        await sheets.spreadsheets.values.append({ spreadsheetId: SPREADSHEET_ID, range: "01_USUARIOS!A:K", valueInputOption: "RAW", insertDataOption: "INSERT_ROWS", requestBody: { values: [[usuarioID, nome, email, senhaHash, salt, "SECRETARIA", "SECRETARIA", "", "ATIVO", dataAtual(), ""]] } });
+        await salvarPerfilCadastro(usuarioID, dadosPessoais);
+        return res.status(201).json({ sucesso: true, mensagem: "Conta da Secretaria cadastrada.", usuario: { id: usuarioID, nome, email, tipoUsuario: "SECRETARIA", perfil: "SECRETARIA" } });
+    } catch (erro) {
+        console.error("Erro no cadastro da Secretaria:", erro);
+        return res.status(500).json({ sucesso: false, mensagem: "Erro interno ao cadastrar a Secretaria." });
     }
 });
 
