@@ -2368,3 +2368,26 @@ footer {
  #page-estoque .stock-toolbar-centered #openNewItemButton,
  #page-estoque .stock-toolbar-centered input{grid-column:auto}
 }
+
+
+/* Estoque: cards sem animação de hover e opções com cores do sistema */
+#page-estoque .stock-item-card,
+#page-estoque .stock-item-card:hover{
+ transform:none;transition:none;
+}
+#page-estoque .stock-item-card:hover{
+ border-color:#e9ddd2;
+ box-shadow:0 5px 18px #3522190a;
+}
+#page-estoque .stock-toolbar-centered select{
+ color-scheme:light;
+ accent-color:var(--orange);
+}
+#page-estoque .stock-toolbar-centered select option{
+ background:#fffdfa;
+ color:#3c291f;
+}
+#page-estoque .stock-toolbar-centered select option:checked{
+ background:#f4e5da;
+ color:#352219;
+}
