@@ -733,8 +733,19 @@ function gerarIDSequencial(linhas, prefixo) {
  return prefixo + String(maior + 1).padStart(5, "0");
 }
 function gerarCodigoProduto(produtos, codigoLocal) {
- let prefixo = texto(codigoLocal).toUpperCase().replace(/-\d+$/, "").replace(/-+$/, "") || "IT-SETOR";
- prefixo = prefixo.replace(/[^A-Z0-9-]/g, "-");
+ const codigo = texto(codigoLocal).toUpperCase().replace(/-\d+$/, "").replace(/-+$/, "");
+ const mapaPrefixos = {
+  "LAB-INFO": "IT-TI",
+  "LABORATORIO-INFORMATICA": "IT-TI",
+  "LAB-INFORMATICA": "IT-TI",
+  "INFORMATICA": "IT-TI",
+  "LAB-CIENCIA": "IT-CIE",
+  "LABORATORIO-CIENCIA": "IT-CIE",
+  "BIBLIOTECA": "IT-BIB",
+  "CANTINA": "IT-CAN",
+ };
+ const chave = codigo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9-]/g, "-").replace(/-+/g, "-");
+ const prefixo = mapaPrefixos[chave] || (chave.startsWith("IT-") ? chave : "IT-" + (chave.replace(/^LAB-?/, "").replace(/-/g, "").slice(0, 6) || "SETOR"));
  const regex = new RegExp("^" + prefixo + "-(\\d+)$", "i");
  const maior = produtos.slice(1).reduce((max, linha) => Math.max(max, Number(texto(linha[1]).match(regex)?.[1] || 0)), 0);
  return prefixo + "-" + String(maior + 1).padStart(4, "0");
@@ -796,7 +807,7 @@ router.post("/responsavel/itens", exigirResponsavel, async (req, res) => {
   if(!subcategoria) return res.status(400).json({sucesso:false,mensagem:"A subcategoria não pertence à categoria ou está inativa."});
   const local=locais.slice(1).find(l=>texto(l[0])===texto(vinculo.local.id)&&normalizar(l[6]||"ATIVO")==="ATIVO");
   if(!local) return res.status(403).json({sucesso:false,mensagem:"O local do seu setor não está ativo."});
-  const produtoID=gerarIDSequencial(produtos,"PROD-"), estoqueID=gerarIDSequencial(estoques,"EST-"), codigo=gerarCodigoProduto(produtos,local[1]);
+  const produtoID=gerarIDSequencial(produtos,"PRD-"), estoqueID=gerarIDSequencial(estoques,"EST-"), codigo=gerarCodigoProduto(produtos,local[1]);
   const produto=[produtoID,codigo,nome,"",categoriaID,subcategoriaID,estoqueMinimo,estado,statusProduto,dataAtual(),observacao];
   const statusLocal=statusProduto==="ATIVO"?"ATIVO":"INATIVO";
   const estoque=[estoqueID,produtoID,texto(vinculo.local.id),quantidade,0,statusLocal==="ATIVO"?quantidade:0,0,new Date().toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"}),statusLocal];
