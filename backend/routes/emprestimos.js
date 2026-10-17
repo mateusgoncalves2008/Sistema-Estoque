@@ -15,11 +15,11 @@ function normalizar(valor) {
         .toUpperCase();
 }
 
-async function buscarDadosEmprestimos(usuarioID) {
+async function buscarDadosEmprestimos(usuarioID, incluirTodos = false) {
     const [empRes, prodRes, catRes, subRes] = await Promise.all([
         sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: "09_EMPRESTIMOS!A:K",
+            range: "09_EMPRESTIMOS!A:L",
         }),
         sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
@@ -68,11 +68,15 @@ async function buscarDadosEmprestimos(usuarioID) {
 
     return (empRes.data.values || [])
         .slice(1)
-        .filter(
-            (l) =>
-                texto(l[2]) === texto(usuarioID) &&
-                ["ABERTO", "ATRASADO"].includes(normalizar(l[8])),
-        )
+        .filter((l) => {
+            const pertenceAoUsuario = texto(l[2]) === texto(usuarioID);
+
+            const status = normalizar(l[8]);
+
+            return incluirTodos
+                ? pertenceAoUsuario
+                : pertenceAoUsuario && ["ABERTO", "ATRASADO"].includes(status);
+        })
         .map((l) => {
             const produtoID = texto(l[3]);
             const produto = produtos.get(produtoID) || {
@@ -149,7 +153,47 @@ async function responderEmprestimos(req, res) {
     }
 }
 
+async function responderHistoricoEmprestimos(req, res) {
+    try {
+        const usuarioID = texto(req.params.usuarioID);
+
+        if (!usuarioID) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "ID do usuário não informado.",
+            });
+        }
+
+        const emprestimos = await buscarDadosEmprestimos(usuarioID, true);
+
+        return res.json({
+            sucesso: true,
+            total: emprestimos.length,
+            emprestimos,
+        });
+    } catch (erro) {
+        console.error("Erro ao buscar histórico de empréstimos:", erro);
+
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: "Erro ao consultar o histórico de empréstimos.",
+        });
+    }
+}
+
 router.get("/aluno/emprestimos/:usuarioID", responderEmprestimos);
 router.get("/professor/emprestimos/:usuarioID", responderEmprestimos);
+
+router.get(
+    "/aluno/historico-emprestimos/:usuarioID",
+    responderHistoricoEmprestimos,
+);
+
+router.get(
+    "/professor/historico-emprestimos/:usuarioID",
+    responderHistoricoEmprestimos,
+);
+
+router.get("/professor/historico/:usuarioID", responderHistoricoEmprestimos);
 
 module.exports = router;

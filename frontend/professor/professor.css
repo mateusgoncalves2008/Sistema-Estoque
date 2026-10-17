@@ -173,60 +173,6 @@ button {
     min-height: 100vh;
 }
 
-.hero {
-    min-height: 177px;
-    border-radius: 20px;
-    overflow: hidden;
-    position: relative;
-    padding: 30px 32px;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 25px;
-    margin-bottom: 22px;
-    background:
-        linear-gradient(90deg, rgba(42, 25, 17, 0.88), rgba(42, 25, 17, 0.45)),
-        url("https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1800&q=85")
-            center 48% / cover no-repeat;
-    box-shadow: 0 12px 30px rgba(67, 42, 26, 0.08);
-}
-
-.hero h1 {
-    font-size: 32px;
-    letter-spacing: -1.4px;
-    margin-bottom: 7px;
-}
-
-.hero p {
-    font-size: 13px;
-    color: #f0e4da;
-}
-
-.hero-stats {
-    display: flex;
-    align-items: center;
-    gap: 28px;
-}
-
-.hero-stat {
-    text-align: center;
-    min-width: 70px;
-}
-
-.hero-stat strong {
-    font-size: 37px;
-    line-height: 1.2;
-    display: block;
-}
-
-.hero-stat span {
-    display: block;
-    font-size: 11px;
-    font-weight: 700;
-    margin-top: 5px;
-}
-
 .clock {
     font-size: 35px;
     font-weight: 800;
@@ -469,11 +415,6 @@ th {
         padding: 25px 20px;
     }
 
-    .hero {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
     .hero-stats {
         width: 100%;
         justify-content: space-between;
@@ -521,11 +462,6 @@ th {
         padding: 10px 12px;
         color: white;
         background: var(--marrom);
-    }
-
-    .hero {
-        padding: 24px 20px;
-        min-height: 200px;
     }
 
     .hero h1 {
@@ -1503,4 +1439,445 @@ th {
     .cal-prof-header h1 {
         font-size: 27px;
     }
+}
+
+/* ==========================================
+   HISTÓRICO DO PROFESSOR
+   Mesmo visual do histórico do Aluno
+========================================== */
+
+#page-historico {
+    color: var(--texto);
+}
+
+#page-historico #conteudoHistorico {
+    width: 100%;
+    min-width: 0;
+}
+
+#page-historico .head {
+    margin-bottom: 26px;
+}
+
+#page-historico .head h1 {
+    margin: 0 0 6px;
+    color: #39251b;
+    font-size: 32px;
+    font-weight: 750;
+    letter-spacing: -1px;
+}
+
+#page-historico .head .sub {
+    color: #8a786b;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Resumo */
+
+#page-historico .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 22px;
+}
+
+#page-historico .card {
+    min-width: 0;
+    padding: 22px;
+    background: #fffdfa;
+    border: 1px solid #e7ddd2;
+    border-radius: 17px;
+    box-shadow: 0 5px 18px rgba(57, 37, 27, 0.06);
+}
+
+#page-historico .card .lab {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 12px;
+    color: #795d4c;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+#page-historico .card .lab svg {
+    width: 18px;
+    height: 18px;
+    color: #c65a32;
+}
+
+#page-historico .card .big {
+    color: #39251b;
+    font-size: 32px;
+    font-weight: 800;
+}
+
+#page-historico .card p {
+    margin-top: 6px;
+    color: #8a786b;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* Lista de cartões */
+
+#page-historico .historico-lista {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    margin-top: 24px;
+}
+
+#page-historico .historico-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    min-width: 0;
+    padding: 22px;
+    background: #fffdfa;
+    border: 1px solid #e7ddd2;
+    border-radius: 18px;
+    box-shadow: 0 5px 18px rgba(57, 37, 27, 0.08);
+    transition: box-shadow 0.2s ease;
+}
+
+#page-historico .historico-card:hover {
+    box-shadow: 0 10px 24px rgba(57, 37, 27, 0.13);
+}
+
+#page-historico .historico-card-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+}
+
+#page-historico .historico-tipo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+#page-historico .historico-tipo svg {
+    width: 18px;
+    height: 18px;
+}
+
+#page-historico .tipo-emprestimo {
+    background: #e7ede3;
+    color: #4f6b43;
+    border: 1px solid #c8d5c0;
+}
+
+#page-historico .historico-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+#page-historico .historico-pendente {
+    background: #fff1d6;
+    color: #865b12;
+    border-color: #ebd6a7;
+}
+
+#page-historico .historico-aprovada {
+    background: #e7ede3;
+    color: #3f6036;
+    border-color: #c8d5c0;
+}
+
+#page-historico .historico-recusada {
+    background: #f8e2de;
+    color: #963b2d;
+    border-color: #ebc1b8;
+}
+
+#page-historico .historico-atrasado {
+    background: #8e3428;
+    color: white;
+    border-color: #8e3428;
+}
+
+#page-historico .historico-concluido {
+    background: #e7ede3;
+    color: #3f6036;
+    border-color: #c8d5c0;
+}
+
+#page-historico .historico-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    margin: 0;
+    color: #39251b;
+    font-size: 21px;
+    font-weight: 750;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+#page-historico .historico-card h3 svg {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    color: #c65a32;
+}
+
+#page-historico .historico-dados {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+}
+
+#page-historico .historico-dados p {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+    margin: 0;
+    padding: 12px;
+    background: #f4efe8;
+    border: 1px solid #e7ddd2;
+    border-radius: 12px;
+    color: #39251b;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+#page-historico .historico-dados p > svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    margin-top: 2px;
+    color: #a85f43;
+}
+
+#page-historico .historico-dados p > span {
+    display: block;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#page-historico .historico-dados p b {
+    display: block;
+    margin-bottom: 4px;
+    color: #795d4c;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+/* Filtros */
+
+#page-historico .historico-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin: 24px 0;
+    padding: 20px;
+    background: #fffdfa;
+    border: 1px solid #e3d8ce;
+    border-radius: 16px;
+}
+
+#page-historico .historico-filtro-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#page-historico .historico-filtro-grupo > span {
+    color: #39251b;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+#page-historico .historico-botoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+#page-historico .historico-botoes button {
+    padding: 9px 14px;
+    border: 1px solid #e3d8ce;
+    border-radius: 10px;
+    background: #f4efe8;
+    color: #65483a;
+    font-size: 13px;
+    font-weight: 700;
+    transition: 0.2s ease;
+}
+
+#page-historico .historico-botoes button:hover {
+    border-color: #c65a32;
+    color: #a84727;
+}
+
+#page-historico .historico-botoes button.ativo {
+    background: #c65a32;
+    border-color: #c65a32;
+    color: white;
+}
+
+/* Histórico vazio */
+
+#page-historico .historico-vazio {
+    grid-column: 1 / -1;
+    padding: 40px 20px;
+    background: #fffdfa;
+    border: 1px dashed #cdbbad;
+    border-radius: 18px;
+    color: #8a786b;
+    text-align: center;
+}
+
+/* Responsividade */
+
+@media (max-width: 800px) {
+    #page-historico .historico-lista {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    #page-historico .grid {
+        grid-template-columns: 1fr;
+    }
+
+    #page-historico .historico-filtros {
+        flex-direction: column;
+        padding: 16px;
+    }
+
+    #page-historico .historico-botoes button {
+        flex: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    #page-historico .historico-card {
+        padding: 16px;
+        gap: 14px;
+    }
+
+    #page-historico .historico-card h3 {
+        font-size: 19px;
+    }
+
+    #page-historico .historico-dados {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* HERO DO PROFESSOR */
+
+/* HERO DO PROFESSOR — FOTO SEM DEGRADÊ */
+.hero-professor {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 38px;
+    margin-bottom: 35px;
+    overflow: hidden;
+    border-radius: 22px;
+    color: #fff;
+    background: url(../img/foto_escola.jpg) center 45% no-repeat;
+    background-size: cover;
+    box-shadow: 0 12px 30px rgba(67, 42, 26, 0.08);
+}
+
+.hero-professor .hero-conteudo {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-professor .hero-etiqueta {
+    display: inline-block;
+    margin-bottom: 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.hero-professor h1 {
+    margin: 0 0 12px;
+    font-size: clamp(28px, 4vw, 42px);
+    color: #fff;
+}
+
+.hero-professor p {
+    max-width: 520px;
+    margin: 0;
+    color: #fff;
+    line-height: 1.6;
+}
+
+.hero-professor .hero-relogio {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 14px;
+    background: rgba(35, 24, 19, 0.25);
+    font-size: 20px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+@media (max-width: 650px) {
+    .hero-professor {
+        align-items: flex-start;
+        flex-direction: column;
+        min-height: 250px;
+        padding: 26px;
+    }
+}
+
+/* REMOVE QUALQUER DEGRADÊ DO HERO DO PROFESSOR */
+.hero-professor {
+    background-image: url("../img/fundo-login.png") !important;
+    background-color: transparent !important;
+    background-blend-mode: normal !important;
+    opacity: 1 !important;
+}
+
+.hero-professor::before,
+.hero-professor::after {
+    content: none !important;
+    display: none !important;
+    background: none !important;
+}
+
+.hero-professor .hero-conteudo,
+.hero-professor .hero-relogio {
+    opacity: 1 !important;
 }

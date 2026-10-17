@@ -68,38 +68,64 @@ function montarPesquisa() {
     if (!container) return false;
 
     container.innerHTML = `
-        <header class="reservas-header">
-            <h1>Pesquisar itens</h1>
-            <p>Consulte salas, livros, equipamentos e materiais da escola.</p>
-        </header>
+        
+<header class="pesquisa-cabecalho">
+    <h1>Pesquisar item</h1>
+    <p>Encontre livros da Biblioteca e computadores do Laboratório de Informática.</p>
+</header>
 
-        <div class="search-main-field">
-            <div class="search-input-wrap">
-                ${iconePesquisa("search")}
-                <input
-                    type="text"
-                    id="pesquisaBusca"
-                    placeholder="Buscar por nome, código, autor ou local..."
-                />
-            </div>
+<section class="search-panel">
+    <div class="search-main-field">
+        <label for="pesquisaBusca">O que você está procurando?</label>
+        <div class="search-input-wrap">
+            ${iconePesquisa("search")}
+            <input
+                type="text"
+                id="pesquisaBusca"
+                placeholder="Digite o nome, código ou palavra-chave..."
+            />
+        </div>
+    </div>
+
+    <div class="search-filtros-linha">
+        <div class="search-filtro-campo">
+            <label for="pesquisaTipo">Tipo</label>
+            <select id="pesquisaTipo">
+                <option value="todos">Todos</option>
+                <option value="biblioteca">Biblioteca</option>
+                <option value="informatica">Informática</option>
+                <option value="laboratorio">Laboratórios</option>
+                <option value="audiovisual">Audiovisual</option>
+                <option value="outros">Outros</option>
+            </select>
         </div>
 
-       <div class="search-filters">
-            <button class="filtro-btn active" data-filtro="">Todos</button>
-            <button class="filtro-btn" data-filtro="lab-info">Lab. Informática</button>
-            <button class="filtro-btn" data-filtro="lab-cie">Lab. Ciência</button>
-            <button class="filtro-btn" data-filtro="locais">Locais</button>
-            <button class="filtro-btn" data-filtro="biblioteca">Biblioteca</button>
+        <div class="search-filtro-campo">
+            <label for="pesquisaSituacao">Situação</label>
+            <select id="pesquisaSituacao">
+                <option value="todas">Todas</option>
+                <option value="DISPONIVEL">Disponível</option>
+                <option value="EM_USO">Em uso</option>
+                <option value="MANUTENCAO">Manutenção</option>
+            </select>
         </div>
 
-        <div class="search-results-head">
-            <div>
-                <h2>Itens encontrados</h2>
-                <span id="pesquisaContagem">Carregando...</span>
-            </div>
-        </div>
+        <button type="button" id="limparPesquisa" class="search-clear">
+            ${iconePesquisa("rotate-ccw")}
+            Limpar
+        </button>
+    </div>
+</section>
 
-        <div id="pesquisaResultados" class="item-results"></div>
+<div class="search-results-head">
+    <div>
+        <h2>Itens encontrados</h2>
+        <span id="pesquisaContagem">Carregando...</span>
+    </div>
+</div>
+
+<div id="pesquisaResultados" class="item-results"></div>
+
 
         <div class="search-note">
             ${iconePesquisa("info")}
@@ -110,14 +136,20 @@ function montarPesquisa() {
     document
         .getElementById("pesquisaBusca")
         .addEventListener("input", aplicarFiltros);
-    document.querySelectorAll(".filtro-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-            document
-                .querySelectorAll(".filtro-btn")
-                .forEach((b) => b.classList.remove("active"));
-            btn.classList.add("active");
-            aplicarFiltros();
-        });
+
+    document
+        .getElementById("pesquisaTipo")
+        .addEventListener("change", aplicarFiltros);
+
+    document
+        .getElementById("pesquisaSituacao")
+        .addEventListener("change", aplicarFiltros);
+
+    document.getElementById("limparPesquisa").addEventListener("click", () => {
+        document.getElementById("pesquisaBusca").value = "";
+        document.getElementById("pesquisaTipo").value = "todos";
+        document.getElementById("pesquisaSituacao").value = "todas";
+        aplicarFiltros();
     });
 
     document
@@ -164,37 +196,17 @@ function aplicarFiltros() {
     const termo = (document.getElementById("pesquisaBusca")?.value || "")
         .trim()
         .toLowerCase();
-    const filtroAtivo =
-        document.querySelector(".filtro-btn.active")?.dataset.filtro || "";
+
+    const tipo = document.getElementById("pesquisaTipo")?.value || "todos";
+    const situacao =
+        document.getElementById("pesquisaSituacao")?.value || "todas";
 
     const filtrados = ITENS_CATALOGO.filter((item) => {
-        // Regra de visibilidade
-        const noLabInfo = item.local === "Laboratório de Informática";
-        const noLabCie = item.local === "Laboratório de Ciência";
-        const ehSala = item.grupo === "Salas";
-        const ehBiblioteca = item.grupo === "Biblioteca";
-        const ehInfoOuAV =
-            item.grupo === "Informática" || item.grupo === "Audiovisual";
+        const grupo = String(item.grupo || "").toLowerCase();
+        const categoria = String(item.categoria || "").toLowerCase();
 
-        const visivel = ehBiblioteca || ehSala || (ehInfoOuAV && noLabInfo);
-
-        if (!visivel) return false;
-
-        // Filtro do botão selecionado
-        if (filtroAtivo === "lab-info") {
-            if (!noLabInfo && !ehSala) return false;
-            if (ehSala && item.nome !== "Laboratório de Informática")
-                return false;
-        } else if (filtroAtivo === "lab-cie") {
-            if (ehSala && item.nome !== "Laboratório de Ciência") return false;
-            if (!ehSala) return false;
-        } else if (filtroAtivo === "locais") {
-            if (!ehSala) return false;
-        } else if (filtroAtivo === "biblioteca") {
-            if (!ehBiblioteca) return false;
-        }
-
-        const textoBusca = [
+        // Pesquisa por nome, código, autor, local ou categoria
+        const texto = [
             item.nome,
             item.codigo,
             item.autor,
@@ -206,7 +218,55 @@ function aplicarFiltros() {
             .join(" ")
             .toLowerCase();
 
-        return !termo || textoBusca.includes(termo);
+        if (termo && !texto.includes(termo)) return false;
+
+        // Filtro por tipo
+        if (tipo === "biblioteca" && grupo !== "biblioteca") return false;
+
+        if (
+            tipo === "informatica" &&
+            grupo !== "informática" &&
+            !String(item.local || "")
+                .toLowerCase()
+                .includes("laboratório de informática")
+        )
+            return false;
+
+        if (
+            tipo === "laboratorio" &&
+            grupo !== "salas" &&
+            grupo !== "laboratório"
+        )
+            return false;
+
+        if (tipo === "audiovisual" && grupo !== "audiovisual") return false;
+
+        if (
+            tipo === "outros" &&
+            [
+                "biblioteca",
+                "informática",
+                "salas",
+                "laboratório",
+                "audiovisual",
+            ].includes(grupo)
+        )
+            return false;
+
+        // Filtro por situação
+        if (situacao !== "todas" && item.situacao !== situacao) {
+            return false;
+        }
+
+        // Mantém os itens que a pesquisa do professor deve exibir
+        const local = String(item.local || "").toLowerCase();
+        const ehBiblioteca = grupo === "biblioteca";
+        const ehSala = grupo === "salas";
+        const ehEquipamentoInfo =
+            ["informática", "audiovisual"].includes(grupo) &&
+            local.includes("laboratório de informática");
+
+        return ehBiblioteca || ehSala || ehEquipamentoInfo;
     });
 
     const contagem = document.getElementById("pesquisaContagem");

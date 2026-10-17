@@ -63,32 +63,28 @@
                         </div>
                     </div>
                     <button class="logout" id="sair">
-                        <i data-lucide="log-out"></i> Sair
+                        <i data-lucide="log-out"></i>Sair
                     </button>
                 </div>
             </aside>
 
             <main class="main">
                 <section class="page active" id="page-inicio">
-                    <header class="hero">
-                        <div>
-                            <h1>Olá, <span id="nomeHero">Professor</span></h1>
+                    <header class="hero hero-professor">
+                        <div class="hero-conteudo">
+                            <span class="hero-etiqueta"
+                                >PAINEL DO PROFESSOR</span
+                            >
+                            <h1>Olá, <span id="nomeHero">Professor</span>!</h1>
                             <p>
-                                Organize suas aulas e acompanhe seus recursos
+                                Organize suas aulas e acompanhe os recursos
                                 escolares.
                             </p>
                         </div>
 
-                        <div class="hero-stats">
-                            <div class="hero-stat">
-                                <strong id="totalReservas">0</strong>
-                                <span>Reservas ativas</span>
-                            </div>
-                            <div class="hero-stat">
-                                <strong id="totalEmprestimos">0</strong>
-                                <span>Empréstimos</span>
-                            </div>
-                            <div class="clock" id="clock">00:00:00</div>
+                        <div class="hero-relogio">
+                            <i data-lucide="clock"></i>
+                            <span id="clock">00:00:00</span>
                         </div>
                     </header>
 
@@ -246,8 +242,8 @@
         </div>
 
         <div class="toast" id="toast"></div>
+        <script src="/lucide/lucide.min.js"></script>
         <script src="pesquisa.js"></script>
-        <script src="https://unpkg.com/lucide@latest"></script>
         <script src="professor.js"></script>
     </body>
 </html>

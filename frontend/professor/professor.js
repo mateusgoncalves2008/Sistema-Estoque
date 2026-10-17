@@ -110,6 +110,10 @@ function carregarCalendarioProfessor() {
         <div class="cal-prof-loading">Carregando calendário escolar...</div>
     `;
 
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+
     fetch(`${API_URL}/professor/calendario`)
         .then((resposta) =>
             resposta.json().then((dados) => {
@@ -567,6 +571,7 @@ document.getElementById("sair").addEventListener("click", () => {
     aviso("Para sair de verdade, conectaremos ao login existente.");
 });
 atualizarTabelas();
+carregarPerfilProfessor();
 
 if (window.lucide) lucide.createIcons();
 
@@ -715,11 +720,11 @@ async function carregarHistoricoProfessor() {
             );
         }
 
-        historicoProfessor = Array.isArray(resultado.historicoProfessor)
-            ? resultado.historicoProfessor
+        historicoProfessor = Array.isArray(resultado.emprestimos)
+            ? resultado.emprestimos
             : [];
 
-        const escapado = (valor) =>
+        const escapar = (valor) =>
             String(valor ?? "").replace(
                 /[&<>"']/g,
                 (c) =>
@@ -732,62 +737,282 @@ async function carregarHistoricoProfessor() {
                     })[c],
             );
 
-        const devolvidos = historicoProfessor.filter(
-            (m) => m.status === "DEVOLVIDO",
+        const normalizarStatus = (status) =>
+            String(status || "SEM STATUS")
+                .trim()
+                .toUpperCase();
+
+        const classeStatus = (status) => {
+            if (
+                [
+                    "DEVOLVIDO",
+                    "DEVOLVIDA",
+                    "CONCLUIDO",
+                    "CONCLUÍDO",
+                    "FINALIZADO",
+                    "FINALIZADA",
+                ].includes(status)
+            ) {
+                return "historico-concluido";
+            }
+
+            if (status === "ATRASADO") return "historico-atrasado";
+
+            if (
+                [
+                    "CANCELADO",
+                    "CANCELADA",
+                    "RECUSADO",
+                    "RECUSADA",
+                    "REJEITADO",
+                    "REJEITADA",
+                ].includes(status)
+            ) {
+                return "historico-recusada";
+            }
+
+            if (
+                ["ABERTO", "EM ANDAMENTO", "APROVADO", "APROVADA"].includes(
+                    status,
+                )
+            ) {
+                return "historico-aprovada";
+            }
+
+            return "historico-pendente";
+        };
+
+        const registros = historicoProfessor.map((m) => ({
+            id: m.emprestimoID || m.id || "",
+            item: m.item || m.nome || m.produtoID || "Item não identificado",
+            tipo: m.tipo || "Não informado",
+            local: m.local || m.localID || "Não informado",
+            quantidade: m.quantidade ?? 1,
+            data: m.retirada || m.data || "",
+            devolucao: m.devolucao || "",
+            dataDevolucao: m.dataDevolucao || "",
+            status: normalizarStatus(m.status),
+        }));
+
+        registros.sort((a, b) => String(b.data).localeCompare(String(a.data)));
+
+        const devolvidos = registros.filter((m) =>
+            [
+                "DEVOLVIDO",
+                "DEVOLVIDA",
+                "CONCLUIDO",
+                "CONCLUÍDO",
+                "FINALIZADO",
+                "FINALIZADA",
+            ].includes(m.status),
         ).length;
+
+        function criarCards(listaRegistros) {
+            return (
+                listaRegistros
+                    .map(
+                        (m) => `
+                    <div class="historico-card">
+                        <div class="historico-card-topo">
+                            <span class="historico-tipo tipo-emprestimo">
+                                ${icon("book-open")}
+                                Empréstimo
+                            </span>
+
+                            <span class="historico-status ${classeStatus(m.status)}">
+                                ${escapar(m.status.replace(/_/g, " "))}
+                            </span>
+                        </div>
+
+                        <h3>
+                            ${icon(
+                                /computador|desktop/i.test(m.item)
+                                    ? "monitor"
+                                    : /livro/i.test(m.tipo)
+                                      ? "book-open"
+                                      : "package",
+                            )}
+                            ${escapar(m.item)}
+                        </h3>
+
+                        <div class="historico-dados">
+                            <p>${icon("layers")}<span><b>Tipo</b>${escapar(m.tipo)}</span></p>
+                            <p>${icon("hash")}<span><b>ID do registro</b>${escapar(m.id || "Não informado")}</span></p>
+                            <p>${icon("map-pin")}<span><b>Local</b>${escapar(m.local)}</span></p>
+                            <p>${icon("package")}<span><b>Quantidade</b>${escapar(m.quantidade)}</span></p>
+                            <p>${icon("calendar")}<span><b>Data</b>${escapar(m.data ? formatarDataHoraReserva(m.data) : "Não informada")}</span></p>
+                            <p>${icon("calendar-clock")}<span><b>Devolução prevista</b>${escapar(m.devolucao ? formatarDataHoraReserva(m.devolucao) : "Não informada")}</span></p>
+
+                            ${
+                                m.dataDevolucao
+                                    ? `<p>${icon("check-circle")}<span><b>Devolvido em</b>${escapar(formatarDataHoraReserva(m.dataDevolucao))}</span></p>`
+                                    : ""
+                            }
+                        </div>
+                    </div>
+                `,
+                    )
+                    .join("") ||
+                '<div class="historico-vazio">Nenhum registro encontrado para essa categoria.</div>'
+            );
+        }
 
         area.innerHTML = `
             <div class="head">
                 <h1>Histórico</h1>
-                <p class="sub">Veja o resumo das suas atividades.</p>
+                <p class="sub">Consulte suas reservas e empréstimos.</p>
             </div>
 
             <div class="grid">
                 <div class="card">
-                    <div class="lab">Movimentações</div>
-                    <div class="big">${historicoProfessor.length}</div>
+                    <div class="lab">${icon("bookmark")} Empréstimos</div>
+                    <div class="big">${registros.length}</div>
+                    <p>Registros de empréstimos.</p>
                 </div>
 
                 <div class="card">
-                    <div class="lab">Itens devolvidos</div>
+                    <div class="lab">${icon("book-open")} Itens devolvidos</div>
                     <div class="big">${devolvidos}</div>
+                    <p>Empréstimos concluídos.</p>
                 </div>
             </div>
 
-            <select id="filtroHistorico">
-                <option value="Todos">Todos os itens</option>
-                <option value="Livro">Livros</option>
-                <option value="Computador">Computadores</option>
-                <option value="Equipamento">Equipamentos</option>
-                <option value="Material">Materiais</option>
-            </select>
+            
+<div class="historico-filtros">
+    <div class="historico-filtro-grupo">
+        <span>Tipo de registro</span>
+        <div class="historico-botoes">
+            <button type="button" data-filtro-tipo-prof="todos" class="ativo">Todos</button>
+            <button type="button" data-filtro-tipo-prof="reservas">Reservas</button>
+            <button type="button" data-filtro-tipo-prof="emprestimos">Empréstimos</button>
+        </div>
+    </div>
 
-            <div class="card" style="margin-top:18px">
-                <h2>Últimas movimentações</h2>
+    <div class="historico-filtro-grupo">
+        <span>Categoria</span>
+        <div class="historico-botoes">
+            <button type="button" data-filtro-prof="todas" class="ativo">Todos</button>
+            <button type="button" data-filtro-prof="biblioteca">Biblioteca</button>
+            <button type="button" data-filtro-prof="informatica">Informática</button>
+        </div>
+    </div>
+</div>
 
-                ${
-                    historicoProfessor.length
-                        ? historicoProfessor
-                              .map(
-                                  (m) => `
-                            <div class="row">
-                                <div class="d">${escapado(m.tipo)}</div>
-                                <div class="t">${escapado(m.item)}</div>
-                                <span class="tag">${escapado(m.status)}</span>
-                                <span>${escapado(m.data)}</span>
-                            </div>
-                        `,
-                              )
-                              .join("")
-                        : '<div class="row">Nenhuma movimentação encontrada.</div>'
-                }
+
+            <div class="historico-lista">
+                ${criarCards(registros)}
             </div>
         `;
+
+        // Desenha os ícones depois de montar o histórico.
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+
+        let tipoSelecionado = "todos";
+        let categoriaSelecionada = "todas";
+        const lista = area.querySelector(".historico-lista");
+
+        function aplicarFiltros() {
+            const filtrados = registros.filter((m) => {
+                const texto = `${m.item} ${m.tipo} ${m.local}`.toLowerCase();
+
+                const correspondeCategoria =
+                    categoriaSelecionada === "todas" ||
+                    (categoriaSelecionada === "biblioteca" &&
+                        /biblioteca|livro|livros/.test(texto)) ||
+                    (categoriaSelecionada === "informatica" &&
+                        /informática|informatica|computador|desktop/.test(
+                            texto,
+                        ));
+
+                // Atualmente, a API carrega somente empréstimos.
+                const correspondeTipo =
+                    tipoSelecionado === "todos" ||
+                    tipoSelecionado === "emprestimos";
+
+                return correspondeCategoria && correspondeTipo;
+            });
+
+            lista.innerHTML = criarCards(filtrados);
+
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        }
+
+        area.querySelectorAll("[data-filtro-prof]").forEach((botao) => {
+            botao.addEventListener("click", () => {
+                categoriaSelecionada = botao.dataset.filtroProf;
+
+                area.querySelectorAll("[data-filtro-prof]").forEach((b) => {
+                    b.classList.toggle("ativo", b === botao);
+                });
+
+                aplicarFiltros();
+            });
+        });
+
+        area.querySelectorAll("[data-filtro-tipo-prof]").forEach((botao) => {
+            botao.addEventListener("click", () => {
+                tipoSelecionado = botao.dataset.filtroTipoProf;
+
+                area.querySelectorAll("[data-filtro-tipo-prof]").forEach(
+                    (b) => {
+                        b.classList.toggle("ativo", b === botao);
+                    },
+                );
+
+                aplicarFiltros();
+            });
+        });
     } catch (erro) {
         console.error("Erro ao carregar histórico:", erro);
-        area.innerHTML =
-            '<p class="empty">Não foi possível carregar o histórico.</p>';
+
+        area.innerHTML = `
+            <div class="historico-vazio">
+                <h3>Erro ao carregar histórico</h3>
+                <p>${String(erro.message || erro)}</p>
+            </div>
+        `;
     }
+}
+
+function formatarDataHoraReserva(valor) {
+    if (!valor) return "Não informada";
+
+    const data = new Date(valor);
+
+    if (isNaN(data.getTime())) return String(valor);
+
+    return data.toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+}
+
+function icon(nome) {
+    const permitidos = [
+        "book-open",
+        "monitor",
+        "package",
+        "layers",
+        "hash",
+        "map-pin",
+        "calendar",
+        "calendar-clock",
+        "check-circle",
+        "bookmark",
+    ];
+
+    if (!permitidos.includes(nome)) {
+        return "";
+    }
+
+    return `<i data-lucide="${nome}" class="icone-historico" aria-hidden="true"></i>`;
 }
 
 async function carregarPerfilProfessor() {
@@ -796,7 +1021,7 @@ async function carregarPerfilProfessor() {
     );
 
     if (!usuario?.id) {
-        aviso("Não foi possível identificar o professor.");
+        console.error("Não foi possível identificar o professor.");
         return;
     }
 
@@ -812,9 +1037,24 @@ async function carregarPerfilProfessor() {
         }
 
         const p = resultado.professor;
+        const nomeCompleto = String(
+            p.nome || usuario.nome || usuario.nomeCompleto || "Professor",
+        ).trim();
 
-        document.getElementById("perfilNome").textContent =
-            p.nome || "Não informado";
+        // Nome na tela inicial
+        document.getElementById("nomeHero").textContent =
+            nomeCompleto.split(/\s+/)[0];
+
+        // Nome no rodapé do menu
+        document.getElementById("nomeUsuario").textContent = nomeCompleto;
+
+        // Inicial do avatar
+        document.getElementById("avatar").textContent = nomeCompleto
+            .charAt(0)
+            .toUpperCase();
+
+        // Dados do perfil
+        document.getElementById("perfilNome").textContent = nomeCompleto;
 
         document.getElementById("perfilIdade").textContent =
             p.idade || "Não informado";
@@ -825,9 +1065,9 @@ async function carregarPerfilProfessor() {
         document.getElementById("perfilEmail").textContent =
             p.email || "Não informado";
 
-        if (window.lucide) lucide.createIcons();
+        if (window.lucide) window.lucide.createIcons();
     } catch (erro) {
         console.error("Erro ao carregar perfil:", erro);
-        aviso("Não foi possível carregar os dados do perfil.");
+        aviso("Não foi possível carregar os dados do professor.");
     }
 }

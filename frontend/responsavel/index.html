@@ -51,6 +51,11 @@
                     <i class="fa-solid fa-clipboard-list"></i
                     ><span>Solicitações</span>
                 </button>
+
+                <button class="nav" data-page="bloqueios">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Bloqueios e denúncias</span>
+                </button>
             </nav>
 
             <div class="side-bottom">
@@ -431,6 +436,119 @@
                                 <tr>
                                     <td colspan="6" class="empty">
                                         Nenhuma solicitação carregada.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+            </section>
+
+            <section
+                id="page-bloqueios"
+                class="page hidden bloqueios-denuncias"
+            >
+                <div class="stats">
+                    <article class="stat-card">
+                        <span class="stat-icon red">
+                            <i class="fa-solid fa-user-lock"></i>
+                        </span>
+                        <div>
+                            <small>Usuários bloqueados</small>
+                            <strong id="totalBloqueados">0</strong>
+                            <span>Neste setor</span>
+                        </div>
+                    </article>
+
+                    <article class="stat-card">
+                        <span class="stat-icon orange">
+                            <i class="fa-solid fa-file-circle-exclamation"></i>
+                        </span>
+                        <div>
+                            <small>Denúncias enviadas</small>
+                            <strong id="totalDenuncias">0</strong>
+                            <span>Encaminhadas à Secretaria</span>
+                        </div>
+                    </article>
+                </div>
+
+                <article class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <h3>Bloqueios e denúncias</h3>
+                            <p>Gerencie o acesso às reservas do seu setor.</p>
+                        </div>
+                    </div>
+
+                    <div class="notice">
+                        Os bloqueios afetam somente as reservas dos itens
+                        vinculados ao seu setor.
+                    </div>
+
+                    <div class="stock-toolbar">
+                        <input
+                            id="blockedUserSearch"
+                            type="search"
+                            placeholder="Buscar usuário por nome ou matrícula..."
+                        />
+
+                        <button id="newBlockButton" class="refresh">
+                            <i class="fa-solid fa-user-lock"></i>
+                            Bloquear usuário
+                        </button>
+
+                        <button id="newReportButton" class="refresh">
+                            <i class="fa-solid fa-file-circle-exclamation"></i>
+                            Registrar denúncia
+                        </button>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>Identificação</th>
+                                    <th>Motivo</th>
+                                    <th>Data</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="blockRows">
+                                <tr>
+                                    <td colspan="6" class="empty">
+                                        Nenhum bloqueio registrado.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <h3>Histórico de denúncias</h3>
+                            <p>Registros encaminhados à Secretaria.</p>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Usuário denunciado</th>
+                                    <th>Motivo</th>
+                                    <th>Relato</th>
+                                    <th>Situação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportRows">
+                                <tr>
+                                    <td colspan="5" class="empty">
+                                        Nenhuma denúncia registrada.
                                     </td>
                                 </tr>
                             </tbody>

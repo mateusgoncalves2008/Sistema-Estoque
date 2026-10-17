@@ -15,16 +15,11 @@ let ALUNO = {
 // DADOS REAIS DO ESTOQUE
 // ============================================================
 
-let ITENS_PESQUISA = [];
-
-// Reservas e empréstimos serão conectados às respectivas APIs
-// quando as rotas dessas funcionalidades estiverem prontas.
 let reservas = [];
-
-let emprestimos = [];
-
 let movimentos = [];
-
+let emprestimos = [];
+let ITENS_PESQUISA = [];
+let emprestimosHistorico = [];
 let reservaItemSelecionado = null;
 let reservasCarregadas = false;
 
@@ -608,6 +603,38 @@ async function carregarEmprestimos() {
     } catch (erro) {
         console.error("Erro ao carregar empréstimos:", erro);
         emprestimos = [];
+    }
+}
+
+async function carregarEmprestimosHistorico() {
+    const usuarioID = usuarioLogado?.id;
+
+    if (!usuarioID) {
+        emprestimosHistorico = [];
+        return;
+    }
+
+    try {
+        const resposta = await fetch(
+            `${API_URL}/aluno/historico-emprestimos/${encodeURIComponent(usuarioID)}`,
+            { credentials: "include" },
+        );
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok || !resultado.sucesso) {
+            throw new Error(
+                resultado.mensagem || "Erro ao carregar histórico.",
+            );
+        }
+
+        emprestimosHistorico = Array.isArray(resultado.emprestimos)
+            ? resultado.emprestimos
+            : [];
+    } catch (erro) {
+        console.error("Erro ao carregar histórico:", erro);
+        emprestimosHistorico = [];
+        showToast("Não foi possível carregar os empréstimos do histórico.");
     }
 }
 
@@ -1364,101 +1391,327 @@ function viewEmprestimos() {
 // ============================================================
 
 function viewHistorico() {
-    const livros = movimentos.filter(
-        (m) => String(m.tipo || m[0] || "").toLowerCase() === "livro",
-    ).length;
+    const todos = [
+        ...reservas.map((r) => ({
+            registro: "Reserva",
+            id: r.reservaID || r.id || "",
+            item: r.nome || r.item || r.produtoID || "Item não identificado",
+            tipo:
+                r.categoriaNome || r.nomeCategoria || r.tipo || "Não informado",
+            local: r.local || r.localID || "Não informado",
+            quantidade: r.quantidade || "1",
+            data: r.dataInicio || "",
+            devolucao: r.dataFim || "",
+            status: r.status || "SEM STATUS",
+        })),
 
-    const computadores = movimentos.filter(
-        (m) => String(m.tipo || m[0] || "").toLowerCase() === "computador",
-    ).length;
+        ...emprestimosHistorico.map((e) => ({
+            registro: "Empréstimo",
+            id: e.emprestimoID || e.id || "",
+            item: e.item || e.nome || e.produtoID || "Item não identificado",
+            tipo: e.tipo || "Item",
+            local: e.local || e.localID || "Não informado",
+            quantidade: e.quantidade || "1",
+            data: e.retirada || "",
+            devolucao: e.devolucao || "",
+            dataDevolucao: e.dataDevolucao || "",
+            status: e.status || "SEM STATUS",
+        })),
+    ];
+
+    const registrosFiltrados = todos.filter((r) => {
+        const tipoCorresponde =
+            filtroHistoricoTipo === "todos" ||
+            (filtroHistoricoTipo === "reservas" && r.registro === "Reserva") ||
+            (filtroHistoricoTipo === "emprestimos" &&
+                r.registro === "Empréstimo");
+
+        const categoria = categoriaHistorico(r);
+
+        const categoriaCorresponde =
+            filtroHistoricoCategoria === "todas" ||
+            categoria === filtroHistoricoCategoria;
+
+        return tipoCorresponde && categoriaCorresponde;
+    });
+
+    registrosFiltrados.sort((a, b) =>
+        String(b.data).localeCompare(String(a.data)),
+    );
+
+    registrosFiltrados.sort((a, b) =>
+        String(b.data).localeCompare(String(a.data)),
+    );
+
+    todos.sort((a, b) => String(b.data).localeCompare(String(a.data)));
+
+    const cards = registrosFiltrados
+        .map((r) => {
+            const status = String(r.status).trim().toUpperCase();
+
+            let classe = "historico-pendente";
+
+            if (
+                ["APROVADA", "APROVADO", "ABERTO", "EM ANDAMENTO"].includes(
+                    status,
+                )
+            ) {
+                classe = "historico-aprovada";
+            } else if (["ATRASADO"].includes(status)) {
+                classe = "historico-atrasado";
+            } else if (
+                [
+                    "CANCELADA",
+                    "CANCELADO",
+                    "RECUSADA",
+                    "RECUSADO",
+                    "REJEITADA",
+                    "REJEITADO",
+                ].includes(status)
+            ) {
+                classe = "historico-recusada";
+            } else if (
+                [
+                    "DEVOLVIDO",
+                    "DEVOLVIDA",
+                    "CONCLUIDO",
+                    "CONCLUÍDO",
+                    "CONCLUIDA",
+                    "CONCLUÍDA",
+                    "FINALIZADO",
+                    "FINALIZADA",
+                ].includes(status)
+            ) {
+                classe = "historico-concluido";
+            }
+
+            return `
+            <div class="historico-card">
+                <div class="historico-card-topo">
+                    
+<span class="historico-tipo ${r.registro === "Reserva" ? "tipo-reserva" : "tipo-emprestimo"}">
+    ${icon(r.registro === "Reserva" ? "calendar-check" : "book-open")}
+    ${escapeHtml(r.registro)}
+</span>
+
+                    <span class="historico-status ${classe}">
+                        ${escapeHtml(status.replace(/_/g, " "))}
+                    </span>
+                </div>
+
+                
+<h3>
+    ${icon(
+        /computador|desktop/i.test(r.item)
+            ? "monitor"
+            : /livro/i.test(r.tipo)
+              ? "book-open"
+              : "package",
+    )}
+    ${escapeHtml(r.item)}
+</h3>
+
+<div class="historico-dados">
+    <p>
+        ${icon("layers")}
+        <span><b>Tipo</b>${escapeHtml(r.tipo)}</span>
+    </p>
+
+    <p>
+        ${icon("hash")}
+        <span><b>ID do registro</b>${escapeHtml(r.id || "Não informado")}</span>
+    </p>
+
+    <p>
+        ${icon("map-pin")}
+        <span><b>Local</b>${escapeHtml(r.local)}</span>
+    </p>
+
+    <p>
+        ${icon("package")}
+        <span><b>Quantidade</b>${escapeHtml(r.quantidade)}</span>
+    </p>
+
+    <p>
+        ${icon("calendar")}
+        <span><b>Data</b>${escapeHtml(formatarDataHoraReserva(r.data))}</span>
+    </p>
+
+    <p>
+        ${icon("calendar-clock")}
+        <span><b>Devolução prevista</b>${escapeHtml(formatarDataHoraReserva(r.devolucao))}</span>
+    </p>
+
+    ${
+        r.dataDevolucao
+            ? `
+        <p>
+            ${icon("check-circle")}
+            <span>
+                <b>Devolvido em</b>
+                ${escapeHtml(formatarDataHoraReserva(r.dataDevolucao))}
+            </span>
+        </p>
+    `
+            : ""
+    }
+</div>
+
+            </div>
+        `;
+        })
+        .join("");
 
     return `
         <div class="head">
             <h1>Histórico</h1>
-
-            <p class="sub">
-                Veja o resumo das suas atividades.
-            </p>
+            <p class="sub">Consulte todas as suas reservas e empréstimos.</p>
         </div>
 
         <div class="grid">
-
             <div class="card">
-
-                <div class="lab">
-                    ${icon("book-open")}
-                    Livros
-                </div>
-
-                <div class="big">
-                    Você leu ${livros} ${livros === 1 ? "livro" : "livros"}
-                </div>
-
+                <div class="lab">${icon("bookmark")} Reservas</div>
+                <div class="big">${reservas.length}</div>
+                <p>Registros de reservas.</p>
             </div>
 
             <div class="card">
-
-                <div class="lab">
-                    ${icon("monitor")}
-                    Computadores
-                </div>
-
-                <div class="big">
-                    Você utilizou ${computadores}
-                    ${computadores === 1 ? "computador" : "computadores"}
-                </div>
-
+                <div class="lab">${icon("book-open")} Empréstimos</div>
+                <div class="big">${emprestimosHistorico.length}</div>
+                <p>Registros de empréstimos, incluindo devolvidos.</p>
             </div>
-
         </div>
 
-        <div
-            class="card"
-            style="margin-top:18px"
-        >
+        
 
-            <h2>
-                Últimas movimentações
-            </h2>
+<div class="historico-filtros">
+    <div class="historico-filtro-grupo">
+        <span>Tipo de registro</span>
+        <div class="historico-botoes">
+            <button type="button" data-filtro-tipo="todos"
+                class="${filtroHistoricoTipo === "todos" ? "ativo" : ""}">Todos</button>
 
-            <div style="margin-top:8px">
+            <button type="button" data-filtro-tipo="reservas"
+                class="${filtroHistoricoTipo === "reservas" ? "ativo" : ""}">Reservas</button>
 
-                ${
-                    movimentos.length
-                        ? movimentos
-                              .map(
-                                  (m) => `
-                            <div class="row">
+            <button type="button" data-filtro-tipo="emprestimos"
+                class="${filtroHistoricoTipo === "emprestimos" ? "ativo" : ""}">Empréstimos</button>
+        </div>
+    </div>
 
-                                <div class="d">
-                                    ${escapeHtml(m.tipo || m[0] || "")}
-                                </div>
+    <div class="historico-filtro-grupo">
+        <span>Categoria</span>
+        
+<div class="historico-filtro-grupo">
 
-                                <div class="t">
-                                    ${escapeHtml(m.item || m[1] || "")}
-                                </div>
+    <div class="historico-botoes">
+        <button type="button"
+            data-filtro-categoria="todas"
+            class="${filtroHistoricoCategoria === "todas" ? "ativo" : ""}">
+            Todos
+        </button>
 
-                                <span class="tag">
-                                    ${escapeHtml(m.data || m[2] || "")}
-                                </span>
+        <button type="button"
+            data-filtro-categoria="biblioteca"
+            class="${filtroHistoricoCategoria === "biblioteca" ? "ativo" : ""}">
+            Biblioteca
+        </button>
 
-                            </div>
-                        `,
-                              )
-                              .join("")
-                        : `
-                        <div class="row">
-                            <div class="d">
-                                Nenhuma movimentação
-                            </div>
-                        </div>
-                        `
-                }
+        <button type="button"
+            data-filtro-categoria="informatica"
+            class="${filtroHistoricoCategoria === "informatica" ? "ativo" : ""}">
+            Informática
+        </button>
+    </div>
+</div>
 
-            </div>
+    </div>
+</div>
 
+
+
+        <div class="historico-lista">
+            ${
+                cards ||
+                `
+                <div class="historico-vazio">
+                   Nenhum registro encontrado para os filtros selecionados.
+                </div>
+            `
+            }
         </div>
     `;
+}
+
+function configurarEventosFiltroHistorico() {
+    const pagina = document.getElementById("pageContent");
+
+    if (!pagina || pagina.dataset.filtroHistoricoConfigurado === "sim") {
+        return;
+    }
+
+    pagina.dataset.filtroHistoricoConfigurado = "sim";
+
+    pagina.addEventListener("click", (evento) => {
+        const botao = evento.target.closest(
+            "[data-filtro-tipo], [data-filtro-categoria]",
+        );
+
+        if (!botao || !pagina.contains(botao)) return;
+
+        if (botao.dataset.filtroTipo) {
+            filtroHistoricoTipo = botao.dataset.filtroTipo;
+        }
+
+        if (botao.dataset.filtroCategoria) {
+            filtroHistoricoCategoria = botao.dataset.filtroCategoria;
+        }
+
+        pagina.innerHTML = viewHistorico();
+    });
+}
+
+let filtroHistoricoTipo = "todos";
+let filtroHistoricoCategoria = "todas";
+
+function aplicarFiltroHistorico(tipo, categoria) {
+    if (tipo) filtroHistoricoTipo = tipo;
+    if (categoria) filtroHistoricoCategoria = categoria;
+
+    const pagina = document.getElementById("pageContent");
+
+    if (pagina) {
+        pagina.innerHTML = viewHistorico();
+
+        if (typeof inicializarIcones === "function") {
+            inicializarIcones();
+        }
+    }
+}
+
+function categoriaHistorico(registro) {
+    const texto = [
+        registro.item || "",
+        registro.tipo || "",
+        registro.local || "",
+    ]
+        .join(" ")
+        .toLowerCase();
+
+    if (texto.includes("biblioteca") || texto.includes("livro")) {
+        return "biblioteca";
+    }
+
+    if (
+        texto.includes("informática") ||
+        texto.includes("informatica") ||
+        texto.includes("computador") ||
+        texto.includes("desktop")
+    ) {
+        return "informatica";
+    }
+
+    return "outros";
 }
 
 // ============================================================
@@ -2480,6 +2733,7 @@ async function iniciarPainel() {
             carregarItensPesquisa(),
             carregarReservas(),
             carregarEmprestimos(),
+            carregarEmprestimosHistorico(),
         ]);
 
         atualizarUsuarioLateral();
@@ -2592,3 +2846,5 @@ function conectarEventosCalendario() {
         }
     });
 }
+
+configurarEventosFiltroHistorico();

@@ -1456,3 +1456,638 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== BOTÕES DE AÇÕES ===== */
+
+.request-actions {
+    min-width: 300px;
+    white-space: normal;
+}
+
+.request-actions .request-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 3px;
+    padding: 10px 15px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+    line-height: 1.2;
+    cursor: pointer;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Aprovar */
+.request-actions .approve {
+    color: #fff;
+    background: #237a4b;
+    border-color: #237a4b;
+}
+
+/* Recusar */
+.request-actions .reject {
+    color: #fff;
+    background: #b8323e;
+    border-color: #b8323e;
+}
+
+/* Cancelar */
+.request-actions .cancel {
+    color: #694b0b;
+    background: #fff3d6;
+    border-color: #ead5a5;
+}
+
+/* Concluir devolução */
+.request-actions .finish {
+    color: #fff;
+    background: #2859a5;
+    border-color: #2859a5;
+}
+
+/* Foco acessível */
+.request-actions .request-action:focus-visible {
+    outline: 2px solid #64748b;
+    outline-offset: 3px;
+}
+
+/* Processamento */
+.request-actions .request-action:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+@media (max-width: 768px) {
+    .request-actions {
+        min-width: 200px;
+    }
+
+    .request-actions .request-action {
+        padding: 9px 11px;
+        font-size: 11px;
+    }
+}
+
+/* ==========================================
+   BLOQUEIOS E DENÚNCIAS
+   Identidade visual da escola
+========================================== */
+
+.bloqueios-denuncias {
+    --bd-marrom: #352219;
+    --bd-laranja: #c95730;
+    --bd-laranja-claro: #e8b99f;
+    --bd-pessego: #fbede3;
+    --bd-bege: #f8f5f1;
+    --bd-branco: #fffdfa;
+    --bd-borda: #e6d8cc;
+    --bd-texto: #3c291f;
+    --bd-suave: #8a786b;
+
+    color: var(--bd-texto);
+}
+
+/* Cartões e painéis */
+.bloqueios-denuncias .panel {
+    background: var(--bd-branco);
+    border: 1px solid var(--bd-laranja-claro);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px #3522190d;
+    padding: 22px;
+}
+
+/* Títulos */
+.bloqueios-denuncias .panel-title {
+    color: var(--bd-marrom);
+    font-weight: 700;
+}
+
+/* Campos de pesquisa e formulários */
+.bloqueios-denuncias input,
+.bloqueios-denuncias select,
+.bloqueios-denuncias textarea {
+    background: var(--bd-branco);
+    color: var(--bd-texto);
+    border: 1px solid var(--bd-laranja-claro);
+    border-radius: 10px;
+    padding: 11px 13px;
+    outline: none;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+.bloqueios-denuncias input:focus,
+.bloqueios-denuncias select:focus,
+.bloqueios-denuncias textarea:focus {
+    border-color: var(--bd-laranja);
+    box-shadow: 0 0 0 3px #c957301a;
+}
+
+/* Botões principais */
+.bloqueios-denuncias .btn-primary,
+.bloqueios-denuncias .primary-button {
+    background: var(--bd-laranja);
+    color: white;
+    border: 1px solid var(--bd-laranja);
+    border-radius: 10px;
+    padding: 11px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.2s,
+        transform 0.2s;
+}
+
+.bloqueios-denuncias .btn-primary:hover,
+.bloqueios-denuncias .primary-button:hover {
+    background: #ad4527;
+    transform: translateY(-1px);
+}
+
+/* Botões secundários */
+.bloqueios-denuncias .btn-secondary,
+.bloqueios-denuncias .secondary-button {
+    background: var(--bd-pessego);
+    color: var(--bd-marrom);
+    border: 1px solid var(--bd-laranja-claro);
+    border-radius: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+/* Tabelas */
+.bloqueios-denuncias .table-wrap {
+    border: 1px solid var(--bd-borda);
+    border-radius: 12px;
+    overflow-x: auto;
+}
+
+.bloqueios-denuncias table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.bloqueios-denuncias th {
+    background: var(--bd-pessego);
+    color: var(--bd-marrom);
+    font-weight: 700;
+    text-align: left;
+    padding: 14px;
+}
+
+.bloqueios-denuncias td {
+    padding: 13px 14px;
+    border-top: 1px solid var(--bd-borda);
+}
+
+.bloqueios-denuncias tbody tr:hover {
+    background: #fbf6f1;
+}
+
+/* Etiquetas de situação */
+.bloqueios-denuncias .status-ativo {
+    background: #e2f3e9;
+    color: #216b45;
+}
+
+.bloqueios-denuncias .status-pendente {
+    background: #fff0d5;
+    color: #855713;
+}
+
+.bloqueios-denuncias .status-inativo {
+    background: #f8e5e3;
+    color: #a33730;
+}
+
+/* Celulares */
+@media (max-width: 768px) {
+    .bloqueios-denuncias .panel {
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .bloqueios-denuncias .table-wrap {
+        overflow-x: auto;
+    }
+}
+
+/* Botões de Bloqueios e Denúncias */
+.bloqueios-denuncias #newBlockButton,
+.bloqueios-denuncias #newReportButton {
+    background: #c95730;
+    color: #fffdfa;
+    border: 1px solid #e8b99f;
+    border-radius: 10px;
+    padding: 11px 16px;
+    cursor: pointer;
+    font-weight: 600;
+    transition:
+        background 0.2s,
+        transform 0.2s;
+}
+
+.bloqueios-denuncias #newBlockButton:hover,
+.bloqueios-denuncias #newReportButton:hover {
+    background: #ad4527;
+    transform: translateY(-1px);
+}
+
+/* Aviso dentro da seção */
+.bloqueios-denuncias .notice {
+    background: #fbede3;
+    color: #352219;
+    border: 1px solid #e8b99f;
+    border-radius: 10px;
+    padding: 13px 16px;
+    margin: 16px 0;
+}
+
+/* Identidade visual dos registros */
+.bloqueios-denuncias .bd-user {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 160px;
+}
+
+.bloqueios-denuncias .bd-user strong {
+    display: block;
+    color: #352219;
+}
+
+.bloqueios-denuncias .bd-user small {
+    display: block;
+    color: #8a786b;
+    margin-top: 4px;
+}
+
+.bloqueios-denuncias .bd-avatar {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    color: #c95730;
+    background: #fbede3;
+    border: 1px solid #e8b99f;
+}
+
+.bloqueios-denuncias .bd-id {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 7px;
+    background: #f8f5f1;
+    border: 1px solid #e6d8cc;
+    color: #352219;
+    font-size: 12px;
+}
+
+.bloqueios-denuncias .bd-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.bloqueios-denuncias .bd-status.ativo {
+    background: #e2f3e9;
+    color: #216b45;
+}
+
+.bloqueios-denuncias .bd-status.inativo {
+    background: #f8e5e3;
+    color: #a33730;
+}
+
+.bloqueios-denuncias .bd-action-info {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: #fbede3;
+    color: #c95730;
+}
+
+.bloqueios-denuncias .bd-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 28px 12px;
+    color: #8a786b;
+}
+
+.bloqueios-denuncias .bd-empty > i {
+    font-size: 25px;
+    color: #c95730;
+}
+
+.bloqueios-denuncias .bd-empty strong {
+    color: #352219;
+}
+
+.bloqueios-denuncias .bd-description {
+    min-width: 180px;
+    max-width: 360px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+}
+
+.bloqueios-denuncias .bd-status.pendente {
+    background: #fff0d5;
+    color: #855713;
+}
+
+/* Formulário de bloqueios e denúncias */
+.bd-dialog {
+    width: min(520px, calc(100% - 28px));
+    max-width: 520px;
+    padding: 0;
+    border: 1px solid #e8b99f;
+    border-radius: 18px;
+    background: #fffdfa;
+    color: #3c291f;
+    box-shadow: 0 24px 70px #35221930;
+}
+
+.bd-dialog::backdrop {
+    background: #24160fc0;
+    backdrop-filter: blur(3px);
+}
+
+.bd-form {
+    margin: 0;
+}
+
+.bd-form-header {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 22px;
+    border-bottom: 1px solid #e6d8cc;
+    background: #fbede3;
+}
+
+.bd-form-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    background: #c95730;
+    color: white;
+    font-size: 19px;
+}
+
+.bd-form-header h2 {
+    margin: 0;
+    color: #352219;
+    font-size: 20px;
+}
+
+.bd-form-header p {
+    margin: 5px 0 0;
+    color: #8a786b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.bd-dialog .bd-close {
+    margin-left: auto;
+    border: 0;
+    background: transparent;
+    color: #8a786b;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.bd-form-body {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 22px;
+}
+
+.bd-form-body label {
+    margin-top: 7px;
+    color: #352219;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.bd-form-body input,
+.bd-form-body textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px 13px;
+    border: 1px solid #e8b99f;
+    border-radius: 10px;
+    background: #fffdfa;
+    color: #3c291f;
+    font: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+.bd-form-body input:focus,
+.bd-form-body textarea:focus {
+    border-color: #c95730;
+    box-shadow: 0 0 0 3px #c957301a;
+}
+
+.bd-form-body textarea {
+    resize: vertical;
+}
+
+.bd-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 22px 22px;
+    border-top: 1px solid #e6d8cc;
+}
+
+.bd-dialog .bd-cancel,
+.bd-dialog .bd-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 15px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.bd-dialog .bd-cancel {
+    border: 1px solid #e6d8cc;
+    background: #fffdfa;
+    color: #352219;
+}
+
+.bd-dialog .bd-submit {
+    border: 1px solid #c95730;
+    background: #c95730;
+    color: white;
+}
+
+.bd-dialog .bd-submit:hover {
+    background: #ad4527;
+}
+
+.bd-dialog .bd-submit:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+@media (max-width: 480px) {
+    .bd-form-header,
+    .bd-form-body {
+        padding: 17px;
+    }
+
+    .bd-form-actions {
+        padding: 14px 17px 17px;
+    }
+
+    .bd-dialog .bd-cancel,
+    .bd-dialog .bd-submit {
+        padding: 10px;
+        font-size: 13px;
+    }
+}
+
+/* Cabeçalho com botões no topo */
+.bd-form-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.bd-form-title {
+    flex: 1;
+    min-width: 130px;
+}
+
+.bd-form-title h2 {
+    margin: 0;
+    font-size: 19px;
+}
+
+.bd-form-title p {
+    margin: 5px 0 0;
+    line-height: 1.4;
+}
+
+.bd-form-actions-top {
+    order: 3;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.bd-form-actions-top .bd-cancel,
+.bd-form-actions-top .bd-submit {
+    width: auto;
+    min-height: 38px;
+    padding: 9px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.bd-form-header .bd-close {
+    order: 4;
+    margin-left: 0;
+    flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+    .bd-form-header {
+        gap: 10px;
+        padding: 16px;
+    }
+
+    .bd-form-title {
+        flex-basis: calc(100% - 75px);
+    }
+
+    .bd-form-actions-top {
+        width: 100%;
+        justify-content: flex-end;
+        order: 5;
+        margin-left: 0;
+    }
+
+    .bd-form-actions-top .bd-cancel,
+    .bd-form-actions-top .bd-submit {
+        flex: 1;
+    }
+}
+
+
+.bloqueios-denuncias #blockedUserSearch {
+    width: 220px;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    flex: 0 1 700px;
+}
+
+@media (max-width: 768px) {
+    .bloqueios-denuncias #blockedUserSearch {
+        width: 100%;
+        flex: 1 1 100%;
+    }
+}
+
+/* Corrige o tamanho dos botões da seção */
+.bloqueios-denuncias #newBlockButton,
+.bloqueios-denuncias #newReportButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 150px;
+    min-height: 42px;
+    padding: 11px 16px;
+    white-space: nowrap;
+    overflow: visible;
+    line-height: 1.3;
+    font-size: 13px;
+    gap: 10px;
+}
+
+@media (max-width: 768px) {
+    .bloqueios-denuncias #newBlockButton,
+    .bloqueios-denuncias #newReportButton {
+        min-width: 0;
+    }
+
+    .bloqueios-denuncias #blockedUserSearch {
+        width: 100%;
+        flex: 1 1 100%;
+    }
+}

@@ -15,7 +15,6 @@ const state = {
     movements: [],
     requests: [],
 };
-
 const pageInfo = {
     inicio: [
         "Visão geral",
@@ -27,6 +26,10 @@ const pageInfo = {
         "Histórico de entradas, saídas e ajustes.",
     ],
     solicitacoes: ["Solicitações", "Pedidos relacionados ao seu setor."],
+    bloqueios: [
+        "Bloqueios e denúncias",
+        "Gerencie bloqueios e encaminhe ocorrências à Secretaria.",
+    ],
 };
 
 /* =====================================================
@@ -177,6 +180,10 @@ function openPage(page) {
     if (!pageInfo[page]) return;
 
     state.page = page;
+
+    if (page === "bloqueios") {
+        carregarBloqueiosDenuncias();
+    }
 
     document.querySelectorAll(".page").forEach((section) => {
         section.classList.add("hidden");
@@ -1181,11 +1188,201 @@ function iniciarEventos() {
 
         executarAcaoReserva(button.dataset.action, button.dataset.id);
     });
+
+    el("blockedUserSearch")?.addEventListener("input", renderBloqueios);
+
+    el("newBlockButton")?.addEventListener("click", () => {
+        abrirFormulario("bloqueio");
+    });
+
+    el("newReportButton")?.addEventListener("click", () => {
+        abrirFormulario("denuncia");
+    });
 }
 
 /* =====================================================
-   INICIALIZAÇÃO
+   BLOQUEIOS E DENÚNCIAS
 ===================================================== */
+
+state.bloqueios = [];
+state.denuncias = [];
+
+async function carregarBloqueiosDenuncias() {
+    try {
+        const response = await fetch(
+            `${API_BASE}/responsavel/bloqueios-denuncias`,
+            {
+                credentials: "include",
+                headers: { Accept: "application/json" },
+            },
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.sucesso) {
+            throw new Error(data.mensagem || "Erro ao carregar registros.");
+        }
+
+        state.bloqueios = data.bloqueios || [];
+        state.denuncias = data.denuncias || [];
+
+        renderBloqueios();
+        renderDenuncias();
+
+        setText(
+            "totalBloqueados",
+            state.bloqueios.filter(
+                (item) => String(item[9] || "").toUpperCase() === "ATIVO",
+            ).length,
+        );
+
+        setText("totalDenuncias", state.denuncias.length);
+    } catch (error) {
+        showNotice(
+            error.message || "Erro ao carregar bloqueios e denúncias.",
+            true,
+        );
+    }
+}
+
+function renderBloqueios() {
+    const tbody = el("blockRows");
+    if (!tbody) return;
+
+    const busca = normalizeText(el("blockedUserSearch")?.value || "");
+
+    const registros = state.bloqueios.filter((item) =>
+        normalizeText(
+            `${item[6] || ""} ${item[7] || ""} ${item[8] || ""}`,
+        ).includes(busca),
+    );
+
+    if (!registros.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty">
+                    <div class="bd-empty">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <strong>Nenhum bloqueio encontrado</strong>
+                        <span>Os registros aparecerão aqui quando existirem.</span>
+                    </div>
+                </td>
+            </tr>`;
+        return;
+    }
+
+    tbody.innerHTML = registros
+        .map((item) => {
+            const nome = escapeHTML(item[7] || "Usuário não identificado");
+            const id = escapeHTML(item[6] || "—");
+            const motivo = escapeHTML(item[8] || "Não informado");
+            const data = escapeHTML(formatDate(item[1]));
+            const status = String(item[9] || "Não informado");
+            const ativo = normalizeText(status) === "ativo";
+
+            return `
+            <tr>
+                <td>
+                    <div class="bd-user">
+                        <span class="bd-avatar">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <div>
+                            <strong>${nome}</strong>
+                            <small>Usuário do setor</small>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="bd-id">${id}</span></td>
+                <td>${motivo}</td>
+                <td>${data}</td>
+                <td>
+                    <span class="bd-status ${ativo ? "ativo" : "inativo"}">
+                        <i class="fa-solid ${ativo ? "fa-circle-check" : "fa-circle-minus"}"></i>
+                        ${escapeHTML(status)}
+                    </span>
+                </td>
+                <td>
+                    <span class="bd-action-info" title="Registro de bloqueio">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </span>
+                </td>
+            </tr>`;
+        })
+        .join("");
+}
+
+function renderDenuncias() {
+    const tbody = el("reportRows");
+    if (!tbody) return;
+
+    if (!state.denuncias.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty">
+                    <div class="bd-empty">
+                        <i class="fa-solid fa-flag"></i>
+                        <strong>Nenhuma denúncia registrada</strong>
+                        <span>As denúncias registradas aparecerão aqui.</span>
+                    </div>
+                </td>
+            </tr>`;
+        return;
+    }
+
+    tbody.innerHTML = state.denuncias
+        .map((item) => {
+            const data = escapeHTML(formatDate(item[1]));
+            const nome = escapeHTML(item[7] || "Não identificado");
+            const motivo = escapeHTML(item[8] || "Não informado");
+            const descricao = escapeHTML(item[9] || "Sem descrição");
+            const status = escapeHTML(item[10] || "Pendente");
+            const statusNormalizado = normalizeText(status);
+
+            let classe = "pendente";
+            let icone = "fa-clock";
+
+            if (
+                statusNormalizado.includes("resolvida") ||
+                statusNormalizado.includes("concluida") ||
+                statusNormalizado.includes("aprovada")
+            ) {
+                classe = "ativo";
+                icone = "fa-circle-check";
+            } else if (
+                statusNormalizado.includes("recusada") ||
+                statusNormalizado.includes("cancelada")
+            ) {
+                classe = "inativo";
+                icone = "fa-circle-xmark";
+            }
+
+            return `
+            <tr>
+                <td>${data}</td>
+                <td>
+                    <div class="bd-user">
+                        <span class="bd-avatar">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <div>
+                            <strong>${nome}</strong>
+                            <small>Usuário denunciado</small>
+                        </div>
+                    </div>
+                </td>
+                <td>${motivo}</td>
+                <td class="bd-description">${descricao}</td>
+                <td>
+                    <span class="bd-status ${classe}">
+                        <i class="fa-solid ${icone}"></i>
+                        ${status}
+                    </span>
+                </td>
+            </tr>`;
+        })
+        .join("");
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     iniciarEventos();
@@ -1193,6 +1390,10 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(updateClock, 1000);
     carregarPainel();
 });
+
+/* =====================================================
+   INICIALIZAÇÃO
+===================================================== */
 
 function atualizarTituloSetor(setor) {
     const titulo = document.getElementById("heroSector");
@@ -1220,4 +1421,136 @@ function atualizarTituloSetor(setor) {
             ? `PAINEL ${nome.toLocaleUpperCase("pt-BR")}`
             : "PAINEL DO SETOR";
     }
+}
+
+function abrirFormulario(tipo) {
+    const bloqueio = tipo === "bloqueio";
+
+    const dialog = document.createElement("dialog");
+    dialog.className = "bd-dialog";
+
+    dialog.innerHTML = `
+    <form id="registroForm" class="bd-form">
+        <div class="bd-form-header">
+            <span class="bd-form-icon">
+                <i class="fa-solid ${bloqueio ? "fa-shield-halved" : "fa-flag"}"></i>
+            </span>
+
+            <div class="bd-form-title">
+                <h2>${bloqueio ? "Bloquear usuário" : "Registrar denúncia"}</h2>
+                <p>${
+                    bloqueio
+                        ? "Informe os dados para registrar o bloqueio."
+                        : "Descreva a ocorrência para registrar a denúncia."
+                }</p>
+            </div>
+
+            <button type="button" id="cancelarForm" class="bd-close"
+                    aria-label="Fechar">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="bd-form-body">
+            <label for="bdUsuarioID">ID do usuário</label>
+            <input id="bdUsuarioID" name="usuarioID" required
+                   placeholder="Ex.: USU-0001" autocomplete="off">
+
+            <label for="bdMotivo">Motivo</label>
+            <input id="bdMotivo" name="motivo" required
+                   minlength="${bloqueio ? 5 : 3}"
+                   placeholder="Informe o motivo">
+
+            ${
+                bloqueio
+                    ? ""
+                    : `
+                <label for="bdDescricao">Descrição da ocorrência</label>
+                <textarea id="bdDescricao" name="descricao"
+                          required minlength="10" rows="4"
+                          placeholder="Descreva o que aconteceu..."></textarea>
+            `
+            }
+        </div>
+
+        <div class="bd-form-actions bd-form-actions-top">
+            <button type="button" id="cancelarFormSecundario" class="bd-cancel">
+                Cancelar
+            </button>
+            <button type="submit" class="bd-submit">
+                <i class="fa-solid fa-paper-plane"></i>
+                Enviar registro
+            </button>
+        </div>
+    </form>
+`;
+
+    document.body.appendChild(dialog);
+    dialog.showModal();
+
+    const fechar = () => dialog.close();
+
+    dialog.querySelector("#cancelarForm").onclick = fechar;
+    dialog.querySelector("#cancelarFormSecundario").onclick = fechar;
+    dialog.addEventListener("close", () => dialog.remove());
+
+    dialog
+        .querySelector("#registroForm")
+        .addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const form = event.currentTarget;
+            const botao = form.querySelector('[type="submit"]');
+            const campos = new FormData(form);
+
+            const dados = bloqueio
+                ? {
+                      usuarioBloqueadoID: campos.get("usuarioID").trim(),
+                      motivo: campos.get("motivo").trim(),
+                  }
+                : {
+                      denunciadoID: campos.get("usuarioID").trim(),
+                      motivo: campos.get("motivo").trim(),
+                      descricao: campos.get("descricao").trim(),
+                  };
+
+            botao.disabled = true;
+            botao.innerHTML =
+                '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/responsavel/${bloqueio ? "bloqueios" : "denuncias"}`,
+                    {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                        },
+                        body: JSON.stringify(dados),
+                    },
+                );
+
+                const resultado = await response.json();
+
+                if (!response.ok || !resultado.sucesso) {
+                    throw new Error(
+                        resultado.mensagem || "Não foi possível salvar.",
+                    );
+                }
+
+                dialog.close();
+                showNotice(resultado.mensagem || "Registro salvo com sucesso.");
+                await carregarBloqueiosDenuncias();
+            } catch (error) {
+                showNotice(error.message || "Erro ao enviar os dados.", true);
+            } finally {
+                if (botao.isConnected) {
+                    botao.disabled = false;
+                    botao.innerHTML =
+                        '<i class="fa-solid fa-paper-plane"></i> Enviar registro';
+                }
+            }
+        });
 }

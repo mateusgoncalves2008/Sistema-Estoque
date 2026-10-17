@@ -156,7 +156,10 @@ async function buscarLocal(localID) {
     return null;
 }
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 /**
  * Verifica bloqueio ativo do usuário no setor correspondente ao local.
  */
@@ -174,6 +177,7 @@ async function verificarBloqueioSetor(usuarioID, local) {
 
     const bloqueios = bloqueiosResposta.data.values || [];
     const setores = setoresResposta.data.values || [];
+<<<<<<< Updated upstream
     const setor = setores.slice(1).find((linha) =>
         normalizar(linha[1]) === normalizar(local.nome)
     );
@@ -190,6 +194,30 @@ async function verificarBloqueioSetor(usuarioID, local) {
         setorNome: String(bloqueio[5] || setor[1] || "").trim(),
         motivo: String(bloqueio[8] || "").trim(),
     } : null;
+=======
+    const setor = setores
+        .slice(1)
+        .find((linha) => normalizar(linha[1]) === normalizar(local.nome));
+
+    if (!setor) return null;
+
+    const bloqueio = bloqueios
+        .slice(1)
+        .find(
+            (linha) =>
+                String(linha[4] || "").trim() ===
+                    String(setor[0] || "").trim() &&
+                String(linha[6] || "").trim() === String(usuarioID).trim() &&
+                normalizar(linha[9]) === "ATIVO",
+        );
+
+    return bloqueio
+        ? {
+              setorNome: String(bloqueio[5] || setor[1] || "").trim(),
+              motivo: String(bloqueio[8] || "").trim(),
+          }
+        : null;
+>>>>>>> Stashed changes
 }
 
 // ============================================================
