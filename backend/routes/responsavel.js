@@ -810,7 +810,7 @@ router.post("/responsavel/itens", exigirResponsavel, async (req, res) => {
   const produtoID=gerarIDSequencial(produtos,"PRD-"), estoqueID=gerarIDSequencial(estoques,"EST-"), codigo=gerarCodigoProduto(produtos,local[1]);
   const produto=[produtoID,codigo,nome,"",categoriaID,subcategoriaID,estoqueMinimo,estado,statusProduto,dataAtual(),observacao];
   const statusLocal=statusProduto==="ATIVO"?"ATIVO":"INATIVO";
-  const estoque=[estoqueID,produtoID,texto(vinculo.local.id),quantidade,0,statusLocal==="ATIVO"?quantidade:0,0,new Date().toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"}),statusLocal];
+  const estoque=[estoqueID,produtoID,texto(vinculo.local.id),quantidade,0,statusLocal==="ATIVO"?quantidade:0,0,new Date().toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"}),statusLocal];
   await sheets.spreadsheets.values.batchUpdate({spreadsheetId:SPREADSHEET_ID,requestBody:{valueInputOption:"USER_ENTERED",data:[{range:"02_PRODUTOS!A"+(produtos.length+1)+":K"+(produtos.length+1),values:[produto]},{range:"06_ESTOQUE_LOCAIS!A"+(estoques.length+1)+":I"+(estoques.length+1),values:[estoque]}]}});
   return res.status(201).json({sucesso:true,mensagem:"Item cadastrado e vinculado ao estoque do seu setor.",produto:{produtoID,codigo,nome},estoque:{estoqueID,localID:texto(vinculo.local.id),quantidade,reservado:0,disponivel:statusLocal==="ATIVO"?quantidade:0,indisponivel:0,statusLocal}});
  } catch(erro) { console.error("Erro ao cadastrar item do responsável:",erro); return res.status(erro.status||500).json({sucesso:false,mensagem:erro.status?erro.message:"Não foi possível cadastrar o item nas abas 02_PRODUTOS e 06_ESTOQUE_LOCAIS."}); }
