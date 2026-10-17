@@ -261,7 +261,7 @@ async function carregarDashboard(vinculo) {
 
 function gerarMovimentacaoID(linhas) {
     const maior = linhas.slice(1).reduce((max, linha) => {
-        const id = Number(texto(linha[0]).match(/^MOV-(\\d+)$/i)?.[1] || 0);
+        const id = Number(texto(linha[0]).match(/^MOV-(\d+)$/i)?.[1] || 0);
         return Math.max(max, id);
     }, 0);
     return `MOV-${String(maior + 1).padStart(5, "0")}`;
