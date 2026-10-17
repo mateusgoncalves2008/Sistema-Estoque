@@ -444,117 +444,67 @@ async function salvarNovoItem(event) {
 ===================================================== */
 
 function renderStock(filter = "") {
-    const tbody = el("stockRows");
-    if (!tbody) return;
+    const container = el("stockRows");
+    if (!container) return;
 
     const categoriaSelecionada = el("stockCategoryFilter")?.value || "";
-
     const statusSelecionado = el("stockStatusFilter")?.value || "";
-
-    const categorias = [
-        ...new Set(
-            state.stock
-                .map((item) => getValue(item, ["categoria", "Categoria"], ""))
-                .filter(Boolean),
-        ),
-    ];
-
-    const status = [
-        ...new Set(
-            state.stock
-                .map((item) => getValue(item, ["status", "Status"], ""))
-                .filter(Boolean),
-        ),
-    ];
+    const categorias = [...new Set(state.stock.map(item => getValue(item, ["categoria", "Categoria"], "")).filter(Boolean))];
+    const status = [...new Set(state.stock.map(item => getValue(item, ["statusLocal", "StatusLocal", "status", "Status"], "ATIVO")).filter(Boolean))];
 
     const preencherFiltro = (id, valores, selecionado, titulo) => {
         const select = el(id);
         if (!select) return;
-
-        select.innerHTML =
-            `<option value="">${titulo}</option>` +
-            valores
-                .map(
-                    (valor) =>
-                        `<option value="${escapeHTML(valor)}">${escapeHTML(valor)}</option>`,
-                )
-                .join("");
-
+        select.innerHTML = `<option value="">${titulo}</option>` + valores.map(valor => `<option value="${escapeHTML(valor)}">${escapeHTML(valor)}</option>`).join("");
         select.value = selecionado;
     };
-
-    preencherFiltro(
-        "stockCategoryFilter",
-        categorias,
-        categoriaSelecionada,
-        "Todas as categorias",
-    );
-
-    preencherFiltro(
-        "stockStatusFilter",
-        status,
-        statusSelecionado,
-        "Todos os status",
-    );
+    preencherFiltro("stockCategoryFilter", categorias, categoriaSelecionada, "Todas as categorias");
+    preencherFiltro("stockStatusFilter", status, statusSelecionado, "Todos os status");
 
     const busca = normalizeText(filter);
-
-    const rows = state.stock.filter((item) => {
-        const codigo = normalizeText(
-            getValue(item, ["produtoID", "ProdutoID", "estoqueID"], ""),
-        );
-
-        const produto = normalizeText(
-            getValue(item, ["produto", "Produto", "nome", "Nome"], ""),
-        );
-
+    const rows = state.stock.filter(item => {
+        const codigo = normalizeText(getValue(item, ["codigo", "Codigo", "produtoID", "ProdutoID", "estoqueID"], ""));
+        const produto = normalizeText(getValue(item, ["produto", "Produto", "nome", "Nome", "nomeProduto"], ""));
         const categoria = getValue(item, ["categoria", "Categoria"], "");
-
-        const situacao = getValue(item, ["status", "Status"], "");
-
-        const correspondeBusca =
-            !busca ||
-            codigo.includes(busca) ||
-            produto.includes(busca) ||
-            normalizeText(categoria).includes(busca);
-
-        const correspondeCategoria =
-            !categoriaSelecionada || categoria === categoriaSelecionada;
-
-        const correspondeStatus =
-            !statusSelecionado || situacao === statusSelecionado;
-
-        return correspondeBusca && correspondeCategoria && correspondeStatus;
+        const situacao = getValue(item, ["statusLocal", "StatusLocal", "status", "Status"], "ATIVO");
+        return (!busca || codigo.includes(busca) || produto.includes(busca) || normalizeText(categoria).includes(busca))
+            && (!categoriaSelecionada || categoria === categoriaSelecionada)
+            && (!statusSelecionado || situacao === statusSelecionado);
     });
 
     if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty">Nenhum item encontrado.</td></tr>`;
+        container.innerHTML = '<div class="stock-empty"><i class="fa-solid fa-box-open"></i><strong>Nenhum item encontrado</strong><span>Tente alterar a busca ou os filtros.</span></div>';
         return;
     }
 
-    tbody.innerHTML = rows
-        .map(
-            (item) => `
-        <tr>
-            <td>${escapeHTML(getValue(item, ["produtoID", "ProdutoID", "codigo", "Codigo", "id"]))}</td>
-            <td>${escapeHTML(getValue(item, ["produto", "Produto", "nome", "Nome", "nomeProduto"]))}</td>
-            <td>${escapeHTML(getValue(item, ["categoria", "Categoria"]))}</td>
-            <td>${escapeHTML(getValue(item, ["quantidade", "Quantidade", "total"]))}</td>
-            <td>${escapeHTML(getValue(item, ["disponivel", "Disponivel", "quantidadeDisponivel"]))}</td>
-            <td>${statusBadge(getValue(item, ["statusLocal", "StatusLocal", "status", "Status"], "ATIVO"))}</td>
-            <td class="stock-actions">
-                ${normalizeText(getValue(item, ["statusLocal", "StatusLocal", "status", "Status"], "ATIVO")) === "inativo"
-                    ? '<span class="muted">Item inativo</span>'
-                    : `
-                        <button type="button" class="text-btn" data-stock-action="entrada" data-id="${escapeHTML(getValue(item, ["estoqueID", "EstoqueID"], ""))}">Entrada</button>
-                        <button type="button" class="text-btn" data-stock-action="saida" data-id="${escapeHTML(getValue(item, ["estoqueID", "EstoqueID"], ""))}">Saída</button>
-                        <button type="button" class="text-btn danger" data-stock-action="desativar" data-id="${escapeHTML(getValue(item, ["estoqueID", "EstoqueID"], ""))}">Desativar</button>
-                    `}
-            </td>
-        </tr>
-    `,
-        )
-        .join("");
+    container.innerHTML = rows.map(item => {
+        const nome = getValue(item, ["produto", "Produto", "nome", "Nome", "nomeProduto"], "Item sem nome");
+        const codigo = getValue(item, ["codigo", "Codigo", "produtoID", "ProdutoID", "estoqueID"], "—");
+        const total = numberValue(getValue(item, ["quantidade", "Quantidade", "total"], 0));
+        const disponivel = numberValue(getValue(item, ["disponivel", "Disponivel", "quantidadeDisponivel"], 0));
+        const localStatus = String(getValue(item, ["statusLocal", "StatusLocal", "status", "Status"], "ATIVO"));
+        const inativo = normalizeText(localStatus) === "inativo";
+        const estoqueId = escapeHTML(getValue(item, ["estoqueID", "EstoqueID"], ""));
+        return `
+        <article class="stock-item-card ${inativo ? "is-inactive" : ""}">
+            <div class="stock-card-main">
+                <div class="stock-card-icon"><i class="fa-solid fa-box"></i></div>
+                <div class="stock-card-info">
+                    <div class="stock-card-title-row"><h3>${escapeHTML(nome)}</h3><span class="stock-state ${inativo ? "inactive" : "active"}"><span></span>${inativo ? "Inativo" : "Ativo"}</span></div>
+                    <p class="stock-code"><i class="fa-solid fa-barcode"></i> Código: <strong>${escapeHTML(codigo)}</strong></p>
+                    <div class="stock-card-metrics"><span><i class="fa-solid fa-cubes-stacked"></i> Total: <strong>${formatNumber(total)}</strong></span><span class="stock-metric-available"><i class="fa-solid fa-circle-check"></i> Disponíveis: <strong>${formatNumber(disponivel)}</strong></span></div>
+                    <div class="stock-card-category"><i class="fa-solid fa-tag"></i> ${escapeHTML(getValue(item, ["categoria", "Categoria"], "Sem categoria"))}</div>
+                </div>
+            </div>
+            <div class="stock-card-actions">
+                ${inativo ? '<span class="stock-inactive-note"><i class="fa-solid fa-ban"></i> Item desativado neste setor</span>' : `
+                    <button type="button" class="stock-action increase" data-stock-action="entrada" data-id="${estoqueId}"><i class="fa-solid fa-plus"></i><span>Aumentar</span></button>
+                    <button type="button" class="stock-action decrease" data-stock-action="saida" data-id="${estoqueId}"><i class="fa-solid fa-minus"></i><span>Diminuir</span></button>
+                    <button type="button" class="stock-action deactivate" data-stock-action="desativar" data-id="${estoqueId}"><i class="fa-solid fa-ban"></i><span>Desativar</span></button>
+                `}
+            </div>
+        </article>`;
+    }).join("");
 }
 
 /* =====================================================
