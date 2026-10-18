@@ -922,9 +922,9 @@ router.post("/secretaria/professores/cadastrar", async (req, res) => {
             const match = texto(linha[0]).match(/^USR-(\d+)$/);
             return match ? Number(match[1]) : 0;
         });
-        const usuarioID = \`USR-\${String(Math.max(0, ...ids) + 1).padStart(5, "0")}\`;
+        const usuarioID = `USR-${String(Math.max(0, ...ids) + 1).padStart(5, "0")}`;
         const salt = crypto.randomBytes(16).toString("hex");
-        const senhaHash = crypto.createHash("sha256").update(\`\${salt}:\${senha}\`).digest("hex");
+        const senhaHash = crypto.createHash("sha256").update(`${salt}:${senha}`).digest("hex");
         const dataCadastro = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
         await sheets.spreadsheets.values.append({
@@ -937,7 +937,7 @@ router.post("/secretaria/professores/cadastrar", async (req, res) => {
 
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
-            range: \`17_CADASTROS_AUTORIZADOS!D\${numeroLinhaAutorizacao}:J\${numeroLinhaAutorizacao}\`,
+            range: `17_CADASTROS_AUTORIZADOS!D${numeroLinhaAutorizacao}:J${numeroLinhaAutorizacao}`,
             valueInputOption: "RAW",
             requestBody: { values: [[usuarioID, nome, "", "", "", "", idade, "CADASTRADO"]] },
         });
