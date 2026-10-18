@@ -157,11 +157,26 @@ router.post("/login", async (req, res) => {
 router.get("/aluno/perfil/:usuarioID", async (req, res) => {
     try {
         const { usuarioID } = req.params;
+        const sessao = req.session?.usuario;
+
+        if (!sessao) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: "Faça login para consultar seu perfil.",
+            });
+        }
 
         if (!usuarioID) {
             return res.status(400).json({
                 sucesso: false,
                 mensagem: "UsuarioID não informado.",
+            });
+        }
+
+        if (String(sessao.id || "").trim() !== String(usuarioID).trim()) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Você só pode consultar o próprio perfil.",
             });
         }
 
@@ -304,11 +319,26 @@ router.get("/aluno/perfil/:usuarioID", async (req, res) => {
 router.get("/professor/perfil/:usuarioID", async (req, res) => {
     try {
         const { usuarioID } = req.params;
+        const sessao = req.session?.usuario;
+
+        if (!sessao) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: "Faça login para consultar seu perfil.",
+            });
+        }
 
         if (!usuarioID) {
             return res.status(400).json({
                 sucesso: false,
                 mensagem: "UsuarioID não informado.",
+            });
+        }
+
+        if (String(sessao.id || "").trim() !== String(usuarioID).trim()) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Você só pode consultar o próprio perfil.",
             });
         }
 
