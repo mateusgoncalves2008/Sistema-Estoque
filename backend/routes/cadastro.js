@@ -49,17 +49,12 @@ function gerarHashSenha(senha, salt) {
 // ============================================================
 
 router.post("/verificar-matricula", async (req, res) => {
-    console.log(">>> REQUISIÇÃO DE VERIFICAÇÃO RECEBIDA <<<");
 
     try {
-        console.log("1. Lendo dados enviados pelo navegador...");
 
         const { matricula } = req.body;
 
-        console.log("2. Matrícula recebida:", matricula);
-
         if (!matricula) {
-            console.log("3. Matrícula não informada.");
 
             return res.status(400).json({
                 sucesso: false,
@@ -69,32 +64,18 @@ router.post("/verificar-matricula", async (req, res) => {
 
         const identificador = String(matricula).trim();
 
-        console.log("4. Identificador normalizado:", identificador);
-        console.log("5. SPREADSHEET_ID existe?", !!SPREADSHEET_ID);
-
-        console.log("6. Consultando Google Sheets...");
-
         const resposta = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
             range: "17_CADASTROS_AUTORIZADOS!A2:J",
         });
 
-        console.log("7. Google Sheets respondeu.");
-
         const autorizacoes = resposta.data.values || [];
-
-        console.log(
-            "8. Quantidade de registros encontrados:",
-            autorizacoes.length,
-        );
 
         const registro = autorizacoes.find((linha) => {
             const identificadorPlanilha = String(linha[2] || "").trim();
 
             return identificadorPlanilha === identificador;
         });
-
-        console.log("9. Registro encontrado?", !!registro);
 
         if (!registro) {
             const ehMASP = /^\d{7}-\d$/.test(identificador);
@@ -120,17 +101,9 @@ router.post("/verificar-matricula", async (req, res) => {
             status,
         ] = registro;
 
-        console.log("11. Dados encontrados:", {
-            autorizacaoID,
-            tipo,
-            identificadorEncontrado,
-            status,
-        });
-
         const statusNormalizado = String(status || "").trim().toUpperCase();
 
         if (statusNormalizado === "CADASTRADO") {
-            console.log("12. Matrícula já cadastrada.");
 
             return res.status(409).json({
                 sucesso: false,
@@ -139,15 +112,12 @@ router.post("/verificar-matricula", async (req, res) => {
         }
 
         if (statusNormalizado !== "PENDENTE") {
-            console.log("13. Status não permitido:", status);
 
             return res.status(403).json({
                 sucesso: false,
                 mensagem: "Esta matrícula não está disponível para cadastro.",
             });
         }
-
-        console.log("14. Matrícula autorizada.");
 
         const respostaFinal = {
             sucesso: true,
@@ -165,8 +135,6 @@ router.post("/verificar-matricula", async (req, res) => {
                 status: status || "",
             },
         };
-
-        console.log("15. Enviando resposta para o navegador.");
 
         return res.json(respostaFinal);
     } catch (erro) {
@@ -197,18 +165,6 @@ router.post("/cadastro", async (req, res) => {
             senha,
             tipo,
         } = req.body;
-
-        console.log(">>> INICIANDO CADASTRO <<<");
-        console.log("Dados recebidos:", {
-            matricula,
-            nome,
-            ano,
-            turma,
-            turno,
-            idade,
-            email,
-            tipo,
-        });
 
         // ==================================================
         // VALIDAÇÕES BÁSICAS
@@ -422,13 +378,6 @@ router.post("/cadastro", async (req, res) => {
             "", // K - UltimoLogin
         ];
 
-        console.log("Nova linha 01_USUARIOS:", {
-            usuarioID,
-            nomeNormalizado,
-            emailNormalizado,
-            tipoNormalizado,
-        });
-
         // ==================================================
         // GRAVAR NA 01_USUARIOS
         // ==================================================
@@ -442,8 +391,6 @@ router.post("/cadastro", async (req, res) => {
                 values: [novaLinha],
             },
         });
-
-        console.log("Usuário criado:", usuarioID);
 
         // ==================================================
         // ATUALIZAR 17_CADASTROS_AUTORIZADOS
@@ -477,14 +424,6 @@ router.post("/cadastro", async (req, res) => {
             },
         });
 
-        console.log(
-            "Autorização atualizada:",
-            autorizacaoID,
-            "→",
-            usuarioID,
-            "→ CADASTRADO",
-        );
-
         // ==================================================
         // RESPOSTA
         // ==================================================
@@ -510,9 +449,6 @@ router.post("/cadastro", async (req, res) => {
         });
     }
 });
-
-console.log(">>> CADASTRO.JS FOI CARREGADO <<<");
-console.log(">>> ROTA /verificar-matricula REGISTRADA <<<");
 
 /* =========================================================
    AUTORIZAR RESPONSÁVEL — SOMENTE ADM AUTENTICADO
@@ -671,7 +607,6 @@ router.post("/autorizar-responsavel", somenteADM, async (req, res) => {
    CRIAR CONTA DO RESPONSÁVEL
    POST /api/cadastro-responsavel
 ========================================================= */
-
 
 async function garantirAbaPerfilResponsaveis() {
     const nomeAba = "23_PERFIS_RESPONSAVEIS";
@@ -905,7 +840,6 @@ router.post("/cadastro-responsavel", somenteADM, async (req, res) => {
         });
     }
 });
-
 
 router.post("/cadastro-secretaria", somenteADM, async (req, res) => {
     try {
