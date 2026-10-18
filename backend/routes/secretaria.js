@@ -196,15 +196,16 @@ function usuarioTemPermissao(usuario) {
     const tipo = normalizar(usuario.tipoUsuario);
     const perfil = normalizar(usuario.perfil);
 
-    const perfisPermitidos = [
-        "funcionario",
-        "secretaria",
-        "adm",
-        "admin",
-        "administrador",
-    ];
+    const perfisAdministrativos = ["adm", "admin", "administrador"];
 
-    return perfisPermitidos.includes(tipo) || perfisPermitidos.includes(perfil);
+    // Um funcionário comum não recebe acesso administrativo só pelo tipo.
+    // Acesso à Secretaria exige perfil explícito de Secretaria ou perfil/tipo ADM.
+    return (
+        tipo === "secretaria" ||
+        perfil === "secretaria" ||
+        perfisAdministrativos.includes(tipo) ||
+        perfisAdministrativos.includes(perfil)
+    );
 }
 
 function exigirSecretaria(req, res, next) {
