@@ -1208,15 +1208,22 @@ const R = {
             ];
         });
 
-        $("#ch-prof").innerHTML = bars(
-            dados.map((x) => x[3]),
-            dados.map((x) => x[0].split(" ")[0]),
-        );
+        const contador = $("#prof-total");
+        if (contador) {
+            contador.textContent = `${dados.length} ${dados.length === 1 ? "professor" : "professores"}`;
+        }
 
-        $("#t-prof").innerHTML = T(
-            ["Professor", "MASP", "E-mail", "Aulas semanais"],
-            dados,
-        );
+        $("#t-prof").innerHTML = dados.length
+            ? T(
+                ["Professor", "MASP", "E-mail", "Aulas semanais"],
+                dados.map((linha) => [
+                    `<strong class="professor-nome">${escHtml(linha[0])}</strong>`,
+                    escHtml(linha[1]),
+                    `<span class="professor-email">${escHtml(linha[2])}</span>`,
+                    `<span class="professor-aulas">${linha[3]} ${linha[3] === 1 ? "aula" : "aulas"}</span>`,
+                ]),
+            )
+            : `<div class="professores-vazio"><strong>Nenhum professor encontrado</strong><p>Cadastre um professor para que ele apareça nesta lista.</p></div>`;
     },
 
     usuarios() {
