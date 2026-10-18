@@ -115,6 +115,21 @@ app.use(
     }),
 );
 
+// Limita tentativas de verificação/cadastro para reduzir enumeração e abuso.
+const cadastroLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 20,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: {
+        sucesso: false,
+        mensagem: "Muitas tentativas. Aguarde 15 minutos e tente novamente.",
+    },
+});
+
+app.use("/api/verificar-matricula", cadastroLimiter);
+app.use("/api/cadastro", cadastroLimiter);
+
 // ============================================================
 // ROTAS
 // ============================================================
