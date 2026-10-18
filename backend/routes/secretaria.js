@@ -1017,7 +1017,7 @@ router.post("/secretaria/professores/cadastrar", async (req, res) => {
             spreadsheetId: SPREADSHEET_ID,
             range: `17_CADASTROS_AUTORIZADOS!D${numeroLinhaAutorizacao}:J${numeroLinhaAutorizacao}`,
             valueInputOption: "RAW",
-            requestBody: { values: [[usuarioID, nome, "", "", "", "", idade, "CADASTRADO"]] },
+            requestBody: { values: [[usuarioID, nome, "", "", "", idade, "CADASTRADO"]] },
         });
 
         limparCache();
