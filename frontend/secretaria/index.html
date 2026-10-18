@@ -318,7 +318,7 @@
                                 <h2>Gerenciar turmas</h2>
                                 <p class="sub">Cadastre uma turma e defina sua série, turno e limite máximo de alunos.</p>
                             </div>
-                            <button class="btn" type="button" onclick="abrirModalTurma()">
+                            <button class="btn" type="button" data-acao="abrir-modal-turma">
                                 Abrir turma
                             </button>
                         </div>
@@ -893,7 +893,7 @@
         </div>
 
         <div id="modal-turma" class="modal-turma" aria-hidden="true">
-            <div class="modal-turma__fundo" onclick="fecharModalTurma()"></div>
+            <div class="modal-turma__fundo" data-acao="fechar-modal-turma"></div>
             <section class="modal-turma__painel" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-turma">
                 <div class="modal-turma__cabecalho">
                     <div>
@@ -901,10 +901,10 @@
                         <h2 id="titulo-modal-turma">Abrir nova turma</h2>
                         <p class="sub">Informe os dados da turma. O ID será gerado automaticamente.</p>
                     </div>
-                    <button class="modal-turma__fechar" type="button" aria-label="Fechar" onclick="fecharModalTurma()">×</button>
+                    <button class="modal-turma__fechar" type="button" aria-label="Fechar" data-acao="fechar-modal-turma">×</button>
                 </div>
 
-                <form id="form-turma" class="modal-turma__form" onsubmit="event.preventDefault(); addT();">
+                <form id="form-turma" class="modal-turma__form" >
                     <div>
                         <label for="ts">Série</label>
                         <select id="ts" required></select>
@@ -926,7 +926,7 @@
                         <small>Quantidade máxima de alunos permitida nesta turma.</small>
                     </div>
                     <div class="modal-turma__acoes">
-                        <button class="btn btn-secundario" type="button" onclick="fecharModalTurma()">Cancelar</button>
+                        <button class="btn btn-secundario" type="button" data-acao="fechar-modal-turma">Cancelar</button>
                         <button class="btn" id="btn-criar-turma" type="submit">Criar</button>
                     </div>
                 </form>
