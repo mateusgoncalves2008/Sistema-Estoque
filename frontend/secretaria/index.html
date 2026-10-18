@@ -364,8 +364,9 @@
                                         <input id="pe" type="email" autocomplete="email" placeholder="professor@escola.com" />
                                     </div>
                                     <div>
-                                        <label for="ps">Senha provisória</label>
-                                        <input id="ps" type="password" autocomplete="new-password" placeholder="Crie uma senha provisória" />
+                                        <label for="ps">Senha do professor</label>
+                                        <input id="ps" type="password" autocomplete="new-password" placeholder="Defina a senha de acesso do professor" />
+                                        <small class="professores-ajuda">Essa será a senha de acesso definida para o professor.</small>
                                     </div>
                                     <div>
                                         <label for="pm">MASP</label>
@@ -388,8 +389,13 @@
 
                                 <div class="form professores-form">
                                     <div>
-                                        <label for="pp">Professor</label>
-                                        <select id="pp"><option value="">Selecione um professor</option></select>
+                                        <label for="busca-masp">Pesquisar professor pelo MASP</label>
+                                        <div class="professor-masp-busca">
+                                            <input id="busca-masp" type="search" inputmode="text" autocomplete="off" placeholder="Digite o MASP do professor" aria-describedby="masp-status" />
+                                            <div id="masp-resultados" class="professor-masp-resultados" role="listbox" aria-label="Professores encontrados"></div>
+                                        </div>
+                                        <small id="masp-status" class="professores-ajuda" aria-live="polite">Digite o MASP para localizar o professor.</small>
+                                        <select id="pp" class="professor-select-oculto" aria-hidden="true" tabindex="-1"><option value="">Selecione um professor</option></select>
                                     </div>
                                     <div>
                                         <label for="pt">Turma</label>
