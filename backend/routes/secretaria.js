@@ -459,10 +459,10 @@ router.post("/secretaria/usuarios", async (req, res) => {
             });
         }
 
-        if (senha.length < 12 || senha.length > 128) {
+        if (senha.length < 6 || senha.length > 128) {
             return res.status(400).json({
                 sucesso: false,
-                erro: "A senha deve ter entre 12 e 128 caracteres.",
+                erro: "A senha deve ter entre 6 e 128 caracteres.",
             });
         }
 
