@@ -553,7 +553,9 @@ function renderizarListaTurmas() {
     area.innerHTML=lista.map(t=>{
         const cap=Number(t.cap||0), al=Number(t.al||0), pc=cap?Math.min(100,Math.round(al/cap*100)):0;
         const aberta=String(t.status||"").toUpperCase()==="ABERTO";
-        const alerta=cap>0&&pc<=10?"critica":cap>0&&pc<=20?"atencao":"";
+        const limiteVermelho=Math.floor(cap*0.30);
+        const limiteAmarelo=Math.round(cap*0.50);
+        const alerta=cap>0&&al<=limiteVermelho?"critica":cap>0&&al<=limiteAmarelo?"atencao":"";
         const textoOcupacao=alerta==="critica"?"Risco de fechamento":alerta==="atencao"?"Poucos alunos matriculados":"Ocupação";
         return `<button class="card turma-card ${alerta ? "turma-card--" + alerta : ""}" type="button" data-turma-id="${escHtml(t.id)}">
             <div class="turma-card__topo"><span class="turma-card__icone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V8l9-5 9 5v13M8 21v-7h8v7M7 10h.01M12 10h.01M17 10h.01"></path></svg></span><span class="turma-status ${aberta?"aberta":"fechada"}">${aberta?"Aberta":"Fechada"}</span></div>
