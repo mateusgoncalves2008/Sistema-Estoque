@@ -6,6 +6,19 @@ const sheets = require("../database/googleSheets");
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
+// Padroniza Ano e Turma para manter os dados consistentes na planilha.
+function normalizarAnoEscolar(valor) {
+    const texto = String(valor || "").trim();
+    const numero = texto.match(/^(\d+)\s*(?:[º°o]?\s*ano)?$/i);
+    return numero ? `${numero[1]}° Ano` : texto;
+}
+
+function normalizarNomeTurma(valor) {
+    const texto = String(valor || "").trim();
+    const numero = texto.match(/^(?:turma\s*)?(\d+)$/i);
+    return numero ? `Turma ${numero[1]}` : texto;
+}
+
 // ============================================================
 // GERAR SALT
 // ============================================================
@@ -213,6 +226,9 @@ router.post("/cadastro", async (req, res) => {
             .trim()
             .toUpperCase();
 
+        const anoNormalizado = normalizarAnoEscolar(ano);
+        const turmaNormalizada = normalizarNomeTurma(turma);
+
         // ==================================================
         // VALIDAR TIPO
         // ==================================================
@@ -229,7 +245,7 @@ router.post("/cadastro", async (req, res) => {
         // ==================================================
 
         if (tipoNormalizado === "ALUNO") {
-            if (!ano || !turma || !turno) {
+            if (!anoNormalizado || !turmaNormalizada || !turno) {
                 return res.status(400).json({
                     sucesso: false,
                     mensagem:
@@ -445,8 +461,8 @@ router.post("/cadastro", async (req, res) => {
                     [
                         usuarioID, // D - UsuarioID
                         nomeNormalizado, // E - Nome
-                        ano || "", // F - Ano
-                        turma || "", // G - Turma
+                        anoNormalizado, // F - Ano
+                        turmaNormalizada, // G - Turma
                         turno || "", // H - Turno
                         idade || "", // I - Idade
                         "CADASTRADO", // J - Status
