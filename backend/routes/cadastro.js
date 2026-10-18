@@ -127,7 +127,9 @@ router.post("/verificar-matricula", async (req, res) => {
             status,
         });
 
-        if (status === "CADASTRADO") {
+        const statusNormalizado = String(status || "").trim().toUpperCase();
+
+        if (statusNormalizado === "CADASTRADO") {
             console.log("12. Matrícula já cadastrada.");
 
             return res.status(409).json({
@@ -136,7 +138,7 @@ router.post("/verificar-matricula", async (req, res) => {
             });
         }
 
-        if (status !== "PENDENTE") {
+        if (statusNormalizado !== "PENDENTE") {
             console.log("13. Status não permitido:", status);
 
             return res.status(403).json({
@@ -400,7 +402,11 @@ router.post("/cadastro", async (req, res) => {
                 ? "ADMIN"
                 : tipoNormalizado === "LIDER"
                   ? "LIDER"
-                  : "CONSULTA";
+                  : tipoNormalizado === "PROFESSOR"
+                    ? "PROFESSOR"
+                    : tipoNormalizado === "ALUNO"
+                      ? "ALUNO"
+                      : "CONSULTA";
 
         const novaLinha = [
             usuarioID, // A - UsuarioID
