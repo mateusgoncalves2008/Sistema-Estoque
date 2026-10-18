@@ -453,6 +453,98 @@ async function salvarNovoItem(event) {
  finally {botao.disabled=false;}
 }
 
+function abrirDialogAcaoEstoque(estoqueID, acao) {
+    const dialog = el("stockActionDialog");
+    const form = el("stockActionForm");
+    if (!dialog || !form || !estoqueID || !["entrada", "saida", "desativar"].includes(acao)) {
+        showNotice("Não foi possível abrir a ação do estoque.", true);
+        return;
+    }
+
+    form.reset();
+    dialog.dataset.estoqueId = estoqueID;
+    dialog.dataset.acao = acao;
+    const quantidadeWrap = el("stockActionQuantityWrap");
+    const motivoWrap = el("stockActionReasonWrap");
+    const warning = el("stockActionWarning");
+    const title = el("stockActionTitle");
+    const description = el("stockActionDescription");
+    const submit = el("stockActionSubmit");
+    const desativar = acao === "desativar";
+
+    quantidadeWrap.hidden = desativar;
+    motivoWrap.hidden = desativar;
+    el("stockActionQuantity").required = !desativar;
+    el("stockActionReason").required = !desativar;
+
+    if (desativar) {
+        title.textContent = "Desativar item neste setor";
+        description.textContent = "Confirme a desativação deste item no seu setor.";
+        warning.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> As quantidades e o histórico serão preservados. O item ficará indisponível neste setor.';
+        submit.innerHTML = '<i class="fa-solid fa-ban"></i> Desativar item';
+        submit.classList.add("danger-action");
+    } else {
+        title.textContent = acao === "entrada" ? "Aumentar estoque" : "Diminuir estoque";
+        description.textContent = acao === "entrada" ? "Registre a entrada de unidades no seu setor." : "Registre a saída de unidades do seu setor.";
+        warning.innerHTML = '<i class="fa-solid fa-circle-info"></i> A movimentação será registrada no histórico do setor.';
+        submit.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar';
+        submit.classList.remove("danger-action");
+    }
+
+    dialog.showModal();
+}
+
+async function executarAcaoEstoque(event) {
+    event.preventDefault();
+    const dialog = el("stockActionDialog");
+    const form = el("stockActionForm");
+    const submit = el("stockActionSubmit");
+    if (!dialog || !form || !submit) return;
+
+    const estoqueID = dialog.dataset.estoqueId;
+    const acao = dialog.dataset.acao;
+    let payload;
+    if (acao === "entrada" || acao === "saida") {
+        const quantidade = Number(el("stockActionQuantity").value);
+        const motivo = el("stockActionReason").value.trim();
+        if (!Number.isSafeInteger(quantidade) || quantidade <= 0) {
+            showNotice("Informe uma quantidade inteira maior que zero.", true);
+            return;
+        }
+        if (!motivo) {
+            showNotice("O motivo é obrigatório.", true);
+            return;
+        }
+        payload = { operacao: acao, quantidade, motivo };
+    } else if (acao !== "desativar") {
+        return;
+    }
+
+    submit.disabled = true;
+    try {
+        const response = await fetch(
+            `${API_BASE}/responsavel/estoque/${encodeURIComponent(estoqueID)}/${acao === "desativar" ? "desativar" : "ajustar"}`,
+            {
+                method: acao === "desativar" ? "PATCH" : "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json", Accept: "application/json" },
+                body: acao === "desativar" ? undefined : JSON.stringify(payload),
+            },
+        );
+        const data = await response.json();
+        if (!response.ok || data.sucesso === false) {
+            throw new Error(data.mensagem || data.erro || `Erro HTTP ${response.status}`);
+        }
+        dialog.close();
+        showNotice(data.mensagem || "Estoque atualizado.");
+        await carregarPainel();
+    } catch (error) {
+        showNotice(error.message || "Não foi possível atualizar o estoque.", true);
+    } finally {
+        submit.disabled = false;
+    }
+}
+
 /* =====================================================
    TABELA DE ESTOQUE
 ===================================================== */
@@ -1240,62 +1332,18 @@ function iniciarEventos() {
         renderStock(el("stockSearch")?.value || "");
     });
 
-    el("stockRows")?.addEventListener("click", async (event) => {
+    el("stockRows")?.addEventListener("click", (event) => {
         const button = event.target.closest("button[data-stock-action]");
         if (!button || button.disabled) return;
+        abrirDialogAcaoEstoque(button.dataset.id, button.dataset.stockAction);
+    });
 
-        const estoqueID = button.dataset.id;
-        const acao = button.dataset.stockAction;
-        if (!estoqueID) {
-            showNotice("Não foi possível identificar o item do estoque.", true);
-            return;
-        }
-
-        if (acao === "desativar") {
-            if (!window.confirm("Desativar este item somente no seu setor? As quantidades serão preservadas.")) return;
-        }
-
-        let payload = {};
-        if (acao === "entrada" || acao === "saida") {
-            const respostaQuantidade = window.prompt("Informe a quantidade inteira:");
-            if (respostaQuantidade === null) return;
-            const quantidade = Number(respostaQuantidade.trim());
-            if (!Number.isSafeInteger(quantidade) || quantidade <= 0) {
-                showNotice("Informe uma quantidade inteira maior que zero.", true);
-                return;
-            }
-
-            const motivo = window.prompt("Informe o motivo da movimentação:");
-            if (motivo === null) return;
-            if (!motivo.trim()) {
-                showNotice("O motivo é obrigatório.", true);
-                return;
-            }
-            payload = { operacao: acao, quantidade, motivo: motivo.trim() };
-        }
-
-        button.disabled = true;
-        try {
-            const response = await fetch(
-                `${API_BASE}/responsavel/estoque/${encodeURIComponent(estoqueID)}/${acao === "desativar" ? "desativar" : "ajustar"}`,
-                {
-                    method: acao === "desativar" ? "PATCH" : "POST",
-                    credentials: "include",
-                    headers: { "Content-Type": "application/json", Accept: "application/json" },
-                    body: acao === "desativar" ? undefined : JSON.stringify(payload),
-                },
-            );
-            const data = await response.json();
-            if (!response.ok || data.sucesso === false) {
-                throw new Error(data.mensagem || data.erro || `Erro HTTP ${response.status}`);
-            }
-            showNotice(data.mensagem || "Estoque atualizado.");
-            await carregarPainel();
-        } catch (error) {
-            showNotice(error.message || "Não foi possível atualizar o estoque.", true);
-        } finally {
-            button.disabled = false;
-        }
+    el("stockActionClose")?.addEventListener("click", () => el("stockActionDialog")?.close());
+    el("stockActionCancel")?.addEventListener("click", () => el("stockActionDialog")?.close());
+    el("stockActionForm")?.addEventListener("submit", executarAcaoEstoque);
+    el("stockActionDialog")?.addEventListener("click", (event) => {
+        const dialog = el("stockActionDialog");
+        if (event.target === dialog) dialog.close();
     });
 
     el("requestRows")?.addEventListener("click", (event) => {
