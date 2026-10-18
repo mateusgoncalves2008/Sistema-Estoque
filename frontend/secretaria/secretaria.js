@@ -1554,7 +1554,7 @@ function preencherSelectProfessores() {
 }
 
 function formatarMasp(valor) {
-    const numeros = String(valor || "").replace(/\\D/g, "").slice(0, 8);
+    const numeros = String(valor || "").replace(/\D/g, "").slice(0, 8);
     if (numeros.length <= 7) return numeros;
     return numeros.slice(0, 7) + "-" + numeros.slice(7);
 }
