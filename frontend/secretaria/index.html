@@ -314,16 +314,23 @@
                         </div>
 
                         <div class="card turma-acoes">
-                            <div>
+                            <div class="turma-acoes__texto">
                                 <h2>Gerenciar turmas</h2>
                                 <p class="sub">Cadastre uma turma e defina sua série, turno e limite máximo de alunos.</p>
                             </div>
-                            <button class="btn" type="button" data-acao="abrir-modal-turma">
-                                Abrir turma
-                            </button>
+                            <div class="turma-acoes__controles">
+                                <label class="turma-busca" for="busca-turmas">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg>
+                                    <input id="busca-turmas" type="search" placeholder="Pesquisar por turma, série ou turno..." autocomplete="off">
+                                </label>
+                                <button class="btn" type="button" data-acao="abrir-modal-turma">Abrir turma</button>
+                            </div>
                         </div>
-
-                        <div class="sr" id="series"></div>
+                        <div class="turmas-resumo">
+                            <span id="resultado-turmas">Todas as turmas</span>
+                            <span>Selecione uma turma para ver e editar os detalhes.</span>
+                        </div>
+                        <div class="sr turmas-lista" id="series"></div>
                     </section>
 
                     <!-- PROFESSORES -->
@@ -933,6 +940,22 @@
             </section>
         </div>
 
+        <div id="modal-detalhes-turma" class="modal-turma" aria-hidden="true">
+            <div class="modal-turma__fundo" data-acao="fechar-detalhes-turma"></div>
+            <section class="modal-turma__painel" role="dialog" aria-modal="true" aria-labelledby="titulo-detalhes-turma">
+                <div class="modal-turma__cabecalho">
+                    <div><p class="modal-turma__sobretitulo">DETALHES DA TURMA</p><h2 id="titulo-detalhes-turma">Turma</h2><p class="sub" id="detalhe-turma-id"></p></div>
+                    <button class="modal-turma__fechar" type="button" aria-label="Fechar" data-acao="fechar-detalhes-turma">×</button>
+                </div>
+                <div id="detalhes-turma-conteudo"></div>
+                <form id="form-editar-turma" class="modal-turma__form">
+                    <div><label for="detalhe-turno">Turno</label><select id="detalhe-turno" required><option value="Manhã">Manhã</option><option value="Tarde">Tarde</option></select></div>
+                    <div><label for="detalhe-capacidade">Limite máximo de alunos</label><input id="detalhe-capacidade" type="number" min="0" max="500" step="1" required></div>
+                    <div class="modal-turma__acoes"><button class="btn btn-secundario" type="button" data-acao="fechar-detalhes-turma">Cancelar</button><button class="btn" id="btn-salvar-turma" type="submit">Salvar alterações</button></div>
+                    <button class="btn turma-status-btn" id="btn-status-turma" type="button" data-acao="alternar-status-turma">Fechar turma</button>
+                </form>
+            </section>
+        </div>
         <div id="toast"></div>
 
         <script src="./secretaria.js"></script>
