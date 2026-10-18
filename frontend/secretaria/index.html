@@ -313,168 +313,112 @@
                             </div>
                         </div>
 
-                        <div class="card">
-                            <h2>Nova turma</h2>
-
-                            <div class="form">
-                                <div>
-                                    <label for="ts">Série</label>
-                                    <select id="ts"></select>
-                                </div>
-
-                                <div>
-                                    <label for="tn">Nome</label>
-                                    <input id="tn" placeholder="Turma 4" />
-                                </div>
-
-                                <div>
-                                    <label for="tt">Turno</label>
-                                    <select id="tt">
-                                        <option>Manhã</option>
-                                        <option>Tarde</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label for="tc">Capacidade</label>
-                                    <input
-                                        id="tc"
-                                        min="1"
-                                        type="number"
-                                        value="35"
-                                    />
-                                </div>
-
-                                <button class="btn" onclick="addT()">
-                                    Abrir turma
-                                </button>
+                        <div class="card turma-acoes">
+                            <div class="turma-acoes__texto">
+                                <h2>Gerenciar turmas</h2>
+                                <p class="sub">Cadastre uma turma e defina sua série, turno e limite máximo de alunos.</p>
+                            </div>
+                            <div class="turma-acoes__controles">
+                                <label class="turma-busca" for="busca-turmas">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg>
+                                    <input id="busca-turmas" type="search" placeholder="Pesquisar por turma, série ou turno..." autocomplete="off">
+                                </label>
+                                <button class="btn" type="button" data-acao="abrir-modal-turma">Abrir turma</button>
                             </div>
                         </div>
-
-                        <div class="sr" id="series"></div>
+                        <div class="turmas-resumo">
+                            <span id="resultado-turmas">Todas as turmas</span>
+                            <span>Selecione uma turma para ver e editar os detalhes.</span>
+                        </div>
+                        <div class="sr turmas-lista" id="series"></div>
                     </section>
 
                     <!-- PROFESSORES -->
                     <section class="page" id="p-professores">
-                        <div class="head">
+                        <div class="head professores-head">
                             <div>
                                 <h1>Professores</h1>
-                                <p class="sub">
-                                    Cadastre professores e atribua turmas. Cada
-                                    turma equivale a 4 aulas semanais.
-                                </p>
+                                <p class="sub">Cadastre os profissionais e organize os vínculos com turmas e disciplinas.</p>
                             </div>
                         </div>
 
-                        <div class="g2">
-                            <!-- CADASTRO DO PROFESSOR -->
-                            <div class="card">
-                                <h2>Novo professor</h2>
-
-                                <div class="form">
-                                    <div>
-                                        <label for="pn">Nome</label>
-                                        <input
-                                            id="pn"
-                                            type="text"
-                                            placeholder="Nome completo"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label for="pe">E-mail</label>
-                                        <input
-                                            id="pe"
-                                            type="email"
-                                            placeholder="professor@escola.com"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label for="ps">Senha provisória</label>
-                                        <input
-                                            id="ps"
-                                            type="password"
-                                            placeholder="Senha provisória"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label for="pm">MASP</label>
-                                        <input
-                                            id="pm"
-                                            type="text"
-                                            placeholder="1234567-8"
-                                        />
-                                    </div>
-
-                                    <button
-                                        class="btn"
-                                        type="button"
-                                        onclick="addProf()"
-                                    >
-                                        Cadastrar
-                                    </button>
+                        <div class="professores-grid">
+                            <div class="card professores-card">
+                                <div class="professores-card__titulo">
+                                    <span class="professores-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="9.5" cy="7" r="4"></circle><path d="M20 8v6M23 11h-6"></path></svg></span>
+                                    <div><h2>Novo professor</h2><p>Cadastre o professor agora, com ajuda da Secretaria.</p></div>
+                                </div>
+                                <div class="form professores-form">
+                                    <div><label for="np-masp">MASP</label><input id="np-masp" type="text" inputmode="numeric" placeholder="Ex.: 1234567-8" autocomplete="off" /></div>
+                                    <div><label for="np-nome">Nome completo</label><input id="np-nome" type="text" autocomplete="name" placeholder="Nome do professor" /></div>
+                                    <div><label for="np-idade">Idade</label><input id="np-idade" type="number" min="18" max="100" placeholder="Idade" /></div>
+                                    <div><label for="np-email">E-mail</label><input id="np-email" type="email" autocomplete="email" placeholder="professor@exemplo.com" /></div>
+                                    <div><label for="np-senha">Senha inicial</label><input id="np-senha" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo de 8 caracteres" /></div>
+                                    <small class="professores-ajuda">A conta será criada imediatamente com esse e-mail e senha.</small>
+                                    <button class="btn professores-submit" type="button" onclick="cadastrarProfessorAgora()">Cadastrar professor agora</button>
                                 </div>
                             </div>
 
-                            <!-- VINCULAR PROFESSOR -->
-                            <div class="card">
-                                <h2>Vincular professor à turma</h2>
+                            <div class="card professores-card">
+                                <div class="professores-card__titulo">
+                                    <span class="professores-icone professores-icone--azul" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M8 2v4M16 2v4M3 9h18M8 13h3M8 16h7"></path></svg></span>
+                                    <div><h2>Autorizar para cadastro próprio</h2><p>Se o professor preferir, ele cria a conta no site depois.</p></div>
+                                </div>
+                                <div class="form professores-form">
+                                    <div><label for="pm">MASP do professor</label><input id="pm" type="text" inputmode="numeric" autocomplete="off" placeholder="Ex.: 1234567-8" /><small class="professores-ajuda">O MASP ficará como PENDENTE. O professor usará “Criar minha conta” no site.</small></div>
+                                    <button class="btn professores-submit professores-submit--azul" type="button" onclick="addProf()">Autorizar MASP</button>
+                                </div>
+                            </div>
 
-                                <div class="form">
+                            <div class="card professores-card">
+                                <div class="professores-card__titulo">
+                                    <span class="professores-icone professores-icone--azul" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M8 2v4M16 2v4M3 9h18M8 13h3M8 16h7"></path></svg>
+                                    </span>
                                     <div>
-                                        <label for="pp">Professor</label>
-                                        <select id="pp">
-                                            <option value="">
-                                                Selecione o professor
-                                            </option>
-                                        </select>
+                                        <h2>Vincular professor</h2>
+                                        <p>Associe um professor a uma turma e disciplina.</p>
                                     </div>
+                                </div>
 
+                                <div class="form professores-form">
+                                    <div>
+                                        <label for="busca-masp">Pesquisar professor pelo MASP</label>
+                                        <div class="professor-masp-busca">
+                                            <input id="busca-masp" type="search" inputmode="text" autocomplete="off" placeholder="Digite o MASP do professor" aria-describedby="masp-status" />
+                                            <div id="masp-resultados" class="professor-masp-resultados" role="listbox" aria-label="Professores encontrados"></div>
+                                        </div>
+                                        <small id="masp-status" class="professores-ajuda" aria-live="polite">Digite o MASP para localizar o professor.</small>
+                                        <select id="pp" class="professor-select-oculto" aria-hidden="true" tabindex="-1"><option value="">Selecione um professor</option></select>
+                                    </div>
                                     <div>
                                         <label for="pt">Turma</label>
-                                        <select id="pt">
-                                            <option value="">
-                                                Selecione a turma
-                                            </option>
-                                        </select>
+                                        <select id="pt"><option value="">Selecione uma turma</option></select>
                                     </div>
-
                                     <div>
                                         <label for="pdv">Disciplina</label>
-                                        <select id="pdv">
-                                            <option value="">
-                                                Selecione a disciplina
-                                            </option>
-                                        </select>
+                                        <select id="pdv"><option value="">Selecione uma disciplina</option></select>
                                     </div>
-
                                     <div>
                                         <label for="pa">Aulas semanais</label>
-                                        <input
-                                            id="pa"
-                                            type="number"
-                                            min="1"
-                                            max="40"
-                                            value="4"
-                                        />
+                                        <input id="pa" type="number" min="1" max="40" value="4" />
                                     </div>
-
-                                    <button class="btn" onclick="assign()">
-                                        Vincular professor
-                                    </button>
+                                    <button class="btn professores-submit professores-submit--azul" type="button" onclick="assign()">Salvar vínculo</button>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="g2">
-                            <div class="card">
-                                <h2>Carga horária semanal (aulas)</h2>
-                                <div id="ch-prof"></div>
+                        <div class="card professores-lista">
+                            <div class="professores-lista__topo">
+                                <div>
+                                    <h2>Professores cadastrados</h2>
+                                    <p class="sub">Confira os dados e os vínculos registrados no sistema.</p>
+                                </div>
+                                <span class="professores-lista__contador" id="prof-total">0 professores</span>
                             </div>
-
-                            <div class="card" id="t-prof"></div>
+                            <div class="professores-tabela scroll" id="t-prof">
+                                <p class="sub">Carregando professores...</p>
+                            </div>
                         </div>
                     </section>
 
@@ -920,6 +864,64 @@
             </main>
         </div>
 
+        <div id="modal-turma" class="modal-turma" aria-hidden="true">
+            <div class="modal-turma__fundo" data-acao="fechar-modal-turma"></div>
+            <section class="modal-turma__painel" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-turma">
+                <div class="modal-turma__cabecalho">
+                    <div>
+                        <p class="modal-turma__sobretitulo">SECRETARIA</p>
+                        <h2 id="titulo-modal-turma">Abrir nova turma</h2>
+                        <p class="sub">Informe os dados da turma. O ID será gerado automaticamente.</p>
+                    </div>
+                    <button class="modal-turma__fechar" type="button" aria-label="Fechar" data-acao="fechar-modal-turma">×</button>
+                </div>
+
+                <form id="form-turma" class="modal-turma__form" >
+                    <div>
+                        <label for="ts">Série</label>
+                        <select id="ts" required></select>
+                    </div>
+                    <div>
+                        <label for="tn">Nome da turma</label>
+                        <input id="tn" type="text" maxlength="80" placeholder="Ex.: Turma 1" required />
+                    </div>
+                    <div>
+                        <label for="tt">Turno</label>
+                        <select id="tt" required>
+                            <option value="Manhã">Manhã</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Noite">Noite</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tc">Máximo de alunos</label>
+                        <input id="tc" min="0" max="500" step="1" type="number" value="0" required />
+                        <small>Quantidade máxima de alunos permitida nesta turma.</small>
+                    </div>
+                    <div class="modal-turma__acoes">
+                        <button class="btn btn-secundario" type="button" data-acao="fechar-modal-turma">Cancelar</button>
+                        <button class="btn" id="btn-criar-turma" type="submit">Criar</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <div id="modal-detalhes-turma" class="modal-turma" aria-hidden="true">
+            <div class="modal-turma__fundo" data-acao="fechar-detalhes-turma"></div>
+            <section class="modal-turma__painel" role="dialog" aria-modal="true" aria-labelledby="titulo-detalhes-turma">
+                <div class="modal-turma__cabecalho">
+                    <div><p class="modal-turma__sobretitulo">DETALHES DA TURMA</p><h2 id="titulo-detalhes-turma">Turma</h2><p class="sub" id="detalhe-turma-id"></p></div>
+                    <button class="modal-turma__fechar" type="button" aria-label="Fechar" data-acao="fechar-detalhes-turma">×</button>
+                </div>
+                <div id="detalhes-turma-conteudo"></div>
+                <form id="form-editar-turma" class="modal-turma__form">
+                    <div><label for="detalhe-turno">Turno</label><select id="detalhe-turno" required><option value="Manhã">Manhã</option><option value="Tarde">Tarde</option><option value="Noite">Noite</option></select></div>
+                    <div><label for="detalhe-capacidade">Limite máximo de alunos</label><input id="detalhe-capacidade" type="number" min="0" max="500" step="1" required></div>
+                    <div class="modal-turma__acoes"><button class="btn btn-secundario" type="button" data-acao="fechar-detalhes-turma">Cancelar</button><button class="btn" id="btn-salvar-turma" type="submit">Salvar alterações</button></div>
+                    <button class="btn turma-status-btn" id="btn-status-turma" type="button" data-acao="alternar-status-turma">Fechar turma</button>
+                </form>
+            </section>
+        </div>
         <div id="toast"></div>
 
         <script src="./secretaria.js"></script>

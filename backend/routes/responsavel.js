@@ -151,7 +151,7 @@ async function carregarVinculo(usuarioSessao) {
 async function carregarDashboard(vinculo) {
     const [estoques, produtos, categorias, movimentacoes, reservas, usuarios] =
         await Promise.all([
-            lerAba("06_ESTOQUE_LOCAIS!A:H"),
+            lerAba("06_ESTOQUE_LOCAIS!A:I"),
             lerAba("02_PRODUTOS!A:K"),
             lerAba("03_CATEGORIAS!A:D"),
             lerAba("07_MOVIMENTACOES!A:L"),
@@ -203,7 +203,9 @@ async function carregarDashboard(vinculo) {
                 reservado: numero(linha[4]),
                 disponivel: numero(linha[5]),
                 indisponivel: numero(linha[6]),
-                status: produto?.status || "—",
+                statusLocal: texto(linha[8]) || "ATIVO",
+                status: texto(linha[8]) || "ATIVO",
+                statusProduto: produto?.status || "—",
             };
         });
 
@@ -252,6 +254,177 @@ async function carregarDashboard(vinculo) {
     };
 }
 
+/* =====================================================
+   GERENCIAMENTO DO ESTOQUE DO RESPONSÁVEL
+   A coluna I da aba 06_ESTOQUE_LOCAIS é StatusLocal.
+===================================================== */
+
+function gerarMovimentacaoID(linhas) {
+    const maior = linhas.slice(1).reduce((max, linha) => {
+        const id = Number(texto(linha[0]).match(/^MOV-(\d+)$/i)?.[1] || 0);
+        return Math.max(max, id);
+    }, 0);
+    return `MOV-${String(maior + 1).padStart(5, "0")}`;
+}
+
+router.post(
+    "/responsavel/estoque/:estoqueID/ajustar",
+    exigirResponsavel,
+    async (req, res) => {
+        try {
+            const vinculo = await carregarVinculo(req.session.usuario);
+            const operacao = normalizar(req.body.operacao);
+            const quantidade = Number(req.body.quantidade);
+            const motivo = texto(req.body.motivo);
+
+            if (!["ENTRADA", "SAIDA"].includes(operacao)) {
+                return res.status(400).json({ sucesso: false, mensagem: "Operação inválida." });
+            }
+            if (!Number.isSafeInteger(quantidade) || quantidade <= 0) {
+                return res.status(400).json({ sucesso: false, mensagem: "Informe uma quantidade inteira maior que zero." });
+            }
+            if (!motivo) {
+                return res.status(400).json({ sucesso: false, mensagem: "Informe o motivo da movimentação." });
+            }
+
+            const [estoques, produtos, movimentacoes] = await Promise.all([
+                lerAba("06_ESTOQUE_LOCAIS!A:I"),
+                lerAba("02_PRODUTOS!A:K"),
+                lerAba("07_MOVIMENTACOES!A:L"),
+            ]);
+
+            const indice = estoques.findIndex((linha, i) =>
+                i > 0 &&
+                texto(linha[0]) === texto(req.params.estoqueID) &&
+                texto(linha[2]) === texto(vinculo.local.id)
+            );
+
+            if (indice < 1) {
+                return res.status(404).json({ sucesso: false, mensagem: "Item não encontrado no estoque do seu setor." });
+            }
+
+            const estoque = estoques[indice];
+            if (normalizar(estoque[8] || "ATIVO") !== "ATIVO") {
+                return res.status(409).json({ sucesso: false, mensagem: "Este item está inativo neste local." });
+            }
+
+            const total = numero(estoque[3]);
+            const reservado = numero(estoque[4]);
+            const disponivel = numero(estoque[5]);
+            const indisponivel = numero(estoque[6]);
+            let novoTotal = total;
+            let novoDisponivel = disponivel;
+
+            if (operacao === "ENTRADA") {
+                novoTotal += quantidade;
+                novoDisponivel += quantidade;
+            } else {
+                if (quantidade > disponivel) {
+                    return res.status(409).json({ sucesso: false, mensagem: `Saída não permitida. Há somente ${disponivel} unidade(s) disponível(is), sem contar as reservadas.` });
+                }
+                novoTotal -= quantidade;
+                novoDisponivel -= quantidade;
+            }
+
+            const produtoExiste = produtos.slice(1).some((linha) => texto(linha[0]) === texto(estoque[1]));
+            if (!produtoExiste) {
+                return res.status(409).json({ sucesso: false, mensagem: "O produto vinculado a este estoque não foi encontrado na aba 02_PRODUTOS." });
+            }
+
+            const dataHora = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+            const movimentoID = gerarMovimentacaoID(movimentacoes);
+            const linhaPlanilha = indice + 1;
+            const linhaMovimento = movimentacoes.length + 1;
+            const movimento = [
+                movimentoID,
+                dataHora,
+                operacao,
+                texto(estoque[1]),
+                quantidade,
+                operacao === "SAIDA" ? texto(vinculo.local.id) : "",
+                operacao === "ENTRADA" ? texto(vinculo.local.id) : "",
+                texto(vinculo.usuario.id),
+                texto(vinculo.usuario.id),
+                motivo,
+                "CONCLUIDA",
+                "",
+            ];
+
+            await sheets.spreadsheets.values.batchUpdate({
+                spreadsheetId: SPREADSHEET_ID,
+                requestBody: {
+                    valueInputOption: "USER_ENTERED",
+                    data: [
+                        {
+                            range: `06_ESTOQUE_LOCAIS!D${linhaPlanilha}:H${linhaPlanilha}`,
+                            values: [[novoTotal, reservado, novoDisponivel, indisponivel, dataAtual()]],
+                        },
+                        {
+                            range: `07_MOVIMENTACOES!A${linhaMovimento}:L${linhaMovimento}`,
+                            values: [movimento],
+                        },
+                    ],
+                },
+            });
+
+            return res.json({
+                sucesso: true,
+                mensagem: operacao === "ENTRADA" ? "Entrada registrada e estoque atualizado." : "Saída registrada e estoque atualizado.",
+                movimentacaoID: movimentoID,
+                quantidade: novoTotal,
+                reservado,
+                disponivel: novoDisponivel,
+            });
+        } catch (erro) {
+            console.error("Erro ao ajustar estoque do responsável:", erro);
+            return res.status(erro.status || 500).json({
+                sucesso: false,
+                mensagem: erro.status ? erro.message : "Não foi possível atualizar o estoque.",
+            });
+        }
+    },
+);
+
+router.patch(
+    "/responsavel/estoque/:estoqueID/desativar",
+    exigirResponsavel,
+    async (req, res) => {
+        try {
+            const vinculo = await carregarVinculo(req.session.usuario);
+            const estoques = await lerAba("06_ESTOQUE_LOCAIS!A:I");
+            const indice = estoques.findIndex((linha, i) =>
+                i > 0 &&
+                texto(linha[0]) === texto(req.params.estoqueID) &&
+                texto(linha[2]) === texto(vinculo.local.id)
+            );
+
+            if (indice < 1) {
+                return res.status(404).json({ sucesso: false, mensagem: "Item não encontrado no estoque do seu setor." });
+            }
+
+            const linha = estoques[indice];
+            if (normalizar(linha[8]) === "INATIVO") {
+                return res.status(409).json({ sucesso: false, mensagem: "Este item já está inativo neste local." });
+            }
+
+            await sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range: `06_ESTOQUE_LOCAIS!I${indice + 1}`,
+                valueInputOption: "USER_ENTERED",
+                requestBody: { values: [["INATIVO"]] },
+            });
+
+            return res.json({ sucesso: true, mensagem: "Item desativado somente neste local. As quantidades foram preservadas." });
+        } catch (erro) {
+            console.error("Erro ao desativar item do estoque:", erro);
+            return res.status(erro.status || 500).json({
+                sucesso: false,
+                mensagem: erro.status ? erro.message : "Não foi possível desativar o item.",
+            });
+        }
+    },
+);
+
 function gerarEmprestimoID(emprestimos) {
     const maior = emprestimos.slice(1).reduce((max, linha) => {
         const numeroID = Number(texto(linha[0]).match(/(\d+)$/)?.[1] || 0);
@@ -267,7 +440,7 @@ async function atualizarReserva(reservaID, acao, usuario) {
         spreadsheetId: SPREADSHEET_ID,
         ranges: [
             "08_RESERVAS!A:L",
-            "06_ESTOQUE_LOCAIS!A:H",
+            "06_ESTOQUE_LOCAIS!A:I",
             "05_LOCAIS!A:G",
             "09_EMPRESTIMOS!A:L",
         ],
@@ -328,6 +501,12 @@ async function atualizarReserva(reservaID, acao, usuario) {
     }
 
     const estoque = estoques[indiceEstoque];
+    if (acao === "aprovar" && normalizar(estoque[8] || "ATIVO") !== "ATIVO") {
+        const erro = new Error("Este item foi desativado neste local e não pode ter novas reservas aprovadas.");
+        erro.status = 409;
+        throw erro;
+    }
+
     let reservado = numero(estoque[4]);
     let disponivel = numero(estoque[5]);
 
@@ -547,6 +726,95 @@ for (const acao of ["aprovar", "recusar", "cancelar", "concluir"]) {
         },
     );
 }
+
+/* CADASTRO DE ITEM: grava produto e estoque vinculados ao local do responsável. */
+function gerarIDSequencial(linhas, prefixo) {
+ const maior = linhas.slice(1).reduce((max, linha) => Math.max(max, Number(texto(linha[0]).match(/(\d+)$/)?.[1] || 0)), 0);
+ return prefixo + String(maior + 1).padStart(5, "0");
+}
+function gerarCodigoProduto(produtos, codigoLocal) {
+ const codigo = texto(codigoLocal).toUpperCase().replace(/-\d+$/, "").replace(/-+$/, "");
+ const mapaPrefixos = {
+  "LAB-INFO": "IT-TI",
+  "LABORATORIO-INFORMATICA": "IT-TI",
+  "LAB-INFORMATICA": "IT-TI",
+  "INFORMATICA": "IT-TI",
+  "LAB-CIENCIA": "IT-CIE",
+  "LABORATORIO-CIENCIA": "IT-CIE",
+  "BIBLIOTECA": "IT-BIB",
+  "CANTINA": "IT-CAN",
+ };
+ const chave = codigo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9-]/g, "-").replace(/-+/g, "-");
+ const prefixo = mapaPrefixos[chave] || (chave.startsWith("IT-") ? chave : "IT-" + (chave.replace(/^LAB-?/, "").replace(/-/g, "").slice(0, 6) || "SETOR"));
+ const regex = new RegExp("^" + prefixo + "-(\\d+)$", "i");
+ const maior = produtos.slice(1).reduce((max, linha) => Math.max(max, Number(texto(linha[1]).match(regex)?.[1] || 0)), 0);
+ return prefixo + "-" + String(maior + 1).padStart(4, "0");
+}
+router.get("/responsavel/itens/opcoes", exigirResponsavel, async (req, res) => {
+    try {
+        await carregarVinculo(req.session.usuario);
+
+        const [categorias, subcategorias] = await Promise.all([
+            lerAba("'03_CATEGORIAS'!A:D"),
+            lerAba("'04_SUBCATEGORIAS'!A:E"),
+        ]);
+
+        const categoriasAtivas = categorias.slice(1)
+            .filter((linha) => texto(linha[0]) && texto(linha[1]))
+            .filter((linha) => !texto(linha[3]) || normalizar(linha[3]) === "ATIVO")
+            .map((linha) => ({ id: texto(linha[0]), nome: texto(linha[1]) }));
+
+        const subcategoriasAtivas = subcategorias.slice(1)
+            .filter((linha) => texto(linha[0]) && texto(linha[1]) && texto(linha[2]))
+            .filter((linha) => !texto(linha[4]) || normalizar(linha[4]) === "ATIVO")
+            .map((linha) => ({
+                id: texto(linha[0]),
+                categoriaID: texto(linha[1]),
+                nome: texto(linha[2]),
+            }));
+
+        return res.json({
+            sucesso: true,
+            categorias: categoriasAtivas,
+            subcategorias: subcategoriasAtivas,
+        });
+    } catch (erro) {
+        console.error("Erro ao carregar opções do cadastro:", erro);
+        return res.status(erro.status || 500).json({
+            sucesso: false,
+            mensagem: erro.status
+                ? erro.message
+                : "Não foi possível ler as abas 03_CATEGORIAS e 04_SUBCATEGORIAS. Confira o acesso à planilha e os nomes das abas.",
+        });
+    }
+});
+
+router.post("/responsavel/itens", exigirResponsavel, async (req, res) => {
+ try {
+  const vinculo = await carregarVinculo(req.session.usuario);
+  const nome=texto(req.body.nome), categoriaID=texto(req.body.categoriaID), subcategoriaID=texto(req.body.subcategoriaID);
+  const estoqueMinimo=Number(req.body.estoqueMinimo), quantidade=Number(req.body.quantidade), estado=normalizar(req.body.estado), statusProduto=normalizar(req.body.status || "ATIVO"), observacao=texto(req.body.observacao);
+  if (!nome) return res.status(400).json({sucesso:false,mensagem:"Informe o nome do item."});
+  if (!categoriaID || !subcategoriaID) return res.status(400).json({sucesso:false,mensagem:"Selecione categoria e subcategoria."});
+  if (!Number.isSafeInteger(estoqueMinimo) || estoqueMinimo<0) return res.status(400).json({sucesso:false,mensagem:"O estoque mínimo deve ser inteiro e maior ou igual a zero."});
+  if (!Number.isSafeInteger(quantidade) || quantidade<0) return res.status(400).json({sucesso:false,mensagem:"A quantidade inicial deve ser inteira e maior ou igual a zero."});
+  if (!["NOVO","BOM","DANIFICADO","INCOMPLETO"].includes(estado)) return res.status(400).json({sucesso:false,mensagem:"Selecione um estado válido."});
+  if (!["ATIVO","INATIVO"].includes(statusProduto)) return res.status(400).json({sucesso:false,mensagem:"Selecione um status válido."});
+  const [produtos,estoques,categorias,subcategorias,locais]=await Promise.all([lerAba("02_PRODUTOS!A:K"),lerAba("06_ESTOQUE_LOCAIS!A:I"),lerAba("03_CATEGORIAS!A:D"),lerAba("04_SUBCATEGORIAS!A:E"),lerAba("05_LOCAIS!A:G")]);
+  const categoria=categorias.slice(1).find(l=>texto(l[0])===categoriaID && normalizar(l[3]||"ATIVO")==="ATIVO");
+  const subcategoria=subcategorias.slice(1).find(l=>texto(l[0])===subcategoriaID && texto(l[1])===categoriaID && normalizar(l[4]||"ATIVO")==="ATIVO");
+  if(!categoria) return res.status(400).json({sucesso:false,mensagem:"A categoria selecionada não está ativa."});
+  if(!subcategoria) return res.status(400).json({sucesso:false,mensagem:"A subcategoria não pertence à categoria ou está inativa."});
+  const local=locais.slice(1).find(l=>texto(l[0])===texto(vinculo.local.id)&&normalizar(l[6]||"ATIVO")==="ATIVO");
+  if(!local) return res.status(403).json({sucesso:false,mensagem:"O local do seu setor não está ativo."});
+  const produtoID=gerarIDSequencial(produtos,"PRD-"), estoqueID=gerarIDSequencial(estoques,"EST-"), codigo=gerarCodigoProduto(produtos,local[1]);
+  const produto=[produtoID,codigo,nome,"",categoriaID,subcategoriaID,estoqueMinimo,estado,statusProduto,dataAtual(),observacao];
+  const statusLocal=statusProduto==="ATIVO"?"ATIVO":"INATIVO";
+  const estoque=[estoqueID,produtoID,texto(vinculo.local.id),quantidade,0,statusLocal==="ATIVO"?quantidade:0,0,new Date().toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"}),statusLocal];
+  await sheets.spreadsheets.values.batchUpdate({spreadsheetId:SPREADSHEET_ID,requestBody:{valueInputOption:"USER_ENTERED",data:[{range:"02_PRODUTOS!A"+(produtos.length+1)+":K"+(produtos.length+1),values:[produto]},{range:"06_ESTOQUE_LOCAIS!A"+(estoques.length+1)+":I"+(estoques.length+1),values:[estoque]}]}});
+  return res.status(201).json({sucesso:true,mensagem:"Item cadastrado e vinculado ao estoque do seu setor.",produto:{produtoID,codigo,nome},estoque:{estoqueID,localID:texto(vinculo.local.id),quantidade,reservado:0,disponivel:statusLocal==="ATIVO"?quantidade:0,indisponivel:0,statusLocal}});
+ } catch(erro) { console.error("Erro ao cadastrar item do responsável:",erro); return res.status(erro.status||500).json({sucesso:false,mensagem:erro.status?erro.message:"Não foi possível cadastrar o item nas abas 02_PRODUTOS e 06_ESTOQUE_LOCAIS."}); }
+});
 
 router.get("/responsavel/dashboard", exigirResponsavel, async (req, res) => {
     try {

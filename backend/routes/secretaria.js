@@ -28,8 +28,24 @@ let cacheSecretaria = {
 
 function normalizar(valor) {
     return String(valor || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[º°]/g, "")
+        .replace(/\s+/g, " ")
         .trim()
         .toLowerCase();
+}
+
+function normalizarSerie(valor) {
+    const textoSerie = String(valor || "").trim();
+    const match = textoSerie.match(/^(\d+)\s*(?:[º°o]?\s*ano)?$/i);
+    return match ? `${match[1]}° ano` : normalizar(textoSerie);
+}
+
+function normalizarTurma(valor) {
+    const textoTurma = String(valor || "").trim();
+    const match = textoTurma.match(/^(?:turma\s*)?(\d+)$/i);
+    return match ? `turma ${match[1]}` : normalizar(textoTurma);
 }
 
 function numero(valor) {
@@ -72,7 +88,13 @@ function gerarID(prefixo, linhas, coluna = 0) {
 }
 
 function hashSenha(senha, salt) {
-    return crypto.createHash("sha256").update(`${salt}:${senha}`).digest("hex");
+    const derivada = crypto.scryptSync(senha, salt, 64, {
+        N: 16384,
+        r: 8,
+        p: 1,
+        maxmem: 64 * 1024 * 1024,
+    }).toString("hex");
+    return "scrypt$16384$8$1$" + derivada;
 }
 
 /*
@@ -126,7 +148,7 @@ async function carregarDadosSecretaria() {
         "21_PROFESSOR_TURMAS!A:F",
     ];
 
-    console.log("📊 Carregando dados da Secretaria...");
+    
 
     const resposta = await sheets.spreadsheets.values.batchGet({
         spreadsheetId: SPREADSHEET_ID,
@@ -148,7 +170,7 @@ async function carregarDadosSecretaria() {
         atualizadoEm: Date.now(),
     };
 
-    console.log("✅ Dados da Secretaria carregados com uma única requisição.");
+    
 
     return dados;
 }
@@ -178,15 +200,42 @@ function usuarioTemPermissao(usuario) {
     }
 
     const tipo = normalizar(usuario.tipoUsuario);
-
     const perfil = normalizar(usuario.perfil);
 
+    const perfisAdministrativos = ["adm", "admin", "administrador"];
+
+    // Um funcionário comum não recebe acesso administrativo só pelo tipo.
+    // Acesso à Secretaria exige perfil explícito de Secretaria ou perfil/tipo ADM.
     return (
-        tipo === "funcionario" ||
         tipo === "secretaria" ||
-        perfil === "secretaria"
+        perfil === "secretaria" ||
+        perfisAdministrativos.includes(tipo) ||
+        perfisAdministrativos.includes(perfil)
     );
 }
+
+function exigirSecretaria(req, res, next) {
+    const usuario = req.session?.usuario;
+
+    if (!usuario) {
+        return res.status(401).json({
+            sucesso: false,
+            mensagem: "Faça login para acessar este painel.",
+        });
+    }
+
+    if (!usuarioTemPermissao(usuario)) {
+        return res.status(403).json({
+            sucesso: false,
+            mensagem: "Sua conta não tem permissão para acessar o painel da Secretaria.",
+        });
+    }
+
+    next();
+}
+
+// Todas as rotas deste módulo exigem uma sessão e perfil autorizado.
+router.use(exigirSecretaria);
 
 /*
 ==========================================================
@@ -384,18 +433,61 @@ router.post("/secretaria/usuarios", async (req, res) => {
     try {
         const { nome, email, senha, tipoUsuario, perfil, setorID } = req.body;
 
-        if (!nome || !email || !senha || !tipoUsuario) {
+        if (
+            typeof nome !== "string" ||
+            !nome.trim() ||
+            typeof email !== "string" ||
+            !email.trim() ||
+            typeof senha !== "string" ||
+            !senha ||
+            typeof tipoUsuario !== "string" ||
+            !tipoUsuario.trim()
+        ) {
             return res.status(400).json({
                 sucesso: false,
                 erro: "Nome, e-mail, senha e tipo de usuário são obrigatórios.",
             });
         }
 
+        const emailNormalizado = email.trim().toLowerCase();
+        if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailNormalizado)) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "Informe um e-mail válido.",
+            });
+        }
+
+        if (senha.length < 12 || senha.length > 128) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "A senha deve ter entre 12 e 128 caracteres.",
+            });
+        }
+
+        // A conta da Secretaria pode cadastrar usuários comuns, mas não
+        // conceder privilégios administrativos ou criar outras contas internas.
+        const ator = req.session?.usuario;
+        const tiposAdmin = ["adm", "admin", "administrador"];
+        const atorEhAdmin =
+            tiposAdmin.includes(normalizar(ator?.tipoUsuario)) ||
+            tiposAdmin.includes(normalizar(ator?.perfil));
+        const tipoNovo = normalizar(tipoUsuario);
+        const perfilNovo = normalizar(perfil);
+
+        if (
+            !atorEhAdmin &&
+            (!["aluno", "professor"].includes(tipoNovo) ||
+                (perfilNovo && !["aluno", "professor", "consulta"].includes(perfilNovo)))
+        ) {
+            return res.status(403).json({
+                sucesso: false,
+                erro: "Somente um administrador pode criar contas privilegiadas.",
+            });
+        }
+
         const dados = await carregarDadosSecretaria();
 
         const usuarios = dados["01_USUARIOS"] || [];
-
-        const emailNormalizado = normalizar(email);
 
         const existe = usuarios
             .slice(1)
@@ -528,94 +620,90 @@ router.patch("/secretaria/usuarios/:usuarioID/status", async (req, res) => {
 router.get("/secretaria/turmas", async (req, res) => {
     try {
         const dados = await carregarDadosSecretaria();
-
         const turmas = dados["19_TURMAS"] || [];
-
-        const usuarios = dados["01_USUARIOS"] || [];
-
-        const alunos = usuarios
-            .slice(1)
-            .filter(
-                (linha) =>
-                    normalizar(linha[5]) === "aluno" &&
-                    normalizar(linha[8]) === "ativo",
-            );
-
         const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
 
-        const mapaAlunos = new Map();
+        const chaveExata = (serie, turma, turno) =>
+            [normalizarSerie(serie), normalizarTurma(turma), normalizar(turno)].join("|");
+        const chaveNomeTurno = (turma, turno) =>
+            [normalizarTurma(turma), normalizar(turno)].join("|");
 
-        for (const linha of autorizados.slice(1)) {
-            const id = texto(linha[3]);
+        // Primeiro identifica as turmas cadastradas e quais nomes/turnos são únicos.
+        const linhasTurmas = turmas.slice(1).map((linha) => ({
+            id: texto(linha[0]),
+            nome: texto(linha[1]),
+            serie: texto(linha[2]),
+            turno: texto(linha[3]),
+            capacidade: numero(linha[4]),
+            status: linha[5] || "",
+        }));
 
-            if (id) {
-                mapaAlunos.set(id, {
-                    ano: linha[5] || "",
-                    turma: linha[6] || "",
-                    turno: linha[7] || "",
-                });
-            }
+        const turmasPorNomeTurno = new Map();
+        for (const turma of linhasTurmas) {
+            const chave = chaveNomeTurno(turma.nome, turma.turno);
+            if (!turmasPorNomeTurno.has(chave)) turmasPorNomeTurno.set(chave, []);
+            turmasPorNomeTurno.get(chave).push(turma);
         }
 
         const contagem = new Map();
+        for (const turma of linhasTurmas) contagem.set(turma.id, 0);
 
-        for (const aluno of alunos) {
-            const cadastro = mapaAlunos.get(texto(aluno[0]));
+        for (const linha of autorizados.slice(1)) {
+            const tipo = normalizar(linha[1]);       // B: Tipo
+            const serieAluno = texto(linha[5]);      // F: Ano
+            const turmaAluno = texto(linha[6]);     // G: Turma
+            const turnoAluno = texto(linha[7]);     // H: Turno
+            const status = normalizar(linha[9]);    // J: Status
 
-            if (!cadastro) continue;
+            if (
+                tipo !== "aluno" ||
+                !["cadastrado", "ativo", "autorizado"].includes(status) ||
+                !turmaAluno ||
+                !turnoAluno
+            ) continue;
 
-            const chave = `${cadastro.ano}|${cadastro.turma}|${cadastro.turno}`;
+            // Correspondência exata é sempre preferida.
+            const exatas = linhasTurmas.filter((turma) =>
+                chaveExata(turma.serie, turma.nome, turma.turno) ===
+                chaveExata(serieAluno, turmaAluno, turnoAluno)
+            );
 
-            contagem.set(chave, (contagem.get(chave) || 0) + 1);
+            if (exatas.length === 1) {
+                contagem.set(exatas[0].id, (contagem.get(exatas[0].id) || 0) + 1);
+                continue;
+            }
+
+            // Se a série estiver divergente, só usa nome+turno quando identifica
+            // uma única turma; se houver ambiguidade, não atribui aluno errado.
+            const candidatas = turmasPorNomeTurno.get(chaveNomeTurno(turmaAluno, turnoAluno)) || [];
+            if (candidatas.length === 1) {
+                contagem.set(candidatas[0].id, (contagem.get(candidatas[0].id) || 0) + 1);
+            }
         }
 
-        const lista = turmas.slice(1).map((linha) => {
-            const id = linha[0] || "";
+        const lista = linhasTurmas.map((turma) => ({
+            turmaID: turma.id,
+            nome: turma.nome,
+            serie: turma.serie,
+            turno: turma.turno,
+            capacidade: turma.capacidade,
+            alunosAtivos: contagem.get(turma.id) || 0,
+            status: turma.status,
+        }));
 
-            const nome = linha[1] || "";
-
-            const serie = linha[2] || "";
-
-            const turno = linha[3] || "";
-
-            const capacidade = numero(linha[4]);
-
-            const chave = `${serie}|${nome}|${turno}`;
-
-            return {
-                turmaID: id,
-
-                nome,
-
-                serie,
-
-                turno,
-
-                capacidade,
-
-                alunosAtivos: contagem.get(chave) || 0,
-
-                status: linha[6] || "",
-            };
-        });
-
-        res.json({
-            sucesso: true,
-            turmas: lista,
-        });
+        res.json({ sucesso: true, turmas: lista });
     } catch (erro) {
         console.error("❌ Erro ao carregar turmas:", erro);
-
-        res.status(500).json({
-            sucesso: false,
-            erro: erro.message,
-        });
+        res.status(500).json({ sucesso: false, erro: erro.message });
     }
 });
 
 router.post("/secretaria/turmas", async (req, res) => {
     try {
-        const { nome, serie, turno, capacidade } = req.body;
+        const nome = texto(req.body.nome);
+        const serie = texto(req.body.serie);
+        const turno = texto(req.body.turno);
+        const capacidade = Number(req.body.capacidade);
 
         if (!nome || !serie || !turno) {
             return res.status(400).json({
@@ -624,39 +712,101 @@ router.post("/secretaria/turmas", async (req, res) => {
             });
         }
 
-        const dados = await carregarDadosSecretaria();
+        if (!["Manhã", "Tarde"].includes(turno)) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "Selecione um turno válido.",
+            });
+        }
 
+        if (!Number.isInteger(capacidade) || capacidade < 0 || capacidade > 500) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "A capacidade deve ser um número inteiro entre 0 e 500.",
+            });
+        }
+
+        const dados = await carregarDadosSecretaria();
         const turmas = dados["19_TURMAS"] || [];
+        const duplicada = turmas.slice(1).some((linha) =>
+            normalizar(linha[1]) === normalizar(nome) &&
+            normalizar(linha[2]) === normalizar(serie) &&
+            normalizar(linha[3]) === normalizar(turno)
+        );
+
+        if (duplicada) {
+            return res.status(409).json({
+                sucesso: false,
+                erro: "Já existe uma turma com esse nome, série e turno.",
+            });
+        }
 
         const turmaID = gerarID("TRM", turmas, 0);
 
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-
-            range: "19_TURMAS!A:G",
-
+            range: "19_TURMAS!A:F",
             valueInputOption: "USER_ENTERED",
-
             requestBody: {
-                values: [
-                    [turmaID, nome, serie, turno, capacidade || 0, 0, "ATIVO"],
-                ],
+                values: [[turmaID, nome, serie, turno, capacidade, "ABERTO"]],
             },
         });
 
         limparCache();
 
-        res.json({
+        res.status(201).json({
             sucesso: true,
             turmaID,
         });
     } catch (erro) {
-        console.error("❌ Erro ao cadastrar turma:", erro);
+        console.error("Erro ao cadastrar turma:", erro);
 
         res.status(500).json({
             sucesso: false,
-            erro: erro.message,
+            erro: "Não foi possível cadastrar a turma.",
         });
+    }
+});
+
+router.patch("/secretaria/turmas/:turmaID", async (req, res) => {
+    try {
+        const turmaID = texto(req.params.turmaID);
+        const dados = await carregarDadosSecretaria();
+        const turmas = dados["19_TURMAS"] || [];
+        const indice = turmas.findIndex((linha, i) => i > 0 && texto(linha[0]) === turmaID);
+        if (indice < 0) return res.status(404).json({ sucesso: false, erro: "Turma não encontrada." });
+
+        const atual = turmas[indice];
+        const turno = req.body.turno === undefined ? texto(atual[3]) : texto(req.body.turno);
+        const capacidade = req.body.capacidade === undefined ? numero(atual[4]) : Number(req.body.capacidade);
+        const status = req.body.status === undefined ? texto(atual[5]).toUpperCase() : texto(req.body.status).toUpperCase();
+
+        if (!["Manhã", "Tarde"].includes(turno)) return res.status(400).json({ sucesso: false, erro: "Selecione Manhã ou Tarde." });
+        if (!Number.isInteger(capacidade) || capacidade < 0 || capacidade > 500) return res.status(400).json({ sucesso: false, erro: "A capacidade deve ser um número inteiro entre 0 e 500." });
+        if (!["ABERTO", "FECHADO"].includes(status)) return res.status(400).json({ sucesso: false, erro: "Situação inválida." });
+
+        const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
+        const usuarios = dados["01_USUARIOS"] || [];
+        const cadastroPorUsuario = new Map(autorizados.slice(1).map((l) => [texto(l[3]), l]));
+        const alunosAtivos = usuarios.slice(1).filter((u) => {
+            const cadastro = cadastroPorUsuario.get(texto(u[0]));
+            return normalizar(u[5]) === "aluno" && normalizar(u[8]) === "ativo" && cadastro &&
+                texto(cadastro[5]) === texto(atual[2]) && texto(cadastro[6]) === texto(atual[1]) &&
+                texto(cadastro[7]) === texto(atual[3]);
+        }).length;
+        if (capacidade < alunosAtivos) return res.status(400).json({ sucesso: false, erro: `O limite não pode ser menor que os ${alunosAtivos} alunos já matriculados.` });
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `19_TURMAS!D${indice + 1}:F${indice + 1}`,
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [[turno, capacidade, status]] },
+        });
+        limparCache();
+        res.json({ sucesso: true, mensagem: "Turma atualizada." });
+    } catch (erro) {
+        console.error("Erro ao atualizar turma:", erro);
+        res.status(500).json({ sucesso: false, erro: "Não foi possível atualizar a turma." });
     }
 });
 
@@ -788,95 +938,157 @@ router.get("/secretaria/professores", async (req, res) => {
     }
 });
 
+router.post("/secretaria/professores/cadastrar", async (req, res) => {
+    try {
+        const masp = texto(req.body?.masp).replace(/\s+/g, "");
+        const nome = texto(req.body?.nome);
+        const idade = Number(req.body?.idade);
+        const email = texto(req.body?.email).toLowerCase();
+        const senha = String(req.body?.senha || "");
+
+        if (!/^\d{7}-\d$/.test(masp)) {
+            return res.status(400).json({ sucesso: false, erro: "Informe um MASP válido no formato 1234567-8." });
+        }
+        if (!nome || !email || !Number.isInteger(idade) || idade < 18 || idade > 100 || senha.length < 12) {
+            return res.status(400).json({ sucesso: false, erro: "Informe nome, e-mail válido, idade entre 18 e 100 anos e senha com pelo menos 12 caracteres." });
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ sucesso: false, erro: "Informe um e-mail válido." });
+        }
+
+        const dados = await carregarDadosSecretaria();
+        const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
+        const usuarios = dados["01_USUARIOS"] || [];
+
+        if (usuarios.slice(1).some((linha) => texto(linha[2]).toLowerCase() === email)) {
+            return res.status(409).json({ sucesso: false, erro: "Este e-mail já está cadastrado." });
+        }
+
+        const indiceAutorizacao = autorizados.findIndex((linha, index) =>
+            index > 0 && texto(linha[2]).replace(/\s+/g, "") === masp
+        );
+        let autorizacaoID = "";
+        let numeroLinhaAutorizacao = 0;
+
+        if (indiceAutorizacao >= 0) {
+            const linhaAutorizacao = autorizados[indiceAutorizacao];
+            const tipo = texto(linhaAutorizacao[1]).toUpperCase();
+            const status = texto(linhaAutorizacao[9]).toUpperCase();
+            if (tipo !== "PROFESSOR") {
+                return res.status(409).json({ sucesso: false, erro: "Este MASP está registrado com outro tipo de cadastro." });
+            }
+            if (status === "CADASTRADO" || texto(linhaAutorizacao[3])) {
+                return res.status(409).json({ sucesso: false, erro: "Este MASP já possui uma conta cadastrada." });
+            }
+            autorizacaoID = texto(linhaAutorizacao[0]);
+            numeroLinhaAutorizacao = indiceAutorizacao + 1;
+        } else {
+            autorizacaoID = gerarID("AUT", autorizados, 0);
+            await sheets.spreadsheets.values.append({
+                spreadsheetId: SPREADSHEET_ID,
+                range: "17_CADASTROS_AUTORIZADOS!A:J",
+                valueInputOption: "RAW",
+                insertDataOption: "INSERT_ROWS",
+                requestBody: { values: [[autorizacaoID, "PROFESSOR", masp, "", "", "", "", "", "", "PENDENTE"]] },
+            });
+            numeroLinhaAutorizacao = autorizados.length + 1;
+        }
+
+        const ids = usuarios.slice(1).map((linha) => {
+            const match = texto(linha[0]).match(/^USR-(\d+)$/);
+            return match ? Number(match[1]) : 0;
+        });
+        const usuarioID = `USR-${String(Math.max(0, ...ids) + 1).padStart(5, "0")}`;
+        const salt = crypto.randomBytes(16).toString("hex");
+        const senhaHash = hashSenha(senha, salt);
+        const dataCadastro = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "01_USUARIOS!A:K",
+            valueInputOption: "RAW",
+            insertDataOption: "INSERT_ROWS",
+            requestBody: { values: [[usuarioID, nome, email, senhaHash, salt, "PROFESSOR", "PROFESSOR", "", "ATIVO", dataCadastro, ""]] },
+        });
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `17_CADASTROS_AUTORIZADOS!D${numeroLinhaAutorizacao}:J${numeroLinhaAutorizacao}`,
+            valueInputOption: "RAW",
+            requestBody: { values: [[usuarioID, nome, "", "", "", "", idade, "CADASTRADO"]] },
+        });
+
+        limparCache();
+        return res.status(201).json({ sucesso: true, mensagem: "Professor cadastrado imediatamente.", usuarioID, autorizacaoID });
+    } catch (erro) {
+        console.error("Erro ao cadastrar professor pela Secretaria:", erro);
+        return res.status(500).json({ sucesso: false, erro: "Não foi possível cadastrar o professor agora." });
+    }
+});
+
 router.post("/secretaria/professores", async (req, res) => {
     try {
-        const { nome, email, senha, masp } = req.body;
+        const masp = texto(req.body?.masp).replace(/\s+/g, "");
 
-        if (!nome || !email || !senha) {
+        if (!/^\d{7}-\d$/.test(masp)) {
             return res.status(400).json({
                 sucesso: false,
-                erro: "Nome, e-mail e senha são obrigatórios.",
+                erro: "Informe um MASP válido no formato 1234567-8.",
             });
         }
 
         const dados = await carregarDadosSecretaria();
-
-        const usuarios = dados["01_USUARIOS"] || [];
-
         const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
 
-        const usuarioID = gerarID("USR", usuarios, 0);
+        const duplicado = autorizados.slice(1).some((linha) =>
+            texto(linha[2]).replace(/\s+/g, "") === masp
+        );
 
+        if (duplicado) {
+            return res.status(409).json({
+                sucesso: false,
+                erro: "Este MASP já possui um registro de autorização.",
+            });
+        }
+
+        // gerarID identifica o maior AUT existente e incrementa, sem reutilizar IDs apagados.
         const autorizacaoID = gerarID("AUT", autorizados, 0);
 
-        const salt = crypto.randomBytes(16).toString("hex");
-
-        const senhaHash = hashSenha(senha, salt);
-
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-
-            range: "01_USUARIOS!A:K",
-
-            valueInputOption: "USER_ENTERED",
-
-            requestBody: {
-                values: [
-                    [
-                        usuarioID,
-                        nome,
-                        normalizar(email),
-                        senhaHash,
-                        salt,
-                        "PROFESSOR",
-                        "CONSULTA",
-                        "",
-                        "ATIVO",
-                        agora(),
-                        "",
-                    ],
-                ],
-            },
-        });
-
-        await sheets.spreadsheets.values.append({
-            spreadsheetId: SPREADSHEET_ID,
-
             range: "17_CADASTROS_AUTORIZADOS!A:J",
-
-            valueInputOption: "USER_ENTERED",
-
+            valueInputOption: "RAW",
+            insertDataOption: "INSERT_ROWS",
             requestBody: {
-                values: [
-                    [
-                        autorizacaoID,
-                        "PROFESSOR",
-                        masp || "",
-                        usuarioID,
-                        nome,
-                        "",
-                        "",
-                        "",
-                        "",
-                        "CADASTRADO",
-                    ],
-                ],
+                values: [[
+                    autorizacaoID, // A - CadastradoID
+                    "PROFESSOR",   // B - Tipo
+                    masp,          // C - Identificador
+                    "",            // D - UsuarioID (preenchido no cadastro)
+                    "",            // E - Nome
+                    "",            // F - Ano
+                    "",            // G - Turma
+                    "",            // H - Turno
+                    "",            // I - Idade
+                    "PENDENTE",    // J - Status
+                ]],
             },
         });
 
         limparCache();
 
-        res.json({
+        return res.status(201).json({
             sucesso: true,
-            usuarioID,
+            mensagem: "MASP autorizado. O professor já pode criar a própria conta.",
             autorizacaoID,
+            masp,
+            status: "PENDENTE",
         });
     } catch (erro) {
-        console.error("❌ Erro ao cadastrar professor:", erro);
-
-        res.status(500).json({
+        console.error("❌ Erro ao autorizar MASP do professor:", erro);
+        return res.status(500).json({
             sucesso: false,
-            erro: erro.message,
+            erro: "Não foi possível autorizar o MASP do professor.",
         });
     }
 });
@@ -891,14 +1103,14 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
     try {
         const { professorID, turmaID, disciplinaID, aulasSemanais } = req.body;
 
-        console.log("");
-        console.log("==========================================");
-        console.log("🔗 NOVO VÍNCULO PROFESSOR/TURMA");
-        console.log("==========================================");
-        console.log("Professor:", professorID);
-        console.log("Turma:", turmaID);
-        console.log("Disciplina:", disciplinaID);
-        console.log("Aulas:", aulasSemanais);
+        
+        
+        
+        
+        
+        
+        
+        
 
         if (!professorID) {
             return res.status(400).json({
@@ -942,11 +1154,11 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
 
         const vinculos = dados["21_PROFESSOR_TURMAS"] || [];
 
-        console.log("📊 Dados carregados.");
-        console.log("Professores:", usuarios.length);
-        console.log("Turmas:", turmas.length);
-        console.log("Disciplinas:", disciplinas.length);
-        console.log("Vínculos atuais:", vinculos.length);
+        
+        
+        
+        
+        
 
         const professor = usuarios
             .slice(1)
@@ -958,14 +1170,14 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             );
 
         if (!professor) {
-            console.log("❌ Professor não encontrado.");
+            
             return res.status(404).json({
                 sucesso: false,
                 erro: "Professor não encontrado ou está inativo.",
             });
         }
 
-        console.log("✅ Professor encontrado:", professor[0]);
+        
 
         const cadastroProfessor = autorizados
             .slice(1)
@@ -977,9 +1189,9 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             );
 
         if (!cadastroProfessor) {
-            console.log("⚠️ Cadastro autorizado não encontrado.");
+            
         } else {
-            console.log("✅ Cadastro autorizado:", cadastroProfessor[0]);
+            
         }
 
         const turma = turmas
@@ -991,7 +1203,7 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             );
 
         if (!turma) {
-            console.log("❌ Turma não encontrada:", turmaID);
+            
 
             return res.status(404).json({
                 sucesso: false,
@@ -999,7 +1211,7 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             });
         }
 
-        console.log("✅ Turma encontrada:", turma[0], turma[1]);
+        
 
         const disciplina = disciplinas
             .slice(1)
@@ -1013,7 +1225,7 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             );
 
         if (!disciplina) {
-            console.log("❌ Disciplina não encontrada:", disciplinaID);
+            
 
             return res.status(404).json({
                 sucesso: false,
@@ -1021,7 +1233,7 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             });
         }
 
-        console.log("✅ Disciplina encontrada:", disciplina[0], disciplina[1]);
+        
 
         const jaExiste = vinculos
             .slice(1)
@@ -1034,7 +1246,7 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             );
 
         if (jaExiste) {
-            console.log("⚠️ Este vínculo já existe.");
+            
 
             return res.status(409).json({
                 sucesso: false,
@@ -1053,10 +1265,10 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             "ATIVO",
         ];
 
-        console.log("");
-        console.log("🚀 GRAVANDO NA 21_PROFESSOR_TURMAS");
-        console.log("ID:", vinculoID);
-        console.log("Dados:", dadosParaGravar);
+        
+        
+        
+        
 
         const resultado = await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
@@ -1068,8 +1280,8 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             },
         });
 
-        console.log("✅ GRAVAÇÃO REALIZADA!");
-        console.log("Range gravado:", resultado.data?.updates?.updatedRange);
+        
+        
 
         limparCache();
 
@@ -1511,7 +1723,7 @@ router.post("/secretaria/devolucoes", async (req, res) => {
                 ],
             },
         });
-        console.log("✅ APPEND REALIZADO COM SUCESSO!");
+        
 
         limparCache();
 

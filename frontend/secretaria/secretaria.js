@@ -1,9 +1,16 @@
 const API_URL = "/api";
 let professoresReais = [];
 let turmasReais = [];
+let turmaSelecionada = null;
 let disciplinasReais = [];
 
 const $ = (s) => document.querySelector(s);
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", configurarEventosTurma);
+} else {
+    configurarEventosTurma();
+}
 const pad = (n) => String(n).padStart(2, "0");
 
 let page = "inicio";
@@ -91,7 +98,10 @@ async function api(url, opcoes = {}) {
 
 async function carregarDados() {
     try {
-        const dados = await api("/secretaria/dashboard");
+        const [dados, dadosTurmas] = await Promise.all([
+            api("/secretaria/dashboard"),
+            api("/secretaria/turmas"),
+        ]);
 
         indicadores = dados.indicadores || {};
 
@@ -155,7 +165,7 @@ async function carregarDados() {
             m.produto || "Produto",
         ]);
 
-        series = montarTurmas(dados.turmas || []);
+        series = montarTurmas(dadosTurmas.turmas || []);
 
         disciplinas = dados.disciplinas || [];
 
@@ -450,38 +460,143 @@ function kv(id, valor) {
    TURMAS
 ========================================================= */
 
+function abrirModalTurma() {
+    const modal = $("#modal-turma");
+    if (!modal) return;
+
+    modal.classList.add("aberto");
+    modal.setAttribute("aria-hidden", "false");
+    $("#tn")?.focus();
+}
+
+function fecharModalTurma() {
+    const modal = $("#modal-turma");
+    if (!modal) return;
+
+    modal.classList.remove("aberto");
+    modal.setAttribute("aria-hidden", "true");
+}
+
+function configurarEventosTurma() {
+    document.querySelectorAll('[data-acao="abrir-modal-turma"]').forEach((botao) => {
+        botao.addEventListener("click", abrirModalTurma);
+    });
+
+    document.querySelectorAll('[data-acao="fechar-modal-turma"]').forEach((botao) => botao.addEventListener("click", fecharModalTurma));
+    document.querySelectorAll('[data-acao="fechar-detalhes-turma"]').forEach((botao) => botao.addEventListener("click", fecharDetalhesTurma));
+    document.querySelectorAll('[data-acao="alternar-status-turma"]').forEach((botao) => botao.addEventListener("click", alternarStatusTurma));
+    $("#busca-turmas")?.addEventListener("input", renderizarListaTurmas);
+    $("#form-editar-turma")?.addEventListener("submit", salvarEdicaoTurma);
+
+    const formulario = $("#form-turma");
+    if (formulario) {
+        formulario.addEventListener("submit", (evento) => {
+            evento.preventDefault();
+            addT();
+        });
+    }
+}
+
 async function addT() {
-    const serie = $("#ts")?.value;
-
+    const serie = $("#ts")?.value.trim();
     const nome = $("#tn")?.value.trim();
-
-    const turno = $("#tt")?.value;
-
+    const turno = $("#tt")?.value.trim();
     const capacidade = Number($("#tc")?.value);
+    const botao = $("#btn-criar-turma");
 
-    if (!serie || !nome || !turno || !capacidade) {
+    if (!serie || !nome || !turno) {
         return toast("Preencha todos os dados da turma.");
+    }
+
+    if (!Number.isInteger(capacidade) || capacidade < 0 || capacidade > 500) {
+        return toast("Informe um limite máximo entre 0 e 500 alunos.");
+    }
+
+    if (botao) {
+        botao.disabled = true;
+        botao.textContent = "Criando...";
     }
 
     try {
         await api("/secretaria/turmas", {
             method: "POST",
-            body: JSON.stringify({
-                nome,
-                serie,
-                turno,
-                capacidade,
-            }),
+            body: JSON.stringify({ nome, serie, turno, capacidade }),
         });
 
+        $("#form-turma")?.reset();
+        fecharModalTurma();
         toast("Turma criada com sucesso.");
-
-        $("#tn").value = "";
-
         await carregarDados();
     } catch (erro) {
         toast(erro.message);
+    } finally {
+        if (botao) {
+            botao.disabled = false;
+            botao.textContent = "Criar";
+        }
     }
+}
+
+function escHtml(valor) {
+    return String(valor ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function obterTodasTurmas() {
+    return series.flatMap((g) => g.t.map((t) => ({...t, serie:g.s})));
+}
+function renderizarListaTurmas() {
+    const area=$("#series"); if(!area) return;
+    const busca=($("#busca-turmas")?.value||"").trim().toLocaleLowerCase("pt-BR");
+    const todas=obterTodasTurmas();
+    const lista=todas.filter(t=>[t.n,t.serie,t.tu,t.id,t.status].some(v=>String(v||"").toLocaleLowerCase("pt-BR").includes(busca)));
+    const resumo=$("#resultado-turmas"); if(resumo) resumo.textContent=`${lista.length} de ${todas.length} turma(s)`;
+    if(!lista.length){area.innerHTML='<div class="card turmas-vazio"><strong>Nenhuma turma encontrada</strong><p class="sub">Tente outro nome, série ou turno.</p></div>';return;}
+    area.innerHTML=lista.map(t=>{
+        const cap=Number(t.cap||0), al=Number(t.al||0), pc=cap?Math.min(100,Math.round(al/cap*100)):0;
+        const aberta=String(t.status||"").toUpperCase()==="ABERTO";
+        const limiteVermelho=Math.floor(cap*0.30);
+        const limiteAmarelo=Math.round(cap*0.50);
+        const alerta=cap>0&&al<=limiteVermelho?"critica":cap>0&&al<=limiteAmarelo?"atencao":"";
+        const textoOcupacao=alerta==="critica"?"Risco de fechamento":alerta==="atencao"?"Poucos alunos matriculados":"Ocupação";
+        return `<button class="card turma-card ${alerta ? "turma-card--" + alerta : ""}" type="button" data-turma-id="${escHtml(t.id)}">
+            <div class="turma-card__topo"><span class="turma-card__icone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V8l9-5 9 5v13M8 21v-7h8v7M7 10h.01M12 10h.01M17 10h.01"></path></svg></span><span class="turma-status ${aberta?"aberta":"fechada"}">${aberta?"Aberta":"Fechada"}</span></div>
+            <span class="turma-card__serie">${escHtml(t.serie)}</span><strong class="turma-card__nome">${escHtml(t.n)}</strong>
+            <span class="turma-card__turno">${escHtml(t.tu)} • Código ${escHtml(t.id||"—")}</span>
+            <div class="turma-card__ocupacao"><span>${textoOcupacao}</span><strong>${al} de ${cap} alunos</strong></div><div class="prog turma-card__barra ${alerta ? "turma-card__barra--" + alerta : ""}"><i style="width:${pc}%"></i></div>
+            <span class="turma-card__rodape">Ver informações e gerenciar <span aria-hidden="true">→</span></span></button>`;
+    }).join("");
+    area.querySelectorAll("[data-turma-id]").forEach(card=>card.addEventListener("click",()=>abrirDetalhesTurma(card.dataset.turmaId)));
+}
+function abrirDetalhesTurma(id) {
+    turmaSelecionada=obterTodasTurmas().find(t=>String(t.id)===String(id)); if(!turmaSelecionada)return;
+    const aberta=String(turmaSelecionada.status||"").toUpperCase()==="ABERTO";
+    $("#titulo-detalhes-turma").textContent=turmaSelecionada.n;
+    $("#detalhe-turma-id").textContent=`Código: ${turmaSelecionada.id||"—"}`;
+    $("#detalhes-turma-conteudo").innerHTML=`<div class="turma-detalhes-grid">
+      <div><span>Série</span><strong>${escHtml(turmaSelecionada.serie)}</strong></div><div><span>Turno atual</span><strong>${escHtml(turmaSelecionada.tu)}</strong></div>
+      <div><span>Alunos matriculados</span><strong>${Number(turmaSelecionada.al||0)}</strong></div><div><span>Limite máximo</span><strong>${Number(turmaSelecionada.cap||0)}</strong></div>
+      <div><span>Vagas disponíveis</span><strong>${Math.max(0,Number(turmaSelecionada.cap||0)-Number(turmaSelecionada.al||0))}</strong></div>
+      <div><span>Situação</span><strong>${aberta?"Aberta para matrículas":"Fechada para matrículas"}</strong></div></div>
+      <p class="sub turma-detalhe-aviso">O limite não pode ficar abaixo da quantidade de alunos matriculados.</p>`;
+    $("#detalhe-turno").value=["Manhã","Tarde","Noite"].includes(turmaSelecionada.tu)?turmaSelecionada.tu:"Manhã";
+    $("#detalhe-capacidade").value=Number(turmaSelecionada.cap||0);
+    $("#btn-status-turma").textContent=aberta?"Fechar turma para matrículas":"Reabrir turma";
+    $("#btn-status-turma").classList.toggle("btn-perigo",aberta);
+    const modal=$("#modal-detalhes-turma");modal.classList.add("aberto");modal.setAttribute("aria-hidden","false");
+}
+function fecharDetalhesTurma(){const m=$("#modal-detalhes-turma");if(m){m.classList.remove("aberto");m.setAttribute("aria-hidden","true");}turmaSelecionada=null;}
+async function salvarEdicaoTurma(e){
+    e.preventDefault();if(!turmaSelecionada)return;
+    const capacidade=Number($("#detalhe-capacidade").value),turno=$("#detalhe-turno").value;
+    if(!Number.isInteger(capacidade)||capacidade<0||capacidade>500)return toast("Informe um limite entre 0 e 500 alunos.");
+    if(capacidade<Number(turmaSelecionada.al||0))return toast("O limite não pode ser menor que os alunos já matriculados.");
+    const b=$("#btn-salvar-turma");b.disabled=true;
+    try{await api(`/secretaria/turmas/${encodeURIComponent(turmaSelecionada.id)}`,{method:"PATCH",body:JSON.stringify({capacidade,turno})});fecharDetalhesTurma();toast("Turma atualizada com sucesso.");await carregarDados();}
+    catch(err){toast(err.message);}finally{b.disabled=false;}
+}
+async function alternarStatusTurma(){
+    if(!turmaSelecionada)return;const aberta=String(turmaSelecionada.status||"").toUpperCase()==="ABERTO",status=aberta?"FECHADO":"ABERTO",b=$("#btn-status-turma");b.disabled=true;
+    try{await api(`/secretaria/turmas/${encodeURIComponent(turmaSelecionada.id)}`,{method:"PATCH",body:JSON.stringify({status})});fecharDetalhesTurma();toast(aberta?"Turma fechada para novas matrículas.":"Turma reaberta.");await carregarDados();}
+    catch(err){toast(err.message);}finally{b.disabled=false;}
 }
 
 /* =========================================================
@@ -504,10 +619,10 @@ function uList() {
     $("#ut2").innerHTML = T(
         ["Nome", "Perfil", "Turma / Disciplina", "Turno", "Situação", "Ações"],
         filtrados.map((u) => [
-            `<b>${u.n}</b>`,
-            u.p,
-            u.t,
-            u.tu,
+            `<b>${escHtml(u.n)}</b>`,
+            escHtml(u.p),
+            escHtml(u.t),
+            escHtml(u.tu),
             u.a ? tg("Ativo") : tg("Inativo", "m"),
             `
                 <button
@@ -741,7 +856,7 @@ function bars(v, l) {
                 fill="var(--c1)"
             >
                 <title>
-                    ${l[i] || ""}: ${x}
+                    ${escHtml(l[i] || "")}: ${x}
                 </title>
             </rect>
 
@@ -760,7 +875,7 @@ function bars(v, l) {
                 text-anchor="middle"
                 font-size="12"
                 fill="var(--mute)"
-            >${l[i] || ""}</text>
+            >${escHtml(l[i] || "")}</text>
         `;
     });
 
@@ -818,7 +933,7 @@ function line(v, l) {
                 text-anchor="middle"
                 font-size="12"
                 fill="var(--mute)"
-            >${l[i] || ""}</text>
+            >${escHtml(l[i] || "")}</text>
         `;
     });
 
@@ -900,7 +1015,7 @@ function donut(it) {
                     .map(
                         (x, i) =>
                             `<span style="--c:${C[i % C.length]}">
-                                ${x[0]} - ${x[1]}
+                                ${escHtml(x[0])} - ${x[1]}
                             </span>`,
                     )
                     .join("")}
@@ -916,7 +1031,7 @@ function hb(it) {
         .map(
             (x) =>
                 `<div class="hb">
-                    <span>${x[0]}</span>
+                    <span>${escHtml(x[0])}</span>
                     <div>
                         <i style="width:${(x[1] / mx) * 100}%"></i>
                     </div>
@@ -1047,8 +1162,8 @@ const R = {
                 .map(
                     (a) =>
                         `<div class="log">
-                            ${a[0]}
-                            <span>${a[1]}</span>
+                            ${escHtml(a[0])}
+                            <span>${escHtml(a[1])}</span>
                         </div>`,
                 )
                 .join("") ||
@@ -1059,109 +1174,15 @@ const R = {
 
     turmas() {
         const A = indicadores.alunos || 0;
-
         const C = A + (indicadores.vagasLivres || 0);
-
-        kv("kt-al", A);
-
-        $("#kt-al2").textContent = `de ${C} vagas`;
-
-        kv("kt-vg", indicadores.vagasLivres);
-
-        kv("kt-tm", indicadores.turmas);
-
+        kv("kt-al", A); $("#kt-al2").textContent = `de ${C} vagas`;
+        kv("kt-vg", indicadores.vagasLivres); kv("kt-tm", indicadores.turmas);
         const select = $("#ts");
-
         if (select) {
-            select.innerHTML = series
-                .map(
-                    (s) =>
-                        `<option value="${s.s}">
-                                ${s.s}
-                            </option>`,
-                )
-                .join("");
+            const opts = [...new Set(["1º Ano", "2º Ano", "3º Ano", ...series.map((s) => s.s)])];
+            select.innerHTML = opts.map((s) => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join("");
         }
-
-        $("#series").innerHTML = series
-            .map((s, si) => {
-                const al = s.t.reduce((a, t) => a + t.al, 0);
-
-                const cp = s.t.reduce((a, t) => a + t.cap, 0);
-
-                const pc = cp ? Math.round((al / cp) * 100) : 0;
-
-                return `
-                            <div class="card">
-                                <div class="ord">
-                                    ${si + 1}
-                                    <sup>º</sup>
-                                    <small>Ano</small>
-                                </div>
-
-                                <p
-                                    class="sub"
-                                    style="margin:6px 0 10px"
-                                >
-                                    ${al}
-                                    alunos -
-                                    ${s.t.length}
-                                    turmas -
-                                    ${pc}%
-                                    ocupado
-                                </p>
-
-                                <div class="prog">
-                                    <i
-                                        style="width:${pc}%"
-                                    ></i>
-                                </div>
-
-                                <div
-                                    style="margin-top:12px"
-                                >
-                                    ${
-                                        s.t
-                                            .map(
-                                                (t) =>
-                                                    `
-                                                        <div class="tm">
-                                                            <div>
-                                                                <b>${t.n}</b>
-                                                                <span>${t.tu}</span>
-                                                            </div>
-
-                                                            <div
-                                                                class="prog"
-                                                                style="flex:1;min-width:70px"
-                                                            >
-                                                                <i
-                                                                    style="width:${
-                                                                        t.cap
-                                                                            ? (t.al /
-                                                                                  t.cap) *
-                                                                              100
-                                                                            : 0
-                                                                    }%"
-                                                                ></i>
-                                                            </div>
-
-                                                            <b>
-                                                                ${t.al}/${t.cap}
-                                                            </b>
-                                                        </div>
-                                                    `,
-                                            )
-                                            .join("") ||
-                                        `<p class="sub">
-                                            Sem turmas abertas.
-                                        </p>`
-                                    }
-                                </div>
-                            </div>
-                        `;
-            })
-            .join("");
+        renderizarListaTurmas();
     },
 
     professores() {
@@ -1187,15 +1208,22 @@ const R = {
             ];
         });
 
-        $("#ch-prof").innerHTML = bars(
-            dados.map((x) => x[3]),
-            dados.map((x) => x[0].split(" ")[0]),
-        );
+        const contador = $("#prof-total");
+        if (contador) {
+            contador.textContent = `${dados.length} ${dados.length === 1 ? "professor" : "professores"}`;
+        }
 
-        $("#t-prof").innerHTML = T(
-            ["Professor", "MASP", "E-mail", "Aulas semanais"],
-            dados,
-        );
+        $("#t-prof").innerHTML = dados.length
+            ? T(
+                ["Professor", "MASP", "E-mail", "Aulas semanais"],
+                dados.map((linha) => [
+                    `<strong class="professor-nome">${escHtml(linha[0])}</strong>`,
+                    escHtml(linha[1]),
+                    `<span class="professor-email">${escHtml(linha[2])}</span>`,
+                    `<span class="professor-aulas">${linha[3]} ${linha[3] === 1 ? "aula" : "aulas"}</span>`,
+                ]),
+            )
+            : `<div class="professores-vazio"><strong>Nenhum professor encontrado</strong><p>Cadastre um professor para que ele apareça nesta lista.</p></div>`;
     },
 
     usuarios() {
@@ -1214,7 +1242,7 @@ const R = {
                 .map(
                     (p) =>
                         `<div class="log">
-                            <b>${p.n}</b>
+                            <b>${escHtml(p.n)}</b>
                             <span>
                                 ${p.q}
                             </span>
@@ -1228,9 +1256,9 @@ const R = {
         $("#t-acervo").innerHTML = T(
             ["Produto", "Categoria", "Local", "Qtd.", "Mínimo", "Situação"],
             prods.map((p) => [
-                `<b>${p.n}</b>`,
-                p.c,
-                p.l,
+                `<b>${escHtml(p.n)}</b>`,
+                escHtml(p.c),
+                escHtml(p.l),
                 p.q,
                 p.m,
                 p.q <= p.m ? tg("Estoque baixo", "r") : tg("Normal"),
@@ -1242,8 +1270,8 @@ const R = {
         $("#t-res").innerHTML = T(
             ["Solicitante", "Item", "Data", "Situação", "Ações"],
             reservas.map((r) => [
-                `<b>${r.q}</b>`,
-                r.i,
+                `<b>${escHtml(r.q)}</b>`,
+                escHtml(r.i),
                 r.d,
                 tg(
                     r.s,
@@ -1303,10 +1331,10 @@ const R = {
             emps
                 .filter((e) => e.s !== "Devolvido")
                 .map((e) => [
-                    `<b>${e.q}</b>`,
-                    e.i,
-                    e.r,
-                    e.p,
+                    `<b>${escHtml(e.q)}</b>`,
+                    escHtml(e.i),
+                    escHtml(e.r),
+                    escHtml(e.p),
                     tg(e.s, e.s === "Atrasado" ? "r" : "g"),
                     `
                                 <button
@@ -1327,7 +1355,7 @@ const R = {
 
         $("#mt").innerHTML = T(
             ["Data", "Tipo", "Pessoa", "Item"],
-            dados.map((m) => [m[0], m[1], m[2], m[3]]),
+            dados.map((m) => m.map((valor) => escHtml(valor))),
         );
     },
 
@@ -1350,10 +1378,10 @@ const R = {
                                 class="dot"
                                 style="--c:${TP[e.t]?.[1] || "#888"}"
                             ></span>
-                            ${TP[e.t]?.[0] || e.t}
+                            ${escHtml(TP[e.t]?.[0] || e.t)}
                         `,
 
-                `<b>${e.n}</b>`,
+                `<b>${escHtml(e.n)}</b>`,
             ]),
         );
     },
@@ -1402,8 +1430,8 @@ const R = {
                 .map(
                     (a) =>
                         `<div class="log">
-                            ${a[0]}
-                            <span>${a[1]}</span>
+                            ${escHtml(a[0])}
+                            <span>${escHtml(a[1])}</span>
                         </div>`,
                 )
                 .join("") ||
@@ -1508,22 +1536,86 @@ async function carregarDadosProfessores() {
 
 function preencherSelectProfessores() {
     const select = $("#pp");
-
     if (!select) return;
 
-    select.innerHTML = `<option value="">Selecione o professor</option>`;
+    const selecionado = select.value;
+    select.innerHTML = `<option value="">Selecione um professor</option>`;
 
     professoresReais.forEach((professor) => {
         const option = document.createElement("option");
-
         option.value = professor.usuarioID;
-
-        option.textContent = `${professor.nome} — ${
-            professor.identificador || "Sem MASP"
-        }`;
-
+        option.textContent = `${professor.nome} — ${professor.identificador || "Sem MASP"}`;
         select.appendChild(option);
     });
+
+    if (selecionado && professoresReais.some((p) => p.usuarioID === selecionado)) {
+        select.value = selecionado;
+    }
+}
+
+function normalizarMaspBusca(valor) {
+    return String(valor || "").trim().toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]/g, "");
+}
+
+function pesquisarProfessorMasp() {
+    const campo = $("#busca-masp");
+    const resultados = $("#masp-resultados");
+    const status = $("#masp-status");
+    const select = $("#pp");
+    if (!campo || !resultados || !status || !select) return;
+
+    const digitado = campo.value.trim();
+    const busca = normalizarMaspBusca(digitado);
+    resultados.innerHTML = "";
+    select.value = "";
+
+    if (!busca) {
+        status.textContent = "Digite o MASP para localizar o professor.";
+        status.dataset.estado = "";
+        return;
+    }
+
+    const encontrados = professoresReais.filter((p) => {
+        const masp = normalizarMaspBusca(p.identificador);
+        return masp && masp.includes(busca);
+    });
+
+    if (!encontrados.length) {
+        status.textContent = "MASP não encontrado. Confira os números digitados.";
+        status.dataset.estado = "erro";
+        return;
+    }
+
+    status.textContent = encontrados.length === 1
+        ? "1 professor encontrado."
+        : `${encontrados.length} professores encontrados. Continue digitando para refinar.`;
+    status.dataset.estado = "sucesso";
+
+    encontrados.forEach((professor) => {
+        const botao = document.createElement("button");
+        botao.type = "button";
+        botao.className = "professor-masp-opcao";
+        botao.setAttribute("role", "option");
+        botao.innerHTML = `<strong>${escHtml(professor.nome || "Sem nome")}</strong><span>MASP: ${escHtml(professor.identificador || "Não informado")}</span>`;
+        botao.addEventListener("click", () => {
+            select.value = professor.usuarioID;
+            campo.value = professor.identificador || "";
+            resultados.innerHTML = "";
+            status.textContent = `Professor selecionado: ${professor.nome} — MASP ${professor.identificador}.`;
+            status.dataset.estado = "sucesso";
+        });
+        resultados.appendChild(botao);
+    });
+
+    const maspDigitado = normalizarMaspBusca(digitado);
+    const exatos = encontrados.filter((p) => normalizarMaspBusca(p.identificador) === maspDigitado);
+    if (exatos.length === 1) {
+        const professor = exatos[0];
+        select.value = professor.usuarioID;
+        resultados.innerHTML = "";
+        status.textContent = `MASP exato encontrado: ${professor.nome}.`;
+        status.dataset.estado = "sucesso";
+    }
 }
 
 function preencherSelectTurmas() {
@@ -1564,53 +1656,67 @@ function preencherSelectDisciplinas() {
     });
 }
 
+document.addEventListener("input", (evento) => {
+    if (evento.target?.id === "busca-masp") pesquisarProfessorMasp();
+});
+
 async function addProf() {
-    const nome = $("#pn")?.value.trim();
-    const email = $("#pe")?.value.trim();
-    const senha = $("#ps")?.value;
     const masp = $("#pm")?.value.trim();
 
-    if (!nome) {
-        return toast("Informe o nome do professor.");
-    }
-
-    if (!email) {
-        return toast("Informe o e-mail do professor.");
-    }
-
-    if (!senha) {
-        return toast("Informe uma senha provisória.");
+    if (!masp) {
+        return toast("Informe o MASP do professor.");
     }
 
     try {
         const resultado = await api("/secretaria/professores", {
             method: "POST",
-            body: JSON.stringify({
-                nome,
-                email,
-                senha,
-                masp,
-            }),
+            body: JSON.stringify({ masp }),
         });
 
         if (!resultado.sucesso) {
             throw new Error(
-                resultado.erro || "Não foi possível cadastrar o professor.",
+                resultado.erro || "Não foi possível autorizar o MASP.",
             );
         }
 
-        toast("Professor cadastrado com sucesso.");
-
-        $("#pn").value = "";
-        $("#pe").value = "";
-        $("#ps").value = "";
+        toast(`MASP autorizado com status PENDENTE. ID: ${resultado.autorizacaoID}`);
         $("#pm").value = "";
-
         await carregarDados();
-
         await carregarDadosProfessores();
     } catch (erro) {
-        console.error("Erro ao cadastrar professor:", erro);
+        console.error("Erro ao autorizar MASP do professor:", erro);
+        toast(erro.message);
+    }
+}
+
+async function cadastrarProfessorAgora() {
+    const masp = $("#np-masp")?.value.trim();
+    const nome = $("#np-nome")?.value.trim();
+    const idade = Number($("#np-idade")?.value);
+    const email = $("#np-email")?.value.trim();
+    const senha = $("#np-senha")?.value;
+
+    if (!masp || !nome || !idade || !email || !senha) {
+        return toast("Preencha todos os campos do cadastro imediato.");
+    }
+    if (senha.length < 8) return toast("A senha precisa ter pelo menos 8 caracteres.");
+
+    try {
+        const resultado = await api("/secretaria/professores/cadastrar", {
+            method: "POST",
+            body: JSON.stringify({ masp, nome, idade, email, senha }),
+        });
+        if (!resultado.sucesso) throw new Error(resultado.erro || "Não foi possível cadastrar o professor.");
+
+        toast(`Professor cadastrado com sucesso. ID: ${resultado.usuarioID}`);
+        ["np-masp", "np-nome", "np-idade", "np-email", "np-senha"].forEach((id) => {
+            const campo = document.getElementById(id);
+            if (campo) campo.value = "";
+        });
+        await carregarDados();
+        await carregarDadosProfessores();
+    } catch (erro) {
+        console.error("Erro ao cadastrar professor imediatamente:", erro);
         toast(erro.message);
     }
 }
@@ -1651,6 +1757,10 @@ async function assign() {
         toast(resultado.mensagem || "Professor vinculado com sucesso.");
 
         $("#pp").value = "";
+        $("#busca-masp").value = "";
+        $("#masp-resultados").innerHTML = "";
+        $("#masp-status").textContent = "Digite o MASP para localizar o professor.";
+        $("#masp-status").dataset.estado = "";
         $("#pt").value = "";
         $("#pdv").value = "";
         $("#pa").value = "4";

@@ -392,113 +392,228 @@ function renderRecentMoves() {
         .join("");
 }
 
+/* Cadastro de item e criação automática do registro de estoque. */
+let opcoesCadastroItem = { categorias: [], subcategorias: [] };
+async function carregarOpcoesCadastroItem() {
+ const categoriaSelect=el("newItemCategory"), subcategoriaSelect=el("newItemSubcategory");
+ if(!categoriaSelect||!subcategoriaSelect) return;
+ try {
+  const response=await fetch(API_BASE+"/responsavel/itens/opcoes",{credentials:"include",headers:{Accept:"application/json"}});
+  const data=await response.json();
+  if(!response.ok||!data.sucesso) throw new Error(data.mensagem||"Não foi possível carregar categorias.");
+  opcoesCadastroItem=data;
+  categoriaSelect.innerHTML='<option value="">Selecione uma categoria</option>'+data.categorias.map(i=>'<option value="'+escapeHTML(i.id)+'">'+escapeHTML(i.nome)+'</option>').join("");
+  atualizarSubcategoriasCadastroItem();
+ } catch(erro) { categoriaSelect.innerHTML='<option value="">Erro ao carregar categorias</option>'; showNotice(erro.message||"Erro ao carregar opções.",true); }
+}
+function atualizarSubcategoriasCadastroItem() {
+ const categoriaID=el("newItemCategory")?.value||"", select=el("newItemSubcategory");
+ if(!select) return;
+ const lista=opcoesCadastroItem.subcategorias.filter(i=>i.categoriaID===categoriaID);
+ select.innerHTML='<option value="">'+(categoriaID?"Selecione uma subcategoria":"Selecione uma categoria primeiro")+'</option>'+lista.map(i=>'<option value="'+escapeHTML(i.id)+'">'+escapeHTML(i.nome)+'</option>').join("");
+ select.disabled=!categoriaID||lista.length===0;
+ if(categoriaID&&!lista.length) select.innerHTML='<option value="">Nenhuma subcategoria ativa nesta categoria</option>';
+}
+function configurarFechamentoCadastroItem() {
+ const dialog=el("newItemDialog");
+ if(!dialog || dialog.dataset.clickOutsideConfigured==="true") return;
+ dialog.dataset.clickOutsideConfigured="true";
+ dialog.addEventListener("click", event => {
+  if(event.target===dialog) dialog.close();
+ });
+ dialog.addEventListener("click", event => {
+  const rect=dialog.getBoundingClientRect();
+  const clicouForaDoConteudo=event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom;
+  if(clicouForaDoConteudo) dialog.close();
+ });
+}
+function abrirCadastroItem() {
+ const dialog=el("newItemDialog"), form=el("newItemForm");
+ if(!dialog||!form) return;
+ form.reset(); opcoesCadastroItem={categorias:[],subcategorias:[]};
+ if(el("newItemCategory")) el("newItemCategory").innerHTML='<option value="">Carregando categorias...</option>';
+ if(el("newItemSubcategory")) {el("newItemSubcategory").innerHTML='<option value="">Selecione uma categoria primeiro</option>';el("newItemSubcategory").disabled=true;}
+ if(typeof dialog.showModal==="function") dialog.showModal(); else {showNotice("Seu navegador não suporta o formulário.",true);return;}
+ configurarFechamentoCadastroItem();
+ carregarOpcoesCadastroItem();
+}
+async function salvarNovoItem(event) {
+ event.preventDefault();
+ const form=el("newItemForm"), botao=el("saveNewItemButton");
+ if(!form||!botao) return;
+ const payload=Object.fromEntries(new FormData(form).entries());
+ payload.quantidade=Number(payload.quantidade); payload.estoqueMinimo=Number(payload.estoqueMinimo);
+ botao.disabled=true;
+ try {
+  const response=await fetch(API_BASE+"/responsavel/itens",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(payload)});
+  const data=await response.json();
+  if(!response.ok||!data.sucesso) throw new Error(data.mensagem||"Não foi possível cadastrar o item.");
+  el("newItemDialog")?.close(); showNotice(data.mensagem||"Item cadastrado com sucesso."); await carregarPainel(); openPage("estoque");
+ } catch(erro) {showNotice(erro.message||"Erro ao cadastrar item.",true);}
+ finally {botao.disabled=false;}
+}
+
+function abrirDialogAcaoEstoque(estoqueID, acao) {
+    const dialog = el("stockActionDialog");
+    const form = el("stockActionForm");
+    if (!dialog || !form || !estoqueID || !["entrada", "saida", "desativar"].includes(acao)) {
+        showNotice("Não foi possível abrir a ação do estoque.", true);
+        return;
+    }
+
+    form.reset();
+    dialog.dataset.estoqueId = estoqueID;
+    dialog.dataset.acao = acao;
+    const quantidadeWrap = el("stockActionQuantityWrap");
+    const motivoWrap = el("stockActionReasonWrap");
+    const warning = el("stockActionWarning");
+    const title = el("stockActionTitle");
+    const description = el("stockActionDescription");
+    const submit = el("stockActionSubmit");
+    const desativar = acao === "desativar";
+
+    quantidadeWrap.hidden = desativar;
+    motivoWrap.hidden = desativar;
+    el("stockActionQuantity").required = !desativar;
+    el("stockActionReason").required = !desativar;
+
+    if (desativar) {
+        title.textContent = "Desativar item neste setor";
+        description.textContent = "Confirme a desativação deste item no seu setor.";
+        warning.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> As quantidades e o histórico serão preservados. O item ficará indisponível neste setor.';
+        submit.innerHTML = '<i class="fa-solid fa-ban"></i> Desativar item';
+        submit.classList.add("danger-action");
+    } else {
+        title.textContent = acao === "entrada" ? "Aumentar estoque" : "Diminuir estoque";
+        description.textContent = acao === "entrada" ? "Registre a entrada de unidades no seu setor." : "Registre a saída de unidades do seu setor.";
+        warning.innerHTML = '<i class="fa-solid fa-circle-info"></i> A movimentação será registrada no histórico do setor.';
+        submit.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar';
+        submit.classList.remove("danger-action");
+    }
+
+    dialog.showModal();
+}
+
+async function executarAcaoEstoque(event) {
+    event.preventDefault();
+    const dialog = el("stockActionDialog");
+    const form = el("stockActionForm");
+    const submit = el("stockActionSubmit");
+    if (!dialog || !form || !submit) return;
+
+    const estoqueID = dialog.dataset.estoqueId;
+    const acao = dialog.dataset.acao;
+    let payload;
+    if (acao === "entrada" || acao === "saida") {
+        const quantidade = Number(el("stockActionQuantity").value);
+        const motivo = el("stockActionReason").value.trim();
+        if (!Number.isSafeInteger(quantidade) || quantidade <= 0) {
+            showNotice("Informe uma quantidade inteira maior que zero.", true);
+            return;
+        }
+        if (!motivo) {
+            showNotice("O motivo é obrigatório.", true);
+            return;
+        }
+        payload = { operacao: acao, quantidade, motivo };
+    } else if (acao !== "desativar") {
+        return;
+    }
+
+    submit.disabled = true;
+    try {
+        const response = await fetch(
+            `${API_BASE}/responsavel/estoque/${encodeURIComponent(estoqueID)}/${acao === "desativar" ? "desativar" : "ajustar"}`,
+            {
+                method: acao === "desativar" ? "PATCH" : "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json", Accept: "application/json" },
+                body: acao === "desativar" ? undefined : JSON.stringify(payload),
+            },
+        );
+        const data = await response.json();
+        if (!response.ok || data.sucesso === false) {
+            throw new Error(data.mensagem || data.erro || `Erro HTTP ${response.status}`);
+        }
+        dialog.close();
+        showNotice(data.mensagem || "Estoque atualizado.");
+        await carregarPainel();
+    } catch (error) {
+        showNotice(error.message || "Não foi possível atualizar o estoque.", true);
+    } finally {
+        submit.disabled = false;
+    }
+}
+
 /* =====================================================
    TABELA DE ESTOQUE
 ===================================================== */
 
 function renderStock(filter = "") {
-    const tbody = el("stockRows");
-    if (!tbody) return;
+    const container = el("stockRows");
+    if (!container) return;
 
     const categoriaSelecionada = el("stockCategoryFilter")?.value || "";
-
     const statusSelecionado = el("stockStatusFilter")?.value || "";
-
-    const categorias = [
-        ...new Set(
-            state.stock
-                .map((item) => getValue(item, ["categoria", "Categoria"], ""))
-                .filter(Boolean),
-        ),
-    ];
-
-    const status = [
-        ...new Set(
-            state.stock
-                .map((item) => getValue(item, ["status", "Status"], ""))
-                .filter(Boolean),
-        ),
-    ];
+    const categorias = [...new Set(state.stock.map(item => getValue(item, ["categoria", "Categoria"], "")).filter(Boolean))];
+    const status = [...new Set(state.stock.map(item => getValue(item, ["statusLocal", "StatusLocal", "status", "Status"], "ATIVO")).filter(Boolean))];
 
     const preencherFiltro = (id, valores, selecionado, titulo) => {
         const select = el(id);
         if (!select) return;
-
-        select.innerHTML =
-            `<option value="">${titulo}</option>` +
-            valores
-                .map(
-                    (valor) =>
-                        `<option value="${escapeHTML(valor)}">${escapeHTML(valor)}</option>`,
-                )
-                .join("");
-
+        select.innerHTML = `<option value="">${titulo}</option>` + valores.map(valor => `<option value="${escapeHTML(valor)}">${escapeHTML(valor)}</option>`).join("");
         select.value = selecionado;
     };
-
-    preencherFiltro(
-        "stockCategoryFilter",
-        categorias,
-        categoriaSelecionada,
-        "Todas as categorias",
-    );
-
-    preencherFiltro(
-        "stockStatusFilter",
-        status,
-        statusSelecionado,
-        "Todos os status",
-    );
+    preencherFiltro("stockCategoryFilter", categorias, categoriaSelecionada, "Todas as categorias");
+    preencherFiltro("stockStatusFilter", status, statusSelecionado, "Todos os status");
 
     const busca = normalizeText(filter);
-
-    const rows = state.stock.filter((item) => {
-        const codigo = normalizeText(
-            getValue(item, ["produtoID", "ProdutoID", "estoqueID"], ""),
-        );
-
-        const produto = normalizeText(
-            getValue(item, ["produto", "Produto", "nome", "Nome"], ""),
-        );
-
+    const rows = state.stock.filter(item => {
+        const codigo = normalizeText(getValue(item, ["codigo", "Codigo", "produtoID", "ProdutoID", "estoqueID"], ""));
+        const produto = normalizeText(getValue(item, ["produto", "Produto", "nome", "Nome", "nomeProduto"], ""));
         const categoria = getValue(item, ["categoria", "Categoria"], "");
-
-        const situacao = getValue(item, ["status", "Status"], "");
-
-        const correspondeBusca =
-            !busca ||
-            codigo.includes(busca) ||
-            produto.includes(busca) ||
-            normalizeText(categoria).includes(busca);
-
-        const correspondeCategoria =
-            !categoriaSelecionada || categoria === categoriaSelecionada;
-
-        const correspondeStatus =
-            !statusSelecionado || situacao === statusSelecionado;
-
-        return correspondeBusca && correspondeCategoria && correspondeStatus;
+        const situacao = getValue(item, ["statusLocal", "StatusLocal", "status", "Status"], "ATIVO");
+        return (!busca || codigo.includes(busca) || produto.includes(busca) || normalizeText(categoria).includes(busca))
+            && (!categoriaSelecionada || categoria === categoriaSelecionada)
+            && (!statusSelecionado || situacao === statusSelecionado);
     });
 
     if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="empty">Nenhum item encontrado.</td></tr>`;
+        container.innerHTML = '<div class="stock-empty"><i class="fa-solid fa-box-open"></i><strong>Nenhum item encontrado</strong><span>Tente alterar a busca ou os filtros.</span></div>';
         return;
     }
 
-    tbody.innerHTML = rows
-        .map(
-            (item) => `
-        <tr>
-            <td>${escapeHTML(getValue(item, ["produtoID", "ProdutoID", "codigo", "Codigo", "id"]))}</td>
-            <td>${escapeHTML(getValue(item, ["produto", "Produto", "nome", "Nome", "nomeProduto"]))}</td>
-            <td>${escapeHTML(getValue(item, ["categoria", "Categoria"]))}</td>
-            <td>${escapeHTML(getValue(item, ["quantidade", "Quantidade", "total"]))}</td>
-            <td>${escapeHTML(getValue(item, ["disponivel", "Disponivel", "quantidadeDisponivel"]))}</td>
-            <td>${statusBadge(getValue(item, ["status", "Status"], "Disponível"))}</td>
-        </tr>
-    `,
-        )
-        .join("");
+    container.innerHTML = rows.map(item => {
+        const nome = getValue(item, ["produto", "Produto", "nome", "Nome", "nomeProduto"], "Item sem nome");
+        const categoriaItem = getValue(item, ["categoria", "Categoria"], "");
+        const textoItem = normalizeText(`${nome} ${categoriaItem}`);
+        const iconeItem = /computador|desktop|notebook|laptop|pc gamer|microcomputador|informatica/.test(textoItem) ? "fa-desktop" : "fa-box";
+        const codigo = getValue(item, ["codigo", "Codigo", "produtoID", "ProdutoID", "estoqueID"], "—");
+        const total = numberValue(getValue(item, ["quantidade", "Quantidade", "total"], 0));
+        const disponivel = numberValue(getValue(item, ["disponivel", "Disponivel", "quantidadeDisponivel"], 0));
+        const localStatus = String(getValue(item, ["statusLocal", "StatusLocal", "status", "Status"], "ATIVO"));
+        const inativo = normalizeText(localStatus) === "inativo";
+        const estoqueId = escapeHTML(getValue(item, ["estoqueID", "EstoqueID"], ""));
+        return `
+        <article class="stock-item-card ${inativo ? "is-inactive" : ""}">
+            <div class="stock-card-main">
+                <div class="stock-card-icon"><i class="fa-solid ${iconeItem}"></i></div>
+                <div class="stock-card-info">
+                    <div class="stock-card-title-row"><h3>${escapeHTML(nome)}</h3><span class="stock-state ${inativo ? "inactive" : "active"}"><span></span>${inativo ? "Inativo" : "Ativo"}</span></div>
+                    <p class="stock-code"><i class="fa-solid fa-barcode"></i> Código: <strong>${escapeHTML(codigo)}</strong></p>
+                    <div class="stock-card-metrics"><span><i class="fa-solid fa-cubes-stacked"></i> Total: <strong>${formatNumber(total)}</strong></span><span class="stock-metric-available"><i class="fa-solid fa-circle-check"></i> Disponíveis: <strong>${formatNumber(disponivel)}</strong></span></div>
+                    <div class="stock-card-category"><i class="fa-solid fa-tag"></i> ${escapeHTML(getValue(item, ["categoria", "Categoria"], "Sem categoria"))}</div>
+                </div>
+            </div>
+            <div class="stock-card-actions">
+                ${inativo ? '<span class="stock-inactive-note"><i class="fa-solid fa-ban"></i> Item desativado neste setor</span>' : `
+                    <button type="button" class="stock-action increase" data-stock-action="entrada" data-id="${estoqueId}"><i class="fa-solid fa-plus"></i><span>Aumentar</span></button>
+                    <button type="button" class="stock-action decrease" data-stock-action="saida" data-id="${estoqueId}"><i class="fa-solid fa-minus"></i><span>Diminuir</span></button>
+                    <button type="button" class="stock-action deactivate" data-stock-action="desativar" data-id="${estoqueId}"><i class="fa-solid fa-ban"></i><span>Desativar</span></button>
+                `}
+            </div>
+        </article>`;
+    }).join("");
 }
 
 /* =====================================================
@@ -1166,6 +1281,12 @@ function iniciarEventos() {
                 : digits.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
     });
 
+    el("openNewItemButton")?.addEventListener("click", abrirCadastroItem);
+    el("closeNewItemButton")?.addEventListener("click", () => el("newItemDialog")?.close());
+    el("cancelNewItemButton")?.addEventListener("click", () => el("newItemDialog")?.close());
+    el("newItemCategory")?.addEventListener("change", atualizarSubcategoriasCadastroItem);
+    el("newItemForm")?.addEventListener("submit", salvarNovoItem);
+
     el("stockSearch")?.addEventListener("input", (event) => {
         renderStock(event.target.value);
     });
@@ -1212,6 +1333,20 @@ function iniciarEventos() {
 
     el("stockStatusFilter")?.addEventListener("change", () => {
         renderStock(el("stockSearch")?.value || "");
+    });
+
+    el("stockRows")?.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-stock-action]");
+        if (!button || button.disabled) return;
+        abrirDialogAcaoEstoque(button.dataset.id, button.dataset.stockAction);
+    });
+
+    el("stockActionClose")?.addEventListener("click", () => el("stockActionDialog")?.close());
+    el("stockActionCancel")?.addEventListener("click", () => el("stockActionDialog")?.close());
+    el("stockActionForm")?.addEventListener("submit", executarAcaoEstoque);
+    el("stockActionDialog")?.addEventListener("click", (event) => {
+        const dialog = el("stockActionDialog");
+        if (event.target === dialog) dialog.close();
     });
 
     el("requestRows")?.addEventListener("click", (event) => {

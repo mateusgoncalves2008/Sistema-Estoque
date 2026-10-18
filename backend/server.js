@@ -11,7 +11,6 @@ const express = require("express");
 const helmet = require("helmet");
 const session = require("express-session");
 const authRoutes = require("./routes/auth");
-const debugRoutes = require("./routes/debug");
 const rateLimit = require("express-rate-limit");
 const sheets = require("./database/googleSheets");
 const cadastroRoutes = require("./routes/cadastro");
@@ -42,9 +41,15 @@ app.disable("x-powered-by");
 
 app.use(helmet());
 
+const frontendOrigin = process.env.FRONTEND_ORIGIN || "http://localhost:3000";
+
+if (process.env.NODE_ENV === "production" && !process.env.FRONTEND_ORIGIN) {
+    throw new Error("FRONTEND_ORIGIN precisa estar configurado em produção.");
+}
+
 app.use(
     cors({
-        origin: process.env.FRONTEND_ORIGIN || "http://localhost:3000",
+        origin: frontendOrigin,
         credentials: true,
     }),
 );
@@ -93,6 +98,39 @@ app.get("/", (req, res) => {
 });
 
 // ============================================================
+// LIMITAR TENTATIVAS DE LOGIN
+// ============================================================
+
+app.use(
+    "/api/login",
+    rateLimit({
+        windowMs: 15 * 60 * 1000,
+        limit: 10,
+        standardHeaders: "draft-8",
+        legacyHeaders: false,
+        message: {
+            sucesso: false,
+            mensagem: "Muitas tentativas de login. Aguarde 15 minutos e tente novamente.",
+        },
+    }),
+);
+
+// Limita tentativas de verificação/cadastro para reduzir enumeração e abuso.
+const cadastroLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 20,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: {
+        sucesso: false,
+        mensagem: "Muitas tentativas. Aguarde 15 minutos e tente novamente.",
+    },
+});
+
+app.use("/api/verificar-matricula", cadastroLimiter);
+app.use("/api/cadastro", cadastroLimiter);
+
+// ============================================================
 // ROTAS
 // ============================================================
 
@@ -105,41 +143,54 @@ app.use("/api", emprestimosRoutes);
 app.use("/api", responsavelRoutes);
 app.use("/api", bloqueiosDenunciasRoutes);
 app.use("/api", professorItensRoutes);
-app.use("/api", debugRoutes);
 
 // ============================================================
 // TESTE DO GOOGLE SHEETS
 // ============================================================
 
 app.get("/api/teste-planilha", async (req, res) => {
-    console.log("Rota /api/teste-planilha acessada");
+    const usuario = req.session?.usuario;
+    const tipo = String(usuario?.tipoUsuario || "").trim().toUpperCase();
+    const perfil = String(usuario?.perfil || "").trim().toUpperCase();
+    const administradores = ["ADM", "ADMIN", "ADMINISTRADOR"];
+
+    if (
+        !usuario ||
+        (!administradores.includes(tipo) && !administradores.includes(perfil))
+    ) {
+        return res.status(usuario ? 403 : 401).json({
+            sucesso: false,
+            mensagem: usuario
+                ? "Acesso permitido somente ao administrador."
+                : "Faça login para testar a conexão com a planilha.",
+        });
+    }
 
     try {
         if (!SPREADSHEET_ID) {
             return res.status(500).json({
                 sucesso: false,
-                erro: "SPREADSHEET_ID não foi encontrado no arquivo .env",
+                mensagem: "A planilha não está configurada no servidor.",
             });
         }
 
-        const resposta = await sheets.spreadsheets.values.get({
+        // Lê apenas uma célula para testar a conexão. Nunca devolve
+        // dados pessoais, hashes de senha ou salts da aba de usuários.
+        await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: "01_USUARIOS!A1:K5",
+            range: "01_USUARIOS!A1",
         });
 
-        res.json({
+        return res.json({
             sucesso: true,
-            mensagem: "Conexão com o Google Sheets funcionando!",
-            aba: "01_USUARIOS",
-            dados: resposta.data.values || [],
+            mensagem: "Conexão com o Google Sheets funcionando.",
         });
     } catch (erro) {
-        console.error("Erro ao acessar o Google Sheets:");
-        console.error(erro);
+        console.error("Erro ao testar conexão com o Google Sheets:", erro.message);
 
-        res.status(500).json({
+        return res.status(500).json({
             sucesso: false,
-            erro: erro.message,
+            mensagem: "Não foi possível acessar a planilha.",
         });
     }
 });
@@ -176,7 +227,3 @@ if (require.main === module) {
 }
 
 module.exports = app;
-
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});

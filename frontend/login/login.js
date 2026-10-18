@@ -3,6 +3,19 @@
 // ============================================================
 
 const API_URL = "/api";
+
+// Padroniza os dados acadêmicos antes de exibi-los ou enviá-los.
+function normalizarAnoEscolar(valor) {
+    const texto = String(valor || "").trim();
+    const numero = texto.match(/^(\d+)\s*(?:[º°o]?\s*ano)?$/i);
+    return numero ? `${numero[1]}° Ano` : texto;
+}
+
+function normalizarNomeTurma(valor) {
+    const texto = String(valor || "").trim();
+    const numero = texto.match(/^(?:turma\s*)?(\d+)$/i);
+    return numero ? `Turma ${numero[1]}` : texto;
+}
 // ============================================================
 // QUANDO A PÁGINA CARREGAR
 // ============================================================
@@ -529,11 +542,11 @@ async function verificarMatricula() {
         }
 
         if (campoAno) {
-            campoAno.value = cadastro.ano || "";
+            campoAno.value = normalizarAnoEscolar(cadastro.ano || "");
         }
 
         if (campoTurma) {
-            campoTurma.value = cadastro.turma || "";
+            campoTurma.value = normalizarNomeTurma(cadastro.turma || "");
         }
 
         if (campoTurno) {
@@ -645,9 +658,9 @@ async function enviarCadastro() {
 
     const nome = document.getElementById("nome")?.value.trim() || "";
 
-    const ano = document.getElementById("ano")?.value.trim() || "";
+    const ano = normalizarAnoEscolar(document.getElementById("ano")?.value || "");
 
-    const turma = document.getElementById("turma")?.value.trim() || "";
+    const turma = normalizarNomeTurma(document.getElementById("turma")?.value || "");
 
     const turno = document.getElementById("turno")?.value || "";
 

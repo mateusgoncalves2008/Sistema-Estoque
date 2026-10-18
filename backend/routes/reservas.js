@@ -230,7 +230,7 @@ async function buscarCategoria(categoriaID) {
 async function buscarEstoque(produtoID, localID) {
     const resposta = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: "06_ESTOQUE_LOCAIS!A:H",
+        range: "06_ESTOQUE_LOCAIS!A:I",
     });
 
     const linhas = resposta.data.values || [];
@@ -249,6 +249,7 @@ async function buscarEstoque(produtoID, localID) {
                 disponivel: numero(linha[5]),
                 indisponivel: numero(linha[6]),
                 ultimaAtualizacao: linha[7] || "",
+                statusLocal: normalizar(linha[8] || "ATIVO"),
             };
         }
     }
@@ -335,7 +336,27 @@ function existeConflito(reservas, produtoID, localID, inicio, fim) {
 
 router.get("/aluno/reservas/:usuarioID", async (req, res) => {
     try {
+        const sessao = req.session?.usuario;
+        if (!sessao?.id) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: "Faça login para consultar suas reservas.",
+            });
+        }
+
         const usuarioID = String(req.params.usuarioID || "").trim();
+        if (String(sessao.id).trim() !== usuarioID) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Você só pode consultar suas próprias reservas.",
+            });
+        }
+        if (normalizar(sessao.tipoUsuario) !== "ALUNO") {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Esta rota é exclusiva para alunos.",
+            });
+        }
 
         if (!usuarioID) {
             return res.status(400).json({
@@ -457,7 +478,27 @@ router.get("/aluno/reservas/:usuarioID", async (req, res) => {
 
 router.get("/professor/reservas/:usuarioID", async (req, res) => {
     try {
+        const sessao = req.session?.usuario;
+        if (!sessao?.id) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: "Faça login para consultar suas reservas.",
+            });
+        }
+
         const usuarioID = String(req.params.usuarioID || "").trim();
+        if (String(sessao.id).trim() !== usuarioID) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Você só pode consultar suas próprias reservas.",
+            });
+        }
+        if (normalizar(sessao.tipoUsuario) !== "PROFESSOR") {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Esta rota é exclusiva para professores.",
+            });
+        }
 
         if (!usuarioID) {
             return res.status(400).json({
@@ -778,10 +819,10 @@ router.post("/aluno/reservas", async (req, res) => {
             });
         }
 
-        if (estoque.disponivel <= 0) {
+        if (estoque.statusLocal !== "ATIVO") {
             return res.status(409).json({
                 sucesso: false,
-                mensagem: "Este item não está disponível no momento.",
+                mensagem: "Este item está desativado neste setor e não pode ser reservado.",
             });
         }
 
@@ -1104,7 +1145,15 @@ router.post("/professor/reservas", async (req, res) => {
             });
         }
 
-        const quantidadeDisponivel = estoque.disponivel - estoque.reservado;
+        if (estoque.statusLocal !== "ATIVO") {
+            return res.status(409).json({
+                sucesso: false,
+                mensagem: "Este item está desativado neste setor e não pode ser reservado.",
+            });
+        }
+
+        // A coluna Disponivel já deve representar o saldo após reservas.
+        const quantidadeDisponivel = estoque.disponivel;
 
         if (quantidadeDisponivel <= 0) {
             return res.status(409).json({

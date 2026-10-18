@@ -6,6 +6,19 @@ const sheets = require("../database/googleSheets");
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
+// Padroniza Ano e Turma para manter os dados consistentes na planilha.
+function normalizarAnoEscolar(valor) {
+    const texto = String(valor || "").trim();
+    const numero = texto.match(/^(\d+)\s*(?:[º°o]?\s*ano)?$/i);
+    return numero ? `${numero[1]}° Ano` : texto;
+}
+
+function normalizarNomeTurma(valor) {
+    const texto = String(valor || "").trim();
+    const numero = texto.match(/^(?:turma\s*)?(\d+)$/i);
+    return numero ? `Turma ${numero[1]}` : texto;
+}
+
 // ============================================================
 // GERAR SALT
 // ============================================================
@@ -20,7 +33,13 @@ function gerarSalt() {
 // ============================================================
 
 function gerarHashSenha(senha, salt) {
-    return crypto.createHash("sha256").update(`${salt}:${senha}`).digest("hex");
+    const derivada = crypto.scryptSync(senha, salt, 64, {
+        N: 16384,
+        r: 8,
+        p: 1,
+        maxmem: 64 * 1024 * 1024,
+    }).toString("hex");
+    return "scrypt$16384$8$1$" + derivada;
 }
 
 // ============================================================
@@ -36,17 +55,12 @@ function gerarHashSenha(senha, salt) {
 // ============================================================
 
 router.post("/verificar-matricula", async (req, res) => {
-    console.log(">>> REQUISIÇÃO DE VERIFICAÇÃO RECEBIDA <<<");
 
     try {
-        console.log("1. Lendo dados enviados pelo navegador...");
 
         const { matricula } = req.body;
 
-        console.log("2. Matrícula recebida:", matricula);
-
         if (!matricula) {
-            console.log("3. Matrícula não informada.");
 
             return res.status(400).json({
                 sucesso: false,
@@ -56,32 +70,18 @@ router.post("/verificar-matricula", async (req, res) => {
 
         const identificador = String(matricula).trim();
 
-        console.log("4. Identificador normalizado:", identificador);
-        console.log("5. SPREADSHEET_ID existe?", !!SPREADSHEET_ID);
-
-        console.log("6. Consultando Google Sheets...");
-
         const resposta = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
             range: "17_CADASTROS_AUTORIZADOS!A2:J",
         });
 
-        console.log("7. Google Sheets respondeu.");
-
         const autorizacoes = resposta.data.values || [];
-
-        console.log(
-            "8. Quantidade de registros encontrados:",
-            autorizacoes.length,
-        );
 
         const registro = autorizacoes.find((linha) => {
             const identificadorPlanilha = String(linha[2] || "").trim();
 
             return identificadorPlanilha === identificador;
         });
-
-        console.log("9. Registro encontrado?", !!registro);
 
         if (!registro) {
             const ehMASP = /^\d{7}-\d$/.test(identificador);
@@ -107,15 +107,9 @@ router.post("/verificar-matricula", async (req, res) => {
             status,
         ] = registro;
 
-        console.log("11. Dados encontrados:", {
-            autorizacaoID,
-            tipo,
-            identificadorEncontrado,
-            status,
-        });
+        const statusNormalizado = String(status || "").trim().toUpperCase();
 
-        if (status === "CADASTRADO") {
-            console.log("12. Matrícula já cadastrada.");
+        if (statusNormalizado === "CADASTRADO") {
 
             return res.status(409).json({
                 sucesso: false,
@@ -123,16 +117,13 @@ router.post("/verificar-matricula", async (req, res) => {
             });
         }
 
-        if (status !== "PENDENTE") {
-            console.log("13. Status não permitido:", status);
+        if (statusNormalizado !== "PENDENTE") {
 
             return res.status(403).json({
                 sucesso: false,
                 mensagem: "Esta matrícula não está disponível para cadastro.",
             });
         }
-
-        console.log("14. Matrícula autorizada.");
 
         const respostaFinal = {
             sucesso: true,
@@ -150,8 +141,6 @@ router.post("/verificar-matricula", async (req, res) => {
                 status: status || "",
             },
         };
-
-        console.log("15. Enviando resposta para o navegador.");
 
         return res.json(respostaFinal);
     } catch (erro) {
@@ -181,19 +170,7 @@ router.post("/cadastro", async (req, res) => {
             email,
             senha,
             tipo,
-        } = req.body;
-
-        console.log(">>> INICIANDO CADASTRO <<<");
-        console.log("Dados recebidos:", {
-            matricula,
-            nome,
-            ano,
-            turma,
-            turno,
-            idade,
-            email,
-            tipo,
-        });
+        } = req.body || {};
 
         // ==================================================
         // VALIDAÇÕES BÁSICAS
@@ -213,6 +190,23 @@ router.post("/cadastro", async (req, res) => {
             .trim()
             .toUpperCase();
 
+        const anoNormalizado = normalizarAnoEscolar(ano);
+        const turmaNormalizada = normalizarNomeTurma(turma);
+
+        if (typeof senha !== "string" || senha.length < 12 || senha.length > 128) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "A senha deve ter entre 12 e 128 caracteres.",
+            });
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalizado)) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "Informe um e-mail válido.",
+            });
+        }
+
         // ==================================================
         // VALIDAR TIPO
         // ==================================================
@@ -229,7 +223,7 @@ router.post("/cadastro", async (req, res) => {
         // ==================================================
 
         if (tipoNormalizado === "ALUNO") {
-            if (!ano || !turma || !turno) {
+            if (!anoNormalizado || !turmaNormalizada || !turno) {
                 return res.status(400).json({
                     sucesso: false,
                     mensagem:
@@ -384,7 +378,11 @@ router.post("/cadastro", async (req, res) => {
                 ? "ADMIN"
                 : tipoNormalizado === "LIDER"
                   ? "LIDER"
-                  : "CONSULTA";
+                  : tipoNormalizado === "PROFESSOR"
+                    ? "PROFESSOR"
+                    : tipoNormalizado === "ALUNO"
+                      ? "ALUNO"
+                      : "CONSULTA";
 
         const novaLinha = [
             usuarioID, // A - UsuarioID
@@ -400,13 +398,6 @@ router.post("/cadastro", async (req, res) => {
             "", // K - UltimoLogin
         ];
 
-        console.log("Nova linha 01_USUARIOS:", {
-            usuarioID,
-            nomeNormalizado,
-            emailNormalizado,
-            tipoNormalizado,
-        });
-
         // ==================================================
         // GRAVAR NA 01_USUARIOS
         // ==================================================
@@ -420,8 +411,6 @@ router.post("/cadastro", async (req, res) => {
                 values: [novaLinha],
             },
         });
-
-        console.log("Usuário criado:", usuarioID);
 
         // ==================================================
         // ATUALIZAR 17_CADASTROS_AUTORIZADOS
@@ -445,8 +434,8 @@ router.post("/cadastro", async (req, res) => {
                     [
                         usuarioID, // D - UsuarioID
                         nomeNormalizado, // E - Nome
-                        ano || "", // F - Ano
-                        turma || "", // G - Turma
+                        anoNormalizado, // F - Ano
+                        turmaNormalizada, // G - Turma
                         turno || "", // H - Turno
                         idade || "", // I - Idade
                         "CADASTRADO", // J - Status
@@ -454,14 +443,6 @@ router.post("/cadastro", async (req, res) => {
                 ],
             },
         });
-
-        console.log(
-            "Autorização atualizada:",
-            autorizacaoID,
-            "→",
-            usuarioID,
-            "→ CADASTRADO",
-        );
 
         // ==================================================
         // RESPOSTA
@@ -488,9 +469,6 @@ router.post("/cadastro", async (req, res) => {
         });
     }
 });
-
-console.log(">>> CADASTRO.JS FOI CARREGADO <<<");
-console.log(">>> ROTA /verificar-matricula REGISTRADA <<<");
 
 /* =========================================================
    AUTORIZAR RESPONSÁVEL — SOMENTE ADM AUTENTICADO
@@ -650,7 +628,6 @@ router.post("/autorizar-responsavel", somenteADM, async (req, res) => {
    POST /api/cadastro-responsavel
 ========================================================= */
 
-
 async function garantirAbaPerfilResponsaveis() {
     const nomeAba = "23_PERFIS_RESPONSAVEIS";
     const cabecalho = ["PerfilID", "UsuarioID", "DataNascimento", "CPF", "Telefone", "DataAtualizacao"];
@@ -783,10 +760,7 @@ router.post("/cadastro-responsavel", somenteADM, async (req, res) => {
         const usuarioID = gerarID("USR-", usuarios, /^USR-(\d+)$/);
 
         const salt = crypto.randomBytes(16).toString("hex");
-        const senhaHash = crypto
-            .createHash("sha256")
-            .update(`${salt}:${senha}`)
-            .digest("hex");
+        const senhaHash = gerarHashSenha(senha, salt);
 
         const metadados = await sheets.spreadsheets.get({
             spreadsheetId: SPREADSHEET_ID,
@@ -884,7 +858,6 @@ router.post("/cadastro-responsavel", somenteADM, async (req, res) => {
     }
 });
 
-
 router.post("/cadastro-secretaria", somenteADM, async (req, res) => {
     try {
         const nome = normalizar(req.body?.nome);
@@ -902,7 +875,7 @@ router.post("/cadastro-secretaria", somenteADM, async (req, res) => {
         if (usuarios.some(linha => normalizar(linha[2]).toLowerCase() === email)) return res.status(409).json({ sucesso: false, mensagem: "Este e-mail já possui uma conta." });
         const usuarioID = gerarID("USR-", usuarios, /^USR-(\d+)$/);
         const salt = crypto.randomBytes(16).toString("hex");
-        const senhaHash = crypto.createHash("sha256").update(`${salt}:${senha}`).digest("hex");
+        const senhaHash = gerarHashSenha(senha, salt);
         await sheets.spreadsheets.values.append({ spreadsheetId: SPREADSHEET_ID, range: "01_USUARIOS!A:K", valueInputOption: "RAW", insertDataOption: "INSERT_ROWS", requestBody: { values: [[usuarioID, nome, email, senhaHash, salt, "SECRETARIA", "SECRETARIA", "", "ATIVO", dataAtual(), ""]] } });
         await salvarPerfilCadastro(usuarioID, dadosPessoais);
         return res.status(201).json({ sucesso: true, mensagem: "Conta da Secretaria cadastrada.", usuario: { id: usuarioID, nome, email, tipoUsuario: "SECRETARIA", perfil: "SECRETARIA" } });

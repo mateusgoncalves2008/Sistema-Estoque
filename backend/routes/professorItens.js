@@ -5,6 +5,18 @@ const { buscarCatalogo } = require("../services/catalogoItens");
 const sheets = require("../database/googleSheets");
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
+function exigirProfessor(req, res, next) {
+    const usuario = req.session?.usuario;
+    if (!usuario) {
+        return res.status(401).json({ sucesso: false, mensagem: "Faça login para acessar os recursos do professor." });
+    }
+    if (String(usuario.tipoUsuario || "").trim().toUpperCase() !== "PROFESSOR") {
+        return res.status(403).json({ sucesso: false, mensagem: "Esta consulta é exclusiva para professores." });
+    }
+    next();
+}
+
+
 // ============================================================
 // GET /api/professor/itens
 //
@@ -12,7 +24,7 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 // incluindo as salas (categoria Laboratório) reserváveis.
 // ============================================================
 
-router.get("/professor/itens", async (req, res) => {
+router.get("/professor/itens", exigirProfessor, async (req, res) => {
     try {
         const { itens, grupos } = await buscarCatalogo();
 
@@ -32,7 +44,7 @@ router.get("/professor/itens", async (req, res) => {
     }
 });
 
-router.get("/professor/calendario", async (req, res) => {
+router.get("/professor/calendario", exigirProfessor, async (req, res) => {
     try {
         const resposta = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
