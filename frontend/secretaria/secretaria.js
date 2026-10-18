@@ -1699,7 +1699,7 @@ async function cadastrarProfessorAgora() {
     if (!masp || !nome || !idade || !email || !senha) {
         return toast("Preencha todos os campos do cadastro imediato.");
     }
-    if (senha.length < 12 || senha.length > 128) return toast("A senha precisa ter entre 12 e 128 caracteres.");
+    if (senha.length < 6 || senha.length > 128) return toast("A senha precisa ter entre 6 e 128 caracteres.");
 
     try {
         const resultado = await api("/secretaria/professores/cadastrar", {
