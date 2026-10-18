@@ -356,27 +356,11 @@
 
                                 <div class="form professores-form">
                                     <div>
-                                        <label for="pn">Nome completo</label>
-                                        <input id="pn" type="text" autocomplete="name" placeholder="Digite o nome completo" />
+                                        <label for="pm">MASP do professor</label>
+                                        <input id="pm" type="text" inputmode="numeric" autocomplete="off" placeholder="Ex.: 1234567-8" />
+                                        <small class="professores-ajuda">O MASP ficará autorizado como PENDENTE. O professor criará a própria conta em “Criar minha conta”.</small>
                                     </div>
-                                    <div>
-                                        <label for="pe">E-mail institucional</label>
-                                        <input id="pe" type="email" autocomplete="email" placeholder="professor@escola.com" />
-                                    </div>
-                                    <div>
-                                        <label for="ps">Senha do professor</label>
-                                        <input id="ps" type="password" autocomplete="new-password" placeholder="Defina a senha de acesso do professor" />
-                                        <small class="professores-ajuda">Essa será a senha de acesso definida para o professor.</small>
-                                    </div>
-                                    <div>
-                                        <label for="pm">MASP</label>
-                                        <input id="pm" type="text" placeholder="Ex.: 1234567-8" />
-                                    </div>
-                                    <div>
-                                        <label for="pidade">Idade</label>
-                                        <input id="pidade" type="number" min="18" max="100" step="1" placeholder="Idade do professor" />
-                                    </div>
-                                    <button class="btn professores-submit" type="button" onclick="addProf()">Cadastrar professor</button>
+                                    <button class="btn professores-submit" type="button" onclick="addProf()">Autorizar MASP</button>
                                 </div>
                             </div>
 
