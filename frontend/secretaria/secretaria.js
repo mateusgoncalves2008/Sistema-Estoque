@@ -1689,6 +1689,38 @@ async function addProf() {
     }
 }
 
+async function cadastrarProfessorAgora() {
+    const masp = $("#np-masp")?.value.trim();
+    const nome = $("#np-nome")?.value.trim();
+    const idade = Number($("#np-idade")?.value);
+    const email = $("#np-email")?.value.trim();
+    const senha = $("#np-senha")?.value;
+
+    if (!masp || !nome || !idade || !email || !senha) {
+        return toast("Preencha todos os campos do cadastro imediato.");
+    }
+    if (senha.length < 8) return toast("A senha precisa ter pelo menos 8 caracteres.");
+
+    try {
+        const resultado = await api("/secretaria/professores/cadastrar", {
+            method: "POST",
+            body: JSON.stringify({ masp, nome, idade, email, senha }),
+        });
+        if (!resultado.sucesso) throw new Error(resultado.erro || "Não foi possível cadastrar o professor.");
+
+        toast(`Professor cadastrado com sucesso. ID: ${resultado.usuarioID}`);
+        ["np-masp", "np-nome", "np-idade", "np-email", "np-senha"].forEach((id) => {
+            const campo = document.getElementById(id);
+            if (campo) campo.value = "";
+        });
+        await carregarDados();
+        await carregarDadosProfessores();
+    } catch (erro) {
+        console.error("Erro ao cadastrar professor imediatamente:", erro);
+        toast(erro.message);
+    }
+}
+
 async function assign() {
     const professorID = $("#pp")?.value;
     const turmaID = $("#pt")?.value;
