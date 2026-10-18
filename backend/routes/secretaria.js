@@ -194,15 +194,41 @@ function usuarioTemPermissao(usuario) {
     }
 
     const tipo = normalizar(usuario.tipoUsuario);
-
     const perfil = normalizar(usuario.perfil);
 
-    return (
-        tipo === "funcionario" ||
-        tipo === "secretaria" ||
-        perfil === "secretaria"
-    );
+    const perfisPermitidos = [
+        "funcionario",
+        "secretaria",
+        "adm",
+        "admin",
+        "administrador",
+    ];
+
+    return perfisPermitidos.includes(tipo) || perfisPermitidos.includes(perfil);
 }
+
+function exigirSecretaria(req, res, next) {
+    const usuario = req.session?.usuario;
+
+    if (!usuario) {
+        return res.status(401).json({
+            sucesso: false,
+            mensagem: "Faça login para acessar este painel.",
+        });
+    }
+
+    if (!usuarioTemPermissao(usuario)) {
+        return res.status(403).json({
+            sucesso: false,
+            mensagem: "Sua conta não tem permissão para acessar o painel da Secretaria.",
+        });
+    }
+
+    next();
+}
+
+// Todas as rotas deste módulo exigem uma sessão e perfil autorizado.
+router.use(exigirSecretaria);
 
 /*
 ==========================================================
