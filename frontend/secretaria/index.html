@@ -313,42 +313,14 @@
                             </div>
                         </div>
 
-                        <div class="card">
-                            <h2>Nova turma</h2>
-
-                            <div class="form">
-                                <div>
-                                    <label for="ts">Série</label>
-                                    <select id="ts"></select>
-                                </div>
-
-                                <div>
-                                    <label for="tn">Nome</label>
-                                    <input id="tn" placeholder="Turma 4" />
-                                </div>
-
-                                <div>
-                                    <label for="tt">Turno</label>
-                                    <select id="tt">
-                                        <option>Manhã</option>
-                                        <option>Tarde</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label for="tc">Capacidade</label>
-                                    <input
-                                        id="tc"
-                                        min="1"
-                                        type="number"
-                                        value="35"
-                                    />
-                                </div>
-
-                                <button class="btn" onclick="addT()">
-                                    Abrir turma
-                                </button>
+                        <div class="card turma-acoes">
+                            <div>
+                                <h2>Gerenciar turmas</h2>
+                                <p class="sub">Cadastre uma turma e defina sua série, turno e limite máximo de alunos.</p>
                             </div>
+                            <button class="btn" type="button" onclick="abrirModalTurma()">
+                                Abrir turma
+                            </button>
                         </div>
 
                         <div class="sr" id="series"></div>
@@ -918,6 +890,47 @@
                     </section>
                 </div>
             </main>
+        </div>
+
+        <div id="modal-turma" class="modal-turma" aria-hidden="true">
+            <div class="modal-turma__fundo" onclick="fecharModalTurma()"></div>
+            <section class="modal-turma__painel" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-turma">
+                <div class="modal-turma__cabecalho">
+                    <div>
+                        <p class="modal-turma__sobretitulo">SECRETARIA</p>
+                        <h2 id="titulo-modal-turma">Abrir nova turma</h2>
+                        <p class="sub">Informe os dados da turma. O ID será gerado automaticamente.</p>
+                    </div>
+                    <button class="modal-turma__fechar" type="button" aria-label="Fechar" onclick="fecharModalTurma()">×</button>
+                </div>
+
+                <form id="form-turma" class="modal-turma__form" onsubmit="event.preventDefault(); addT();">
+                    <div>
+                        <label for="ts">Série</label>
+                        <select id="ts" required></select>
+                    </div>
+                    <div>
+                        <label for="tn">Nome da turma</label>
+                        <input id="tn" type="text" maxlength="80" placeholder="Ex.: Turma 1" required />
+                    </div>
+                    <div>
+                        <label for="tt">Turno</label>
+                        <select id="tt" required>
+                            <option value="Manhã">Manhã</option>
+                            <option value="Tarde">Tarde</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tc">Máximo de alunos</label>
+                        <input id="tc" min="0" max="500" step="1" type="number" value="0" required />
+                        <small>Quantidade máxima de alunos permitida nesta turma.</small>
+                    </div>
+                    <div class="modal-turma__acoes">
+                        <button class="btn btn-secundario" type="button" onclick="fecharModalTurma()">Cancelar</button>
+                        <button class="btn" id="btn-criar-turma" type="submit">Criar</button>
+                    </div>
+                </form>
+            </section>
         </div>
 
         <div id="toast"></div>
