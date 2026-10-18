@@ -553,11 +553,13 @@ function renderizarListaTurmas() {
     area.innerHTML=lista.map(t=>{
         const cap=Number(t.cap||0), al=Number(t.al||0), pc=cap?Math.min(100,Math.round(al/cap*100)):0;
         const aberta=String(t.status||"").toUpperCase()==="ABERTO";
-        return `<button class="card turma-card" type="button" data-turma-id="${escHtml(t.id)}">
+        const alerta=cap>0&&pc>=95?"critica":cap>0&&pc>=80?"atencao":"";
+        const textoOcupacao=alerta==="critica"?"Limite quase atingido":alerta==="atencao"?"Atenção: poucas vagas":"Ocupação";
+        return `<button class="card turma-card ${alerta ? "turma-card--" + alerta : ""}" type="button" data-turma-id="${escHtml(t.id)}">
             <div class="turma-card__topo"><span class="turma-card__icone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V8l9-5 9 5v13M8 21v-7h8v7M7 10h.01M12 10h.01M17 10h.01"></path></svg></span><span class="turma-status ${aberta?"aberta":"fechada"}">${aberta?"Aberta":"Fechada"}</span></div>
             <span class="turma-card__serie">${escHtml(t.serie)}</span><strong class="turma-card__nome">${escHtml(t.n)}</strong>
             <span class="turma-card__turno">${escHtml(t.tu)} • Código ${escHtml(t.id||"—")}</span>
-            <div class="turma-card__ocupacao"><span>Ocupação</span><strong>${al} de ${cap} alunos</strong></div><div class="prog turma-card__barra"><i style="width:${pc}%"></i></div>
+            <div class="turma-card__ocupacao"><span>${textoOcupacao}</span><strong>${al} de ${cap} alunos</strong></div><div class="prog turma-card__barra ${alerta ? "turma-card__barra--" + alerta : ""}"><i style="width:${pc}%"></i></div>
             <span class="turma-card__rodape">Ver informações e gerenciar <span aria-hidden="true">→</span></span></button>`;
     }).join("");
     area.querySelectorAll("[data-turma-id]").forEach(card=>card.addEventListener("click",()=>abrirDetalhesTurma(card.dataset.turmaId)));
