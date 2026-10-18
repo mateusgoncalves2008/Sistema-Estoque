@@ -1,0 +1,27 @@
+name: Verificações de segurança
+
+on:
+  push:
+    branches:
+      - revisao-seguranca-main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verificacoes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Instalar dependências
+        run: npm ci
+      - name: Verificar sintaxe JavaScript
+        run: |
+          find backend frontend tests -type f -name '*.js' -print0 | xargs -0 -r -n1 node --check
+      - name: Testes de segurança estruturais
+        run: npm test
