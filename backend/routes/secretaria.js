@@ -528,54 +528,41 @@ router.patch("/secretaria/usuarios/:usuarioID/status", async (req, res) => {
 router.get("/secretaria/turmas", async (req, res) => {
     try {
         const dados = await carregarDadosSecretaria();
-
         const turmas = dados["19_TURMAS"] || [];
-
-        const usuarios = dados["01_USUARIOS"] || [];
-
-        const alunos = usuarios
-            .slice(1)
-            .filter(
-                (linha) =>
-                    normalizar(linha[5]) === "aluno" &&
-                    normalizar(linha[8]) === "ativo",
-            );
-
         const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
 
-        const mapaAlunos = new Map();
-
-        for (const linha of autorizados.slice(1)) {
-            const id = texto(linha[3]);
-
-            if (id) {
-                mapaAlunos.set(id, {
-                    ano: linha[5] || "",
-                    turma: linha[6] || "",
-                    turno: linha[7] || "",
-                });
-            }
-        }
+        // Usa diretamente os cadastros autorizados como fonte da matrícula.
+        // Compara série (Ano), turma e turno, contando somente alunos cadastrados/ativos.
+        const chaveTurma = (serie, turma, turno) =>
+            [serie, turma, turno].map((valor) => normalizar(valor)).join("|");
 
         const contagem = new Map();
 
-        for (const aluno of alunos) {
-            const cadastro = mapaAlunos.get(texto(aluno[0]));
+        for (const linha of autorizados.slice(1)) {
+            const tipo = normalizar(linha[1]);
+            const serie = texto(linha[5]); // Ano = Série
+            const nomeTurma = texto(linha[6]); // Turma
+            const turnoAluno = texto(linha[7]); // Turno
+            const status = normalizar(linha[9]); // Status do cadastro
 
-            if (!cadastro) continue;
+            const ehAluno = tipo === "aluno";
+            const cadastroValido = ["cadastrado", "ativo", "autorizado"].includes(status);
 
-            const chave = `${cadastro.ano}|${cadastro.turma}|${cadastro.turno}`;
+            if (!ehAluno || !cadastroValido || !serie || !nomeTurma || !turnoAluno) {
+                continue;
+            }
 
+            const chave = chaveTurma(serie, nomeTurma, turnoAluno);
             contagem.set(chave, (contagem.get(chave) || 0) + 1);
         }
 
         const lista = turmas.slice(1).map((linha) => {
             const id = linha[0] || "";
-            const nome = linha[1] || "";
-            const serie = linha[2] || "";
-            const turno = linha[3] || "";
+            const nome = texto(linha[1]);
+            const serie = texto(linha[2]);
+            const turno = texto(linha[3]);
             const capacidade = numero(linha[4]);
-            const chave = `${serie}|${nome}|${turno}`;
+            const chave = chaveTurma(serie, nome, turno);
 
             return {
                 turmaID: id,
@@ -588,13 +575,9 @@ router.get("/secretaria/turmas", async (req, res) => {
             };
         });
 
-        res.json({
-            sucesso: true,
-            turmas: lista,
-        });
+        res.json({ sucesso: true, turmas: lista });
     } catch (erro) {
         console.error("❌ Erro ao carregar turmas:", erro);
-
         res.status(500).json({
             sucesso: false,
             erro: erro.message,
