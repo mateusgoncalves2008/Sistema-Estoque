@@ -336,7 +336,27 @@ function existeConflito(reservas, produtoID, localID, inicio, fim) {
 
 router.get("/aluno/reservas/:usuarioID", async (req, res) => {
     try {
+        const sessao = req.session?.usuario;
+        if (!sessao?.id) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: "Faça login para consultar suas reservas.",
+            });
+        }
+
         const usuarioID = String(req.params.usuarioID || "").trim();
+        if (String(sessao.id).trim() !== usuarioID) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Você só pode consultar suas próprias reservas.",
+            });
+        }
+        if (normalizar(sessao.tipoUsuario) !== "ALUNO") {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Esta rota é exclusiva para alunos.",
+            });
+        }
 
         if (!usuarioID) {
             return res.status(400).json({
@@ -458,7 +478,27 @@ router.get("/aluno/reservas/:usuarioID", async (req, res) => {
 
 router.get("/professor/reservas/:usuarioID", async (req, res) => {
     try {
+        const sessao = req.session?.usuario;
+        if (!sessao?.id) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: "Faça login para consultar suas reservas.",
+            });
+        }
+
         const usuarioID = String(req.params.usuarioID || "").trim();
+        if (String(sessao.id).trim() !== usuarioID) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Você só pode consultar suas próprias reservas.",
+            });
+        }
+        if (normalizar(sessao.tipoUsuario) !== "PROFESSOR") {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Esta rota é exclusiva para professores.",
+            });
+        }
 
         if (!usuarioID) {
             return res.status(400).json({
