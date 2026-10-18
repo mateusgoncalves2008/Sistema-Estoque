@@ -4,6 +4,12 @@ let turmasReais = [];
 let disciplinasReais = [];
 
 const $ = (s) => document.querySelector(s);
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", configurarEventosTurma);
+} else {
+    configurarEventosTurma();
+}
 const pad = (n) => String(n).padStart(2, "0");
 
 let page = "inicio";
@@ -465,6 +471,24 @@ function fecharModalTurma() {
 
     modal.classList.remove("aberto");
     modal.setAttribute("aria-hidden", "true");
+}
+
+function configurarEventosTurma() {
+    document.querySelectorAll('[data-acao="abrir-modal-turma"]').forEach((botao) => {
+        botao.addEventListener("click", abrirModalTurma);
+    });
+
+    document.querySelectorAll('[data-acao="fechar-modal-turma"]').forEach((botao) => {
+        botao.addEventListener("click", fecharModalTurma);
+    });
+
+    const formulario = $("#form-turma");
+    if (formulario) {
+        formulario.addEventListener("submit", (evento) => {
+            evento.preventDefault();
+            addT();
+        });
+    }
 }
 
 async function addT() {
