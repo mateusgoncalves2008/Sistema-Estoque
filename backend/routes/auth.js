@@ -11,8 +11,33 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 // FUNÇÃO PARA GERAR O HASH DA SENHA
 // ======================================================
 
+const SCRYPT_OPCOES = { N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+
 function gerarHashSenha(senha, salt) {
-    return crypto.createHash("sha256").update(`${salt}:${senha}`).digest("hex");
+    const derivada = crypto.scryptSync(senha, salt, 64, SCRYPT_OPCOES).toString("hex");
+    return `scrypt$16384$8$1${derivada}`;
+}
+
+function verificarHashSenha(senha, salt, hashArmazenado) {
+    if (String(hashArmazenado).startsWith("scrypt$")) {
+        const partes = String(hashArmazenado).split("$");
+        if (partes.length !== 5 || partes[1] !== "16384" || partes[2] !== "8" || partes[3] !== "1") {
+            return false;
+        }
+
+        const hashBuffer = Buffer.from(partes[4], "hex");
+        const hashDigitado = crypto.scryptSync(senha, salt, 64, SCRYPT_OPCOES);
+        return hashBuffer.length === hashDigitado.length &&
+            crypto.timingSafeEqual(hashBuffer, hashDigitado);
+    }
+
+    // Compatibilidade temporária com contas antigas; elas são migradas após login válido.
+    const hashLegado = crypto.createHash("sha256").update(`${salt}:${senha}`).digest("hex");
+    const legadoBuffer = Buffer.from(hashLegado, "hex");
+    const armazenadoBuffer = Buffer.from(String(hashArmazenado), "hex");
+    return legadoBuffer.length === armazenadoBuffer.length &&
+        legadoBuffer.length > 0 &&
+        crypto.timingSafeEqual(legadoBuffer, armazenadoBuffer);
 }
 
 // ======================================================
@@ -95,19 +120,29 @@ router.post("/login", async (req, res) => {
             });
         }
 
-        const hashDigitado = gerarHashSenha(senha, salt);
+        const senhaHashValida = verificarHashSenha(senha, salt, senhaHash);
 
-        const hashBuffer = Buffer.from(hashDigitado, "hex");
-        const hashArmazenado = Buffer.from(senhaHash, "hex");
-
-        if (
-            hashBuffer.length !== hashArmazenado.length ||
-            !crypto.timingSafeEqual(hashBuffer, hashArmazenado)
-        ) {
+        if (!senhaHashValida) {
             return res.status(401).json({
                 sucesso: false,
                 mensagem: "E-mail ou senha incorretos.",
             });
+        }
+
+        // Migra contas antigas para scrypt após um login válido, sem exigir redefinição de senha.
+        if (!String(senhaHash).startsWith("scrypt$")) {
+            try {
+                const novoHash = gerarHashSenha(senha, salt);
+                const linhaPlanilha = usuarios.findIndex((linha) => linha === usuario) + 2;
+                await sheets.spreadsheets.values.update({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `01_USUARIOS!D${linhaPlanilha}:E${linhaPlanilha}`,
+                    valueInputOption: "RAW",
+                    requestBody: { values: [[novoHash, salt]] },
+                });
+            } catch (erroMigracao) {
+                console.error("Não foi possível atualizar o hash legado da senha.");
+            }
         }
 
         // Cria uma sessão nova após validar as credenciais.
