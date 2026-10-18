@@ -98,7 +98,10 @@ async function api(url, opcoes = {}) {
 
 async function carregarDados() {
     try {
-        const dados = await api("/secretaria/dashboard");
+        const [dados, dadosTurmas] = await Promise.all([
+            api("/secretaria/dashboard"),
+            api("/secretaria/turmas"),
+        ]);
 
         indicadores = dados.indicadores || {};
 
@@ -162,7 +165,7 @@ async function carregarDados() {
             m.produto || "Produto",
         ]);
 
-        series = montarTurmas(dados.turmas || []);
+        series = montarTurmas(dadosTurmas.turmas || []);
 
         disciplinas = dados.disciplinas || [];
 
