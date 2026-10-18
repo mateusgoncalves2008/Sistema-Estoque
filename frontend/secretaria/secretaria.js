@@ -1665,6 +1665,7 @@ async function addProf() {
     const email = $("#pe")?.value.trim();
     const senha = $("#ps")?.value;
     const masp = $("#pm")?.value.trim();
+    const idade = Number($("#pidade")?.value);
 
     if (!nome) {
         return toast("Informe o nome do professor.");
@@ -1675,7 +1676,11 @@ async function addProf() {
     }
 
     if (!senha) {
-        return toast("Informe uma senha provisória.");
+        return toast("Informe a senha do professor.");
+    }
+
+    if (!Number.isInteger(idade) || idade < 18 || idade > 100) {
+        return toast("Informe uma idade válida entre 18 e 100 anos.");
     }
 
     try {
@@ -1686,6 +1691,7 @@ async function addProf() {
                 email,
                 senha,
                 masp,
+                idade,
             }),
         });
 
@@ -1701,6 +1707,7 @@ async function addProf() {
         $("#pe").value = "";
         $("#ps").value = "";
         $("#pm").value = "";
+        $("#pidade").value = "";
 
         await carregarDados();
 
