@@ -33,7 +33,13 @@ function gerarSalt() {
 // ============================================================
 
 function gerarHashSenha(senha, salt) {
-    return crypto.createHash("sha256").update(`${salt}:${senha}`).digest("hex");
+    const derivada = crypto.scryptSync(senha, salt, 64, {
+        N: 16384,
+        r: 8,
+        p: 1,
+        maxmem: 64 * 1024 * 1024,
+    }).toString("hex");
+    return `scrypt$16384$8$1${derivada}`;
 }
 
 // ============================================================
@@ -740,10 +746,7 @@ router.post("/cadastro-responsavel", somenteADM, async (req, res) => {
         const usuarioID = gerarID("USR-", usuarios, /^USR-(\d+)$/);
 
         const salt = crypto.randomBytes(16).toString("hex");
-        const senhaHash = crypto
-            .createHash("sha256")
-            .update(`${salt}:${senha}`)
-            .digest("hex");
+        const senhaHash = gerarHashSenha(senha, salt);
 
         const metadados = await sheets.spreadsheets.get({
             spreadsheetId: SPREADSHEET_ID,
@@ -858,7 +861,7 @@ router.post("/cadastro-secretaria", somenteADM, async (req, res) => {
         if (usuarios.some(linha => normalizar(linha[2]).toLowerCase() === email)) return res.status(409).json({ sucesso: false, mensagem: "Este e-mail já possui uma conta." });
         const usuarioID = gerarID("USR-", usuarios, /^USR-(\d+)$/);
         const salt = crypto.randomBytes(16).toString("hex");
-        const senhaHash = crypto.createHash("sha256").update(`${salt}:${senha}`).digest("hex");
+        const senhaHash = gerarHashSenha(senha, salt);
         await sheets.spreadsheets.values.append({ spreadsheetId: SPREADSHEET_ID, range: "01_USUARIOS!A:K", valueInputOption: "RAW", insertDataOption: "INSERT_ROWS", requestBody: { values: [[usuarioID, nome, email, senhaHash, salt, "SECRETARIA", "SECRETARIA", "", "ATIVO", dataAtual(), ""]] } });
         await salvarPerfilCadastro(usuarioID, dadosPessoais);
         return res.status(201).json({ sucesso: true, mensagem: "Conta da Secretaria cadastrada.", usuario: { id: usuarioID, nome, email, tipoUsuario: "SECRETARIA", perfil: "SECRETARIA" } });
