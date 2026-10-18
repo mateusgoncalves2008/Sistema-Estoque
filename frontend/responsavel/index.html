@@ -369,6 +369,20 @@
                         <footer class="new-item-actions"><button type="button" id="cancelNewItemButton" class="secondary-button">Cancelar</button><button type="submit" id="saveNewItemButton" class="primary-button"><i class="fa-solid fa-floppy-disk"></i> Salvar item</button></footer>
                       </form>
                     </dialog>
+                    <dialog id="stockActionDialog" class="new-item-dialog stock-action-dialog">
+                      <form id="stockActionForm" class="new-item-form">
+                        <header class="new-item-header">
+                          <div><h2 id="stockActionTitle">Atualizar estoque</h2><p id="stockActionDescription">Informe os dados da movimentação.</p></div>
+                          <button type="button" id="stockActionClose" class="icon-btn" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+                        </header>
+                        <div class="new-item-body">
+                          <label id="stockActionQuantityWrap">Quantidade *<input id="stockActionQuantity" name="quantidade" type="number" min="1" step="1" required placeholder="Informe uma quantidade"></label>
+                          <label id="stockActionReasonWrap">Motivo da movimentação *<textarea id="stockActionReason" name="motivo" rows="3" maxlength="500" required placeholder="Explique o motivo da alteração"></textarea></label>
+                          <p id="stockActionWarning" class="new-item-note"><i class="fa-solid fa-circle-info"></i> A movimentação será registrada no histórico do setor.</p>
+                        </div>
+                        <footer class="new-item-actions"><button type="button" id="stockActionCancel" class="secondary-button">Cancelar</button><button type="submit" id="stockActionSubmit" class="primary-button"><i class="fa-solid fa-check"></i> Confirmar</button></footer>
+                      </form>
+                    </dialog>
                 </article>
             </section>
 
