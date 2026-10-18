@@ -864,102 +864,67 @@ router.get("/secretaria/professores", async (req, res) => {
 
 router.post("/secretaria/professores", async (req, res) => {
     try {
-        const { nome, email, senha, masp, idade } = req.body;
+        const masp = texto(req.body?.masp).replace(/\s+/g, "");
 
-        const idadeNumerica = Number(idade);
-
-        if (!nome || !email || !senha) {
+        if (!/^\d{7}-\d$/.test(masp)) {
             return res.status(400).json({
                 sucesso: false,
-                erro: "Nome, e-mail e senha são obrigatórios.",
-            });
-        }
-
-        if (!Number.isInteger(idadeNumerica) || idadeNumerica < 18 || idadeNumerica > 100) {
-            return res.status(400).json({
-                sucesso: false,
-                erro: "Informe uma idade válida entre 18 e 100 anos.",
+                erro: "Informe um MASP válido no formato 1234567-8.",
             });
         }
 
         const dados = await carregarDadosSecretaria();
-
-        const usuarios = dados["01_USUARIOS"] || [];
-
         const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
 
-        const usuarioID = gerarID("USR", usuarios, 0);
+        const duplicado = autorizados.slice(1).some((linha) =>
+            texto(linha[2]).replace(/\s+/g, "") === masp
+        );
 
+        if (duplicado) {
+            return res.status(409).json({
+                sucesso: false,
+                erro: "Este MASP já possui um registro de autorização.",
+            });
+        }
+
+        // gerarID identifica o maior AUT existente e incrementa, sem reutilizar IDs apagados.
         const autorizacaoID = gerarID("AUT", autorizados, 0);
 
-        const salt = crypto.randomBytes(16).toString("hex");
-
-        const senhaHash = hashSenha(senha, salt);
-
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-
-            range: "01_USUARIOS!A:K",
-
-            valueInputOption: "USER_ENTERED",
-
-            requestBody: {
-                values: [
-                    [
-                        usuarioID,
-                        nome,
-                        normalizar(email),
-                        senhaHash,
-                        salt,
-                        "PROFESSOR",
-                        "CONSULTA",
-                        "",
-                        "ATIVO",
-                        agora(),
-                        "",
-                    ],
-                ],
-            },
-        });
-
-        await sheets.spreadsheets.values.append({
-            spreadsheetId: SPREADSHEET_ID,
-
             range: "17_CADASTROS_AUTORIZADOS!A:J",
-
-            valueInputOption: "USER_ENTERED",
-
+            valueInputOption: "RAW",
+            insertDataOption: "INSERT_ROWS",
             requestBody: {
-                values: [
-                    [
-                        autorizacaoID,
-                        "PROFESSOR",
-                        masp || "",
-                        usuarioID,
-                        nome,
-                        "",
-                        "",
-                        "",
-                        idadeNumerica,
-                        "CADASTRADO",
-                    ],
-                ],
+                values: [[
+                    autorizacaoID, // A - CadastradoID
+                    "PROFESSOR",   // B - Tipo
+                    masp,          // C - Identificador
+                    "",            // D - UsuarioID (preenchido no cadastro)
+                    "",            // E - Nome
+                    "",            // F - Ano
+                    "",            // G - Turma
+                    "",            // H - Turno
+                    "",            // I - Idade
+                    "PENDENTE",    // J - Status
+                ]],
             },
         });
 
         limparCache();
 
-        res.json({
+        return res.status(201).json({
             sucesso: true,
-            usuarioID,
+            mensagem: "MASP autorizado. O professor já pode criar a própria conta.",
             autorizacaoID,
+            masp,
+            status: "PENDENTE",
         });
     } catch (erro) {
-        console.error("❌ Erro ao cadastrar professor:", erro);
-
-        res.status(500).json({
+        console.error("❌ Erro ao autorizar MASP do professor:", erro);
+        return res.status(500).json({
             sucesso: false,
-            erro: erro.message,
+            erro: "Não foi possível autorizar o MASP do professor.",
         });
     }
 });
