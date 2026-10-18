@@ -112,34 +112,48 @@ app.use("/api", debugRoutes);
 // ============================================================
 
 app.get("/api/teste-planilha", async (req, res) => {
-    console.log("Rota /api/teste-planilha acessada");
+    const usuario = req.session?.usuario;
+    const tipo = String(usuario?.tipoUsuario || "").trim().toUpperCase();
+    const perfil = String(usuario?.perfil || "").trim().toUpperCase();
+    const administradores = ["ADM", "ADMIN", "ADMINISTRADOR"];
+
+    if (
+        !usuario ||
+        (!administradores.includes(tipo) && !administradores.includes(perfil))
+    ) {
+        return res.status(usuario ? 403 : 401).json({
+            sucesso: false,
+            mensagem: usuario
+                ? "Acesso permitido somente ao administrador."
+                : "Faça login para testar a conexão com a planilha.",
+        });
+    }
 
     try {
         if (!SPREADSHEET_ID) {
             return res.status(500).json({
                 sucesso: false,
-                erro: "SPREADSHEET_ID não foi encontrado no arquivo .env",
+                mensagem: "A planilha não está configurada no servidor.",
             });
         }
 
-        const resposta = await sheets.spreadsheets.values.get({
+        // Lê apenas uma célula para testar a conexão. Nunca devolve
+        // dados pessoais, hashes de senha ou salts da aba de usuários.
+        await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: "01_USUARIOS!A1:K5",
+            range: "01_USUARIOS!A1",
         });
 
-        res.json({
+        return res.json({
             sucesso: true,
-            mensagem: "Conexão com o Google Sheets funcionando!",
-            aba: "01_USUARIOS",
-            dados: resposta.data.values || [],
+            mensagem: "Conexão com o Google Sheets funcionando.",
         });
     } catch (erro) {
-        console.error("Erro ao acessar o Google Sheets:");
-        console.error(erro);
+        console.error("Erro ao testar conexão com o Google Sheets:", erro.message);
 
-        res.status(500).json({
+        return res.status(500).json({
             sucesso: false,
-            erro: erro.message,
+            mensagem: "Não foi possível acessar a planilha.",
         });
     }
 });
