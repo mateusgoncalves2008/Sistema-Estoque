@@ -93,6 +93,24 @@ app.get("/", (req, res) => {
 });
 
 // ============================================================
+// LIMITAR TENTATIVAS DE LOGIN
+// ============================================================
+
+app.use(
+    "/api/login",
+    rateLimit({
+        windowMs: 15 * 60 * 1000,
+        limit: 10,
+        standardHeaders: "draft-8",
+        legacyHeaders: false,
+        message: {
+            sucesso: false,
+            mensagem: "Muitas tentativas de login. Aguarde 15 minutos e tente novamente.",
+        },
+    }),
+);
+
+// ============================================================
 // ROTAS
 // ============================================================
 
