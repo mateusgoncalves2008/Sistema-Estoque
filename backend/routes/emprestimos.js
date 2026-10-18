@@ -127,7 +127,30 @@ async function buscarDadosEmprestimos(usuarioID, incluirTodos = false) {
 // Rotas compartilhadas: aluno e professor.
 async function responderEmprestimos(req, res) {
     try {
+        const sessao = req.session?.usuario;
+        if (!sessao?.id) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: "Faça login para consultar seus empréstimos.",
+            });
+        }
+
         const usuarioID = texto(req.params.usuarioID);
+        const tipoEsperado = req.path.startsWith("/aluno/") ? "ALUNO" : "PROFESSOR";
+
+        if (texto(sessao.id) !== usuarioID) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Você só pode consultar seus próprios empréstimos.",
+            });
+        }
+
+        if (normalizar(sessao.tipoUsuario) !== tipoEsperado) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Seu perfil não tem acesso a esta consulta.",
+            });
+        }
 
         if (!usuarioID) {
             return res.status(400).json({
@@ -155,7 +178,30 @@ async function responderEmprestimos(req, res) {
 
 async function responderHistoricoEmprestimos(req, res) {
     try {
+        const sessao = req.session?.usuario;
+        if (!sessao?.id) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: "Faça login para consultar o histórico.",
+            });
+        }
+
         const usuarioID = texto(req.params.usuarioID);
+        const tipoEsperado = req.path.startsWith("/aluno/") ? "ALUNO" : "PROFESSOR";
+
+        if (texto(sessao.id) !== usuarioID) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Você só pode consultar seu próprio histórico.",
+            });
+        }
+
+        if (normalizar(sessao.tipoUsuario) !== tipoEsperado) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Seu perfil não tem acesso a este histórico.",
+            });
+        }
 
         if (!usuarioID) {
             return res.status(400).json({
