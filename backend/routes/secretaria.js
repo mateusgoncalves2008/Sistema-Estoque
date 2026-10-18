@@ -862,6 +862,94 @@ router.get("/secretaria/professores", async (req, res) => {
     }
 });
 
+router.post("/secretaria/professores/cadastrar", async (req, res) => {
+    try {
+        const masp = texto(req.body?.masp).replace(/\s+/g, "");
+        const nome = texto(req.body?.nome);
+        const idade = Number(req.body?.idade);
+        const email = texto(req.body?.email).toLowerCase();
+        const senha = String(req.body?.senha || "");
+
+        if (!/^\d{7}-\d$/.test(masp)) {
+            return res.status(400).json({ sucesso: false, erro: "Informe um MASP válido no formato 1234567-8." });
+        }
+        if (!nome || !email || !Number.isInteger(idade) || idade < 18 || idade > 100 || senha.length < 8) {
+            return res.status(400).json({ sucesso: false, erro: "Informe nome, e-mail válido, idade entre 18 e 100 anos e senha com pelo menos 8 caracteres." });
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ sucesso: false, erro: "Informe um e-mail válido." });
+        }
+
+        const dados = await carregarDadosSecretaria();
+        const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
+        const usuarios = dados["01_USUARIOS"] || [];
+
+        if (usuarios.slice(1).some((linha) => texto(linha[2]).toLowerCase() === email)) {
+            return res.status(409).json({ sucesso: false, erro: "Este e-mail já está cadastrado." });
+        }
+
+        const indiceAutorizacao = autorizados.findIndex((linha, index) =>
+            index > 0 && texto(linha[2]).replace(/\s+/g, "") === masp
+        );
+        let autorizacaoID = "";
+        let numeroLinhaAutorizacao = 0;
+
+        if (indiceAutorizacao >= 0) {
+            const linhaAutorizacao = autorizados[indiceAutorizacao];
+            const tipo = texto(linhaAutorizacao[1]).toUpperCase();
+            const status = texto(linhaAutorizacao[9]).toUpperCase();
+            if (tipo !== "PROFESSOR") {
+                return res.status(409).json({ sucesso: false, erro: "Este MASP está registrado com outro tipo de cadastro." });
+            }
+            if (status === "CADASTRADO" || texto(linhaAutorizacao[3])) {
+                return res.status(409).json({ sucesso: false, erro: "Este MASP já possui uma conta cadastrada." });
+            }
+            autorizacaoID = texto(linhaAutorizacao[0]);
+            numeroLinhaAutorizacao = indiceAutorizacao + 1;
+        } else {
+            autorizacaoID = gerarID("AUT", autorizados, 0);
+            await sheets.spreadsheets.values.append({
+                spreadsheetId: SPREADSHEET_ID,
+                range: "17_CADASTROS_AUTORIZADOS!A:J",
+                valueInputOption: "RAW",
+                insertDataOption: "INSERT_ROWS",
+                requestBody: { values: [[autorizacaoID, "PROFESSOR", masp, "", "", "", "", "", "", "PENDENTE"]] },
+            });
+            numeroLinhaAutorizacao = autorizados.length + 1;
+        }
+
+        const ids = usuarios.slice(1).map((linha) => {
+            const match = texto(linha[0]).match(/^USR-(\d+)$/);
+            return match ? Number(match[1]) : 0;
+        });
+        const usuarioID = \`USR-\${String(Math.max(0, ...ids) + 1).padStart(5, "0")}\`;
+        const salt = crypto.randomBytes(16).toString("hex");
+        const senhaHash = crypto.createHash("sha256").update(\`\${salt}:\${senha}\`).digest("hex");
+        const dataCadastro = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "01_USUARIOS!A:K",
+            valueInputOption: "RAW",
+            insertDataOption: "INSERT_ROWS",
+            requestBody: { values: [[usuarioID, nome, email, senhaHash, salt, "PROFESSOR", "PROFESSOR", "", "ATIVO", dataCadastro, ""]] },
+        });
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: \`17_CADASTROS_AUTORIZADOS!D\${numeroLinhaAutorizacao}:J\${numeroLinhaAutorizacao}\`,
+            valueInputOption: "RAW",
+            requestBody: { values: [[usuarioID, nome, "", "", "", "", idade, "CADASTRADO"]] },
+        });
+
+        limparCache();
+        return res.status(201).json({ sucesso: true, mensagem: "Professor cadastrado imediatamente.", usuarioID, autorizacaoID });
+    } catch (erro) {
+        console.error("Erro ao cadastrar professor pela Secretaria:", erro);
+        return res.status(500).json({ sucesso: false, erro: "Não foi possível cadastrar o professor agora." });
+    }
+});
+
 router.post("/secretaria/professores", async (req, res) => {
     try {
         const masp = texto(req.body?.masp).replace(/\s+/g, "");
