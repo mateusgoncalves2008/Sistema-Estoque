@@ -1553,6 +1553,12 @@ function preencherSelectProfessores() {
     }
 }
 
+function formatarMasp(valor) {
+    const numeros = String(valor || "").replace(/\\D/g, "").slice(0, 8);
+    if (numeros.length <= 7) return numeros;
+    return numeros.slice(0, 7) + "-" + numeros.slice(7);
+}
+
 function normalizarMaspBusca(valor) {
     return String(valor || "").trim().toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]/g, "");
 }
@@ -1657,7 +1663,20 @@ function preencherSelectDisciplinas() {
 }
 
 document.addEventListener("input", (evento) => {
-    if (evento.target?.id === "busca-masp") pesquisarProfessorMasp();
+    const campo = evento.target;
+    if (!["np-masp", "pm", "busca-masp"].includes(campo?.id)) return;
+
+    const posicao = campo.selectionStart;
+    const valorAnterior = campo.value;
+    campo.value = formatarMasp(valorAnterior);
+
+    if (posicao !== null && campo === document.activeElement) {
+        const diferenca = campo.value.length - valorAnterior.length;
+        const novaPosicao = Math.max(0, Math.min(campo.value.length, posicao + diferenca));
+        campo.setSelectionRange(novaPosicao, novaPosicao);
+    }
+
+    if (campo.id === "busca-masp") pesquisarProfessorMasp();
 });
 
 async function addProf() {
