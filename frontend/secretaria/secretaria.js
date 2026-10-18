@@ -1773,3 +1773,23 @@ async function assign() {
         toast(erro.message);
     }
 }
+
+
+function configurarEventosBotoesProfessores() {
+    document
+        .querySelector("#btn-cadastrar-professor-agora")
+        ?.addEventListener("click", cadastrarProfessorAgora);
+    document
+        .querySelector("#btn-autorizar-masp")
+        ?.addEventListener("click", addProf);
+    document
+        .querySelector("#btn-salvar-vinculo")
+        ?.addEventListener("click", assign);
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", configurarEventosBotoesProfessores);
+} else {
+    configurarEventosBotoesProfessores();
+}
+
