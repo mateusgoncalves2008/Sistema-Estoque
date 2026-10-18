@@ -23,7 +23,7 @@ test("servidor exige segredo de sessão e restringe CORS em produção", () => {
 test("login limita tentativas e regenera sessão após autenticar", () => {
   const server = read("backend/server.js");
   const auth = read("backend/routes/auth.js");
-  assert.match(server, /\\/api\\/login[\\s\\S]{0,100}rateLimit\\(/);
+  assert.match(server, /\/api\/login[\s\S]{0,100}rateLimit\(/);
   assert.match(auth, /req\.session\.regenerate\(/);
   assert.match(auth, /req\.session\.save\(/);
 });
