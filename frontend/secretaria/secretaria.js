@@ -1536,22 +1536,86 @@ async function carregarDadosProfessores() {
 
 function preencherSelectProfessores() {
     const select = $("#pp");
-
     if (!select) return;
 
-    select.innerHTML = `<option value="">Selecione o professor</option>`;
+    const selecionado = select.value;
+    select.innerHTML = `<option value="">Selecione um professor</option>`;
 
     professoresReais.forEach((professor) => {
         const option = document.createElement("option");
-
         option.value = professor.usuarioID;
-
-        option.textContent = `${professor.nome} — ${
-            professor.identificador || "Sem MASP"
-        }`;
-
+        option.textContent = `${professor.nome} — ${professor.identificador || "Sem MASP"}`;
         select.appendChild(option);
     });
+
+    if (selecionado && professoresReais.some((p) => p.usuarioID === selecionado)) {
+        select.value = selecionado;
+    }
+}
+
+function normalizarMaspBusca(valor) {
+    return String(valor || "").trim().toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]/g, "");
+}
+
+function pesquisarProfessorMasp() {
+    const campo = $("#busca-masp");
+    const resultados = $("#masp-resultados");
+    const status = $("#masp-status");
+    const select = $("#pp");
+    if (!campo || !resultados || !status || !select) return;
+
+    const digitado = campo.value.trim();
+    const busca = normalizarMaspBusca(digitado);
+    resultados.innerHTML = "";
+    select.value = "";
+
+    if (!busca) {
+        status.textContent = "Digite o MASP para localizar o professor.";
+        status.dataset.estado = "";
+        return;
+    }
+
+    const encontrados = professoresReais.filter((p) => {
+        const masp = normalizarMaspBusca(p.identificador);
+        return masp && masp.includes(busca);
+    });
+
+    if (!encontrados.length) {
+        status.textContent = "MASP não encontrado. Confira os números digitados.";
+        status.dataset.estado = "erro";
+        return;
+    }
+
+    status.textContent = encontrados.length === 1
+        ? "1 professor encontrado."
+        : `${encontrados.length} professores encontrados. Continue digitando para refinar.`;
+    status.dataset.estado = "sucesso";
+
+    encontrados.forEach((professor) => {
+        const botao = document.createElement("button");
+        botao.type = "button";
+        botao.className = "professor-masp-opcao";
+        botao.setAttribute("role", "option");
+        botao.innerHTML = `<strong>${escHtml(professor.nome || "Sem nome")}</strong><span>MASP: ${escHtml(professor.identificador || "Não informado")}</span>`;
+        botao.addEventListener("click", () => {
+            select.value = professor.usuarioID;
+            campo.value = professor.identificador || "";
+            resultados.innerHTML = "";
+            status.textContent = `Professor selecionado: ${professor.nome} — MASP ${professor.identificador}.`;
+            status.dataset.estado = "sucesso";
+        });
+        resultados.appendChild(botao);
+    });
+
+    const maspDigitado = normalizarMaspBusca(digitado);
+    const exatos = encontrados.filter((p) => normalizarMaspBusca(p.identificador) === maspDigitado);
+    if (exatos.length === 1) {
+        const professor = exatos[0];
+        select.value = professor.usuarioID;
+        resultados.innerHTML = "";
+        status.textContent = `MASP exato encontrado: ${professor.nome}.`;
+        status.dataset.estado = "sucesso";
+    }
 }
 
 function preencherSelectTurmas() {
@@ -1591,6 +1655,10 @@ function preencherSelectDisciplinas() {
         select.appendChild(option);
     });
 }
+
+document.addEventListener("input", (evento) => {
+    if (evento.target?.id === "busca-masp") pesquisarProfessorMasp();
+});
 
 async function addProf() {
     const nome = $("#pn")?.value.trim();
@@ -1679,6 +1747,10 @@ async function assign() {
         toast(resultado.mensagem || "Professor vinculado com sucesso.");
 
         $("#pp").value = "";
+        $("#busca-masp").value = "";
+        $("#masp-resultados").innerHTML = "";
+        $("#masp-status").textContent = "Digite o MASP para localizar o professor.";
+        $("#masp-status").dataset.estado = "";
         $("#pt").value = "";
         $("#pdv").value = "";
         $("#pa").value = "4";
