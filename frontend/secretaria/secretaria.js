@@ -1661,59 +1661,30 @@ document.addEventListener("input", (evento) => {
 });
 
 async function addProf() {
-    const nome = $("#pn")?.value.trim();
-    const email = $("#pe")?.value.trim();
-    const senha = $("#ps")?.value;
     const masp = $("#pm")?.value.trim();
-    const idade = Number($("#pidade")?.value);
 
-    if (!nome) {
-        return toast("Informe o nome do professor.");
-    }
-
-    if (!email) {
-        return toast("Informe o e-mail do professor.");
-    }
-
-    if (!senha) {
-        return toast("Informe a senha do professor.");
-    }
-
-    if (!Number.isInteger(idade) || idade < 18 || idade > 100) {
-        return toast("Informe uma idade válida entre 18 e 100 anos.");
+    if (!masp) {
+        return toast("Informe o MASP do professor.");
     }
 
     try {
         const resultado = await api("/secretaria/professores", {
             method: "POST",
-            body: JSON.stringify({
-                nome,
-                email,
-                senha,
-                masp,
-                idade,
-            }),
+            body: JSON.stringify({ masp }),
         });
 
         if (!resultado.sucesso) {
             throw new Error(
-                resultado.erro || "Não foi possível cadastrar o professor.",
+                resultado.erro || "Não foi possível autorizar o MASP.",
             );
         }
 
-        toast("Professor cadastrado com sucesso.");
-
-        $("#pn").value = "";
-        $("#pe").value = "";
-        $("#ps").value = "";
+        toast(`MASP autorizado com status PENDENTE. ID: ${resultado.autorizacaoID}`);
         $("#pm").value = "";
-        $("#pidade").value = "";
-
         await carregarDados();
-
         await carregarDadosProfessores();
     } catch (erro) {
-        console.error("Erro ao cadastrar professor:", erro);
+        console.error("Erro ao autorizar MASP do professor:", erro);
         toast(erro.message);
     }
 }
