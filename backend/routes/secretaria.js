@@ -94,7 +94,7 @@ function hashSenha(senha, salt) {
         p: 1,
         maxmem: 64 * 1024 * 1024,
     }).toString("hex");
-    return `scrypt$16384$8$1${derivada}`;
+    return "scrypt$16384$8$1$" + derivada;
 }
 
 /*
