@@ -11,7 +11,6 @@ const express = require("express");
 const helmet = require("helmet");
 const session = require("express-session");
 const authRoutes = require("./routes/auth");
-const debugRoutes = require("./routes/debug");
 const rateLimit = require("express-rate-limit");
 const sheets = require("./database/googleSheets");
 const cadastroRoutes = require("./routes/cadastro");
@@ -42,9 +41,15 @@ app.disable("x-powered-by");
 
 app.use(helmet());
 
+const frontendOrigin = process.env.FRONTEND_ORIGIN || "http://localhost:3000";
+
+if (process.env.NODE_ENV === "production" && !process.env.FRONTEND_ORIGIN) {
+    throw new Error("FRONTEND_ORIGIN precisa estar configurado em produção.");
+}
+
 app.use(
     cors({
-        origin: process.env.FRONTEND_ORIGIN || "http://localhost:3000",
+        origin: frontendOrigin,
         credentials: true,
     }),
 );
@@ -123,7 +128,6 @@ app.use("/api", emprestimosRoutes);
 app.use("/api", responsavelRoutes);
 app.use("/api", bloqueiosDenunciasRoutes);
 app.use("/api", professorItensRoutes);
-app.use("/api", debugRoutes);
 
 // ============================================================
 // TESTE DO GOOGLE SHEETS
