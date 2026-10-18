@@ -335,125 +335,90 @@
 
                     <!-- PROFESSORES -->
                     <section class="page" id="p-professores">
-                        <div class="head">
+                        <div class="head professores-head">
                             <div>
                                 <h1>Professores</h1>
-                                <p class="sub">
-                                    Cadastre professores e atribua turmas. Cada
-                                    turma equivale a 4 aulas semanais.
-                                </p>
+                                <p class="sub">Cadastre os profissionais e organize os vínculos com turmas e disciplinas.</p>
                             </div>
                         </div>
 
-                        <div class="g2">
-                            <!-- CADASTRO DO PROFESSOR -->
-                            <div class="card">
-                                <h2>Novo professor</h2>
-
-                                <div class="form">
+                        <div class="professores-grid">
+                            <div class="card professores-card">
+                                <div class="professores-card__titulo">
+                                    <span class="professores-icone" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="9.5" cy="7" r="4"></circle><path d="M20 8v6M23 11h-6"></path></svg>
+                                    </span>
                                     <div>
-                                        <label for="pn">Nome</label>
-                                        <input
-                                            id="pn"
-                                            type="text"
-                                            placeholder="Nome completo"
-                                        />
+                                        <h2>Novo professor</h2>
+                                        <p>Preencha os dados para cadastrar um profissional.</p>
                                     </div>
+                                </div>
 
+                                <div class="form professores-form">
                                     <div>
-                                        <label for="pe">E-mail</label>
-                                        <input
-                                            id="pe"
-                                            type="email"
-                                            placeholder="professor@escola.com"
-                                        />
+                                        <label for="pn">Nome completo</label>
+                                        <input id="pn" type="text" autocomplete="name" placeholder="Digite o nome completo" />
                                     </div>
-
+                                    <div>
+                                        <label for="pe">E-mail institucional</label>
+                                        <input id="pe" type="email" autocomplete="email" placeholder="professor@escola.com" />
+                                    </div>
                                     <div>
                                         <label for="ps">Senha provisória</label>
-                                        <input
-                                            id="ps"
-                                            type="password"
-                                            placeholder="Senha provisória"
-                                        />
+                                        <input id="ps" type="password" autocomplete="new-password" placeholder="Crie uma senha provisória" />
                                     </div>
-
                                     <div>
                                         <label for="pm">MASP</label>
-                                        <input
-                                            id="pm"
-                                            type="text"
-                                            placeholder="1234567-8"
-                                        />
+                                        <input id="pm" type="text" placeholder="Ex.: 1234567-8" />
                                     </div>
-
-                                    <button
-                                        class="btn"
-                                        type="button"
-                                        onclick="addProf()"
-                                    >
-                                        Cadastrar
-                                    </button>
+                                    <button class="btn professores-submit" type="button" onclick="addProf()">Cadastrar professor</button>
                                 </div>
                             </div>
 
-                            <!-- VINCULAR PROFESSOR -->
-                            <div class="card">
-                                <h2>Vincular professor à turma</h2>
+                            <div class="card professores-card">
+                                <div class="professores-card__titulo">
+                                    <span class="professores-icone professores-icone--azul" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M8 2v4M16 2v4M3 9h18M8 13h3M8 16h7"></path></svg>
+                                    </span>
+                                    <div>
+                                        <h2>Vincular professor</h2>
+                                        <p>Associe um professor a uma turma e disciplina.</p>
+                                    </div>
+                                </div>
 
-                                <div class="form">
+                                <div class="form professores-form">
                                     <div>
                                         <label for="pp">Professor</label>
-                                        <select id="pp">
-                                            <option value="">
-                                                Selecione o professor
-                                            </option>
-                                        </select>
+                                        <select id="pp"><option value="">Selecione um professor</option></select>
                                     </div>
-
                                     <div>
                                         <label for="pt">Turma</label>
-                                        <select id="pt">
-                                            <option value="">
-                                                Selecione a turma
-                                            </option>
-                                        </select>
+                                        <select id="pt"><option value="">Selecione uma turma</option></select>
                                     </div>
-
                                     <div>
                                         <label for="pdv">Disciplina</label>
-                                        <select id="pdv">
-                                            <option value="">
-                                                Selecione a disciplina
-                                            </option>
-                                        </select>
+                                        <select id="pdv"><option value="">Selecione uma disciplina</option></select>
                                     </div>
-
                                     <div>
                                         <label for="pa">Aulas semanais</label>
-                                        <input
-                                            id="pa"
-                                            type="number"
-                                            min="1"
-                                            max="40"
-                                            value="4"
-                                        />
+                                        <input id="pa" type="number" min="1" max="40" value="4" />
                                     </div>
-
-                                    <button class="btn" onclick="assign()">
-                                        Vincular professor
-                                    </button>
+                                    <button class="btn professores-submit professores-submit--azul" type="button" onclick="assign()">Salvar vínculo</button>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="g2">
-                            <div class="card">
-                                <h2>Carga horária semanal (aulas)</h2>
-                                <div id="ch-prof"></div>
+                        <div class="card professores-lista">
+                            <div class="professores-lista__topo">
+                                <div>
+                                    <h2>Professores cadastrados</h2>
+                                    <p class="sub">Confira os dados e os vínculos registrados no sistema.</p>
+                                </div>
+                                <span class="professores-lista__contador" id="prof-total">0 professores</span>
                             </div>
-
-                            <div class="card" id="t-prof"></div>
+                            <div class="professores-tabela scroll" id="t-prof">
+                                <p class="sub">Carregando professores...</p>
+                            </div>
                         </div>
                     </section>
 
