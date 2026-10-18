@@ -15,16 +15,11 @@ let ALUNO = {
 // DADOS REAIS DO ESTOQUE
 // ============================================================
 
-let ITENS_PESQUISA = [];
-
-// Reservas e empréstimos serão conectados às respectivas APIs
-// quando as rotas dessas funcionalidades estiverem prontas.
 let reservas = [];
-
-let emprestimos = [];
-
 let movimentos = [];
-
+let emprestimos = [];
+let ITENS_PESQUISA = [];
+let emprestimosHistorico = [];
 let reservaItemSelecionado = null;
 let reservasCarregadas = false;
 
@@ -78,7 +73,7 @@ const EV = {
     "2026-10-08": ["feriado", "Feriado"],
     "2026-10-12": ["feriado", "Nossa Senhora Aparecida"],
     "2026-10-15": ["evento", "Dia do Professor"],
-    "2026-10-20": ["reuniao", "Reunião de pais"],
+    "2026-10-01": ["reuniao", "Reunião de pais"],
     "2026-10-24": ["escola", "Feira de Ciências"],
     "2026-10-28": ["recesso", "Dia do Servidor Público"],
     "2026-11-02": ["feriado", "Finados"],
@@ -170,7 +165,9 @@ function showToast(message) {
 
 function inicializarIcones() {
     if (window.lucide) {
-        lucide.createIcons();
+        window.lucide.createIcons();
+    } else {
+        console.error("Lucide não foi carregado.");
     }
 }
 
@@ -281,10 +278,28 @@ function atualizarUsuarioLateral() {
     }
 }
 
-function fazerLogout() {
-    sessionStorage.removeItem("usuarioLogado");
+async function fazerLogout() {
+    const botao = document.getElementById("logoutBtn");
+    if (botao) botao.disabled = true;
 
-    window.location.href = "/";
+    try {
+        const resposta = await fetch("/api/logout", {
+            method: "POST",
+            credentials: "include",
+        });
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok || !resultado.sucesso) {
+            throw new Error("Não foi possível sair.");
+        }
+
+        sessionStorage.removeItem("usuarioLogado");
+        window.location.replace("/");
+    } catch (erro) {
+        alert("Erro ao sair. Tente novamente.");
+        if (botao) botao.disabled = false;
+    }
 }
 
 // ============================================================
@@ -411,29 +426,35 @@ function viewInicio() {
     ).length;
 
     return `
-        <div class="hero">
-            <div>
-                <h1>Olá, ${escapeHtml(primeiroNome)}</h1>
+        
+<div class="hero">
+    <div class="hero-info">
+        <h1>Olá, ${escapeHtml(primeiroNome)}</h1>
 
-                <p>
-                    ${escapeHtml(ALUNO.ano || "Ano não informado")}
-                    · Turma ${escapeHtml(ALUNO.turma || "Não informada")}
-                    · ${escapeHtml(ALUNO.turno || "Turno não informado")}
-                </p>
+        <p>
+            ${escapeHtml(ALUNO.ano || "Ano não informado")}
+            · Turma ${escapeHtml(ALUNO.turma || "Não informada")}
+            · ${escapeHtml(ALUNO.turno || "Turno não informado")}
+        </p>
+    </div>
+
+    <div class="hero-direita">
+        <div class="stats">
+            <div class="stat">
+                <b>${livrosLidos}</b>
+                <span>Livros lidos</span>
             </div>
 
-            <div class="stats">
-                <div class="stat">
-                    <b>${livrosLidos}</b>
-                    <span>Livros lidos</span>
-                </div>
-
-                <div class="stat">
-                    <b>${computadoresUsados}</b>
-                    <span>Computadores</span>
-                </div>
+            <div class="stat">
+                <b>${computadoresUsados}</b>
+                <span>Computadores</span>
             </div>
         </div>
+
+        <div class="hero-relogio" id="relogioAluno">00:00:00</div>
+    </div>
+</div>
+
 
         <div class="grid">
 
@@ -568,6 +589,70 @@ async function carregarReservas() {
         showToast("Não foi possível carregar suas reservas.");
 
         return false;
+    }
+}
+
+async function carregarEmprestimos() {
+    const usuarioID = usuarioLogado?.id;
+
+    if (!usuarioID) {
+        emprestimos = [];
+        return;
+    }
+
+    try {
+        const resposta = await fetch(
+            `${API_URL}/aluno/emprestimos/${encodeURIComponent(usuarioID)}`,
+            {
+                credentials: "include",
+            },
+        );
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok || !resultado.sucesso) {
+            throw new Error(
+                resultado.mensagem ||
+                    "Não foi possível carregar os empréstimos.",
+            );
+        }
+
+        emprestimos = resultado.emprestimos || [];
+    } catch (erro) {
+        console.error("Erro ao carregar empréstimos:", erro);
+        emprestimos = [];
+    }
+}
+
+async function carregarEmprestimosHistorico() {
+    const usuarioID = usuarioLogado?.id;
+
+    if (!usuarioID) {
+        emprestimosHistorico = [];
+        return;
+    }
+
+    try {
+        const resposta = await fetch(
+            `${API_URL}/aluno/historico-emprestimos/${encodeURIComponent(usuarioID)}`,
+            { credentials: "include" },
+        );
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok || !resultado.sucesso) {
+            throw new Error(
+                resultado.mensagem || "Erro ao carregar histórico.",
+            );
+        }
+
+        emprestimosHistorico = Array.isArray(resultado.emprestimos)
+            ? resultado.emprestimos
+            : [];
+    } catch (erro) {
+        console.error("Erro ao carregar histórico:", erro);
+        emprestimosHistorico = [];
+        showToast("Não foi possível carregar os empréstimos do histórico.");
     }
 }
 
@@ -762,12 +847,9 @@ function criarModalReserva() {
     modal.id = "reservaModal";
 
     modal.innerHTML = `
-        <div class="reserva-overlay" onclick="fecharReserva(event)">
+       <div class="reserva-overlay">
 
-            <div
-                class="reserva-modal"
-                onclick="event.stopPropagation()"
-            >
+              <div class="reserva-modal">
 
                 <div class="reserva-modal-header">
 
@@ -788,7 +870,6 @@ function criarModalReserva() {
                     <button
                         type="button"
                         class="reserva-close"
-                        onclick="fecharReserva()"
                         aria-label="Fechar"
                     >
                         ${icon("x")}
@@ -949,23 +1030,14 @@ function criarModalReserva() {
 
                 <div class="reserva-modal-footer">
 
-                    <button
-                        type="button"
-                        class="btn secondary"
-                        onclick="fecharReserva()"
-                    >
-                        Cancelar
-                    </button>
+                    <button type="button" class="btn secondary reserva-cancelar">
+    Cancelar
+</button>
 
-                    <button
-                        type="button"
-                        class="btn"
-                        id="confirmarReservaBtn"
-                        onclick="confirmarReserva()"
-                    >
-                        ${icon("bookmark-check")}
-                        Confirmar reserva
-                    </button>
+                    <button type="button" class="btn" id="confirmarReservaBtn">
+    ${icon("bookmark-check")}
+    Confirmar reserva
+</button>
 
                 </div>
 
@@ -975,6 +1047,26 @@ function criarModalReserva() {
     `;
 
     document.body.appendChild(modal);
+    const overlay = modal.querySelector(".reserva-overlay");
+    const caixa = modal.querySelector(".reserva-modal");
+
+    overlay.addEventListener("click", fecharReserva);
+
+    caixa.addEventListener("click", (event) => {
+        event.stopPropagation();
+    });
+
+    modal
+        .querySelector(".reserva-close")
+        .addEventListener("click", () => fecharReserva());
+
+    modal
+        .querySelector(".reserva-cancelar")
+        .addEventListener("click", () => fecharReserva());
+
+    modal
+        .querySelector("#confirmarReservaBtn")
+        .addEventListener("click", confirmarReserva);
 
     inicializarIcones();
 }
@@ -1317,101 +1409,327 @@ function viewEmprestimos() {
 // ============================================================
 
 function viewHistorico() {
-    const livros = movimentos.filter(
-        (m) => String(m.tipo || m[0] || "").toLowerCase() === "livro",
-    ).length;
+    const todos = [
+        ...reservas.map((r) => ({
+            registro: "Reserva",
+            id: r.reservaID || r.id || "",
+            item: r.nome || r.item || r.produtoID || "Item não identificado",
+            tipo:
+                r.categoriaNome || r.nomeCategoria || r.tipo || "Não informado",
+            local: r.local || r.localID || "Não informado",
+            quantidade: r.quantidade || "1",
+            data: r.dataInicio || "",
+            devolucao: r.dataFim || "",
+            status: r.status || "SEM STATUS",
+        })),
 
-    const computadores = movimentos.filter(
-        (m) => String(m.tipo || m[0] || "").toLowerCase() === "computador",
-    ).length;
+        ...emprestimosHistorico.map((e) => ({
+            registro: "Empréstimo",
+            id: e.emprestimoID || e.id || "",
+            item: e.item || e.nome || e.produtoID || "Item não identificado",
+            tipo: e.tipo || "Item",
+            local: e.local || e.localID || "Não informado",
+            quantidade: e.quantidade || "1",
+            data: e.retirada || "",
+            devolucao: e.devolucao || "",
+            dataDevolucao: e.dataDevolucao || "",
+            status: e.status || "SEM STATUS",
+        })),
+    ];
+
+    const registrosFiltrados = todos.filter((r) => {
+        const tipoCorresponde =
+            filtroHistoricoTipo === "todos" ||
+            (filtroHistoricoTipo === "reservas" && r.registro === "Reserva") ||
+            (filtroHistoricoTipo === "emprestimos" &&
+                r.registro === "Empréstimo");
+
+        const categoria = categoriaHistorico(r);
+
+        const categoriaCorresponde =
+            filtroHistoricoCategoria === "todas" ||
+            categoria === filtroHistoricoCategoria;
+
+        return tipoCorresponde && categoriaCorresponde;
+    });
+
+    registrosFiltrados.sort((a, b) =>
+        String(b.data).localeCompare(String(a.data)),
+    );
+
+    registrosFiltrados.sort((a, b) =>
+        String(b.data).localeCompare(String(a.data)),
+    );
+
+    todos.sort((a, b) => String(b.data).localeCompare(String(a.data)));
+
+    const cards = registrosFiltrados
+        .map((r) => {
+            const status = String(r.status).trim().toUpperCase();
+
+            let classe = "historico-pendente";
+
+            if (
+                ["APROVADA", "APROVADO", "ABERTO", "EM ANDAMENTO"].includes(
+                    status,
+                )
+            ) {
+                classe = "historico-aprovada";
+            } else if (["ATRASADO"].includes(status)) {
+                classe = "historico-atrasado";
+            } else if (
+                [
+                    "CANCELADA",
+                    "CANCELADO",
+                    "RECUSADA",
+                    "RECUSADO",
+                    "REJEITADA",
+                    "REJEITADO",
+                ].includes(status)
+            ) {
+                classe = "historico-recusada";
+            } else if (
+                [
+                    "DEVOLVIDO",
+                    "DEVOLVIDA",
+                    "CONCLUIDO",
+                    "CONCLUÍDO",
+                    "CONCLUIDA",
+                    "CONCLUÍDA",
+                    "FINALIZADO",
+                    "FINALIZADA",
+                ].includes(status)
+            ) {
+                classe = "historico-concluido";
+            }
+
+            return `
+            <div class="historico-card">
+                <div class="historico-card-topo">
+                    
+<span class="historico-tipo ${r.registro === "Reserva" ? "tipo-reserva" : "tipo-emprestimo"}">
+    ${icon(r.registro === "Reserva" ? "calendar-check" : "book-open")}
+    ${escapeHtml(r.registro)}
+</span>
+
+                    <span class="historico-status ${classe}">
+                        ${escapeHtml(status.replace(/_/g, " "))}
+                    </span>
+                </div>
+
+                
+<h3>
+    ${icon(
+        /computador|desktop/i.test(r.item)
+            ? "monitor"
+            : /livro/i.test(r.tipo)
+              ? "book-open"
+              : "package",
+    )}
+    ${escapeHtml(r.item)}
+</h3>
+
+<div class="historico-dados">
+    <p>
+        ${icon("layers")}
+        <span><b>Tipo</b>${escapeHtml(r.tipo)}</span>
+    </p>
+
+    <p>
+        ${icon("hash")}
+        <span><b>ID do registro</b>${escapeHtml(r.id || "Não informado")}</span>
+    </p>
+
+    <p>
+        ${icon("map-pin")}
+        <span><b>Local</b>${escapeHtml(r.local)}</span>
+    </p>
+
+    <p>
+        ${icon("package")}
+        <span><b>Quantidade</b>${escapeHtml(r.quantidade)}</span>
+    </p>
+
+    <p>
+        ${icon("calendar")}
+        <span><b>Data</b>${escapeHtml(formatarDataHoraReserva(r.data))}</span>
+    </p>
+
+    <p>
+        ${icon("calendar-clock")}
+        <span><b>Devolução prevista</b>${escapeHtml(formatarDataHoraReserva(r.devolucao))}</span>
+    </p>
+
+    ${
+        r.dataDevolucao
+            ? `
+        <p>
+            ${icon("check-circle")}
+            <span>
+                <b>Devolvido em</b>
+                ${escapeHtml(formatarDataHoraReserva(r.dataDevolucao))}
+            </span>
+        </p>
+    `
+            : ""
+    }
+</div>
+
+            </div>
+        `;
+        })
+        .join("");
 
     return `
         <div class="head">
             <h1>Histórico</h1>
-
-            <p class="sub">
-                Veja o resumo das suas atividades.
-            </p>
+            <p class="sub">Consulte todas as suas reservas e empréstimos.</p>
         </div>
 
         <div class="grid">
-
             <div class="card">
-
-                <div class="lab">
-                    ${icon("book-open")}
-                    Livros
-                </div>
-
-                <div class="big">
-                    Você leu ${livros} ${livros === 1 ? "livro" : "livros"}
-                </div>
-
+                <div class="lab">${icon("bookmark")} Reservas</div>
+                <div class="big">${reservas.length}</div>
+                <p>Registros de reservas.</p>
             </div>
 
             <div class="card">
-
-                <div class="lab">
-                    ${icon("monitor")}
-                    Computadores
-                </div>
-
-                <div class="big">
-                    Você utilizou ${computadores}
-                    ${computadores === 1 ? "computador" : "computadores"}
-                </div>
-
+                <div class="lab">${icon("book-open")} Empréstimos</div>
+                <div class="big">${emprestimosHistorico.length}</div>
+                <p>Registros de empréstimos, incluindo devolvidos.</p>
             </div>
-
         </div>
 
-        <div
-            class="card"
-            style="margin-top:18px"
-        >
+        
 
-            <h2>
-                Últimas movimentações
-            </h2>
+<div class="historico-filtros">
+    <div class="historico-filtro-grupo">
+        <span>Tipo de registro</span>
+        <div class="historico-botoes">
+            <button type="button" data-filtro-tipo="todos"
+                class="${filtroHistoricoTipo === "todos" ? "ativo" : ""}">Todos</button>
 
-            <div style="margin-top:8px">
+            <button type="button" data-filtro-tipo="reservas"
+                class="${filtroHistoricoTipo === "reservas" ? "ativo" : ""}">Reservas</button>
 
-                ${
-                    movimentos.length
-                        ? movimentos
-                              .map(
-                                  (m) => `
-                            <div class="row">
+            <button type="button" data-filtro-tipo="emprestimos"
+                class="${filtroHistoricoTipo === "emprestimos" ? "ativo" : ""}">Empréstimos</button>
+        </div>
+    </div>
 
-                                <div class="d">
-                                    ${escapeHtml(m.tipo || m[0] || "")}
-                                </div>
+    <div class="historico-filtro-grupo">
+        <span>Categoria</span>
+        
+<div class="historico-filtro-grupo">
 
-                                <div class="t">
-                                    ${escapeHtml(m.item || m[1] || "")}
-                                </div>
+    <div class="historico-botoes">
+        <button type="button"
+            data-filtro-categoria="todas"
+            class="${filtroHistoricoCategoria === "todas" ? "ativo" : ""}">
+            Todos
+        </button>
 
-                                <span class="tag">
-                                    ${escapeHtml(m.data || m[2] || "")}
-                                </span>
+        <button type="button"
+            data-filtro-categoria="biblioteca"
+            class="${filtroHistoricoCategoria === "biblioteca" ? "ativo" : ""}">
+            Biblioteca
+        </button>
 
-                            </div>
-                        `,
-                              )
-                              .join("")
-                        : `
-                        <div class="row">
-                            <div class="d">
-                                Nenhuma movimentação
-                            </div>
-                        </div>
-                        `
-                }
+        <button type="button"
+            data-filtro-categoria="informatica"
+            class="${filtroHistoricoCategoria === "informatica" ? "ativo" : ""}">
+            Informática
+        </button>
+    </div>
+</div>
 
-            </div>
+    </div>
+</div>
 
+
+
+        <div class="historico-lista">
+            ${
+                cards ||
+                `
+                <div class="historico-vazio">
+                   Nenhum registro encontrado para os filtros selecionados.
+                </div>
+            `
+            }
         </div>
     `;
+}
+
+function configurarEventosFiltroHistorico() {
+    const pagina = document.getElementById("pageContent");
+
+    if (!pagina || pagina.dataset.filtroHistoricoConfigurado === "sim") {
+        return;
+    }
+
+    pagina.dataset.filtroHistoricoConfigurado = "sim";
+
+    pagina.addEventListener("click", (evento) => {
+        const botao = evento.target.closest(
+            "[data-filtro-tipo], [data-filtro-categoria]",
+        );
+
+        if (!botao || !pagina.contains(botao)) return;
+
+        if (botao.dataset.filtroTipo) {
+            filtroHistoricoTipo = botao.dataset.filtroTipo;
+        }
+
+        if (botao.dataset.filtroCategoria) {
+            filtroHistoricoCategoria = botao.dataset.filtroCategoria;
+        }
+
+        pagina.innerHTML = viewHistorico();
+    });
+}
+
+let filtroHistoricoTipo = "todos";
+let filtroHistoricoCategoria = "todas";
+
+function aplicarFiltroHistorico(tipo, categoria) {
+    if (tipo) filtroHistoricoTipo = tipo;
+    if (categoria) filtroHistoricoCategoria = categoria;
+
+    const pagina = document.getElementById("pageContent");
+
+    if (pagina) {
+        pagina.innerHTML = viewHistorico();
+
+        if (typeof inicializarIcones === "function") {
+            inicializarIcones();
+        }
+    }
+}
+
+function categoriaHistorico(registro) {
+    const texto = [
+        registro.item || "",
+        registro.tipo || "",
+        registro.local || "",
+    ]
+        .join(" ")
+        .toLowerCase();
+
+    if (texto.includes("biblioteca") || texto.includes("livro")) {
+        return "biblioteca";
+    }
+
+    if (
+        texto.includes("informática") ||
+        texto.includes("informatica") ||
+        texto.includes("computador") ||
+        texto.includes("desktop")
+    ) {
+        return "informatica";
+    }
+
+    return "outros";
 }
 
 // ============================================================
@@ -1492,16 +1810,12 @@ function pesquisarItens() {
         ? filtrados
               .map(
                   (item) => `
-                    <article
+             <article
     class="item-result-card ${item.podeReservar ? "reservable" : ""}"
     ${
         item.podeReservar
-            ? `onclick="abrirReserva('${escapeHtml(item.produtoID)}')"`
-            : ""
-    }
-    ${
-        item.podeReservar
-            ? `role="button" tabindex="0" title="Clique para reservar"`
+            ? `data-produto-id="${escapeHtml(item.produtoID)}"
+           role="button" tabindex="0" title="Clique para reservar"`
             : ""
     }
 >
@@ -1588,6 +1902,13 @@ function pesquisarItens() {
 
             </div>
         `;
+    resultados.addEventListener("click", (event) => {
+        const card = event.target.closest("[data-produto-id]");
+
+        if (card && resultados.contains(card)) {
+            abrirReserva(card.dataset.produtoId);
+        }
+    });
 
     inicializarIcones();
 }
@@ -1649,7 +1970,6 @@ function viewPesquisar() {
                         type="search"
                         placeholder="Digite o nome, código ou palavra-chave..."
                         autocomplete="off"
-                        oninput="pesquisarItens()"
                     >
 
                 </div>
@@ -1666,7 +1986,6 @@ function viewPesquisar() {
 
                     <select
                         id="itemType"
-                        onchange="pesquisarItens()"
                     >
 
                         <option value="">
@@ -1693,7 +2012,6 @@ function viewPesquisar() {
 
                     <select
                         id="itemStatus"
-                        onchange="pesquisarItens()"
                     >
 
                         <option value="">
@@ -1719,7 +2037,6 @@ function viewPesquisar() {
                 <button
                     class="btn sm search-clear"
                     type="button"
-                    onclick="limparPesquisaItens()"
                 >
                     ${icon("rotate-ccw")}
                     Limpar
@@ -1965,9 +2282,12 @@ function miniMonth(year, month) {
 
     let html = `
         <div
-            class="mini"
-            onclick="cal.view='Mês';cal.cur=new Date(${year},${month},1);draw()"
-        >
+    class="mini"
+    data-calendar-month="${month}"
+    data-calendar-year="${year}"
+    role="button"
+    tabindex="0"
+>
 
             <h2>
                 ${MESES[month]}
@@ -2052,11 +2372,12 @@ function viewCalendario() {
         .map(
             (item) => `
                 <button
-                    class="${item === v ? "on" : ""}"
-                    onclick="setView('${item}')"
-                >
-                    ${item}
-                </button>
+    class="${item === v ? "on" : ""}"
+    data-calendar-view="${item}"
+    type="button"
+>
+    ${item}
+</button>
             `,
         )
         .join("");
@@ -2178,35 +2499,23 @@ function viewCalendario() {
 
             <div class="sp"></div>
 
-            <button
-                class="btn sm"
-                type="button"
-                onclick="shiftCalendar(-1)"
-            >
-                Anterior
-            </button>
+            <button class="btn sm" type="button" data-calendar-shift="-1">
+    Anterior
+</button>
 
-            <select
-                id="calendarMonth"
-                onchange="pickCalendar()"
-            >
-                ${months}
-            </select>
+            
+<select id="calendarMonth">
+    ${months}
+</select>
 
-            <select
-                id="calendarYear"
-                onchange="pickCalendar()"
-            >
-                ${years}
-            </select>
+<select id="calendarYear">
+    ${years}
+</select>
 
-            <button
-                class="btn sm"
-                type="button"
-                onclick="shiftCalendar(1)"
-            >
-                Próximo
-            </button>
+
+            <button class="btn sm" type="button" data-calendar-shift="1">
+    Próximo
+</button>
 
         </div>
 
@@ -2340,7 +2649,7 @@ function draw() {
                 <button
                     type="button"
                     class="nav-item ${id === page ? "active" : ""}"
-                    onclick="go('${id}')"
+                    data-page="${id}"
                 >
                     ${icon(iconName)}
 
@@ -2376,6 +2685,7 @@ function draw() {
     content.innerHTML = views[page]();
 
     if (page === "pesquisar") {
+        conectarEventosPesquisa();
         pesquisarItens();
     }
 
@@ -2437,9 +2747,16 @@ async function iniciarPainel() {
 
         if (!perfilCarregado) return;
 
-        await Promise.all([carregarItensPesquisa(), carregarReservas()]);
+        await Promise.all([
+            carregarItensPesquisa(),
+            carregarReservas(),
+            carregarEmprestimos(),
+            carregarEmprestimosHistorico(),
+        ]);
 
         atualizarUsuarioLateral();
+        conectarEventosMenu();
+        conectarEventosCalendario();
         draw();
         inicializarIcones();
     } catch (erro) {
@@ -2449,4 +2766,103 @@ async function iniciarPainel() {
     }
 }
 
+function atualizarRelogioAluno() {
+    const relogio = document.getElementById("relogioAluno");
+    if (!relogio) return;
+
+    const agora = new Date();
+
+    relogio.textContent = [
+        String(agora.getHours()).padStart(2, "0"),
+        String(agora.getMinutes()).padStart(2, "0"),
+        String(agora.getSeconds()).padStart(2, "0"),
+    ].join(":");
+}
+
+atualizarRelogioAluno();
+setInterval(atualizarRelogioAluno, 1000);
+
 document.addEventListener("DOMContentLoaded", iniciarPainel);
+
+function conectarEventosPesquisa() {
+    $("#itemSearch")?.addEventListener("input", pesquisarItens);
+    $("#itemType")?.addEventListener("change", pesquisarItens);
+    $("#itemStatus")?.addEventListener("change", pesquisarItens);
+
+    document
+        .querySelector(".search-clear")
+        ?.addEventListener("click", limparPesquisaItens);
+}
+
+function conectarEventosMenu() {
+    const nav = $("#nav");
+
+    if (!nav || nav.dataset.eventosConectados) return;
+
+    nav.dataset.eventosConectados = "true";
+
+    nav.addEventListener("click", (event) => {
+        const botao = event.target.closest(".nav-item");
+
+        if (!botao || !nav.contains(botao)) return;
+
+        go(botao.dataset.page);
+    });
+}
+
+function conectarEventosCalendario() {
+    const content = document.querySelector("#pageContent");
+
+    if (!content || content.dataset.calendarioConectado) return;
+
+    content.dataset.calendarioConectado = "true";
+
+    content.addEventListener("click", (event) => {
+        const tab = event.target.closest("[data-calendar-view]");
+        if (tab) {
+            setView(tab.dataset.calendarView);
+            return;
+        }
+
+        const shift = event.target.closest("[data-calendar-shift]");
+        if (shift) {
+            shiftCalendar(Number(shift.dataset.calendarShift));
+            return;
+        }
+
+        const mini = event.target.closest("[data-calendar-month]");
+        if (mini) {
+            cal.view = "Mês";
+            cal.cur = new Date(
+                Number(mini.dataset.calendarYear),
+                Number(mini.dataset.calendarMonth),
+                1,
+            );
+            draw();
+        }
+    });
+
+    content.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+
+        const mini = event.target.closest("[data-calendar-month]");
+        if (!mini) return;
+
+        event.preventDefault();
+        cal.view = "Mês";
+        cal.cur = new Date(
+            Number(mini.dataset.calendarYear),
+            Number(mini.dataset.calendarMonth),
+            1,
+        );
+        draw();
+    });
+
+    content.addEventListener("change", (event) => {
+        if (event.target.matches("#calendarMonth, #calendarYear")) {
+            pickCalendar();
+        }
+    });
+}
+
+configurarEventosFiltroHistorico();

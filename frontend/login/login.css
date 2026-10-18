@@ -1184,3 +1184,9 @@ body {
     margin-top: 10px;
     font-size: 14px;
 }
+
+/* Tamanho dos ícones */
+[class^="icon-"],
+[class*=" icon-"] {
+    font-size: 20px !important;
+}

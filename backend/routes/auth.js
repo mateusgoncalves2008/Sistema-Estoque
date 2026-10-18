@@ -21,22 +21,26 @@ function gerarHashSenha(senha, salt) {
 
 router.post("/login", async (req, res) => {
     try {
-        const { email, senha } = req.body;
+        const { email, senha } = req.body || {};
 
-        // ----------------------------------------------
-        // VALIDAÇÃO
-        // ----------------------------------------------
-
-        if (!email || !senha) {
+        if (
+            typeof email !== "string" ||
+            typeof senha !== "string" ||
+            !email.trim() ||
+            !senha
+        ) {
             return res.status(400).json({
                 sucesso: false,
                 mensagem: "E-mail e senha são obrigatórios.",
             });
         }
 
-        // ----------------------------------------------
-        // BUSCAR USUÁRIOS
-        // ----------------------------------------------
+        if (!SPREADSHEET_ID) {
+            return res.status(500).json({
+                sucesso: false,
+                mensagem: "Planilha não configurada no servidor.",
+            });
+        }
 
         const resposta = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
@@ -44,33 +48,22 @@ router.post("/login", async (req, res) => {
         });
 
         const usuarios = resposta.data.values || [];
-
-        // ----------------------------------------------
-        // PROCURAR USUÁRIO PELO E-MAIL
-        // ----------------------------------------------
-
         const emailNormalizado = email.trim().toLowerCase();
 
         const usuario = usuarios.find((linha) => {
-            const emailPlanilha = (linha[2] || "").trim().toLowerCase();
+            const emailPlanilha = String(linha[2] || "")
+                .trim()
+                .toLowerCase();
 
             return emailPlanilha === emailNormalizado;
         });
 
-        // ----------------------------------------------
-        // USUÁRIO NÃO ENCONTRADO
-        // ----------------------------------------------
-
         if (!usuario) {
             return res.status(401).json({
                 sucesso: false,
-                mensagem: "O e-mail informado está incorreto.",
+                mensagem: "E-mail ou senha incorretos.",
             });
         }
-
-        // ----------------------------------------------
-        // CAMPOS DA PLANILHA
-        // ----------------------------------------------
 
         const [
             usuarioID,
@@ -82,59 +75,73 @@ router.post("/login", async (req, res) => {
             perfil,
             setorID,
             status,
-            dataCadastro,
-            ultimoLogin,
         ] = usuario;
 
-        // ----------------------------------------------
-        // VERIFICAR STATUS
-        // ----------------------------------------------
-
-        if (status !== "ATIVO") {
+        if (
+            String(status || "")
+                .trim()
+                .toUpperCase() !== "ATIVO"
+        ) {
             return res.status(403).json({
                 sucesso: false,
                 mensagem: "Este usuário está inativo.",
             });
         }
 
-        // ----------------------------------------------
-        // GERAR HASH DA SENHA DIGITADA
-        // ----------------------------------------------
-
-        const hashDigitado = gerarHashSenha(senha, salt);
-
-        // ----------------------------------------------
-        // COMPARAR HASH
-        // ----------------------------------------------
-
-        if (hashDigitado !== senhaHash) {
+        if (!senhaHash || !salt) {
             return res.status(401).json({
                 sucesso: false,
-                mensagem: "A senha informada está incorreta.",
+                mensagem: "E-mail ou senha incorretos.",
             });
         }
 
-        // ----------------------------------------------
-        // LOGIN CORRETO
-        // ----------------------------------------------
+        const hashDigitado = gerarHashSenha(senha, salt);
+
+        const hashBuffer = Buffer.from(hashDigitado, "hex");
+        const hashArmazenado = Buffer.from(senhaHash, "hex");
+
+        if (
+            hashBuffer.length !== hashArmazenado.length ||
+            !crypto.timingSafeEqual(hashBuffer, hashArmazenado)
+        ) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: "E-mail ou senha incorretos.",
+            });
+        }
+
+        // Cria uma sessão nova após validar as credenciais.
+        await new Promise((resolve, reject) => {
+            req.session.regenerate((erro) => {
+                if (erro) return reject(erro);
+                resolve();
+            });
+        });
+
+        req.session.usuario = {
+            id: String(usuarioID),
+            nome: nome || "",
+            email: emailUsuario || "",
+            tipoUsuario: tipoUsuario || "",
+            perfil: perfil || "",
+            setorID: setorID || null,
+        };
+
+        // Garante que a sessão seja salva antes de responder.
+        await new Promise((resolve, reject) => {
+            req.session.save((erro) => {
+                if (erro) return reject(erro);
+                resolve();
+            });
+        });
 
         return res.json({
             sucesso: true,
-
             mensagem: "Login realizado com sucesso.",
-
-            usuario: {
-                id: usuarioID,
-                nome: nome,
-                email: emailUsuario,
-                tipoUsuario: tipoUsuario,
-                perfil: perfil,
-                setorID: setorID || null,
-            },
+            usuario: req.session.usuario,
         });
     } catch (erro) {
-        console.error("Erro no login:");
-        console.error(erro);
+        console.error("Erro no login:", erro.message);
 
         return res.status(500).json({
             sucesso: false,
@@ -291,6 +298,144 @@ router.get("/aluno/perfil/:usuarioID", async (req, res) => {
             mensagem: "Erro interno ao buscar perfil do aluno.",
         });
     }
+});
+
+/* GET /api/professor/perfil/:usuarioID */
+router.get("/professor/perfil/:usuarioID", async (req, res) => {
+    try {
+        const { usuarioID } = req.params;
+
+        if (!usuarioID) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "UsuarioID não informado.",
+            });
+        }
+
+        // Buscar usuário
+        const respostaUsuarios = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "01_USUARIOS!A2:K",
+        });
+
+        const usuarios = respostaUsuarios.data.values || [];
+
+        const usuario = usuarios.find(
+            (linha) =>
+                String(linha[0] || "").trim() === String(usuarioID).trim(),
+        );
+
+        if (!usuario) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: "Usuário não encontrado.",
+            });
+        }
+
+        const [
+            id,
+            nome,
+            email,
+            senhaHash,
+            salt,
+            tipoUsuario,
+            perfil,
+            setorID,
+            status,
+        ] = usuario;
+
+        if (
+            String(tipoUsuario || "")
+                .trim()
+                .toUpperCase() !== "PROFESSOR"
+        ) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Este usuário não é um professor.",
+            });
+        }
+
+        if (
+            String(status || "")
+                .trim()
+                .toUpperCase() !== "ATIVO"
+        ) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Este usuário está inativo.",
+            });
+        }
+
+        // Buscar cadastro autorizado
+        const respostaCadastros = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "17_CADASTROS_AUTORIZADOS!A2:J",
+        });
+
+        const cadastros = respostaCadastros.data.values || [];
+
+        const cadastro = cadastros.find(
+            (linha) =>
+                String(linha[3] || "").trim() === String(usuarioID).trim() &&
+                String(linha[1] || "")
+                    .trim()
+                    .toUpperCase() === "PROFESSOR" &&
+                String(linha[9] || "")
+                    .trim()
+                    .toUpperCase() === "CADASTRADO",
+        );
+
+        if (!cadastro) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: "Cadastro autorizado do professor não encontrado.",
+            });
+        }
+
+        return res.json({
+            sucesso: true,
+            professor: {
+                usuarioID: id || "",
+                nome: nome || cadastro[4] || "",
+                idade: cadastro[8] || "",
+                masp: cadastro[2] || "",
+                email: email || "",
+            },
+        });
+    } catch (erro) {
+        console.error("Erro ao buscar perfil do professor:", erro);
+
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: "Erro interno ao buscar perfil do professor.",
+        });
+    }
+});
+
+router.post("/logout", (req, res) => {
+    if (!req.session) {
+        return res.json({ sucesso: true });
+    }
+
+    req.session.destroy((erro) => {
+        if (erro) {
+            return res.status(500).json({
+                sucesso: false,
+                mensagem: "Não foi possível encerrar a sessão.",
+            });
+        }
+
+        res.clearCookie("hauy.sid", {
+            httpOnly: true,
+            secure: true,
+            sameSite: "lax",
+        });
+
+        return res.json({
+            sucesso: true,
+            mensagem: "Logout realizado com sucesso.",
+        });
+    });
 });
 
 module.exports = router;

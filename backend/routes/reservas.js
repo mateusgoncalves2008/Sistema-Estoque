@@ -155,6 +155,47 @@ async function buscarLocal(localID) {
 
     return null;
 }
+/**
+ * Verifica bloqueio ativo do usuário no setor correspondente ao local.
+ */
+async function verificarBloqueioSetor(usuarioID, local) {
+    const [bloqueiosResposta, setoresResposta] = await Promise.all([
+        sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "'22_BLOQUEIOS_SETOR'!A:J",
+        }),
+        sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "12_SETORES!A:E",
+        }),
+    ]);
+
+    const bloqueios = bloqueiosResposta.data.values || [];
+    const setores = setoresResposta.data.values || [];
+
+    const setor = setores
+        .slice(1)
+        .find((linha) => normalizar(linha[1]) === normalizar(local.nome));
+
+    if (!setor) return null;
+
+    const bloqueio = bloqueios
+        .slice(1)
+        .find(
+            (linha) =>
+                String(linha[4] || "").trim() ===
+                    String(setor[0] || "").trim() &&
+                String(linha[6] || "").trim() === String(usuarioID).trim() &&
+                normalizar(linha[9]) === "ATIVO",
+        );
+
+    return bloqueio
+        ? {
+              setorNome: String(bloqueio[5] || setor[1] || "").trim(),
+              motivo: String(bloqueio[8] || "").trim(),
+          }
+        : null;
+}
 
 // ============================================================
 // LER CATEGORIAS
@@ -189,7 +230,7 @@ async function buscarCategoria(categoriaID) {
 async function buscarEstoque(produtoID, localID) {
     const resposta = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: "06_ESTOQUE_LOCAIS!A:H",
+        range: "06_ESTOQUE_LOCAIS!A:I",
     });
 
     const linhas = resposta.data.values || [];
@@ -208,6 +249,7 @@ async function buscarEstoque(produtoID, localID) {
                 disponivel: numero(linha[5]),
                 indisponivel: numero(linha[6]),
                 ultimaAtualizacao: linha[7] || "",
+                statusLocal: normalizar(linha[8] || "ATIVO"),
             };
         }
     }
@@ -292,16 +334,6 @@ function existeConflito(reservas, produtoID, localID, inicio, fim) {
     };
 }
 
-// ============================================================
-// GET /api/aluno/reservas/:usuarioID
-// SOMENTE AS RESERVAS DO ALUNO
-// ============================================================
-
-// ============================================================
-// GET /api/aluno/reservas/:usuarioID
-// SOMENTE AS RESERVAS DO ALUNO
-// ============================================================
-
 router.get("/aluno/reservas/:usuarioID", async (req, res) => {
     try {
         const usuarioID = String(req.params.usuarioID || "").trim();
@@ -313,10 +345,6 @@ router.get("/aluno/reservas/:usuarioID", async (req, res) => {
             });
         }
 
-        // ----------------------------------------------------
-        // USUÁRIO
-        // ----------------------------------------------------
-
         const usuario = await buscarUsuario(usuarioID);
 
         if (!usuario) {
@@ -326,10 +354,12 @@ router.get("/aluno/reservas/:usuarioID", async (req, res) => {
             });
         }
 
-        if (normalizar(usuario.tipoUsuario) !== "ALUNO") {
+        const tipo = normalizar(usuario.tipoUsuario);
+
+        if (!["ALUNO", "PROFESSOR"].includes(tipo)) {
             return res.status(403).json({
                 sucesso: false,
-                mensagem: "Este usuário não é um aluno.",
+                mensagem: "Perfil sem permissão para consultar reservas.",
             });
         }
 
@@ -340,111 +370,72 @@ router.get("/aluno/reservas/:usuarioID", async (req, res) => {
             });
         }
 
-        // ----------------------------------------------------
-        // BUSCAR RESERVAS
-        // ----------------------------------------------------
+        const [respostaReservas, respostaProdutos, respostaLocais] =
+            await Promise.all([
+                sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: "08_RESERVAS!A:L",
+                }),
+                sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: "02_PRODUTOS!A:K",
+                }),
+                sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: "05_LOCAIS!A:G",
+                }),
+            ]);
 
-        const reservas = await buscarReservas();
+        const linhasReservas = respostaReservas.data.values || [];
+        const linhasProdutos = respostaProdutos.data.values || [];
+        const linhasLocais = respostaLocais.data.values || [];
 
-        // ----------------------------------------------------
-        // BUSCAR TODOS OS PRODUTOS
-        // Para transformar ProdutoID em Nome do produto
-        // ----------------------------------------------------
+        const produtos = new Map(
+            linhasProdutos.slice(1).map((linha) => [
+                String(linha[0] || "").trim(),
+                {
+                    nome: linha[2] || "Item não identificado",
+                    categoriaID: linha[4] || "",
+                },
+            ]),
+        );
 
-        const respostaProdutos = await sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEET_ID,
-            range: "02_PRODUTOS!A:K",
-        });
+        const locais = new Map(
+            linhasLocais
+                .slice(1)
+                .map((linha) => [
+                    String(linha[0] || "").trim(),
+                    linha[2] || "Local não identificado",
+                ]),
+        );
 
-        const produtos = respostaProdutos.data.values || [];
-
-        // ----------------------------------------------------
-        // CRIAR MAPA:
-        // ProdutoID -> informações do produto
-        // ----------------------------------------------------
-
-        const mapaProdutos = new Map();
-
-        for (const linha of produtos.slice(1)) {
-            const produtoID = String(linha[0] || "").trim();
-
-            if (!produtoID) {
-                continue;
-            }
-
-            mapaProdutos.set(produtoID, {
-                produtoID: produtoID,
-                codigo: linha[1] || "",
-                nome: linha[2] || "",
-                autor: linha[3] || "",
-                categoriaID: linha[4] || "",
-                subcategoriaID: linha[5] || "",
-                estado: linha[7] || "",
-                status: linha[8] || "",
-                tipo:
-                    String(linha[4] || "").trim() === "CAT-00003"
-                        ? "Livro"
-                        : String(linha[4] || "").trim() === "CAT-00001"
-                          ? "Computador"
-                          : "Item",
-            });
-        }
-
-        // ----------------------------------------------------
-        // FILTRAR RESERVAS DO ALUNO
-        // E ADICIONAR DADOS DO PRODUTO
-        // ----------------------------------------------------
-
-        const minhasReservas = reservas
+        const minhasReservas = linhasReservas
             .slice(1)
-            .filter((linha) => {
-                return String(linha[2] || "").trim() === usuarioID;
-            })
+            .filter((linha) => String(linha[2] || "").trim() === usuarioID)
             .map((linha) => {
                 const produtoID = String(linha[3] || "").trim();
-
-                const produto = mapaProdutos.get(produtoID);
+                const produto = produtos.get(produtoID);
 
                 return {
                     reservaID: linha[0] || "",
-                    dataSolicitacao: linha[1] || "",
-
                     usuarioID: linha[2] || "",
-
-                    produtoID: produtoID,
-
-                    nome: produto?.nome || "Produto não encontrado",
-
-                    tipo: produto?.tipo || "Item",
-
-                    codigo: produto?.codigo || "",
-                    autor: produto?.autor || "",
-                    categoriaID: produto?.categoriaID || "",
-                    subcategoriaID: produto?.subcategoriaID || "",
-                    estado: produto?.estado || "",
-
+                    produtoID,
+                    nome: produto?.nome || "Item não identificado",
+                    tipo: produto?.categoriaID || "Item",
                     localID: linha[4] || "",
+                    local:
+                        locais.get(String(linha[4] || "").trim()) ||
+                        "Local não identificado",
                     quantidade: numero(linha[5]),
-
                     dataInicio: linha[6] || "",
                     dataFim: linha[7] || "",
-
                     motivo: linha[8] || "",
                     status: linha[9] || "",
                     aprovadoPor: linha[10] || "",
                     observacao: linha[11] || "",
                 };
-            });
-
-        // ----------------------------------------------------
-        // MAIS RECENTES PRIMEIRO
-        // ----------------------------------------------------
-
-        minhasReservas.reverse();
-
-        // ----------------------------------------------------
-        // RESPOSTA
-        // ----------------------------------------------------
+            })
+            .reverse();
 
         return res.json({
             sucesso: true,
@@ -452,15 +443,130 @@ router.get("/aluno/reservas/:usuarioID", async (req, res) => {
             reservas: minhasReservas,
         });
     } catch (erro) {
-        console.error("Erro ao buscar reservas do aluno:", erro);
+        console.error("Erro ao buscar reservas:", erro);
 
         return res.status(500).json({
             sucesso: false,
-            mensagem: "Erro ao buscar as reservas do aluno.",
+            mensagem: "Erro ao buscar reservas.",
             erro:
                 process.env.NODE_ENV === "development"
                     ? erro.message
                     : undefined,
+        });
+    }
+});
+
+router.get("/professor/reservas/:usuarioID", async (req, res) => {
+    try {
+        const usuarioID = String(req.params.usuarioID || "").trim();
+
+        if (!usuarioID) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "Usuário não informado.",
+            });
+        }
+
+        const usuario = await buscarUsuario(usuarioID);
+
+        if (!usuario) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: "Usuário não encontrado.",
+            });
+        }
+
+        if (normalizar(usuario.tipoUsuario) !== "PROFESSOR") {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Esta rota é exclusiva para professores.",
+            });
+        }
+
+        if (normalizar(usuario.status) !== "ATIVO") {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "O usuário não está ativo.",
+            });
+        }
+
+        const [respostaReservas, respostaProdutos, respostaLocais] =
+            await Promise.all([
+                sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: "08_RESERVAS!A:L",
+                }),
+                sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: "02_PRODUTOS!A:K",
+                }),
+                sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: "05_LOCAIS!A:G",
+                }),
+            ]);
+
+        const linhasReservas = respostaReservas.data.values || [];
+        const linhasProdutos = respostaProdutos.data.values || [];
+        const linhasLocais = respostaLocais.data.values || [];
+
+        const produtos = new Map(
+            linhasProdutos.slice(1).map((linha) => [
+                String(linha[0] || "").trim(),
+                {
+                    nome: linha[2] || "Item não identificado",
+                    categoriaID: linha[4] || "",
+                },
+            ]),
+        );
+
+        const locais = new Map(
+            linhasLocais
+                .slice(1)
+                .map((linha) => [
+                    String(linha[0] || "").trim(),
+                    linha[2] || "Local não identificado",
+                ]),
+        );
+
+        const minhasReservas = linhasReservas
+            .slice(1)
+            .filter((linha) => String(linha[2] || "").trim() === usuarioID)
+            .map((linha) => {
+                const produtoID = String(linha[3] || "").trim();
+                const localID = String(linha[4] || "").trim();
+                const produto = produtos.get(produtoID);
+
+                return {
+                    reservaID: linha[0] || "",
+                    usuarioID,
+                    produtoID,
+                    nome: produto?.nome || "Item não identificado",
+                    tipo: produto?.categoriaID || "Item",
+                    localID,
+                    local: locais.get(localID) || "Local não identificado",
+                    quantidade: numero(linha[5]),
+                    dataInicio: linha[6] || "",
+                    dataFim: linha[7] || "",
+                    motivo: linha[8] || "",
+                    status: linha[9] || "",
+                    aprovadoPor: linha[10] || "",
+                    observacao: linha[11] || "",
+                };
+            })
+            .reverse();
+
+        return res.json({
+            sucesso: true,
+            total: minhasReservas.length,
+            reservas: minhasReservas,
+        });
+    } catch (erro) {
+        console.error("Erro ao buscar reservas do professor:", erro);
+
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: "Erro ao buscar reservas do professor.",
         });
     }
 });
@@ -472,8 +578,23 @@ router.get("/aluno/reservas/:usuarioID", async (req, res) => {
 
 router.post("/aluno/reservas", async (req, res) => {
     try {
+        const sessao = req.session?.usuario;
+        if (!sessao?.id) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: "Faça login para criar uma reserva.",
+            });
+        }
+        if (normalizar(sessao.tipoUsuario) !== "ALUNO") {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Somente alunos podem fazer este tipo de reserva.",
+            });
+        }
+        // Usa a identidade da sessão, nunca o usuarioID enviado pelo navegador.
+        const usuarioID = String(sessao.id).trim();
+
         const {
-            usuarioID,
             produtoID,
             localID,
             dataRetirada,
@@ -617,6 +738,14 @@ router.post("/aluno/reservas", async (req, res) => {
             });
         }
 
+        const bloqueioSetor = await verificarBloqueioSetor(usuarioID, local);
+        if (bloqueioSetor) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: `Sua reserva foi impedida porque você está bloqueado no setor "${bloqueioSetor.setorNome}". Motivo: ${bloqueioSetor.motivo}`,
+            });
+        }
+
         const localNome = normalizar(local.nome);
 
         // Livro → Biblioteca
@@ -650,17 +779,17 @@ router.post("/aluno/reservas", async (req, res) => {
             });
         }
 
+        if (estoque.statusLocal !== "ATIVO") {
+            return res.status(409).json({
+                sucesso: false,
+                mensagem: "Este item está desativado neste setor e não pode ser reservado.",
+            });
+        }
+
         if (estoque.disponivel <= 0) {
             return res.status(409).json({
                 sucesso: false,
                 mensagem: "Este item não está disponível no momento.",
-            });
-        }
-
-        if (estoque.disponivel <= estoque.reservado) {
-            return res.status(409).json({
-                sucesso: false,
-                mensagem: "A quantidade disponível já está reservada.",
             });
         }
 
@@ -797,6 +926,303 @@ router.post("/aluno/reservas", async (req, res) => {
         });
     } catch (erro) {
         console.error("Erro ao criar reserva:", erro);
+
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: "Erro interno ao criar a reserva.",
+            erro:
+                process.env.NODE_ENV === "development"
+                    ? erro.message
+                    : undefined,
+        });
+    }
+});
+
+/*
+ * POST /api/professor/reservas
+ * Criar reserva de item para professor.
+ * Adicione antes de: module.exports = router;
+ */
+
+router.post("/professor/reservas", async (req, res) => {
+    try {
+        const sessao = req.session?.usuario;
+        if (!sessao?.id) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: "Faça login para criar uma reserva.",
+            });
+        }
+        if (normalizar(sessao.tipoUsuario) !== "PROFESSOR") {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem:
+                    "Somente professores podem fazer este tipo de reserva.",
+            });
+        }
+        // Usa a identidade da sessão, nunca o usuarioID enviado pelo navegador.
+        const usuarioID = String(sessao.id).trim();
+
+        const {
+            produtoID,
+            localID,
+            dataRetirada,
+            horaRetirada,
+            dataDevolucao,
+            horaDevolucao,
+            motivo,
+            observacao,
+        } = req.body;
+
+        // 1. Validar os campos obrigatórios
+        if (
+            !usuarioID ||
+            !produtoID ||
+            !localID ||
+            !dataRetirada ||
+            !horaRetirada ||
+            !dataDevolucao ||
+            !horaDevolucao
+        ) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem:
+                    "Informe o usuário, item, local, retirada e devolução.",
+            });
+        }
+
+        // 2. Validar professor ativo
+        const usuario = await buscarUsuario(usuarioID);
+
+        if (!usuario) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: "Usuário não encontrado.",
+            });
+        }
+
+        if (normalizar(usuario.tipoUsuario) !== "PROFESSOR") {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Somente professores podem usar esta rota.",
+            });
+        }
+
+        if (normalizar(usuario.status) !== "ATIVO") {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "O usuário não está ativo.",
+            });
+        }
+
+        // 3. Validar item ativo
+        const produto = await buscarProduto(produtoID);
+
+        if (!produto) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: "Item não encontrado.",
+            });
+        }
+
+        if (normalizar(produto.status) !== "ATIVO") {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "Este item não está ativo para reserva.",
+            });
+        }
+
+        // 4. Validar categoria ativa
+        const categoria = await buscarCategoria(produto.categoriaID);
+
+        if (!categoria) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "A categoria deste item não foi encontrada.",
+            });
+        }
+
+        if (normalizar(categoria.status) !== "ATIVO") {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "A categoria deste item não está ativa.",
+            });
+        }
+
+        const categoriasPermitidas = [
+            "INFORMATICA",
+            "AUDIOVISUAL",
+            "BIBLIOTECA",
+            "LABORATORIO",
+            "COZINHA",
+            "MOBILIARIO",
+            "ESPORTES",
+            "JOGOS",
+            "INFRAESTRUTURA",
+        ];
+
+        const categoriaNome = normalizar(categoria.nome);
+
+        if (!categoriasPermitidas.includes(categoriaNome)) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Esta categoria não está autorizada para reserva.",
+            });
+        }
+
+        // 5. Validar local ativo
+        const local = await buscarLocal(localID);
+
+        if (!local) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: "Local não encontrado.",
+            });
+        }
+
+        if (normalizar(local.status) !== "ATIVO") {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "Este local não está ativo.",
+            });
+        }
+
+        const bloqueioSetor = await verificarBloqueioSetor(usuarioID, local);
+        if (bloqueioSetor) {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: `Sua reserva foi impedida porque você está bloqueado no setor "${bloqueioSetor.setorNome}". Motivo: ${bloqueioSetor.motivo}`,
+            });
+        }
+
+        // 6. Conferir estoque do item no local escolhido
+        const estoque = await buscarEstoque(produtoID, localID);
+
+        if (!estoque) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "Não existe estoque deste item neste local.",
+            });
+        }
+
+        if (estoque.statusLocal !== "ATIVO") {
+            return res.status(409).json({
+                sucesso: false,
+                mensagem: "Este item está desativado neste setor e não pode ser reservado.",
+            });
+        }
+
+        // A coluna Disponivel já deve representar o saldo após reservas.
+        const quantidadeDisponivel = estoque.disponivel;
+
+        if (quantidadeDisponivel <= 0) {
+            return res.status(409).json({
+                sucesso: false,
+                mensagem: "Este item não está disponível para reserva.",
+            });
+        }
+
+        // 7. Validar datas e horários
+        const inicio = gerarDataHora(dataRetirada, horaRetirada);
+        const fim = gerarDataHora(dataDevolucao, horaDevolucao);
+
+        if (!inicio || !fim) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "A data ou o horário informado é inválido.",
+            });
+        }
+
+        if (fim <= inicio) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "A devolução deve ocorrer após a retirada.",
+            });
+        }
+
+        if (inicio <= new Date()) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: "A retirada deve ser em uma data futura.",
+            });
+        }
+
+        // 8. Verificar conflito com outra reserva
+        const reservas = await buscarReservas();
+
+        const conflito = existeConflito(
+            reservas,
+            produtoID,
+            localID,
+            inicio,
+            fim,
+        );
+
+        if (conflito.conflito) {
+            return res.status(409).json({
+                sucesso: false,
+                mensagem: "Este item já possui uma reserva nesse período.",
+                reservaConflitante: conflito.reservaID,
+            });
+        }
+
+        // 9. Gerar identificação da reserva
+        const reservaID = gerarProximoID(reservas);
+
+        const inicioFormatado = formatarDataHora(inicio);
+        const fimFormatado = formatarDataHora(fim);
+        const agoraFormatado = formatarDataHora(new Date());
+
+        const motivoFinal =
+            String(motivo || "").trim() ||
+            `Reserva de ${categoria.nome} para uso pedagógico`;
+
+        // 10. Registrar na aba 08_RESERVAS
+        const novaLinha = [
+            reservaID, // A - ReservaID
+            agoraFormatado, // B - DataSolicitacao
+            String(usuarioID), // C - UsuarioID
+            String(produtoID), // D - ProdutoID
+            String(localID), // E - LocalID
+            1, // F - Quantidade
+            inicioFormatado, // G - DataInicio
+            fimFormatado, // H - DataFim
+            motivoFinal, // I - Motivo
+            "PENDENTE", // J - Status
+            "", // K - AprovadoPor
+            String(observacao || "").trim(), // L - Observacao
+        ];
+
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "08_RESERVAS!A:L",
+            valueInputOption: "USER_ENTERED",
+            insertDataOption: "INSERT_ROWS",
+            requestBody: {
+                values: [novaLinha],
+            },
+        });
+
+        return res.status(201).json({
+            sucesso: true,
+            mensagem: "Reserva solicitada com sucesso.",
+            reserva: {
+                reservaID,
+                usuarioID,
+                produtoID,
+                nome: produto.nome,
+                categoria: categoria.nome,
+                localID,
+                local: local.nome,
+                quantidade: 1,
+                dataInicio: inicioFormatado,
+                dataFim: fimFormatado,
+                motivo: motivoFinal,
+                status: "PENDENTE",
+            },
+        });
+    } catch (erro) {
+        console.error("Erro ao criar reserva do professor:", erro);
 
         return res.status(500).json({
             sucesso: false,

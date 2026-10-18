@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Responsável | Sistema de Estoque</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <main class="container">
+        <header class="cabecalho">
+            <div>
+                <p class="subtitulo">SISTEMA DE ESTOQUE ESCOLAR</p>
+                <h1>Cadastrar conta</h1>
+                <p>Crie contas de responsáveis pelos setores e da Secretaria.</p>
+            </div>
+            <a class="link-voltar" href="/index.html">Voltar ao início</a>
+        </header>
+
+        <section class="cartao">
+            <h2>Dados da conta</h2>
+
+            <form id="formCadastro">
+                <label for="tipoConta">Tipo de conta</label>
+                <select id="tipoConta" name="tipoConta" required>
+                    <option value="RESPONSAVEL">Responsável pelo setor</option>
+                    <option value="SECRETARIA">Secretaria</option>
+                </select>
+
+                <label for="nome">Nome completo</label>
+                <input id="nome" name="nome" type="text"
+                    autocomplete="name" required maxlength="150">
+
+                <label for="cpf">CPF</label>
+                <input id="cpf" name="cpf" type="text" inputmode="numeric" autocomplete="off" maxlength="14" required>
+
+                <label for="dataNascimento">Data de nascimento</label>
+                <input id="dataNascimento" name="dataNascimento" type="date" required>
+
+                <label for="telefone">Telefone</label>
+                <input id="telefone" name="telefone" type="tel" inputmode="tel" maxlength="15" required>
+
+                <label for="email">E-mail</label>
+                <input id="email" name="email" type="email"
+                    autocomplete="email" required maxlength="254">
+
+                <div id="grupoSetor">
+                <label for="setorID">Setor sob responsabilidade</label>
+                <select id="setorID" name="setorID" required>
+                    <option value="">Carregando setores...</option>
+                </select>
+                </div>
+
+                <label for="senha">Senha</label>
+                <input id="senha" name="senha" type="password"
+                    autocomplete="new-password" minlength="12"
+                    maxlength="128" required>
+                <small>A senha deve ter entre 12 e 128 caracteres.</small>
+
+                <label for="confirmacaoSenha">Confirmar senha</label>
+                <input id="confirmacaoSenha" name="confirmacaoSenha"
+                    type="password" autocomplete="new-password"
+                    minlength="12" maxlength="128" required>
+
+                <button id="btnCadastrar" type="submit">
+                    Cadastrar conta
+                </button>
+
+                <p id="mensagem" class="mensagem" role="status"
+                    aria-live="polite"></p>
+            </form>
+        </section>
+    </main>
+</body>
+</html>
