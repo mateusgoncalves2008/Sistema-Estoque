@@ -355,7 +355,7 @@
                                     <div><label for="np-email">E-mail</label><input id="np-email" type="email" autocomplete="email" placeholder="professor@exemplo.com" /></div>
                                     <div><label for="np-senha">Senha inicial</label><input id="np-senha" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo de 8 caracteres" /></div>
                                     <small class="professores-ajuda">A conta será criada imediatamente com esse e-mail e senha.</small>
-                                    <button class="btn professores-submit" type="button" onclick="cadastrarProfessorAgora()">Cadastrar professor agora</button>
+                                    <button class="btn professores-submit" id="btn-cadastrar-professor-agora" type="button">Cadastrar professor agora</button>
                                 </div>
                             </div>
 
@@ -366,7 +366,7 @@
                                 </div>
                                 <div class="form professores-form">
                                     <div><label for="pm">MASP do professor</label><input id="pm" type="text" inputmode="numeric" autocomplete="off" placeholder="Ex.: 1234567-8" /><small class="professores-ajuda">O MASP ficará como PENDENTE. O professor usará “Criar minha conta” no site.</small></div>
-                                    <button class="btn professores-submit professores-submit--azul" type="button" onclick="addProf()">Autorizar MASP</button>
+                                    <button class="btn professores-submit professores-submit--azul" id="btn-autorizar-masp" type="button">Autorizar MASP</button>
                                 </div>
                             </div>
 
@@ -403,7 +403,7 @@
                                         <label for="pa">Aulas semanais</label>
                                         <input id="pa" type="number" min="1" max="40" value="4" />
                                     </div>
-                                    <button class="btn professores-submit professores-submit--azul" type="button" onclick="assign()">Salvar vínculo</button>
+                                    <button class="btn professores-submit professores-submit--azul" id="btn-salvar-vinculo" type="button">Salvar vínculo</button>
                                 </div>
                             </div>
                         </div>
