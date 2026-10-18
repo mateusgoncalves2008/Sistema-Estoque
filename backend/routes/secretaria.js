@@ -864,12 +864,21 @@ router.get("/secretaria/professores", async (req, res) => {
 
 router.post("/secretaria/professores", async (req, res) => {
     try {
-        const { nome, email, senha, masp } = req.body;
+        const { nome, email, senha, masp, idade } = req.body;
+
+        const idadeNumerica = Number(idade);
 
         if (!nome || !email || !senha) {
             return res.status(400).json({
                 sucesso: false,
                 erro: "Nome, e-mail e senha são obrigatórios.",
+            });
+        }
+
+        if (!Number.isInteger(idadeNumerica) || idadeNumerica < 18 || idadeNumerica > 100) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "Informe uma idade válida entre 18 e 100 anos.",
             });
         }
 
@@ -931,7 +940,7 @@ router.post("/secretaria/professores", async (req, res) => {
                         "",
                         "",
                         "",
-                        "",
+                        idadeNumerica,
                         "CADASTRADO",
                     ],
                 ],
