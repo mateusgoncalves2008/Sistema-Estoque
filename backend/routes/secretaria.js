@@ -571,31 +571,20 @@ router.get("/secretaria/turmas", async (req, res) => {
 
         const lista = turmas.slice(1).map((linha) => {
             const id = linha[0] || "";
-
             const nome = linha[1] || "";
-
             const serie = linha[2] || "";
-
             const turno = linha[3] || "";
-
             const capacidade = numero(linha[4]);
-
             const chave = `${serie}|${nome}|${turno}`;
 
             return {
                 turmaID: id,
-
                 nome,
-
                 serie,
-
                 turno,
-
                 capacidade,
-
                 alunosAtivos: contagem.get(chave) || 0,
-
-                status: linha[6] || "",
+                status: linha[5] || "",
             };
         });
 
@@ -615,7 +604,10 @@ router.get("/secretaria/turmas", async (req, res) => {
 
 router.post("/secretaria/turmas", async (req, res) => {
     try {
-        const { nome, serie, turno, capacidade } = req.body;
+        const nome = texto(req.body.nome);
+        const serie = texto(req.body.serie);
+        const turno = texto(req.body.turno);
+        const capacidade = Number(req.body.capacidade);
 
         if (!nome || !serie || !turno) {
             return res.status(400).json({
@@ -624,38 +616,58 @@ router.post("/secretaria/turmas", async (req, res) => {
             });
         }
 
-        const dados = await carregarDadosSecretaria();
+        if (!["Manhã", "Tarde"].includes(turno)) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "Selecione um turno válido.",
+            });
+        }
 
+        if (!Number.isInteger(capacidade) || capacidade < 0 || capacidade > 500) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "A capacidade deve ser um número inteiro entre 0 e 500.",
+            });
+        }
+
+        const dados = await carregarDadosSecretaria();
         const turmas = dados["19_TURMAS"] || [];
+        const duplicada = turmas.slice(1).some((linha) =>
+            normalizar(linha[1]) === normalizar(nome) &&
+            normalizar(linha[2]) === normalizar(serie) &&
+            normalizar(linha[3]) === normalizar(turno)
+        );
+
+        if (duplicada) {
+            return res.status(409).json({
+                sucesso: false,
+                erro: "Já existe uma turma com esse nome, série e turno.",
+            });
+        }
 
         const turmaID = gerarID("TRM", turmas, 0);
 
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-
-            range: "19_TURMAS!A:G",
-
+            range: "19_TURMAS!A:F",
             valueInputOption: "USER_ENTERED",
-
             requestBody: {
-                values: [
-                    [turmaID, nome, serie, turno, capacidade || 0, 0, "ATIVO"],
-                ],
+                values: [[turmaID, nome, serie, turno, capacidade, "ABERTO"]],
             },
         });
 
         limparCache();
 
-        res.json({
+        res.status(201).json({
             sucesso: true,
             turmaID,
         });
     } catch (erro) {
-        console.error("❌ Erro ao cadastrar turma:", erro);
+        console.error("Erro ao cadastrar turma:", erro);
 
         res.status(500).json({
             sucesso: false,
-            erro: erro.message,
+            erro: "Não foi possível cadastrar a turma.",
         });
     }
 });
