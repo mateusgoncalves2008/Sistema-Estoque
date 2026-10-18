@@ -585,6 +585,9 @@ function renderStock(filter = "") {
 
     container.innerHTML = rows.map(item => {
         const nome = getValue(item, ["produto", "Produto", "nome", "Nome", "nomeProduto"], "Item sem nome");
+        const categoriaItem = getValue(item, ["categoria", "Categoria"], "");
+        const textoItem = normalizeText(`${nome} ${categoriaItem}`);
+        const iconeItem = /computador|desktop|notebook|laptop|pc gamer|microcomputador|informatica/.test(textoItem) ? "fa-desktop" : "fa-box";
         const codigo = getValue(item, ["codigo", "Codigo", "produtoID", "ProdutoID", "estoqueID"], "—");
         const total = numberValue(getValue(item, ["quantidade", "Quantidade", "total"], 0));
         const disponivel = numberValue(getValue(item, ["disponivel", "Disponivel", "quantidadeDisponivel"], 0));
@@ -594,7 +597,7 @@ function renderStock(filter = "") {
         return `
         <article class="stock-item-card ${inativo ? "is-inactive" : ""}">
             <div class="stock-card-main">
-                <div class="stock-card-icon"><i class="fa-solid fa-box"></i></div>
+                <div class="stock-card-icon"><i class="fa-solid ${iconeItem}"></i></div>
                 <div class="stock-card-info">
                     <div class="stock-card-title-row"><h3>${escapeHTML(nome)}</h3><span class="stock-state ${inativo ? "inactive" : "active"}"><span></span>${inativo ? "Inativo" : "Ativo"}</span></div>
                     <p class="stock-code"><i class="fa-solid fa-barcode"></i> Código: <strong>${escapeHTML(codigo)}</strong></p>
