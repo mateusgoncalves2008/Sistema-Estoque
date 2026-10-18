@@ -823,6 +823,12 @@ const grid = (W, H, m) =>
         .join("");
 
 function bars(v, l) {
+    v = (Array.isArray(v) ? v : []).map((valor) => {
+        const n = Number(valor);
+        return Number.isFinite(n) ? n : 0;
+    });
+    l = Array.isArray(l) ? l : [];
+
     const W = 520;
     const H = 230;
     const m = 30;
@@ -883,6 +889,12 @@ function bars(v, l) {
 }
 
 function line(v, l) {
+    v = (Array.isArray(v) ? v : []).map((valor) => {
+        const n = Number(valor);
+        return Number.isFinite(n) ? n : 0;
+    });
+    l = Array.isArray(l) ? l : [];
+
     if (!v.length) {
         return "";
     }
