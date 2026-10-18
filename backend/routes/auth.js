@@ -15,7 +15,7 @@ const SCRYPT_OPCOES = { N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
 
 function gerarHashSenha(senha, salt) {
     const derivada = crypto.scryptSync(senha, salt, 64, SCRYPT_OPCOES).toString("hex");
-    return `scrypt$16384$8$1${derivada}`;
+    return "scrypt$16384$8$1$" + derivada;
 }
 
 function verificarHashSenha(senha, salt, hashArmazenado) {
