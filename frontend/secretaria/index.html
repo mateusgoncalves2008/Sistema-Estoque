@@ -349,7 +349,7 @@
                                     <div><h2>Novo professor</h2><p>Cadastre o professor agora, com ajuda da Secretaria.</p></div>
                                 </div>
                                 <div class="form professores-form">
-                                    <div><label for="np-masp">MASP</label><input id="np-masp" type="text" inputmode="numeric" placeholder="Ex.: 1234567-8" autocomplete="off" /></div>
+                                    <div><label for="np-masp">MASP</label><input id="np-masp" type="text" inputmode="numeric" maxlength="9" placeholder="Ex.: 1234567-8" autocomplete="off" /></div>
                                     <div><label for="np-nome">Nome completo</label><input id="np-nome" type="text" autocomplete="name" placeholder="Nome do professor" /></div>
                                     <div><label for="np-idade">Idade</label><input id="np-idade" type="number" min="18" max="100" placeholder="Idade" /></div>
                                     <div><label for="np-email">E-mail</label><input id="np-email" type="email" autocomplete="email" placeholder="professor@exemplo.com" /></div>
@@ -365,7 +365,7 @@
                                     <div><h2>Autorizar para cadastro próprio</h2><p>Se o professor preferir, ele cria a conta no site depois.</p></div>
                                 </div>
                                 <div class="form professores-form">
-                                    <div><label for="pm">MASP do professor</label><input id="pm" type="text" inputmode="numeric" autocomplete="off" placeholder="Ex.: 1234567-8" /><small class="professores-ajuda">O MASP ficará como PENDENTE. O professor usará “Criar minha conta” no site.</small></div>
+                                    <div><label for="pm">MASP do professor</label><input id="pm" type="text" inputmode="numeric" maxlength="9" autocomplete="off" placeholder="Ex.: 1234567-8" /><small class="professores-ajuda">O MASP ficará como PENDENTE. O professor usará “Criar minha conta” no site.</small></div>
                                     <button class="btn professores-submit professores-submit--azul" id="btn-autorizar-masp" type="button">Autorizar MASP</button>
                                 </div>
                             </div>
@@ -385,7 +385,7 @@
                                     <div>
                                         <label for="busca-masp">Pesquisar professor pelo MASP</label>
                                         <div class="professor-masp-busca">
-                                            <input id="busca-masp" type="search" inputmode="text" autocomplete="off" placeholder="Digite o MASP do professor" aria-describedby="masp-status" />
+                                            <input id="busca-masp" type="search" inputmode="numeric" maxlength="9" autocomplete="off" placeholder="Digite o MASP do professor" aria-describedby="masp-status" />
                                             <div id="masp-resultados" class="professor-masp-resultados" role="listbox" aria-label="Professores encontrados"></div>
                                         </div>
                                         <small id="masp-status" class="professores-ajuda" aria-live="polite">Digite o MASP para localizar o professor.</small>
