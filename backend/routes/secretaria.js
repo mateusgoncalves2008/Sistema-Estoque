@@ -28,8 +28,24 @@ let cacheSecretaria = {
 
 function normalizar(valor) {
     return String(valor || "")
+        .normalize("NFD")
+        .replace(/[\\u0300-\\u036f]/g, "")
+        .replace(/[º°]/g, "")
+        .replace(/\\s+/g, " ")
         .trim()
         .toLowerCase();
+}
+
+function normalizarSerie(valor) {
+    const textoSerie = String(valor || "").trim();
+    const match = textoSerie.match(/^(\\d+)\\s*(?:[º°o]?\\s*ano)?$/i);
+    return match ? `${match[1]}° ano` : normalizar(textoSerie);
+}
+
+function normalizarTurma(valor) {
+    const textoTurma = String(valor || "").trim();
+    const match = textoTurma.match(/^(?:turma\\s*)?(\\d+)$/i);
+    return match ? `turma ${match[1]}` : normalizar(textoTurma);
 }
 
 function numero(valor) {
@@ -534,7 +550,11 @@ router.get("/secretaria/turmas", async (req, res) => {
         // Usa diretamente os cadastros autorizados como fonte da matrícula.
         // Compara série (Ano), turma e turno, contando somente alunos cadastrados/ativos.
         const chaveTurma = (serie, turma, turno) =>
-            [serie, turma, turno].map((valor) => normalizar(valor)).join("|");
+            [
+                normalizarSerie(serie),
+                normalizarTurma(turma),
+                normalizar(turno),
+            ].join("|");
 
         const contagem = new Map();
 
