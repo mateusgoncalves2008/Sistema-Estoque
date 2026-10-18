@@ -933,7 +933,7 @@ function line(v, l) {
                 text-anchor="middle"
                 font-size="12"
                 fill="var(--mute)"
-            >${l[i] || ""}</text>
+            >${escHtml(l[i] || "")}</text>
         `;
     });
 
@@ -1242,7 +1242,7 @@ const R = {
                 .map(
                     (p) =>
                         `<div class="log">
-                            <b>${p.n}</b>
+                            <b>${escHtml(p.n)}</b>
                             <span>
                                 ${p.q}
                             </span>
@@ -1378,7 +1378,7 @@ const R = {
                                 class="dot"
                                 style="--c:${TP[e.t]?.[1] || "#888"}"
                             ></span>
-                            ${TP[e.t]?.[0] || e.t}
+                            ${escHtml(TP[e.t]?.[0] || e.t)}
                         `,
 
                 `<b>${escHtml(e.n)}</b>`,
@@ -1430,8 +1430,8 @@ const R = {
                 .map(
                     (a) =>
                         `<div class="log">
-                            ${a[0]}
-                            <span>${a[1]}</span>
+                            ${escHtml(a[0])}
+                            <span>${escHtml(a[1])}</span>
                         </div>`,
                 )
                 .join("") ||
