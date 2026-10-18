@@ -433,10 +433,34 @@ router.post("/secretaria/usuarios", async (req, res) => {
     try {
         const { nome, email, senha, tipoUsuario, perfil, setorID } = req.body;
 
-        if (!nome || !email || !senha || !tipoUsuario) {
+        if (
+            typeof nome !== "string" ||
+            !nome.trim() ||
+            typeof email !== "string" ||
+            !email.trim() ||
+            typeof senha !== "string" ||
+            !senha ||
+            typeof tipoUsuario !== "string" ||
+            !tipoUsuario.trim()
+        ) {
             return res.status(400).json({
                 sucesso: false,
                 erro: "Nome, e-mail, senha e tipo de usuário são obrigatórios.",
+            });
+        }
+
+        const emailNormalizado = email.trim().toLowerCase();
+        if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailNormalizado)) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "Informe um e-mail válido.",
+            });
+        }
+
+        if (senha.length < 12 || senha.length > 128) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "A senha deve ter entre 12 e 128 caracteres.",
             });
         }
 
@@ -464,8 +488,6 @@ router.post("/secretaria/usuarios", async (req, res) => {
         const dados = await carregarDadosSecretaria();
 
         const usuarios = dados["01_USUARIOS"] || [];
-
-        const emailNormalizado = normalizar(email);
 
         const existe = usuarios
             .slice(1)
