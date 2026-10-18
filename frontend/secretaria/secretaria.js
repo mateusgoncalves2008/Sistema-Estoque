@@ -619,10 +619,10 @@ function uList() {
     $("#ut2").innerHTML = T(
         ["Nome", "Perfil", "Turma / Disciplina", "Turno", "Situação", "Ações"],
         filtrados.map((u) => [
-            `<b>${u.n}</b>`,
-            u.p,
-            u.t,
-            u.tu,
+            `<b>${escHtml(u.n)}</b>`,
+            escHtml(u.p),
+            escHtml(u.t),
+            escHtml(u.tu),
             u.a ? tg("Ativo") : tg("Inativo", "m"),
             `
                 <button
@@ -856,7 +856,7 @@ function bars(v, l) {
                 fill="var(--c1)"
             >
                 <title>
-                    ${l[i] || ""}: ${x}
+                    ${escHtml(l[i] || "")}: ${x}
                 </title>
             </rect>
 
@@ -875,7 +875,7 @@ function bars(v, l) {
                 text-anchor="middle"
                 font-size="12"
                 fill="var(--mute)"
-            >${l[i] || ""}</text>
+            >${escHtml(l[i] || "")}</text>
         `;
     });
 
@@ -1015,7 +1015,7 @@ function donut(it) {
                     .map(
                         (x, i) =>
                             `<span style="--c:${C[i % C.length]}">
-                                ${x[0]} - ${x[1]}
+                                ${escHtml(x[0])} - ${x[1]}
                             </span>`,
                     )
                     .join("")}
@@ -1031,7 +1031,7 @@ function hb(it) {
         .map(
             (x) =>
                 `<div class="hb">
-                    <span>${x[0]}</span>
+                    <span>${escHtml(x[0])}</span>
                     <div>
                         <i style="width:${(x[1] / mx) * 100}%"></i>
                     </div>
@@ -1162,8 +1162,8 @@ const R = {
                 .map(
                     (a) =>
                         `<div class="log">
-                            ${a[0]}
-                            <span>${a[1]}</span>
+                            ${escHtml(a[0])}
+                            <span>${escHtml(a[1])}</span>
                         </div>`,
                 )
                 .join("") ||
@@ -1256,9 +1256,9 @@ const R = {
         $("#t-acervo").innerHTML = T(
             ["Produto", "Categoria", "Local", "Qtd.", "Mínimo", "Situação"],
             prods.map((p) => [
-                `<b>${p.n}</b>`,
-                p.c,
-                p.l,
+                `<b>${escHtml(p.n)}</b>`,
+                escHtml(p.c),
+                escHtml(p.l),
                 p.q,
                 p.m,
                 p.q <= p.m ? tg("Estoque baixo", "r") : tg("Normal"),
@@ -1270,8 +1270,8 @@ const R = {
         $("#t-res").innerHTML = T(
             ["Solicitante", "Item", "Data", "Situação", "Ações"],
             reservas.map((r) => [
-                `<b>${r.q}</b>`,
-                r.i,
+                `<b>${escHtml(r.q)}</b>`,
+                escHtml(r.i),
                 r.d,
                 tg(
                     r.s,
@@ -1331,10 +1331,10 @@ const R = {
             emps
                 .filter((e) => e.s !== "Devolvido")
                 .map((e) => [
-                    `<b>${e.q}</b>`,
-                    e.i,
-                    e.r,
-                    e.p,
+                    `<b>${escHtml(e.q)}</b>`,
+                    escHtml(e.i),
+                    escHtml(e.r),
+                    escHtml(e.p),
                     tg(e.s, e.s === "Atrasado" ? "r" : "g"),
                     `
                                 <button
@@ -1355,7 +1355,7 @@ const R = {
 
         $("#mt").innerHTML = T(
             ["Data", "Tipo", "Pessoa", "Item"],
-            dados.map((m) => [m[0], m[1], m[2], m[3]]),
+            dados.map((m) => m.map((valor) => escHtml(valor))),
         );
     },
 
@@ -1381,7 +1381,7 @@ const R = {
                             ${TP[e.t]?.[0] || e.t}
                         `,
 
-                `<b>${e.n}</b>`,
+                `<b>${escHtml(e.n)}</b>`,
             ]),
         );
     },
