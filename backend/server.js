@@ -176,7 +176,3 @@ if (require.main === module) {
 }
 
 module.exports = app;
-
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});
