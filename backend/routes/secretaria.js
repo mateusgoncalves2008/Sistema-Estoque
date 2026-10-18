@@ -29,22 +29,22 @@ let cacheSecretaria = {
 function normalizar(valor) {
     return String(valor || "")
         .normalize("NFD")
-        .replace(/[\\u0300-\\u036f]/g, "")
+        .replace(/[\u0300-\u036f]/g, "")
         .replace(/[º°]/g, "")
-        .replace(/\\s+/g, " ")
+        .replace(/\s+/g, " ")
         .trim()
         .toLowerCase();
 }
 
 function normalizarSerie(valor) {
     const textoSerie = String(valor || "").trim();
-    const match = textoSerie.match(/^(\\d+)\\s*(?:[º°o]?\\s*ano)?$/i);
+    const match = textoSerie.match(/^(\d+)\s*(?:[º°o]?\s*ano)?$/i);
     return match ? `${match[1]}° ano` : normalizar(textoSerie);
 }
 
 function normalizarTurma(valor) {
     const textoTurma = String(valor || "").trim();
-    const match = textoTurma.match(/^(?:turma\\s*)?(\\d+)$/i);
+    const match = textoTurma.match(/^(?:turma\s*)?(\d+)$/i);
     return match ? `turma ${match[1]}` : normalizar(textoTurma);
 }
 
@@ -547,61 +547,78 @@ router.get("/secretaria/turmas", async (req, res) => {
         const turmas = dados["19_TURMAS"] || [];
         const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
 
-        // Usa diretamente os cadastros autorizados como fonte da matrícula.
-        // Compara série (Ano), turma e turno, contando somente alunos cadastrados/ativos.
-        const chaveTurma = (serie, turma, turno) =>
-            [
-                normalizarSerie(serie),
-                normalizarTurma(turma),
-                normalizar(turno),
-            ].join("|");
+        const chaveExata = (serie, turma, turno) =>
+            [normalizarSerie(serie), normalizarTurma(turma), normalizar(turno)].join("|");
+        const chaveNomeTurno = (turma, turno) =>
+            [normalizarTurma(turma), normalizar(turno)].join("|");
+
+        // Primeiro identifica as turmas cadastradas e quais nomes/turnos são únicos.
+        const linhasTurmas = turmas.slice(1).map((linha) => ({
+            id: texto(linha[0]),
+            nome: texto(linha[1]),
+            serie: texto(linha[2]),
+            turno: texto(linha[3]),
+            capacidade: numero(linha[4]),
+            status: linha[5] || "",
+        }));
+
+        const turmasPorNomeTurno = new Map();
+        for (const turma of linhasTurmas) {
+            const chave = chaveNomeTurno(turma.nome, turma.turno);
+            if (!turmasPorNomeTurno.has(chave)) turmasPorNomeTurno.set(chave, []);
+            turmasPorNomeTurno.get(chave).push(turma);
+        }
 
         const contagem = new Map();
+        for (const turma of linhasTurmas) contagem.set(turma.id, 0);
 
         for (const linha of autorizados.slice(1)) {
-            const tipo = normalizar(linha[1]);
-            const serie = texto(linha[5]); // Ano = Série
-            const nomeTurma = texto(linha[6]); // Turma
-            const turnoAluno = texto(linha[7]); // Turno
-            const status = normalizar(linha[9]); // Status do cadastro
+            const tipo = normalizar(linha[1]);       // B: Tipo
+            const serieAluno = texto(linha[5]);      // F: Ano
+            const turmaAluno = texto(linha[6]);     // G: Turma
+            const turnoAluno = texto(linha[7]);     // H: Turno
+            const status = normalizar(linha[9]);    // J: Status
 
-            const ehAluno = tipo === "aluno";
-            const cadastroValido = ["cadastrado", "ativo", "autorizado"].includes(status);
+            if (
+                tipo !== "aluno" ||
+                !["cadastrado", "ativo", "autorizado"].includes(status) ||
+                !turmaAluno ||
+                !turnoAluno
+            ) continue;
 
-            if (!ehAluno || !cadastroValido || !serie || !nomeTurma || !turnoAluno) {
+            // Correspondência exata é sempre preferida.
+            const exatas = linhasTurmas.filter((turma) =>
+                chaveExata(turma.serie, turma.nome, turma.turno) ===
+                chaveExata(serieAluno, turmaAluno, turnoAluno)
+            );
+
+            if (exatas.length === 1) {
+                contagem.set(exatas[0].id, (contagem.get(exatas[0].id) || 0) + 1);
                 continue;
             }
 
-            const chave = chaveTurma(serie, nomeTurma, turnoAluno);
-            contagem.set(chave, (contagem.get(chave) || 0) + 1);
+            // Se a série estiver divergente, só usa nome+turno quando identifica
+            // uma única turma; se houver ambiguidade, não atribui aluno errado.
+            const candidatas = turmasPorNomeTurno.get(chaveNomeTurno(turmaAluno, turnoAluno)) || [];
+            if (candidatas.length === 1) {
+                contagem.set(candidatas[0].id, (contagem.get(candidatas[0].id) || 0) + 1);
+            }
         }
 
-        const lista = turmas.slice(1).map((linha) => {
-            const id = linha[0] || "";
-            const nome = texto(linha[1]);
-            const serie = texto(linha[2]);
-            const turno = texto(linha[3]);
-            const capacidade = numero(linha[4]);
-            const chave = chaveTurma(serie, nome, turno);
-
-            return {
-                turmaID: id,
-                nome,
-                serie,
-                turno,
-                capacidade,
-                alunosAtivos: contagem.get(chave) || 0,
-                status: linha[5] || "",
-            };
-        });
+        const lista = linhasTurmas.map((turma) => ({
+            turmaID: turma.id,
+            nome: turma.nome,
+            serie: turma.serie,
+            turno: turma.turno,
+            capacidade: turma.capacidade,
+            alunosAtivos: contagem.get(turma.id) || 0,
+            status: turma.status,
+        }));
 
         res.json({ sucesso: true, turmas: lista });
     } catch (erro) {
         console.error("❌ Erro ao carregar turmas:", erro);
-        res.status(500).json({
-            sucesso: false,
-            erro: erro.message,
-        });
+        res.status(500).json({ sucesso: false, erro: erro.message });
     }
 });
 
