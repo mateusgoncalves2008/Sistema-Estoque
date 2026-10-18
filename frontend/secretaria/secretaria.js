@@ -450,37 +450,60 @@ function kv(id, valor) {
    TURMAS
 ========================================================= */
 
+function abrirModalTurma() {
+    const modal = $("#modal-turma");
+    if (!modal) return;
+
+    modal.classList.add("aberto");
+    modal.setAttribute("aria-hidden", "false");
+    $("#tn")?.focus();
+}
+
+function fecharModalTurma() {
+    const modal = $("#modal-turma");
+    if (!modal) return;
+
+    modal.classList.remove("aberto");
+    modal.setAttribute("aria-hidden", "true");
+}
+
 async function addT() {
-    const serie = $("#ts")?.value;
-
+    const serie = $("#ts")?.value.trim();
     const nome = $("#tn")?.value.trim();
-
-    const turno = $("#tt")?.value;
-
+    const turno = $("#tt")?.value.trim();
     const capacidade = Number($("#tc")?.value);
+    const botao = $("#btn-criar-turma");
 
-    if (!serie || !nome || !turno || !capacidade) {
+    if (!serie || !nome || !turno) {
         return toast("Preencha todos os dados da turma.");
+    }
+
+    if (!Number.isInteger(capacidade) || capacidade < 0 || capacidade > 500) {
+        return toast("Informe um limite máximo entre 0 e 500 alunos.");
+    }
+
+    if (botao) {
+        botao.disabled = true;
+        botao.textContent = "Criando...";
     }
 
     try {
         await api("/secretaria/turmas", {
             method: "POST",
-            body: JSON.stringify({
-                nome,
-                serie,
-                turno,
-                capacidade,
-            }),
+            body: JSON.stringify({ nome, serie, turno, capacidade }),
         });
 
+        $("#form-turma")?.reset();
+        fecharModalTurma();
         toast("Turma criada com sucesso.");
-
-        $("#tn").value = "";
-
         await carregarDados();
     } catch (erro) {
         toast(erro.message);
+    } finally {
+        if (botao) {
+            botao.disabled = false;
+            botao.textContent = "Criar";
+        }
     }
 }
 
@@ -1073,13 +1096,15 @@ const R = {
         const select = $("#ts");
 
         if (select) {
-            select.innerHTML = series
-                .map(
-                    (s) =>
-                        `<option value="${s.s}">
-                                ${s.s}
-                            </option>`,
-                )
+            const seriesDisponiveis = [...new Set([
+                "1º Ano",
+                "2º Ano",
+                "3º Ano",
+                ...series.map((s) => s.s),
+            ])];
+
+            select.innerHTML = seriesDisponiveis
+                .map((s) => `<option value="${s}">${s}</option>`)
                 .join("");
         }
 
