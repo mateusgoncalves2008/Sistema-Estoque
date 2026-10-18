@@ -577,7 +577,7 @@ function abrirDetalhesTurma(id) {
       <div><span>Vagas disponíveis</span><strong>${Math.max(0,Number(turmaSelecionada.cap||0)-Number(turmaSelecionada.al||0))}</strong></div>
       <div><span>Situação</span><strong>${aberta?"Aberta para matrículas":"Fechada para matrículas"}</strong></div></div>
       <p class="sub turma-detalhe-aviso">O limite não pode ficar abaixo da quantidade de alunos matriculados.</p>`;
-    $("#detalhe-turno").value=turmaSelecionada.tu==="Tarde"?"Tarde":"Manhã";
+    $("#detalhe-turno").value=["Manhã","Tarde","Noite"].includes(turmaSelecionada.tu)?turmaSelecionada.tu:"Manhã";
     $("#detalhe-capacidade").value=Number(turmaSelecionada.cap||0);
     $("#btn-status-turma").textContent=aberta?"Fechar turma para matrículas":"Reabrir turma";
     $("#btn-status-turma").classList.toggle("btn-perigo",aberta);
