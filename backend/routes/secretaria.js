@@ -434,6 +434,27 @@ router.post("/secretaria/usuarios", async (req, res) => {
             });
         }
 
+        // A conta da Secretaria pode cadastrar usuários comuns, mas não
+        // conceder privilégios administrativos ou criar outras contas internas.
+        const ator = req.session?.usuario;
+        const tiposAdmin = ["adm", "admin", "administrador"];
+        const atorEhAdmin =
+            tiposAdmin.includes(normalizar(ator?.tipoUsuario)) ||
+            tiposAdmin.includes(normalizar(ator?.perfil));
+        const tipoNovo = normalizar(tipoUsuario);
+        const perfilNovo = normalizar(perfil);
+
+        if (
+            !atorEhAdmin &&
+            (!["aluno", "professor"].includes(tipoNovo) ||
+                (perfilNovo && !["aluno", "professor", "consulta"].includes(perfilNovo)))
+        ) {
+            return res.status(403).json({
+                sucesso: false,
+                erro: "Somente um administrador pode criar contas privilegiadas.",
+            });
+        }
+
         const dados = await carregarDadosSecretaria();
 
         const usuarios = dados["01_USUARIOS"] || [];
