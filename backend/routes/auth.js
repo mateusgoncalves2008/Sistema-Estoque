@@ -457,7 +457,7 @@ router.post("/logout", (req, res) => {
 
         res.clearCookie("hauy.sid", {
             httpOnly: true,
-            secure: true,
+            secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
         });
 
