@@ -234,8 +234,10 @@ function exigirSecretaria(req, res, next) {
     next();
 }
 
-// Todas as rotas deste módulo exigem uma sessão e perfil autorizado.
-router.use(exigirSecretaria);
+// Somente as rotas da Secretaria exigem perfil administrativo/Secretaria.
+// Este roteador é montado em /api; limitar o middleware a /secretaria
+// evita bloquear as rotas de Professor, Aluno e outros módulos da API.
+router.use("/secretaria", exigirSecretaria);
 
 /*
 ==========================================================
