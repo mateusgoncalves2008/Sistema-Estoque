@@ -88,7 +88,13 @@ function gerarID(prefixo, linhas, coluna = 0) {
 }
 
 function hashSenha(senha, salt) {
-    return crypto.createHash("sha256").update(`${salt}:${senha}`).digest("hex");
+    const derivada = crypto.scryptSync(senha, salt, 64, {
+        N: 16384,
+        r: 8,
+        p: 1,
+        maxmem: 64 * 1024 * 1024,
+    }).toString("hex");
+    return `scrypt$16384$8$1${derivada}`;
 }
 
 /*
@@ -142,7 +148,7 @@ async function carregarDadosSecretaria() {
         "21_PROFESSOR_TURMAS!A:F",
     ];
 
-    console.log("📊 Carregando dados da Secretaria...");
+    
 
     const resposta = await sheets.spreadsheets.values.batchGet({
         spreadsheetId: SPREADSHEET_ID,
@@ -164,7 +170,7 @@ async function carregarDadosSecretaria() {
         atualizadoEm: Date.now(),
     };
 
-    console.log("✅ Dados da Secretaria carregados com uma única requisição.");
+    
 
     return dados;
 }
@@ -921,8 +927,8 @@ router.post("/secretaria/professores/cadastrar", async (req, res) => {
         if (!/^\d{7}-\d$/.test(masp)) {
             return res.status(400).json({ sucesso: false, erro: "Informe um MASP válido no formato 1234567-8." });
         }
-        if (!nome || !email || !Number.isInteger(idade) || idade < 18 || idade > 100 || senha.length < 8) {
-            return res.status(400).json({ sucesso: false, erro: "Informe nome, e-mail válido, idade entre 18 e 100 anos e senha com pelo menos 8 caracteres." });
+        if (!nome || !email || !Number.isInteger(idade) || idade < 18 || idade > 100 || senha.length < 12) {
+            return res.status(400).json({ sucesso: false, erro: "Informe nome, e-mail válido, idade entre 18 e 100 anos e senha com pelo menos 12 caracteres." });
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             return res.status(400).json({ sucesso: false, erro: "Informe um e-mail válido." });
@@ -972,7 +978,7 @@ router.post("/secretaria/professores/cadastrar", async (req, res) => {
         });
         const usuarioID = `USR-${String(Math.max(0, ...ids) + 1).padStart(5, "0")}`;
         const salt = crypto.randomBytes(16).toString("hex");
-        const senhaHash = crypto.createHash("sha256").update(`${salt}:${senha}`).digest("hex");
+        const senhaHash = hashSenha(senha, salt);
         const dataCadastro = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
         await sheets.spreadsheets.values.append({
@@ -1075,14 +1081,14 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
     try {
         const { professorID, turmaID, disciplinaID, aulasSemanais } = req.body;
 
-        console.log("");
-        console.log("==========================================");
-        console.log("🔗 NOVO VÍNCULO PROFESSOR/TURMA");
-        console.log("==========================================");
-        console.log("Professor:", professorID);
-        console.log("Turma:", turmaID);
-        console.log("Disciplina:", disciplinaID);
-        console.log("Aulas:", aulasSemanais);
+        
+        
+        
+        
+        
+        
+        
+        
 
         if (!professorID) {
             return res.status(400).json({
@@ -1126,11 +1132,11 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
 
         const vinculos = dados["21_PROFESSOR_TURMAS"] || [];
 
-        console.log("📊 Dados carregados.");
-        console.log("Professores:", usuarios.length);
-        console.log("Turmas:", turmas.length);
-        console.log("Disciplinas:", disciplinas.length);
-        console.log("Vínculos atuais:", vinculos.length);
+        
+        
+        
+        
+        
 
         const professor = usuarios
             .slice(1)
@@ -1142,14 +1148,14 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             );
 
         if (!professor) {
-            console.log("❌ Professor não encontrado.");
+            
             return res.status(404).json({
                 sucesso: false,
                 erro: "Professor não encontrado ou está inativo.",
             });
         }
 
-        console.log("✅ Professor encontrado:", professor[0]);
+        
 
         const cadastroProfessor = autorizados
             .slice(1)
@@ -1161,9 +1167,9 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             );
 
         if (!cadastroProfessor) {
-            console.log("⚠️ Cadastro autorizado não encontrado.");
+            
         } else {
-            console.log("✅ Cadastro autorizado:", cadastroProfessor[0]);
+            
         }
 
         const turma = turmas
@@ -1175,7 +1181,7 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             );
 
         if (!turma) {
-            console.log("❌ Turma não encontrada:", turmaID);
+            
 
             return res.status(404).json({
                 sucesso: false,
@@ -1183,7 +1189,7 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             });
         }
 
-        console.log("✅ Turma encontrada:", turma[0], turma[1]);
+        
 
         const disciplina = disciplinas
             .slice(1)
@@ -1197,7 +1203,7 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             );
 
         if (!disciplina) {
-            console.log("❌ Disciplina não encontrada:", disciplinaID);
+            
 
             return res.status(404).json({
                 sucesso: false,
@@ -1205,7 +1211,7 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             });
         }
 
-        console.log("✅ Disciplina encontrada:", disciplina[0], disciplina[1]);
+        
 
         const jaExiste = vinculos
             .slice(1)
@@ -1218,7 +1224,7 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             );
 
         if (jaExiste) {
-            console.log("⚠️ Este vínculo já existe.");
+            
 
             return res.status(409).json({
                 sucesso: false,
@@ -1237,10 +1243,10 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             "ATIVO",
         ];
 
-        console.log("");
-        console.log("🚀 GRAVANDO NA 21_PROFESSOR_TURMAS");
-        console.log("ID:", vinculoID);
-        console.log("Dados:", dadosParaGravar);
+        
+        
+        
+        
 
         const resultado = await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
@@ -1252,8 +1258,8 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             },
         });
 
-        console.log("✅ GRAVAÇÃO REALIZADA!");
-        console.log("Range gravado:", resultado.data?.updates?.updatedRange);
+        
+        
 
         limparCache();
 
@@ -1695,7 +1701,7 @@ router.post("/secretaria/devolucoes", async (req, res) => {
                 ],
             },
         });
-        console.log("✅ APPEND REALIZADO COM SUCESSO!");
+        
 
         limparCache();
 
