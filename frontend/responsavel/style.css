@@ -2391,3 +2391,13 @@ footer {
  background:#f4e5da;
  color:#352219;
 }
+
+/* Modal padronizado para aumentar, diminuir e desativar estoque */
+.stock-action-dialog .new-item-body label[hidden],
+.stock-action-dialog .new-item-body p[hidden]{display:none}
+.stock-action-dialog .danger-action{border-color:#ad3d35!important;background:#ad3d35!important}
+.stock-action-dialog .danger-action:hover{background:#91312b!important}
+.stock-action-dialog .new-item-header{align-items:center}
+.stock-action-dialog .new-item-header .icon-btn{flex-shrink:0}
+.stock-action-dialog .new-item-body input,
+.stock-action-dialog .new-item-body textarea{font-weight:400}
