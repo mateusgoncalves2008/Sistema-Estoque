@@ -193,10 +193,10 @@ router.post("/cadastro", async (req, res) => {
         const anoNormalizado = normalizarAnoEscolar(ano);
         const turmaNormalizada = normalizarNomeTurma(turma);
 
-        if (typeof senha !== "string" || senha.length < 12 || senha.length > 128) {
+        if (typeof senha !== "string" || senha.length < 6 || senha.length > 128) {
             return res.status(400).json({
                 sucesso: false,
-                mensagem: "A senha deve ter entre 12 e 128 caracteres.",
+                mensagem: "A senha deve ter entre 6 e 128 caracteres.",
             });
         }
 
