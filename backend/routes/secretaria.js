@@ -672,6 +672,48 @@ router.post("/secretaria/turmas", async (req, res) => {
     }
 });
 
+router.patch("/secretaria/turmas/:turmaID", async (req, res) => {
+    try {
+        const turmaID = texto(req.params.turmaID);
+        const dados = await carregarDadosSecretaria();
+        const turmas = dados["19_TURMAS"] || [];
+        const indice = turmas.findIndex((linha, i) => i > 0 && texto(linha[0]) === turmaID);
+        if (indice < 0) return res.status(404).json({ sucesso: false, erro: "Turma não encontrada." });
+
+        const atual = turmas[indice];
+        const turno = req.body.turno === undefined ? texto(atual[3]) : texto(req.body.turno);
+        const capacidade = req.body.capacidade === undefined ? numero(atual[4]) : Number(req.body.capacidade);
+        const status = req.body.status === undefined ? texto(atual[5]).toUpperCase() : texto(req.body.status).toUpperCase();
+
+        if (!["Manhã", "Tarde"].includes(turno)) return res.status(400).json({ sucesso: false, erro: "Selecione Manhã ou Tarde." });
+        if (!Number.isInteger(capacidade) || capacidade < 0 || capacidade > 500) return res.status(400).json({ sucesso: false, erro: "A capacidade deve ser um número inteiro entre 0 e 500." });
+        if (!["ABERTO", "FECHADO"].includes(status)) return res.status(400).json({ sucesso: false, erro: "Situação inválida." });
+
+        const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
+        const usuarios = dados["01_USUARIOS"] || [];
+        const cadastroPorUsuario = new Map(autorizados.slice(1).map((l) => [texto(l[3]), l]));
+        const alunosAtivos = usuarios.slice(1).filter((u) => {
+            const cadastro = cadastroPorUsuario.get(texto(u[0]));
+            return normalizar(u[5]) === "aluno" && normalizar(u[8]) === "ativo" && cadastro &&
+                texto(cadastro[5]) === texto(atual[2]) && texto(cadastro[6]) === texto(atual[1]) &&
+                texto(cadastro[7]) === texto(atual[3]);
+        }).length;
+        if (capacidade < alunosAtivos) return res.status(400).json({ sucesso: false, erro: `O limite não pode ser menor que os ${alunosAtivos} alunos já matriculados.` });
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `19_TURMAS!D${indice + 1}:F${indice + 1}`,
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [[turno, capacidade, status]] },
+        });
+        limparCache();
+        res.json({ sucesso: true, mensagem: "Turma atualizada." });
+    } catch (erro) {
+        console.error("Erro ao atualizar turma:", erro);
+        res.status(500).json({ sucesso: false, erro: "Não foi possível atualizar a turma." });
+    }
+});
+
 /*
 ==========================================================
  DISCIPLINAS
