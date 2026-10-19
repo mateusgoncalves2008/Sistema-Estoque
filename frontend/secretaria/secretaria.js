@@ -31,6 +31,9 @@ let disciplinas = [];
 let professorTurmas = [];
 let locais = [];
 let categorias = [];
+let acervoProdutos = [];
+let acervoLocais = [];
+let acervoCategorias = [];
 
 let indicadores = {};
 
@@ -98,10 +101,11 @@ async function api(url, opcoes = {}) {
 
 async function carregarDados() {
     try {
-        const [dados, dadosTurmas, dadosUsuarios] = await Promise.all([
+        const [dados, dadosTurmas, dadosUsuarios, dadosAcervo] = await Promise.all([
             api("/secretaria/dashboard"),
             api("/secretaria/turmas"),
             api("/secretaria/usuarios"),
+            api("/secretaria/acervo"),
         ]);
 
         indicadores = dados.indicadores || {};
@@ -116,14 +120,17 @@ async function carregarDados() {
             a: String(u.status || "").toUpperCase() === "ATIVO",
         }));
 
-        prods = (dados.produtos || []).map((p) => ({
-            id: p.produtoID,
-            n: p.nome,
-            c: p.categoria || "Sem categoria",
-            l: p.estoques?.[0]?.local || "Sem local",
-            q: p.quantidade || 0,
-            m: p.estoqueMinimo || 0,
-            estoques: p.estoques || [],
+        acervoProdutos = dadosAcervo.produtos || [];
+        acervoLocais = dadosAcervo.locais || [];
+        acervoCategorias = dadosAcervo.categorias || [];
+        prods = acervoProdutos.map((p) => ({
+            id: p.produtoID, codigo: p.codigo || "", n: p.nome || "Sem nome", autor: p.autor || "",
+            c: p.categoria || "Sem categoria", sub: p.subcategoria || "Sem subcategoria",
+            l: (p.estoques || []).map((e) => e.local).filter(Boolean).join(", ") || "Sem local",
+            q: Number(p.quantidade || 0), disponivel: Number(p.disponivel || 0),
+            reservado: Number(p.reservado || 0), indisponivel: Number(p.indisponivel || 0),
+            m: Number(p.estoqueMinimo || 0), estado: p.estado || "—", status: p.status || "—",
+            observacao: p.observacao || "", estoques: p.estoques || [],
         }));
 
         reservas = (dados.reservas || []).map((r) => ({
@@ -1268,41 +1275,51 @@ const R = {
     },
 
     acervo() {
-        $("#ch-acervo").innerHTML = bars(
-            prods.map((p) => p.q),
-            prods.map((p) => p.n),
-        );
-
-        $("#low").innerHTML =
-            prods
-                .filter((p) => p.q <= p.m)
-                .map(
-                    (p) =>
-                        `<div class="log">
-                            <b>${escHtml(p.n)}</b>
-                            <span>
-                                ${p.q}
-                            </span>
-                        </div>`,
-                )
-                .join("") ||
-            `<p class="sub">
-                Todos os itens estão acima do mínimo.
-            </p>`;
-
-        $("#t-acervo").innerHTML = T(
-            ["Produto", "Categoria", "Local", "Qtd.", "Mínimo", "Situação"],
-            prods.map((p) => [
-                `<b>${escHtml(p.n)}</b>`,
-                escHtml(p.c),
-                escHtml(p.l),
-                p.q,
-                p.m,
-                p.q <= p.m ? tg("Estoque baixo", "r") : tg("Normal"),
-            ]),
+        const busca = ($("#acervo-busca")?.value || "").trim().toLocaleLowerCase("pt-BR");
+        const categoria = $("#acervo-filtro-categoria")?.value || "";
+        const local = $("#acervo-filtro-local")?.value || "";
+        const situacao = $("#acervo-filtro-situacao")?.value || "";
+        const ativos = prods.filter((p) => String(p.status).toUpperCase() === "ATIVO");
+        const baixo = ativos.filter((p) => p.q <= p.m);
+        const total = ativos.reduce((s,p) => s+p.q,0);
+        const disponivel = ativos.reduce((s,p) => s+p.disponivel,0);
+        const reservado = ativos.reduce((s,p) => s+p.reservado,0);
+        const categoriasUnicas = [...new Set(prods.map(p=>p.c).filter(v=>v&&v!=="Sem categoria"))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+        const locaisUnicos = [...new Set(acervoLocais.map(l=>l.nome).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+        const preencherFiltro = (id,valores,atual,rotulo) => {
+            const el=$(id); if(!el)return;
+            if(el.dataset.preenchido!=="sim"){el.innerHTML='<option value="">Todas '+rotulo+'</option>'+valores.map(v=>'<option value="'+escHtml(v)+'">'+escHtml(v)+'</option>').join("");el.dataset.preenchido="sim";}
+            el.value=atual;
+        };
+        preencherFiltro("#acervo-filtro-categoria",categoriasUnicas,categoria,"as categorias");
+        preencherFiltro("#acervo-filtro-local",locaisUnicos,local,"os locais");
+        const filtrados=prods.filter(p=>{
+            const texto=[p.n,p.codigo,p.autor,p.c,p.sub,p.id].join(" ").toLocaleLowerCase("pt-BR");
+            const b=!busca||texto.includes(busca), c=!categoria||p.c===categoria;
+            const l=!local||p.estoques.some(e=>e.local===local);
+            const s=!situacao||(situacao==="baixo"?p.q<=p.m:situacao==="sem-estoque"?p.q<=0:situacao==="inativo"?String(p.status).toUpperCase()!=="ATIVO":String(p.status).toUpperCase()==="ATIVO");
+            return b&&c&&l&&s;
+        });
+        const setText=(id,value)=>{const el=$(id);if(el)el.textContent=value;};
+        setText("#acervo-kpi-produtos",ativos.length);setText("#acervo-kpi-unidades",total);
+        setText("#acervo-kpi-disponiveis",disponivel);setText("#acervo-kpi-reservadas",reservado);
+        setText("#acervo-kpi-baixo",baixo.length);setText("#acervo-resultado",filtrados.length+" de "+prods.length+" produto(s)");
+        const maiores=[...ativos].sort((a,b)=>b.q-a.q).slice(0,8);
+        $("#ch-acervo").innerHTML=bars(maiores.map(p=>p.q),maiores.map(p=>p.n));
+        $("#low").innerHTML=baixo.slice(0,8).map(p=>'<div class="log"><b>'+escHtml(p.n)+'</b><span>'+p.q+' / mín. '+p.m+'</span></div>').join("")||'<p class="sub">'+(ativos.length?"Nenhum produto abaixo do mínimo.":"Nenhum produto ativo cadastrado.")+'</p>';
+        const porCategoria=categoriasUnicas.map(nome=>({nome,quantidade:ativos.filter(p=>p.c===nome).reduce((s,p)=>s+p.q,0)})).sort((a,b)=>b.quantidade-a.quantidade);
+        $("#acervo-categorias").innerHTML=porCategoria.map(c=>'<div class="acervo-resumo-linha"><span>'+escHtml(c.nome)+'</span><strong>'+c.quantidade+' unidade(s)</strong></div>').join("")||'<p class="sub">Nenhuma categoria cadastrada.</p>';
+        $("#acervo-locais").innerHTML=locaisUnicos.map(nome=>{const quantidade=ativos.reduce((s,p)=>s+p.estoques.filter(e=>e.local===nome).reduce((n,e)=>n+Number(e.quantidade||0),0),0);return '<div class="acervo-resumo-linha"><span>'+escHtml(nome)+'</span><strong>'+quantidade+' unidade(s)</strong></div>';}).join("")||'<p class="sub">Nenhum local cadastrado.</p>';
+        $("#t-acervo").innerHTML='<div class="acervo-tabela-topo"><div><h2>Catálogo de produtos</h2><p class="sub">Pesquise e filtre o acervo da escola. Use “Ver estoque” para conferir a distribuição por local.</p></div><span class="acervo-contador">'+filtrados.length+' resultado(s)</span></div>'+T(
+            ["Código / Produto","Categoria","Subcategoria","Quantidade","Disponível","Estado","Situação","Detalhes"],
+            filtrados.map(p=>[
+                '<div class="acervo-produto"><strong>'+escHtml(p.n)+'</strong><small>'+escHtml(p.codigo||p.id)+(p.autor?' · '+escHtml(p.autor):'')+'</small></div>',
+                escHtml(p.c),escHtml(p.sub),p.q,p.disponivel,escHtml(p.estado),
+                String(p.status).toUpperCase()!=="ATIVO"?tg("Inativo","m"):p.q<=p.m?tg("Estoque baixo","r"):tg("Normal","g"),
+                '<button type="button" class="btn s acervo-ver-estoque" data-produto-id="'+escHtml(p.id)+'">Ver estoque</button>'
+            ])
         );
     },
-
     reservas() {
         $("#t-res").innerHTML = T(
             ["Solicitante", "Item", "Data", "Situação", "Ações"],
@@ -1510,7 +1527,17 @@ function go(p) {
     }
 }
 
+document.addEventListener("input", (e) => { if (e.target.matches("#acervo-busca")) R.acervo(); });
+document.addEventListener("change", (e) => { if (e.target.matches("#acervo-filtro-categoria, #acervo-filtro-local, #acervo-filtro-situacao")) R.acervo(); });
 document.addEventListener("click", (e) => {
+    const detalhe = e.target.closest(".acervo-ver-estoque");
+    if (detalhe) {
+        const p = prods.find((item) => String(item.id) === String(detalhe.dataset.produtoId));
+        if (!p) return;
+        const linhas = p.estoques.map((item) => item.local + ": total " + item.quantidade + ", disponível " + item.disponivel + ", reservado " + item.reservado + ", indisponível " + item.indisponivel).join("\n");
+        alert(p.n + " (" + (p.codigo || p.id) + ")\n\n" + (linhas || "Nenhum registro de estoque por local.") + "\n\nMínimo: " + p.m + "\nEstado: " + p.estado + "\nStatus: " + p.status + (p.observacao ? "\nObservação: " + p.observacao : ""));
+        return;
+    }
     const b = e.target.closest("[data-p],[data-go]");
 
     if (!b) return;
