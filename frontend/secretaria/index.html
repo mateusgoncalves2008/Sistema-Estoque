@@ -571,18 +571,28 @@
                             </div>
                         </div>
 
-                        <div class="g2">
-                            <div class="card">
-                                <h2>Quantidade por item</h2>
-                                <div id="ch-acervo"></div>
-                            </div>
-
-                            <div class="card">
-                                <h2>Atenção ao estoque</h2>
-                                <div id="low"></div>
+                        <div class="acervo-indicadores">
+                            <article class="card acervo-kpi"><span>Produtos ativos</span><strong id="acervo-kpi-produtos">0</strong><small>Itens no catálogo</small></article>
+                            <article class="card acervo-kpi"><span>Unidades em estoque</span><strong id="acervo-kpi-unidades">0</strong><small>Quantidade total registrada</small></article>
+                            <article class="card acervo-kpi"><span>Disponíveis</span><strong id="acervo-kpi-disponiveis">0</strong><small>Prontos para uso</small></article>
+                            <article class="card acervo-kpi"><span>Reservadas</span><strong id="acervo-kpi-reservadas">0</strong><small>Unidades comprometidas</small></article>
+                            <article class="card acervo-kpi acervo-kpi--alerta"><span>Estoque baixo</span><strong id="acervo-kpi-baixo">0</strong><small>No mínimo ou abaixo</small></article>
+                        </div>
+                        <div class="card acervo-filtros">
+                            <div class="acervo-filtros__titulo"><div><h2>Localizar produto</h2><p class="sub">Busque por nome, código, autor, categoria ou identificador.</p></div><span id="acervo-resultado" class="acervo-contador">0 produtos</span></div>
+                            <div class="acervo-filtros__campos">
+                                <label><span>Pesquisa</span><input id="acervo-busca" type="search" placeholder="Ex.: Dom Casmurro, IT-BIB-0001..." autocomplete="off"></label>
+                                <label><span>Categoria</span><select id="acervo-filtro-categoria"><option value="">Todas as categorias</option></select></label>
+                                <label><span>Local de estoque</span><select id="acervo-filtro-local"><option value="">Todos os locais</option></select></label>
+                                <label><span>Situação</span><select id="acervo-filtro-situacao"><option value="">Todas</option><option value="normal">Ativos</option><option value="baixo">Estoque baixo</option><option value="sem-estoque">Sem estoque</option><option value="inativo">Inativos</option></select></label>
                             </div>
                         </div>
-
+                        <div class="g2 acervo-paineis">
+                            <div class="card"><h2>Quantidade por produto</h2><p class="sub">Os oito produtos com maior quantidade registrada.</p><div id="ch-acervo"></div></div>
+                            <div class="card"><h2>Alertas de estoque</h2><p class="sub">Produtos no mínimo ou abaixo dele.</p><div id="low"></div></div>
+                            <div class="card"><h2>Distribuição por categoria</h2><div id="acervo-categorias"></div></div>
+                            <div class="card"><h2>Distribuição por local</h2><div id="acervo-locais"></div></div>
+                        </div>
                         <div class="card" id="t-acervo"></div>
                     </section>
 
