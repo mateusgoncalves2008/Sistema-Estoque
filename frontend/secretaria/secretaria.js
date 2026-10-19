@@ -1797,7 +1797,7 @@ document.addEventListener("click", async (e) => {
         const indiceID = registrosBloqueios.colunas.findIndex((c) => ["bloqueioid", "registroid", "id"].includes(normalizarCabecalho(c)));
         const registro = registrosBloqueios.registros.find((linha) => indiceID >= 0 && String(linha[indiceID] || "").trim() === bloqueioID);
         if (registro && indiceStatus >= 0) registro[indiceStatus] = resposta.statusBloqueio;
-        renderizarRegistrosPlanilha("#t-bloqueios", "#r-bloqueios", registrosBloqueios, "bloqueio");
+        renderizarRegistrosPlanilha("#t-bloqueios", "#bloqueios-resumo", registrosBloqueios, "bloqueio(s)");
         toast(resposta.mensagem || "Status atualizado.");
         $("#modal-registro-planilha").hidden = true;
         document.body.classList.remove("modal-registro-aberto");
