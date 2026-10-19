@@ -2010,7 +2010,7 @@ router.patch("/secretaria/denuncias/:denunciaID/resposta", async (req, res) => {
             return res.status(400).json({ sucesso: false, erro: "A aba de denúncias está vazia ou não possui cabeçalhos." });
         }
 
-        const normalizarCabecalho = (valor) => String(valor || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR");
+        const normalizarCabecalho = (valor) => String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[_\s-]/g, "").trim().toLocaleLowerCase("pt-BR");
         const indiceID = linhas[0].findIndex((c) => normalizarCabecalho(c) === "denunciaid");
         let indiceResposta = linhas[0].findIndex((c) => normalizarCabecalho(c) === "respostasecretaria");
         const indiceDataAnalise = linhas[0].findIndex((c) => normalizarCabecalho(c) === "dataanalise");
@@ -2019,8 +2019,8 @@ router.patch("/secretaria/denuncias/:denunciaID/resposta", async (req, res) => {
         if (indiceID < 0) {
             return res.status(400).json({ sucesso: false, erro: "Adicione a coluna DenunciaID na aba 23_DENUNCIAS_SECRETARIA." });
         }
-        if (indiceDataAnalise < 0 || indiceDataAnalise !== 12) {
-            return res.status(400).json({ sucesso: false, erro: "Confira se a coluna M da aba 23_DENUNCIAS_SECRETARIA se chama DataAnalise." });
+        if (indiceDataAnalise < 0) {
+            return res.status(400).json({ sucesso: false, erro: "Não encontrei o cabeçalho DataAnalise na aba 23_DENUNCIAS_SECRETARIA. Confira a primeira linha da planilha." });
         }
         if (indiceResposta < 0) {
             // Cria o cabeçalho na primeira coluna livre, preservando a coluna M (DataAnalise).
@@ -2066,7 +2066,7 @@ router.patch("/secretaria/denuncias/:denunciaID/resposta", async (req, res) => {
         };
         const numeroLinhaPlanilha = indiceLinha + 1;
         const celulaResposta = colunaA1(indiceResposta + 1) + numeroLinhaPlanilha;
-        const celulaDataAnalise = "M" + numeroLinhaPlanilha;
+        const celulaDataAnalise = colunaA1(indiceDataAnalise + 1) + numeroLinhaPlanilha;
         const celulaStatus = colunaA1(indiceStatus + 1) + numeroLinhaPlanilha;
         const dataAnalise = agora();
 
