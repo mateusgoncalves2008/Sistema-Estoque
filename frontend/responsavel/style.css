@@ -2401,3 +2401,9 @@ footer {
 .stock-action-dialog .new-item-header .icon-btn{flex-shrink:0}
 .stock-action-dialog .new-item-body input,
 .stock-action-dialog .new-item-body textarea{font-weight:400}
+
+
+/* Notificações sempre acima de modais e overlays */
+#toast, .toast, .s {
+    z-index: 2147483647 !important;
+}
