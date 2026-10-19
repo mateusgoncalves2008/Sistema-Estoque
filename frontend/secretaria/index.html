@@ -512,6 +512,53 @@
                         </section>
                     </div>
 
+
+                    <!-- MODAL: NOVO ALUNO -->
+                    <div class="modal-autorizacao-overlay" id="modal-novo-aluno" hidden>
+                        <section class="modal-autorizacao modal-aluno__painel" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-novo-aluno">
+                            <header class="modal-autorizacao__cabecalho">
+                                <span class="modal-autorizacao__icone" aria-hidden="true">＋</span>
+                                <h2 id="titulo-modal-novo-aluno">Cadastrar novo aluno</h2>
+                                <button class="modal-autorizacao__fechar" type="button" data-fechar-modal-aluno aria-label="Fechar janela">×</button>
+                            </header>
+                            <form id="form-novo-aluno">
+                                <div class="modal-autorizacao__conteudo modal-aluno__campos">
+                                    <div><label for="novo-aluno-identificador">IDENTIFICADOR / MATRÍCULA *</label><input id="novo-aluno-identificador" name="identificador" maxlength="50" required /></div>
+                                    <div><label for="novo-aluno-nome">NOME COMPLETO *</label><input id="novo-aluno-nome" name="nome" maxlength="120" autocomplete="name" required /></div>
+                                    <div><label for="novo-aluno-email">E-MAIL *</label><input id="novo-aluno-email" name="email" type="email" maxlength="150" autocomplete="email" required /></div>
+                                    <div><label for="novo-aluno-senha">SENHA INICIAL *</label><input id="novo-aluno-senha" name="senha" type="password" minlength="8" maxlength="128" autocomplete="new-password" required /><small>A senha será armazenada como hash; nunca em texto puro.</small></div>
+                                    <div><label for="novo-aluno-ano">ANO *</label><input id="novo-aluno-ano" name="ano" maxlength="30" required placeholder="Ex.: 1º ano" /></div>
+                                    <div><label for="novo-aluno-turma">TURMA *</label><input id="novo-aluno-turma" name="turma" maxlength="30" required placeholder="Ex.: Turma 1" /></div>
+                                    <div><label for="novo-aluno-turno">TURNO *</label><select id="novo-aluno-turno" name="turno" required><option value="">Selecione</option><option>Matutino</option><option>Vespertino</option><option>Noturno</option><option>Integral</option></select></div>
+                                    <div><label for="novo-aluno-idade">IDADE *</label><input id="novo-aluno-idade" name="idade" type="number" min="1" max="120" required /></div>
+                                    <p class="modal-autorizacao__mensagem" id="mensagem-novo-aluno" role="status" aria-live="polite"></p>
+                                </div>
+                                <footer class="modal-autorizacao__acoes"><button class="modal-autorizacao__cancelar" type="button" data-fechar-modal-aluno>Cancelar</button><button class="modal-autorizacao__salvar" id="btn-salvar-novo-aluno" type="submit">Salvar aluno</button></footer>
+                            </form>
+                        </section>
+                    </div>
+
+                    <!-- MODAL: MUDAR ALUNO DE TURMA -->
+                    <div class="modal-autorizacao-overlay" id="modal-mudar-turma" hidden>
+                        <section class="modal-autorizacao" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-mudar-turma">
+                            <header class="modal-autorizacao__cabecalho">
+                                <span class="modal-autorizacao__icone" aria-hidden="true">↗</span>
+                                <h2 id="titulo-modal-mudar-turma">Mudar aluno de turma</h2>
+                                <button class="modal-autorizacao__fechar" type="button" data-fechar-modal-turma aria-label="Fechar janela">×</button>
+                            </header>
+                            <form id="form-mudar-turma">
+                                <div class="modal-autorizacao__conteudo modal-aluno__campos">
+                                    <div class="modal-aluno__campo-largo"><label for="mudar-turma-aluno">ALUNO CADASTRADO *</label><select id="mudar-turma-aluno" name="usuarioID" required><option value="">Carregando alunos...</option></select></div>
+                                    <div><label for="mudar-turma-ano">NOVO ANO *</label><input id="mudar-turma-ano" name="ano" maxlength="30" required placeholder="Ex.: 2º ano" /></div>
+                                    <div><label for="mudar-turma-nome">NOVA TURMA *</label><input id="mudar-turma-nome" name="turma" maxlength="30" required placeholder="Ex.: Turma 2" /></div>
+                                    <div class="modal-aluno__campo-largo"><label for="mudar-turma-turno">NOVO TURNO *</label><select id="mudar-turma-turno" name="turno" required><option value="">Selecione</option><option>Matutino</option><option>Vespertino</option><option>Noturno</option><option>Integral</option></select></div>
+                                    <p class="modal-autorizacao__mensagem modal-aluno__campo-largo" id="mensagem-mudar-turma" role="status" aria-live="polite"></p>
+                                </div>
+                                <footer class="modal-autorizacao__acoes"><button class="modal-autorizacao__cancelar" type="button" data-fechar-modal-turma>Cancelar</button><button class="modal-autorizacao__salvar" id="btn-salvar-mudar-turma" type="submit">Salvar mudança</button></footer>
+                            </form>
+                        </section>
+                    </div>
+
                     <!-- ACERVO -->
                     <section class="page" id="p-acervo">
                         <div class="head">
