@@ -109,8 +109,14 @@ async function carregarDados() {
             api("/secretaria/usuarios"),
             api("/secretaria/acervo"),
             api("/secretaria/movimentacoes"),
-            api("/secretaria/bloqueios-setor"),
-            api("/secretaria/denuncias"),
+            api("/secretaria/bloqueios-setor").catch((erro) => {
+                console.warn("Não foi possível carregar os bloqueios da Secretaria:", erro);
+                return { colunas: [], registros: [] };
+            }),
+            api("/secretaria/denuncias").catch((erro) => {
+                console.warn("Não foi possível carregar as denúncias da Secretaria:", erro);
+                return { colunas: [], registros: [] };
+            }),
         ]);
 
         registrosBloqueios = { colunas: dadosBloqueios.colunas || [], registros: dadosBloqueios.registros || [] };
