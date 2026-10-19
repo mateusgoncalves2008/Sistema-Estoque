@@ -2013,11 +2013,15 @@ router.patch("/secretaria/denuncias/:denunciaID/resposta", async (req, res) => {
         const normalizarCabecalho = (valor) => String(valor || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR");
         const indiceID = linhas[0].findIndex((c) => normalizarCabecalho(c) === "denunciaid");
         const indiceResposta = linhas[0].findIndex((c) => normalizarCabecalho(c) === "respostasecretaria");
+        const indiceDataAnalise = linhas[0].findIndex((c) => normalizarCabecalho(c) === "dataanalise");
         if (indiceID < 0) {
             return res.status(400).json({ sucesso: false, erro: "Adicione a coluna DenunciaID na aba 23_DENUNCIAS_SECRETARIA." });
         }
         if (indiceResposta < 0) {
             return res.status(400).json({ sucesso: false, erro: "Adicione a coluna RespostaSecretaria na aba 23_DENUNCIAS_SECRETARIA para salvar a resposta." });
+        }
+        if (indiceDataAnalise < 0 || indiceDataAnalise !== 12) {
+            return res.status(400).json({ sucesso: false, erro: "Confira se a coluna M da aba 23_DENUNCIAS_SECRETARIA se chama DataAnalise." });
         }
 
         const indiceLinha = linhas.findIndex((linha, i) => i > 0 && texto(linha[indiceID]) === denunciaID);
@@ -2034,12 +2038,26 @@ router.patch("/secretaria/denuncias/:denunciaID/resposta", async (req, res) => {
             }
             return resultado;
         };
-        const celula = colunaA1(indiceResposta + 1) + (indiceLinha + 1);
-        await sheets.spreadsheets.values.update({
+        const numeroLinhaPlanilha = indiceLinha + 1;
+        const celulaResposta = colunaA1(indiceResposta + 1) + numeroLinhaPlanilha;
+        const celulaDataAnalise = "M" + numeroLinhaPlanilha;
+        const dataAnalise = agora();
+
+        await sheets.spreadsheets.values.batchUpdate({
             spreadsheetId: SPREADSHEET_ID,
-            range: "23_DENUNCIAS_SECRETARIA!" + celula,
-            valueInputOption: "USER_ENTERED",
-            requestBody: { values: [[respostaSecretaria]] },
+            requestBody: {
+                valueInputOption: "USER_ENTERED",
+                data: [
+                    {
+                        range: "23_DENUNCIAS_SECRETARIA!" + celulaResposta,
+                        values: [[respostaSecretaria]],
+                    },
+                    {
+                        range: "23_DENUNCIAS_SECRETARIA!" + celulaDataAnalise,
+                        values: [[dataAnalise]],
+                    },
+                ],
+            },
         });
         limparCache();
         return res.json({ sucesso: true, mensagem: "Resposta da Secretaria salva." });
