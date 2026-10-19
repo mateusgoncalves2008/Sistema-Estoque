@@ -675,13 +675,16 @@ router.post("/secretaria/alunos", async (req, res) => {
         const salt = crypto.randomBytes(16).toString("hex");
         const senhaHash = hashSenha(senha, salt);
 
+        const linhaUsuario = Math.max(2, usuarios.length + 1);
+        const linhaAutorizado = Math.max(2, autorizados.length + 1);
+
         await sheets.spreadsheets.values.batchUpdate({
             spreadsheetId: SPREADSHEET_ID,
             requestBody: {
                 valueInputOption: "USER_ENTERED",
                 data: [
-                    { range: "01_USUARIOS!A:K", values: [[usuarioID, nome, email, senhaHash, salt, "ALUNO", "ALUNO", "", "ATIVO", agora(), ""]] },
-                    { range: "17_CADASTROS_AUTORIZADOS!A:J", values: [[cadastradoID, "ALUNO", identificador, usuarioID, nome, ano, turma, turno, idade, "CADASTRADO"]] }
+                    { range: `01_USUARIOS!A${linhaUsuario}:K${linhaUsuario}`, values: [[usuarioID, nome, email, senhaHash, salt, "ALUNO", "ALUNO", "", "ATIVO", agora(), ""]] },
+                    { range: `17_CADASTROS_AUTORIZADOS!A${linhaAutorizado}:J${linhaAutorizado}`, values: [[cadastradoID, "ALUNO", identificador, usuarioID, nome, ano, turma, turno, idade, "CADASTRADO"]] }
                 ]
             }
         });
