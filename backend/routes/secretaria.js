@@ -350,66 +350,50 @@ router.get("/secretaria/usuarios", async (req, res) => {
         const dados = await carregarDadosSecretaria();
 
         const usuarios = dados["01_USUARIOS"] || [];
-
         const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
 
-        const mapaAutorizados = new Map();
+        const usuariosPorID = new Map();
 
-        for (const linha of autorizados.slice(1)) {
-            const usuarioID = texto(linha[3]);
+        for (const linha of usuarios.slice(1)) {
+            const usuarioID = texto(linha[0]);
 
             if (usuarioID) {
-                mapaAutorizados.set(usuarioID, {
-                    autorizacaoID: linha[0] || "",
-                    tipo: linha[1] || "",
-                    identificador: linha[2] || "",
-                    nome: linha[4] || "",
-                    ano: linha[5] || "",
-                    turma: linha[6] || "",
-                    turno: linha[7] || "",
-                    idade: linha[8] || "",
-                    status: linha[9] || "",
+                usuariosPorID.set(usuarioID, {
+                    usuarioID,
+                    email: linha[2] || "",
+                    status: texto(linha[8]).toUpperCase(),
+                    tipoUsuario: linha[5] || "",
+                    perfil: linha[6] || "",
+                    dataCadastro: linha[9] || "",
+                    ultimoLogin: linha[10] || "",
                 });
             }
         }
 
-        const lista = usuarios.slice(1).map((linha) => {
-            const usuarioID = linha[0] || "";
+        const lista = autorizados
+            .slice(1)
+            .filter((linha) => normalizar(linha[1]) === "aluno")
+            .map((linha) => {
+                const usuarioID = texto(linha[3]);
+                const usuario = usuariosPorID.get(usuarioID);
 
-            const cadastro = mapaAutorizados.get(usuarioID);
-
-            return {
-                usuarioID,
-
-                nome: linha[1] || "",
-
-                email: linha[2] || "",
-
-                tipoUsuario: linha[5] || "",
-
-                perfil: linha[6] || "",
-
-                setorID: linha[7] || "",
-
-                status: linha[8] || "",
-
-                dataCadastro: linha[9] || "",
-
-                ultimoLogin: linha[10] || "",
-
-                matricula: cadastro?.identificador || "",
-
-                ano: cadastro?.ano || "",
-
-                turma: cadastro?.turma || "",
-
-                turno: cadastro?.turno || "",
-
-                idade: cadastro?.idade || "",
-
-                statusCadastro: cadastro?.status || "",
-            };
-        });
+                return {
+                    usuarioID,
+                    nome: linha[4] || "",
+                    email: usuario?.email || "",
+                    tipoUsuario: "ALUNO",
+                    perfil: usuario?.perfil || "ALUNO",
+                    status: usuario?.status || "INATIVO",
+                    matricula: linha[2] || "",
+                    ano: linha[5] || "",
+                    turma: linha[6] || "",
+                    turno: linha[7] || "",
+                    idade: linha[8] || "",
+                    statusCadastro: linha[9] || "",
+                    dataCadastro: usuario?.dataCadastro || "",
+                    ultimoLogin: usuario?.ultimoLogin || "",
+                };
+            });
 
         res.json({
             sucesso: true,
