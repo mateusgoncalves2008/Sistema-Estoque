@@ -617,10 +617,9 @@ function uList() {
     });
 
     $("#ut2").innerHTML = T(
-        ["Nome", "Perfil", "Turma / Disciplina", "Turno", "Situação", "Ações"],
+        ["Nome", "Turma", "Turno", "Situação", "Ações"],
         filtrados.map((u) => [
             `<b>${escHtml(u.n)}</b>`,
-            escHtml(u.p),
             escHtml(u.t),
             escHtml(u.tu),
             u.a ? tg("Ativo") : tg("Inativo", "m"),
