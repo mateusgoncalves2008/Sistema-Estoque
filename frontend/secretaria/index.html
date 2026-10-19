@@ -434,38 +434,17 @@
                             </div>
                         </div>
 
-                        <div class="card">
-                            <h2>Novo usuário</h2>
-
-                            <div class="form">
-                                <div>
-                                    <label for="un">Nome</label>
-                                    <input id="un" />
-                                </div>
-
-                                <div>
-                                    <label for="up">Perfil</label>
-                                    <select id="up">
-                                        <option>Aluno</option>
-                                        <option>Professor</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label for="ut">Turma / Disciplina</label>
-                                    <input id="ut" />
-                                </div>
-
-                                <div>
-                                    <label for="uu">Turno</label>
-                                    <select id="uu">
-                                        <option>Manhã</option>
-                                        <option>Tarde</option>
-                                    </select>
-                                </div>
-
-                                <button class="btn" onclick="addUser()">
-                                    Cadastrar
+                        <div class="card usuarios-acoes">
+                            <h2>Ações de usuários</h2>
+                            <div class="bar">
+                                <button class="btn" type="button" data-acao-usuario="autorizar">
+                                    Autorizar para cadastro próprio
+                                </button>
+                                <button class="btn" type="button" data-acao-usuario="novo-aluno">
+                                    Novo aluno
+                                </button>
+                                <button class="btn" type="button" data-acao-usuario="transferir-turma">
+                                    Mudar aluno de turma
                                 </button>
                             </div>
                         </div>
