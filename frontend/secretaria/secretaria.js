@@ -1174,19 +1174,39 @@ function renderizarRegistrosPlanilha(seletorTabela, seletorResumo, dados, singul
     const registros = dados.registros || [];
     resumo.innerHTML = '<span class="registros-contador">' + registros.length + ' ' + singular + ' encontrado(s)</span>';
 
-    if (!colunas.length) {
-        tabela.innerHTML = '<p class="sub registros-vazio">A aba ainda não possui cabeçalhos ou não retornou dados.</p>';
+    if (!colunas.length || !registros.length) {
+        tabela.innerHTML = '<div class="registros-vazio">' +
+            (!colunas.length ? 'A aba ainda não possui cabeçalhos ou não retornou dados.' : 'Nenhum registro encontrado nesta aba.') +
+            '</div>';
         return;
     }
 
-    tabela.innerHTML = T(
-        colunas.map((coluna, i) => escHtml(coluna || ("Coluna " + (i + 1)))),
-        registros.map((linha) => colunas.map((_, i) => escHtml(linha[i] ?? "—") || "—")),
-    );
-
-    if (!registros.length) {
-        tabela.innerHTML = '<p class="sub registros-vazio">Nenhum registro encontrado nesta aba.</p>';
-    }
+    const bloqueios = seletorTabela === "#t-bloqueios";
+    tabela.innerHTML = '<div class="registros-cards">' + registros.map((linha, indice) => {
+        const valor = (i) => String(linha[i] ?? "").trim();
+        const nomeIndex = colunas.findIndex((c) => /nome|aluno|usuario|usuário/i.test(String(c)));
+        const motivoIndex = colunas.findIndex((c) => /motivo|descri|relato|justificativa/i.test(String(c)));
+        const dataIndex = colunas.findIndex((c) => /data|hora|criado/i.test(String(c)));
+        const idIndex = colunas.findIndex((c) => /(^id$|bloqueioid|denuncia.?id|registro.?id)/i.test(String(c)));
+        const statusIndex = colunas.findIndex((c) => /status|situa/i.test(String(c)));
+        const nome = nomeIndex >= 0 && valor(nomeIndex) ? valor(nomeIndex) : (idIndex >= 0 && valor(idIndex) ? valor(idIndex) : "Registro " + (indice + 1));
+        const motivo = motivoIndex >= 0 ? valor(motivoIndex) : "";
+        const data = dataIndex >= 0 ? valor(dataIndex) : "";
+        const status = statusIndex >= 0 && valor(statusIndex) ? valor(statusIndex) : (bloqueios ? "Bloqueio registrado" : "Denúncia registrada");
+        const detalhes = colunas.map((coluna, i) => '<div class="bloqueio-detalhe-campo"><span>' +
+            escHtml(coluna || ("Coluna " + (i + 1))) + '</span><strong>' +
+            escHtml(valor(i) || "—") + '</strong></div>').join("");
+        return '<button type="button" class="registro-card ' + (bloqueios ? 'registro-card--bloqueio' : 'registro-card--denuncia') +
+            '" data-registro-tipo="' + (bloqueios ? 'bloqueio' : 'denuncia') + '" data-registro-indice="' + indice + '">' +
+            '<span class="registro-card__topo"><span class="registro-card__icone"><svg viewBox="0 0 24 24" aria-hidden="true">' +
+            (bloqueios ? '<path d="M12 3 5 6v5c0 4.5 3 7.5 7 10 4-2.5 7-5.5 7-10V6l-7-3Z"/><path d="m9 9 6 6m0-6-6 6"/>' : '<path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v4m0 3h.01"/>') +
+            '</svg></span><span class="registro-card__status">' + escHtml(status) + '</span></span>' +
+            '<strong class="registro-card__nome">' + escHtml(nome) + '</strong>' +
+            (data ? '<span class="registro-card__data"><span>Data</span> ' + escHtml(data) + '</span>' : '') +
+            (motivo ? '<span class="registro-card__motivo">' + escHtml(motivo) + '</span>' : '') +
+            '<span class="registro-card__rodape">Ver todas as informações <span aria-hidden="true">↗</span></span>' +
+            '<span class="registro-card__dados" hidden>' + detalhes + '</span></button>';
+    }).join("") + '</div>';
 }
 
 /* =========================================================
@@ -1600,6 +1620,33 @@ function go(p) {
 document.addEventListener("input", (e) => { if (e.target.matches("#acervo-busca")) R.acervo(); });
 document.addEventListener("change", (e) => { if (e.target.matches("#acervo-filtro-categoria, #acervo-filtro-local, #acervo-filtro-situacao")) R.acervo(); });
 document.addEventListener("click", (e) => {
+    const registroCard = e.target.closest(".registro-card");
+    if (registroCard) {
+        const bloqueios = registroCard.dataset.registroTipo === "bloqueio";
+        const dados = bloqueios ? registrosBloqueios : registrosDenuncias;
+        const linha = dados.registros[Number(registroCard.dataset.registroIndice)];
+        if (!linha) return;
+        const modal = $("#modal-registro-planilha");
+        const titulo = $("#modal-registro-titulo");
+        const subtitulo = $("#modal-registro-subtitulo");
+        const conteudo = $("#modal-registro-conteudo");
+        titulo.textContent = bloqueios ? "Detalhes do bloqueio" : "Detalhes da denúncia";
+        subtitulo.textContent = bloqueios ? "Registro da aba 22_BLOQUEIOS_SETOR" : "Registro da aba 23_DENUNCIAS_SECRETARIA";
+        conteudo.innerHTML = dados.colunas.map((coluna, i) =>
+            '<div class="bloqueio-detalhe-campo"><span>' + escHtml(coluna || ("Coluna " + (i + 1))) +
+            '</span><strong>' + escHtml(String(linha[i] ?? "").trim() || "—") + '</strong></div>'
+        ).join("");
+        modal.hidden = false;
+        document.body.classList.add("modal-registro-aberto");
+        return;
+    }
+    const fecharRegistro = e.target.closest("[data-fechar-modal-registro]");
+    if (fecharRegistro) {
+        const modal = $("#modal-registro-planilha");
+        modal.hidden = true;
+        document.body.classList.remove("modal-registro-aberto");
+        return;
+    }
     const detalhe = e.target.closest(".acervo-ver-estoque");
     if (detalhe) {
         const p = prods.find((item) => String(item.id) === String(detalhe.dataset.produtoId));
