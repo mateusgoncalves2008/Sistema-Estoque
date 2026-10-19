@@ -246,6 +246,7 @@ function formatarTipoMovimentacao(tipo) {
         SAIDA: "Saída",
         TRANSFERENCIA: "Transferência",
         RESERVA: "Reserva",
+        RETIRADA: "Retirada",
         DEVOLUCAO: "Devolução",
         AJUSTE: "Ajuste",
     };
@@ -376,7 +377,7 @@ function montarGraficos() {
     const tipos = {};
 
     movs.forEach((m) => {
-        const tipo = m[1] || "Outro";
+        const tipo = m[2] || "Outro";
         tipos[tipo] = (tipos[tipo] || 0) + 1;
     });
 
