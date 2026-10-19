@@ -427,6 +427,85 @@ router.get("/secretaria/usuarios", async (req, res) => {
 
 /*
 ==========================================================
+ AUTORIZAR MATRÍCULA PARA CADASTRO PRÓPRIO
+==========================================================
+*/
+
+router.post("/secretaria/autorizar-matricula", async (req, res) => {
+    try {
+        const matricula = texto(req.body.matricula);
+
+        if (!matricula) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "Informe a matrícula do aluno.",
+            });
+        }
+
+        if (matricula.length > 50) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "A matrícula deve ter no máximo 50 caracteres.",
+            });
+        }
+
+        const dados = await carregarDadosSecretaria();
+        const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
+
+        const matriculaNormalizada = normalizar(matricula);
+        const jaExiste = autorizados.slice(1).some((linha) =>
+            normalizar(linha[2]) === matriculaNormalizada
+        );
+
+        if (jaExiste) {
+            return res.status(409).json({
+                sucesso: false,
+                erro: "Essa matrícula já consta na lista de cadastros autorizados.",
+            });
+        }
+
+        const cadastradoID = gerarID("AUT", autorizados, 0);
+
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "17_CADASTROS_AUTORIZADOS!A:J",
+            valueInputOption: "USER_ENTERED",
+            requestBody: {
+                values: [[
+                    cadastradoID,
+                    "ALUNO",
+                    matricula,
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "PENDENTE",
+                ]],
+            },
+        });
+
+        limparCache();
+
+        return res.json({
+            sucesso: true,
+            mensagem: "Matrícula autorizada para cadastro próprio.",
+            cadastradoID,
+            status: "PENDENTE",
+        });
+    } catch (erro) {
+        console.error("Erro ao autorizar matrícula para cadastro próprio:", erro);
+
+        return res.status(500).json({
+            sucesso: false,
+            erro: "Não foi possível salvar a autorização da matrícula.",
+        });
+    }
+});
+
+/*
+==========================================================
  CADASTRAR USUÁRIO
 ==========================================================
 */
