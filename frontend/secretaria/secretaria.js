@@ -662,6 +662,14 @@ function uList() {
     );
 }
 
+// Filtros da lista de denúncias.
+document.addEventListener("input", (evento) => {
+    if (evento.target.matches("#buscar-denuncia")) renderizarRegistrosPlanilha("#t-denuncias", "#denuncias-resumo", registrosDenuncias, "denúncia(s)");
+});
+document.addEventListener("change", (evento) => {
+    if (evento.target.matches("#filtrar-status-denuncia")) renderizarRegistrosPlanilha("#t-denuncias", "#denuncias-resumo", registrosDenuncias, "denúncia(s)");
+});
+
 // Delegação de eventos: funciona mesmo quando a tabela é recriada.
 document.addEventListener("click", (evento) => {
     const botao = evento.target.closest("#ut2 button[data-usuario-status]");
@@ -1233,42 +1241,67 @@ function renderizarRegistrosPlanilha(seletorTabela, seletorResumo, dados, singul
 
     const colunas = dados.colunas || [];
     const registros = dados.registros || [];
-    resumo.innerHTML = '<span class="registros-contador">' + registros.length + ' ' + singular + ' encontrado(s)</span>';
+    const bloqueios = seletorTabela === "#t-bloqueios";
+    const normalizar = (valor) => String(valor || "").trim().toLocaleUpperCase("pt-BR");
+    const statusIndex = colunas.findIndex((c) => /status|situa/i.test(String(c)));
+    const statusRegistro = (linha) => normalizar(statusIndex >= 0 ? linha[statusIndex] : "") || "PENDENTE";
 
-    if (!colunas.length || !registros.length) {
-        tabela.innerHTML = '<div class="registros-vazio">' +
-            (!colunas.length ? 'A aba ainda não possui cabeçalhos ou não retornou dados.' : 'Nenhum registro encontrado nesta aba.') +
-            '</div>';
+    if (!bloqueios) {
+        const pendentes = registros.filter((linha) => statusRegistro(linha) !== "RESOLVIDO").length;
+        const resolvidas = registros.length - pendentes;
+        if ($("#denuncias-total")) $("#denuncias-total").textContent = registros.length;
+        if ($("#denuncias-pendentes")) $("#denuncias-pendentes").textContent = pendentes;
+        if ($("#denuncias-resolvidas")) $("#denuncias-resolvidas").textContent = resolvidas;
+    }
+
+    const busca = !bloqueios ? String($("#buscar-denuncia")?.value || "").trim().toLocaleLowerCase("pt-BR") : "";
+    const filtroStatus = !bloqueios ? normalizar($("#filtrar-status-denuncia")?.value || "TODOS") : "TODOS";
+    const filtrados = registros.map((linha, indice) => ({ linha, indice })).filter(({ linha }) => {
+        const textoRegistro = [ ...colunas.map((_, i) => String(linha[i] ?? "")) ].join(" ").toLocaleLowerCase("pt-BR");
+        const correspondeBusca = !busca || textoRegistro.includes(busca);
+        const status = statusRegistro(linha);
+        const correspondeStatus = filtroStatus === "TODOS"
+            || (filtroStatus === "PENDENTE" && status !== "RESOLVIDO")
+            || (filtroStatus === "RESOLVIDO" && status === "RESOLVIDO");
+        return correspondeBusca && correspondeStatus;
+    });
+
+    resumo.innerHTML = '<span class="registros-contador">' + filtrados.length + ' de ' + registros.length + ' ' + singular + ' encontrado(s)</span>';
+
+    if (!colunas.length || !filtrados.length) {
+        const mensagem = !colunas.length
+            ? "A aba ainda não possui cabeçalhos ou não retornou dados."
+            : (registros.length ? "Nenhuma denúncia corresponde aos filtros selecionados." : "Nenhuma denúncia registrada até o momento.");
+        tabela.innerHTML = '<div class="registros-vazio"><span class="registros-vazio__icone">⌕</span><strong>' +
+            escHtml(mensagem) + '</strong><p>Quando houver registros, eles aparecerão nesta área.</p></div>';
         return;
     }
 
-    const bloqueios = seletorTabela === "#t-bloqueios";
-    tabela.innerHTML = '<div class="registros-cards">' + registros.map((linha, indice) => {
+    tabela.innerHTML = '<div class="registros-cards">' + filtrados.map(({ linha, indice }) => {
         const valor = (i) => String(linha[i] ?? "").trim();
-        const nomeIndex = colunas.findIndex((c) => /nome|aluno|usuario|usuário/i.test(String(c)));
+        const nomeIndex = colunas.findIndex((c) => /denunciado.?nome|denunciante.?nome|nome|aluno|usuario|usuário/i.test(String(c)));
         const motivoIndex = colunas.findIndex((c) => /motivo|descri|relato|justificativa/i.test(String(c)));
         const dataIndex = colunas.findIndex((c) => /data|hora|criado/i.test(String(c)));
         const idIndex = colunas.findIndex((c) => /(^id$|bloqueioid|denuncia.?id|registro.?id)/i.test(String(c)));
-        const statusIndex = colunas.findIndex((c) => /status|situa/i.test(String(c)));
         const nome = nomeIndex >= 0 && valor(nomeIndex) ? valor(nomeIndex) : (idIndex >= 0 && valor(idIndex) ? valor(idIndex) : "Registro " + (indice + 1));
         const motivo = motivoIndex >= 0 ? valor(motivoIndex) : "";
         const data = dataIndex >= 0 ? valor(dataIndex) : "";
-        const status = statusIndex >= 0 && valor(statusIndex) ? valor(statusIndex) : (bloqueios ? "Bloqueio registrado" : "Denúncia registrada");
+        const status = statusRegistro(linha);
         const detalhes = camposExibicaoPlanilha(colunas, linha).map((campo) => '<div class="bloqueio-detalhe-campo"><span>' +
-            escHtml(campo.nome) + '</span><strong>' +
-            escHtml(campo.valor) + '</strong></div>').join("");
+            escHtml(campo.nome) + '</span><strong>' + escHtml(campo.valor) + '</strong></div>').join("");
         return '<button type="button" class="registro-card ' + (bloqueios ? 'registro-card--bloqueio' : 'registro-card--denuncia') +
             '" data-registro-tipo="' + (bloqueios ? 'bloqueio' : 'denuncia') + '" data-registro-indice="' + indice + '">' +
             '<span class="registro-card__topo"><span class="registro-card__icone"><svg viewBox="0 0 24 24" aria-hidden="true">' +
             (bloqueios ? '<path d="M12 3 5 6v5c0 4.5 3 7.5 7 10 4-2.5 7-5.5 7-10V6l-7-3Z"/><path d="m9 9 6 6m0-6-6 6"/>' : '<path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v4m0 3h.01"/>') +
-            '</svg></span><span class="registro-card__status">' + escHtml(status) + '</span></span>' +
+            '</svg></span><span class="registro-card__status registro-card__status--' + (status === "RESOLVIDO" ? "resolvido" : "pendente") + '">' + escHtml(status) + '</span></span>' +
             '<strong class="registro-card__nome">' + escHtml(nome) + '</strong>' +
             (data ? '<span class="registro-card__data"><span>Data</span> ' + escHtml(data) + '</span>' : '') +
             (motivo ? '<span class="registro-card__motivo">' + escHtml(motivo) + '</span>' : '') +
-            '<span class="registro-card__rodape">Ver todas as informações <span aria-hidden="true">↗</span></span>' +
+            '<span class="registro-card__rodape">Ver detalhes e responder <span aria-hidden="true">↗</span></span>' +
             '<span class="registro-card__dados" hidden>' + detalhes + '</span></button>';
     }).join("") + '</div>';
 }
+
 
 /* =========================================================
    RENDERIZAÇÃO
