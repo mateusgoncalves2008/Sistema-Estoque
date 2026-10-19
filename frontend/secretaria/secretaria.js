@@ -1577,6 +1577,150 @@ document.addEventListener("keydown", (e) => {
 
 $("#form-autorizar-matricula")?.addEventListener("submit", salvarAutorizacaoMatricula);
 
+
+async function abrirModalNovoAluno() {
+    const modal = $("#modal-novo-aluno");
+    if (!modal) return;
+    modal.hidden = false;
+    document.body.classList.add("modal-autorizacao-aberto");
+    window.requestAnimationFrame(() => $("#novo-aluno-identificador")?.focus());
+}
+
+async function abrirModalMudarTurma() {
+    const modal = $("#modal-mudar-turma");
+    if (!modal) return;
+    modal.hidden = false;
+    document.body.classList.add("modal-autorizacao-aberto");
+    const select = $("#mudar-turma-aluno");
+    select.innerHTML = '<option value="">Carregando alunos...</option>';
+    $("#mensagem-mudar-turma").textContent = "";
+    try {
+        const resposta = await api("/secretaria/usuarios");
+        const alunos = (resposta.usuarios || []).filter(u =>
+            String(u.tipoUsuario || "").toLowerCase() === "aluno" &&
+            String(u.status || "").toUpperCase() === "ATIVO"
+        );
+        select.innerHTML = '<option value="">Selecione o aluno</option>';
+        alunos.forEach(aluno => {
+            const option = document.createElement("option");
+            option.value = aluno.usuarioID;
+            option.textContent = [aluno.nome, aluno.matricula ? "Matrícula " + aluno.matricula : "", aluno.ano, aluno.turma].filter(Boolean).join(" — ");
+            option.dataset.ano = aluno.ano || "";
+            option.dataset.turma = aluno.turma || "";
+            option.dataset.turno = aluno.turno || "";
+            select.appendChild(option);
+        });
+        if (!alunos.length) select.innerHTML = '<option value="">Nenhum aluno ativo encontrado</option>';
+    } catch (erro) {
+        select.innerHTML = '<option value="">Erro ao carregar alunos</option>';
+        $("#mensagem-mudar-turma").textContent = erro.message;
+    }
+    window.requestAnimationFrame(() => select.focus());
+}
+
+function fecharModalOperacao(id) {
+    const modal = $("#" + id);
+    if (modal) modal.hidden = true;
+    if ($("#modal-autorizar-matricula")?.hidden !== false &&
+        $("#modal-novo-aluno")?.hidden !== false &&
+        $("#modal-mudar-turma")?.hidden !== false) {
+        document.body.classList.remove("modal-autorizacao-aberto");
+    }
+}
+
+document.addEventListener("click", e => {
+    if (e.target.closest('[data-acao-usuario="novo-aluno"]')) {
+        e.preventDefault();
+        abrirModalNovoAluno();
+    } else if (e.target.closest('[data-acao-usuario="transferir-turma"]')) {
+        e.preventDefault();
+        abrirModalMudarTurma();
+    } else if (e.target.closest("[data-fechar-modal-aluno]")) {
+        fecharModalOperacao("modal-novo-aluno");
+    } else if (e.target.closest("[data-fechar-modal-turma]")) {
+        fecharModalOperacao("modal-mudar-turma");
+    } else if (e.target.id === "modal-novo-aluno") {
+        fecharModalOperacao("modal-novo-aluno");
+    } else if (e.target.id === "modal-mudar-turma") {
+        fecharModalOperacao("modal-mudar-turma");
+    }
+});
+
+document.addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    ["modal-novo-aluno", "modal-mudar-turma"].forEach(id => {
+        if (!$("#" + id)?.hidden) fecharModalOperacao(id);
+    });
+});
+
+$("#form-novo-aluno")?.addEventListener("submit", async e => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const mensagem = $("#mensagem-novo-aluno");
+    const botao = $("#btn-salvar-novo-aluno");
+    const dados = Object.fromEntries(new FormData(form).entries());
+    botao.disabled = true;
+    botao.textContent = "Salvando...";
+    mensagem.textContent = "";
+    try {
+        const resposta = await api("/secretaria/alunos", {
+            method: "POST",
+            body: JSON.stringify(dados)
+        });
+        mensagem.textContent = "Aluno cadastrado. ID de usuário: " + resposta.usuarioID;
+        toast("Aluno cadastrado com sucesso.");
+        form.reset();
+    } catch (erro) {
+        mensagem.textContent = erro.message;
+        toast(erro.message);
+    } finally {
+        botao.disabled = false;
+        botao.textContent = "Salvar aluno";
+    }
+});
+
+$("#mudar-turma-aluno")?.addEventListener("change", e => {
+    const option = e.currentTarget.selectedOptions[0];
+    $("#mudar-turma-ano").value = option?.dataset.ano || "";
+    $("#mudar-turma-nome").value = option?.dataset.turma || "";
+    $("#mudar-turma-turno").value = option?.dataset.turno || "";
+});
+
+$("#form-mudar-turma")?.addEventListener("submit", async e => {
+    e.preventDefault();
+    const mensagem = $("#mensagem-mudar-turma");
+    const botao = $("#btn-salvar-mudar-turma");
+    const usuarioID = $("#mudar-turma-aluno").value;
+    const dados = {
+        ano: $("#mudar-turma-ano").value.trim(),
+        turma: $("#mudar-turma-nome").value.trim(),
+        turno: $("#mudar-turma-turno").value
+    };
+    if (!usuarioID) {
+        mensagem.textContent = "Selecione um aluno.";
+        return;
+    }
+    botao.disabled = true;
+    botao.textContent = "Salvando...";
+    mensagem.textContent = "";
+    try {
+        const resposta = await api("/secretaria/alunos/" + encodeURIComponent(usuarioID) + "/turma", {
+            method: "PATCH",
+            body: JSON.stringify(dados)
+        });
+        mensagem.textContent = resposta.mensagem || "Turma atualizada.";
+        toast("Turma do aluno alterada.");
+    } catch (erro) {
+        mensagem.textContent = erro.message;
+        toast(erro.message);
+    } finally {
+        botao.disabled = false;
+        botao.textContent = "Salvar mudança";
+    }
+});
+
+
+
 setInterval(() => {
     const c = $("#clk");
 
