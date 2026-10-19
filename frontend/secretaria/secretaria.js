@@ -110,15 +110,10 @@ async function carregarDados() {
             id: u.usuarioID,
             n: u.nome,
             email: u.email,
-            p:
-                u.tipoUsuario === "ALUNO"
-                    ? "Aluno"
-                    : u.tipoUsuario === "PROFESSOR"
-                      ? "Professor"
-                      : u.tipoUsuario,
-            t: u.turma || u.ano || u.identificador || "-",
+            p: "Aluno",
+            t: u.turma || u.ano || "-",
             tu: u.turno || "-",
-            a: u.status === "ATIVO",
+            a: String(u.status || "").toUpperCase() === "ATIVO",
         }));
 
         prods = (dados.produtos || []).map((p) => ({
@@ -627,6 +622,7 @@ function uList() {
             `
                 <button
                     class="btn s"
+                    ${u.id ? "" : "disabled"}
                     onclick="togUser('${u.id}', ${u.a})"
                 >
                     ${u.a ? "Desativar" : "Reativar"}
