@@ -1881,3 +1881,9 @@ th {
 .hero-professor .hero-relogio {
     opacity: 1 !important;
 }
+
+
+/* Notificações sempre acima de modais e overlays */
+#toast, .toast, .s {
+    z-index: 2147483647 !important;
+}
