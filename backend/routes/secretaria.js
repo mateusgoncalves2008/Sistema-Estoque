@@ -1990,6 +1990,65 @@ router.get("/secretaria/denuncias", async (req, res) => {
     }
 });
 
+router.patch("/secretaria/denuncias/:denunciaID/resposta", async (req, res) => {
+    try {
+        const denunciaID = texto(req.params.denunciaID);
+        const respostaSecretaria = String(req.body?.respostaSecretaria || "").trim();
+        if (!denunciaID) {
+            return res.status(400).json({ sucesso: false, erro: "ID da denúncia não informado." });
+        }
+        if (!respostaSecretaria) {
+            return res.status(400).json({ sucesso: false, erro: "Digite a resposta da Secretaria." });
+        }
+
+        const resposta = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "23_DENUNCIAS_SECRETARIA!A:Z",
+        });
+        const linhas = resposta.data.values || [];
+        if (!linhas.length) {
+            return res.status(400).json({ sucesso: false, erro: "A aba de denúncias está vazia ou não possui cabeçalhos." });
+        }
+
+        const normalizarCabecalho = (valor) => String(valor || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR");
+        const indiceID = linhas[0].findIndex((c) => normalizarCabecalho(c) === "denunciaid");
+        const indiceResposta = linhas[0].findIndex((c) => normalizarCabecalho(c) === "respostasecretaria");
+        if (indiceID < 0) {
+            return res.status(400).json({ sucesso: false, erro: "Adicione a coluna DenunciaID na aba 23_DENUNCIAS_SECRETARIA." });
+        }
+        if (indiceResposta < 0) {
+            return res.status(400).json({ sucesso: false, erro: "Adicione a coluna RespostaSecretaria na aba 23_DENUNCIAS_SECRETARIA para salvar a resposta." });
+        }
+
+        const indiceLinha = linhas.findIndex((linha, i) => i > 0 && texto(linha[indiceID]) === denunciaID);
+        if (indiceLinha < 1) {
+            return res.status(404).json({ sucesso: false, erro: "Denúncia não encontrada na planilha." });
+        }
+
+        const colunaA1 = (numero) => {
+            let resultado = "";
+            while (numero > 0) {
+                const resto = (numero - 1) % 26;
+                resultado = String.fromCharCode(65 + resto) + resultado;
+                numero = Math.floor((numero - 1) / 26);
+            }
+            return resultado;
+        };
+        const celula = colunaA1(indiceResposta + 1) + (indiceLinha + 1);
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "23_DENUNCIAS_SECRETARIA!" + celula,
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [[respostaSecretaria]] },
+        });
+        limparCache();
+        return res.json({ sucesso: true, mensagem: "Resposta da Secretaria salva." });
+    } catch (erro) {
+        console.error("Erro ao salvar resposta da denúncia:", erro);
+        return res.status(500).json({ sucesso: false, erro: erro.message || "Não foi possível salvar a resposta." });
+    }
+});
+
 /*
 ==========================================================
  CALENDÁRIO
