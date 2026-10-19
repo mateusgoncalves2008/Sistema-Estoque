@@ -1774,6 +1774,40 @@ $("#form-resposta-denuncia")?.addEventListener("submit", async (evento) => {
     }
 });
 
+
+document.addEventListener("click", async (e) => {
+    const botao = e.target.closest("#btn-alternar-bloqueio");
+    if (!botao || botao.hidden) return;
+    const bloqueioID = String(botao.dataset.bloqueioId || "").trim();
+    const acao = String(botao.dataset.acao || "").toUpperCase();
+    if (!bloqueioID || !["BLOQUEAR", "DESBLOQUEAR"].includes(acao)) {
+        toast("Não foi possível identificar o registro de bloqueio.");
+        return;
+    }
+    const textoOriginal = botao.textContent;
+    botao.disabled = true;
+    botao.textContent = "Salvando...";
+    try {
+        const resposta = await api("/secretaria/bloqueios-setor/" + encodeURIComponent(bloqueioID) + "/status", {
+            method: "PATCH",
+            body: JSON.stringify({ acao }),
+        });
+        const normalizarCabecalho = (valor) => String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[_\s-]/g, "").trim().toLocaleLowerCase("pt-BR");
+        const indiceStatus = registrosBloqueios.colunas.findIndex((c) => ["status", "situacao"].includes(normalizarCabecalho(c)));
+        const indiceID = registrosBloqueios.colunas.findIndex((c) => ["bloqueioid", "registroid", "id"].includes(normalizarCabecalho(c)));
+        const registro = registrosBloqueios.registros.find((linha) => indiceID >= 0 && String(linha[indiceID] || "").trim() === bloqueioID);
+        if (registro && indiceStatus >= 0) registro[indiceStatus] = resposta.statusBloqueio;
+        renderizarRegistrosPlanilha("#t-bloqueios", "#r-bloqueios", registrosBloqueios, "bloqueio");
+        toast(resposta.mensagem || "Status atualizado.");
+        $("#modal-registro-planilha").hidden = true;
+        document.body.classList.remove("modal-registro-aberto");
+    } catch (erro) {
+        toast(erro.message || "Não foi possível alterar o bloqueio.");
+        botao.disabled = false;
+        botao.textContent = textoOriginal;
+    }
+});
+
 document.addEventListener("click", (e) => {
     const registroCard = e.target.closest(".registro-card");
     if (registroCard) {
@@ -1809,6 +1843,22 @@ document.addEventListener("click", (e) => {
         );
         const botaoResposta = $("#btn-salvar-resposta-denuncia");
         if (botaoResposta) botaoResposta.dataset.denunciaId = idIndice >= 0 ? String(linha[idIndice] || "") : "";
+
+        const botaoBloqueio = $("#btn-alternar-bloqueio");
+        if (botaoBloqueio) {
+            botaoBloqueio.hidden = !bloqueios;
+            botaoBloqueio.dataset.bloqueioId = "";
+            if (bloqueios) {
+                const normalizarCabecalho = (valor) => String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[_\s-]/g, "").trim().toLocaleLowerCase("pt-BR");
+                const indiceBloqueioID = dados.colunas.findIndex((c) => ["bloqueioid", "registroid", "id"].includes(normalizarCabecalho(c)));
+                const indiceStatusBloqueio = dados.colunas.findIndex((c) => ["status", "situacao"].includes(normalizarCabecalho(c)));
+                const statusAtual = String(indiceStatusBloqueio >= 0 ? linha[indiceStatusBloqueio] : "").trim().toUpperCase();
+                botaoBloqueio.dataset.bloqueioId = indiceBloqueioID >= 0 ? String(linha[indiceBloqueioID] || "") : "";
+                botaoBloqueio.dataset.acao = statusAtual === "BLOQUEADO" ? "DESBLOQUEAR" : "BLOQUEAR";
+                botaoBloqueio.textContent = statusAtual === "BLOQUEADO" ? "Desbloquear usuário" : "Bloquear novamente";
+                botaoBloqueio.classList.toggle("btn-perigo", statusAtual !== "BLOQUEADO");
+            }
+        }
         modal.hidden = false;
         document.body.classList.add("modal-registro-aberto");
         return;
