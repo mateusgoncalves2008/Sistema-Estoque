@@ -1979,7 +1979,7 @@ router.patch("/secretaria/bloqueios-setor/:bloqueioID/status", async (req, res) 
         const colunasBloqueio = bloqueios[0];
         const colunasUsuario = usuarios[0];
         const indiceID = colunasBloqueio.findIndex((c) => ["bloqueioid", "registroid", "id"].includes(normalizarCabecalho(c)));
-        const indiceUsuarioID = colunasBloqueio.findIndex((c) => ["usuarioid", "userid", "idusuario"].includes(normalizarCabecalho(c)));
+        const indiceUsuarioID = colunasBloqueio.findIndex((c) => ["usuariobloqueadoid", "usuarioid", "userid", "idusuario"].includes(normalizarCabecalho(c)));
         const indiceStatus = colunasBloqueio.findIndex((c) => ["status", "situacao"].includes(normalizarCabecalho(c)));
         const indiceStatusUsuario = colunasUsuario.findIndex((c) => ["status", "situacao"].includes(normalizarCabecalho(c)));
         const indiceIDUsuario = colunasUsuario.findIndex((c) => ["usuarioid", "userid", "idusuario"].includes(normalizarCabecalho(c)));
