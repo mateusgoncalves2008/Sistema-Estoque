@@ -1493,6 +1493,57 @@ document.addEventListener("click", (e) => {
     go(b.dataset.p || b.dataset.go);
 });
 
+async function salvarAutorizacaoMatricula(evento) {
+    evento.preventDefault();
+
+    const campo = $("#matricula-autorizacao");
+    const mensagem = $("#mensagem-autorizacao-matricula");
+    const botao = $("#btn-salvar-autorizacao-matricula");
+    const matricula = campo?.value.trim();
+
+    if (!matricula) {
+        if (mensagem) mensagem.textContent = "Informe a matrícula do aluno.";
+        campo?.focus();
+        return;
+    }
+
+    if (botao) {
+        botao.disabled = true;
+        botao.textContent = "Salvando...";
+    }
+    if (mensagem) mensagem.textContent = "";
+
+    try {
+        const resposta = await api("/secretaria/autorizar-matricula", {
+            method: "POST",
+            body: JSON.stringify({ matricula }),
+        });
+
+        if (mensagem) {
+            mensagem.textContent = `Autorização salva. ID: ${resposta.cadastradoID} — Status: PENDENTE.`;
+        }
+        campo.value = "";
+        toast("Matrícula autorizada para cadastro próprio.");
+    } catch (erro) {
+        if (mensagem) mensagem.textContent = erro.message;
+        toast(erro.message);
+    } finally {
+        if (botao) {
+            botao.disabled = false;
+            botao.textContent = "Salvar autorização";
+        }
+    }
+}
+
+document.addEventListener("click", (e) => {
+    const acao = e.target.closest('[data-acao-usuario="autorizar"]');
+    if (acao) {
+        go("autorizar-matricula");
+    }
+});
+
+$("#form-autorizar-matricula")?.addEventListener("submit", salvarAutorizacaoMatricula);
+
 setInterval(() => {
     const c = $("#clk");
 
