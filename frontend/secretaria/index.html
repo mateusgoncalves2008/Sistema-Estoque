@@ -1023,6 +1023,18 @@
                 </form>
             </section>
         </div>
+        <div id="modal-registro-planilha" class="modal-registro-overlay" hidden>
+            <div class="modal-registro__fundo" data-fechar-modal-registro></div>
+            <section class="modal-registro" role="dialog" aria-modal="true" aria-labelledby="modal-registro-titulo">
+                <header class="modal-registro__cabecalho">
+                    <div class="modal-registro__icone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 7.5 7 10 4-2.5 7-5.5 7-10V6l-7-3Z"/><path d="M9 9h6M9 13h6"/></svg></div>
+                    <div class="modal-registro__titulos"><h2 id="modal-registro-titulo">Detalhes do registro</h2><p id="modal-registro-subtitulo">Informações da planilha</p></div>
+                    <button type="button" class="modal-registro__fechar" aria-label="Fechar modal" data-fechar-modal-registro>×</button>
+                </header>
+                <div class="modal-registro__conteudo"><div id="modal-registro-conteudo" class="modal-registro__campos"></div></div>
+                <footer class="modal-registro__acoes"><button type="button" class="btn" data-fechar-modal-registro>Fechar</button></footer>
+            </section>
+        </div>
         <div id="toast"></div>
 
         <script src="./secretaria.js"></script>
