@@ -1491,106 +1491,30 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
 router.get("/secretaria/acervo", async (req, res) => {
     try {
         const dados = await carregarDadosSecretaria();
-
-        const produtos = dados["02_PRODUTOS"] || [];
-
-        const categorias = dados["03_CATEGORIAS"] || [];
-
-        const subcategorias = dados["04_SUBCATEGORIAS"] || [];
-
-        const locais = dados["05_LOCAIS"] || [];
-
+        const produtos = dados["02_PRODUTOS"] || [], categorias = dados["03_CATEGORIAS"] || [];
+        const subcategorias = dados["04_SUBCATEGORIAS"] || [], locais = dados["05_LOCAIS"] || [];
         const estoque = dados["06_ESTOQUE_LOCAIS"] || [];
-
-        const mapaCategorias = new Map();
-
-        for (const linha of categorias.slice(1)) {
-            mapaCategorias.set(texto(linha[0]), linha[1] || "");
-        }
-
-        const mapaSubcategorias = new Map();
-
-        for (const linha of subcategorias.slice(1)) {
-            mapaSubcategorias.set(texto(linha[0]), linha[1] || "");
-        }
-
-        const mapaLocais = new Map();
-
-        for (const linha of locais.slice(1)) {
-            mapaLocais.set(texto(linha[0]), linha[1] || "");
-        }
-
+        const mapaCategorias = new Map(categorias.slice(1).map(l => [texto(l[0]), l[1] || ""]));
+        const mapaSubcategorias = new Map(subcategorias.slice(1).map(l => [texto(l[0]), l[2] || ""]));
+        const mapaLocais = new Map(locais.slice(1).map(l => [texto(l[0]), {nome:l[2]||"",codigo:l[1]||"",tipo:l[3]||"",status:l[6]||""}]));
         const estoquePorProduto = new Map();
-
         for (const linha of estoque.slice(1)) {
-            const produtoID = texto(linha[1]);
-
-            if (!produtoID) continue;
-
-            const atual = estoquePorProduto.get(produtoID) || 0;
-
-            estoquePorProduto.set(produtoID, atual + numero(linha[4]));
+            const produtoID = texto(linha[1]); if (!produtoID) continue;
+            const local = mapaLocais.get(texto(linha[2]));
+            const item = {estoqueID:texto(linha[0]),localID:texto(linha[2]),local:local?.nome||"Local não identificado",codigoLocal:local?.codigo||"",tipoLocal:local?.tipo||"",quantidade:numero(linha[3]),reservado:numero(linha[4]),disponivel:numero(linha[5]),indisponivel:numero(linha[6]),ultimaAtualizacao:linha[7]||"",statusLocal:linha[8]||""};
+            if (!estoquePorProduto.has(produtoID)) estoquePorProduto.set(produtoID, []);
+            estoquePorProduto.get(produtoID).push(item);
         }
-
-        const lista = produtos.slice(1).map((linha) => {
-            const produtoID = linha[0] || "";
-
-            const categoriaID = linha[4] || "";
-
-            const subcategoriaID = linha[5] || "";
-
-            return {
-                produtoID,
-
-                codigo: linha[1] || "",
-
-                nome: linha[2] || "",
-
-                autor: linha[3] || "",
-
-                categoriaID,
-
-                categoria: mapaCategorias.get(texto(categoriaID)) || "",
-
-                subcategoriaID,
-
-                subcategoria:
-                    mapaSubcategorias.get(texto(subcategoriaID)) || "",
-
-                local: mapaLocais.get(texto(linha[6])) || "",
-
-                estado: linha[7] || "",
-
-                status: linha[8] || "",
-
-                observacao: linha[9] || "",
-
-                estoque: estoquePorProduto.get(produtoID) || 0,
-            };
+        const lista = produtos.slice(1).filter(l=>texto(l[0])).map(linha=>{
+            const produtoID=texto(linha[0]),categoriaID=texto(linha[4]),subcategoriaID=texto(linha[5]),estoques=estoquePorProduto.get(produtoID)||[];
+            return {produtoID,codigo:linha[1]||"",nome:linha[2]||"",autor:linha[3]||"",categoriaID,categoria:mapaCategorias.get(categoriaID)||"Sem categoria",subcategoriaID,subcategoria:mapaSubcategorias.get(subcategoriaID)||"Sem subcategoria",estoqueMinimo:numero(linha[6]),estado:linha[7]||"",status:linha[8]||"",dataCadastro:linha[9]||"",observacao:linha[10]||"",quantidade:estoques.reduce((s,i)=>s+i.quantidade,0),reservado:estoques.reduce((s,i)=>s+i.reservado,0),disponivel:estoques.reduce((s,i)=>s+i.disponivel,0),indisponivel:estoques.reduce((s,i)=>s+i.indisponivel,0),estoques};
         });
-
-        res.json({
-            sucesso: true,
-            produtos: lista,
-            categorias: categorias.slice(1),
-            subcategorias: subcategorias.slice(1),
-            locais: locais.slice(1),
-        });
+        res.json({sucesso:true,produtos:lista,categorias:categorias.slice(1).filter(l=>texto(l[3]).toUpperCase()==="ATIVO").map(l=>({categoriaID:l[0],nome:l[1],descricao:l[2],status:l[3]})),subcategorias:subcategorias.slice(1).map(l=>({subcategoriaID:l[0],categoriaID:l[1],nome:l[2],descricao:l[3],status:l[4]})),locais:locais.slice(1).filter(l=>texto(l[6]).toUpperCase()==="ATIVO").map(l=>({localID:l[0],codigo:l[1],nome:l[2],tipo:l[3],responsavelID:l[4],descricao:l[5],status:l[6]}))});
     } catch (erro) {
         console.error("❌ Erro ao carregar acervo:", erro);
-
-        res.status(500).json({
-            sucesso: false,
-            erro: erro.message,
-        });
+        res.status(500).json({sucesso:false,erro:erro.message});
     }
 });
-
-/*
-==========================================================
- RESERVAS
-==========================================================
-*/
 
 router.get("/secretaria/reservas", async (req, res) => {
     try {
