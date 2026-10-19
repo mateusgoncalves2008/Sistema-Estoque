@@ -662,12 +662,14 @@ function uList() {
     );
 }
 
-// Filtros da lista de denúncias.
+// Filtros das listas de bloqueios e denúncias.
 document.addEventListener("input", (evento) => {
     if (evento.target.matches("#buscar-denuncia")) renderizarRegistrosPlanilha("#t-denuncias", "#denuncias-resumo", registrosDenuncias, "denúncia(s)");
+    if (evento.target.matches("#buscar-bloqueio")) renderizarRegistrosPlanilha("#t-bloqueios", "#bloqueios-resumo", registrosBloqueios, "bloqueio(s)");
 });
 document.addEventListener("change", (evento) => {
     if (evento.target.matches("#filtrar-status-denuncia")) renderizarRegistrosPlanilha("#t-denuncias", "#denuncias-resumo", registrosDenuncias, "denúncia(s)");
+    if (evento.target.matches("#filtrar-status-bloqueio")) renderizarRegistrosPlanilha("#t-bloqueios", "#bloqueios-resumo", registrosBloqueios, "bloqueio(s)");
 });
 
 // Delegação de eventos: funciona mesmo quando a tabela é recriada.
@@ -1246,7 +1248,12 @@ function renderizarRegistrosPlanilha(seletorTabela, seletorResumo, dados, singul
     const statusIndex = colunas.findIndex((c) => /status|situa/i.test(String(c)));
     const statusRegistro = (linha) => normalizar(statusIndex >= 0 ? linha[statusIndex] : "") || "PENDENTE";
 
-    if (!bloqueios) {
+    if (bloqueios) {
+        const pendentes = registros.filter((linha) => statusRegistro(linha) === "PENDENTE").length;
+        if ($("#bloqueios-total")) $("#bloqueios-total").textContent = registros.length;
+        if ($("#bloqueios-pendentes")) $("#bloqueios-pendentes").textContent = pendentes;
+        if ($("#bloqueios-outros")) $("#bloqueios-outros").textContent = registros.length - pendentes;
+    } else {
         const pendentes = registros.filter((linha) => statusRegistro(linha) !== "RESOLVIDO").length;
         const resolvidas = registros.length - pendentes;
         if ($("#denuncias-total")) $("#denuncias-total").textContent = registros.length;
@@ -1254,15 +1261,15 @@ function renderizarRegistrosPlanilha(seletorTabela, seletorResumo, dados, singul
         if ($("#denuncias-resolvidas")) $("#denuncias-resolvidas").textContent = resolvidas;
     }
 
-    const busca = !bloqueios ? String($("#buscar-denuncia")?.value || "").trim().toLocaleLowerCase("pt-BR") : "";
-    const filtroStatus = !bloqueios ? normalizar($("#filtrar-status-denuncia")?.value || "TODOS") : "TODOS";
+    const busca = String($(bloqueios ? "#buscar-bloqueio" : "#buscar-denuncia")?.value || "").trim().toLocaleLowerCase("pt-BR");
+    const filtroStatus = normalizar($(bloqueios ? "#filtrar-status-bloqueio" : "#filtrar-status-denuncia")?.value || "TODOS");
     const filtrados = registros.map((linha, indice) => ({ linha, indice })).filter(({ linha }) => {
         const textoRegistro = [ ...colunas.map((_, i) => String(linha[i] ?? "")) ].join(" ").toLocaleLowerCase("pt-BR");
         const correspondeBusca = !busca || textoRegistro.includes(busca);
         const status = statusRegistro(linha);
         const correspondeStatus = filtroStatus === "TODOS"
-            || (filtroStatus === "PENDENTE" && status !== "RESOLVIDO")
-            || (filtroStatus === "RESOLVIDO" && status === "RESOLVIDO");
+            || status === filtroStatus
+            || (filtroStatus === "PENDENTE" && status !== "RESOLVIDO" && status !== "ATIVO" && status !== "INATIVO" && status !== "BLOQUEADO");
         return correspondeBusca && correspondeStatus;
     });
 
@@ -1271,7 +1278,7 @@ function renderizarRegistrosPlanilha(seletorTabela, seletorResumo, dados, singul
     if (!colunas.length || !filtrados.length) {
         const mensagem = !colunas.length
             ? "A aba ainda não possui cabeçalhos ou não retornou dados."
-            : (registros.length ? "Nenhuma denúncia corresponde aos filtros selecionados." : "Nenhuma denúncia registrada até o momento.");
+            : (registros.length ? "Nenhum " + (bloqueios ? "bloqueio" : "denúncia") + " corresponde aos filtros selecionados." : "Nenhum " + (bloqueios ? "bloqueio" : "denúncia") + " registrado até o momento.");
         tabela.innerHTML = '<div class="registros-vazio"><span class="registros-vazio__icone">⌕</span><strong>' +
             escHtml(mensagem) + '</strong><p>Quando houver registros, eles aparecerão nesta área.</p></div>';
         return;
@@ -1289,15 +1296,16 @@ function renderizarRegistrosPlanilha(seletorTabela, seletorResumo, dados, singul
         const status = statusRegistro(linha);
         const detalhes = camposExibicaoPlanilha(colunas, linha).map((campo) => '<div class="bloqueio-detalhe-campo"><span>' +
             escHtml(campo.nome) + '</span><strong>' + escHtml(campo.valor) + '</strong></div>').join("");
+        const classeStatus = status === "RESOLVIDO" || status === "ATIVO" ? "resolvido" : (status === "INATIVO" || status === "BLOQUEADO" ? "bloqueado" : "pendente");
         return '<button type="button" class="registro-card ' + (bloqueios ? 'registro-card--bloqueio' : 'registro-card--denuncia') +
             '" data-registro-tipo="' + (bloqueios ? 'bloqueio' : 'denuncia') + '" data-registro-indice="' + indice + '">' +
             '<span class="registro-card__topo"><span class="registro-card__icone"><svg viewBox="0 0 24 24" aria-hidden="true">' +
             (bloqueios ? '<path d="M12 3 5 6v5c0 4.5 3 7.5 7 10 4-2.5 7-5.5 7-10V6l-7-3Z"/><path d="m9 9 6 6m0-6-6 6"/>' : '<path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v4m0 3h.01"/>') +
-            '</svg></span><span class="registro-card__status registro-card__status--' + (status === "RESOLVIDO" ? "resolvido" : "pendente") + '">' + escHtml(status) + '</span></span>' +
+            '</svg></span><span class="registro-card__status registro-card__status--' + classeStatus + '">' + escHtml(status) + '</span></span>' +
             '<strong class="registro-card__nome">' + escHtml(nome) + '</strong>' +
             (data ? '<span class="registro-card__data"><span>Data</span> ' + escHtml(data) + '</span>' : '') +
             (motivo ? '<span class="registro-card__motivo">' + escHtml(motivo) + '</span>' : '') +
-            '<span class="registro-card__rodape">Ver detalhes e responder <span aria-hidden="true">↗</span></span>' +
+            '<span class="registro-card__rodape">' + (bloqueios ? 'Ver detalhes do registro' : 'Ver detalhes e responder') + ' <span aria-hidden="true">↗</span></span>' +
             '<span class="registro-card__dados" hidden>' + detalhes + '</span></button>';
     }).join("") + '</div>';
 }
