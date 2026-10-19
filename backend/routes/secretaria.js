@@ -730,12 +730,19 @@ router.patch("/secretaria/usuarios/:usuarioID/status", async (req, res) => {
     try {
         const usuarioID = texto(req.params.usuarioID);
 
-        const status = texto(req.body.status);
+        const status = texto(req.body.status).toUpperCase();
 
         if (!usuarioID || !status) {
             return res.status(400).json({
                 sucesso: false,
                 erro: "UsuarioID e status são obrigatórios.",
+            });
+        }
+
+        if (!["ATIVO", "INATIVO"].includes(status)) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "O status deve ser ATIVO ou INATIVO.",
             });
         }
 
