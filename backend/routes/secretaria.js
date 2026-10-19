@@ -1201,7 +1201,7 @@ router.post("/secretaria/professor-turmas", async (req, res) => {
             .find(
                 (linha) =>
                     texto(linha[0]) === texto(turmaID) &&
-                    ["aberta", "ativo"].includes(normalizar(linha[5])),
+                    ["aberto", "ativo"].includes(normalizar(linha[5])),
             );
 
         if (!turma) {
