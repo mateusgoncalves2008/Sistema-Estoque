@@ -20,6 +20,8 @@ let prods = [];
 let reservas = [];
 let emps = [];
 let movs = [];
+let registrosBloqueios = { colunas: [], registros: [] };
+let registrosDenuncias = { colunas: [], registros: [] };
 
 let series = [];
 let teachers = [];
@@ -101,13 +103,18 @@ async function api(url, opcoes = {}) {
 
 async function carregarDados() {
     try {
-        const [dados, dadosTurmas, dadosUsuarios, dadosAcervo, dadosMovimentacoes] = await Promise.all([
+        const [dados, dadosTurmas, dadosUsuarios, dadosAcervo, dadosMovimentacoes, dadosBloqueios, dadosDenuncias] = await Promise.all([
             api("/secretaria/dashboard"),
             api("/secretaria/turmas"),
             api("/secretaria/usuarios"),
             api("/secretaria/acervo"),
             api("/secretaria/movimentacoes"),
+            api("/secretaria/bloqueios-setor"),
+            api("/secretaria/denuncias"),
         ]);
+
+        registrosBloqueios = { colunas: dadosBloqueios.colunas || [], registros: dadosBloqueios.registros || [] };
+        registrosDenuncias = { colunas: dadosDenuncias.colunas || [], registros: dadosDenuncias.registros || [] };
 
         indicadores = dados.indicadores || {};
 
@@ -1157,6 +1164,31 @@ function ring(p, t) {
     `;
 }
 
+
+function renderizarRegistrosPlanilha(seletorTabela, seletorResumo, dados, singular) {
+    const tabela = $(seletorTabela);
+    const resumo = $(seletorResumo);
+    if (!tabela || !resumo) return;
+
+    const colunas = dados.colunas || [];
+    const registros = dados.registros || [];
+    resumo.innerHTML = '<span class="registros-contador">' + registros.length + ' ' + singular + ' encontrado(s)</span>';
+
+    if (!colunas.length) {
+        tabela.innerHTML = '<p class="sub registros-vazio">A aba ainda não possui cabeçalhos ou não retornou dados.</p>';
+        return;
+    }
+
+    tabela.innerHTML = T(
+        colunas.map((coluna, i) => escHtml(coluna || ("Coluna " + (i + 1)))),
+        registros.map((linha) => colunas.map((_, i) => escHtml(linha[i] ?? "—") || "—")),
+    );
+
+    if (!registros.length) {
+        tabela.innerHTML = '<p class="sub registros-vazio">Nenhum registro encontrado nesta aba.</p>';
+    }
+}
+
 /* =========================================================
    RENDERIZAÇÃO
 ========================================================= */
@@ -1431,6 +1463,14 @@ const R = {
                             `,
                 ]),
         );
+    },
+
+    bloqueios() {
+        renderizarRegistrosPlanilha("#t-bloqueios", "#bloqueios-resumo", registrosBloqueios, "bloqueio(s)");
+    },
+
+    denuncias() {
+        renderizarRegistrosPlanilha("#t-denuncias", "#denuncias-resumo", registrosDenuncias, "denúncia(s)");
     },
 
     movs() {
