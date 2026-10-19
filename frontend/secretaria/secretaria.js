@@ -1674,6 +1674,59 @@ function go(p) {
 
 document.addEventListener("input", (e) => { if (e.target.matches("#acervo-busca")) R.acervo(); });
 document.addEventListener("change", (e) => { if (e.target.matches("#acervo-filtro-categoria, #acervo-filtro-local, #acervo-filtro-situacao")) R.acervo(); });
+$("#form-resposta-denuncia")?.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+    const campo = $("#resposta-denuncia");
+    const mensagem = $("#mensagem-resposta-denuncia");
+    const botao = $("#btn-salvar-resposta-denuncia");
+    const denunciaID = botao?.dataset.denunciaId;
+    const respostaSecretaria = campo?.value.trim();
+
+    if (!denunciaID) {
+        if (mensagem) mensagem.textContent = "Não foi possível identificar esta denúncia. Confira se a coluna DenunciaID existe na planilha.";
+        return;
+    }
+    if (!respostaSecretaria) {
+        if (mensagem) mensagem.textContent = "Digite a resposta da Secretaria antes de salvar.";
+        campo?.focus();
+        return;
+    }
+    if (botao) {
+        botao.disabled = true;
+        botao.textContent = "Salvando...";
+    }
+    if (mensagem) mensagem.textContent = "";
+    try {
+        await api("/secretaria/denuncias/" + encodeURIComponent(denunciaID) + "/resposta", {
+            method: "PATCH",
+            body: JSON.stringify({ respostaSecretaria })
+        });
+        if (mensagem) mensagem.textContent = "Resposta salva na planilha.";
+        toast("Resposta da Secretaria salva.");
+        await carregarDados();
+        const atualizados = registrosDenuncias;
+        const idIndice = atualizados.colunas.findIndex((c) =>
+            String(c || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR") === "denunciaid"
+        );
+        const indice = atualizados.registros.findIndex((linha) => String(linha[idIndice] || "") === denunciaID);
+        if (indice >= 0) {
+            const linha = atualizados.registros[indice];
+            const respostaIndice = atualizados.colunas.findIndex((c) =>
+                String(c || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR") === "respostasecretaria"
+            );
+            if (respostaIndice >= 0 && campo) campo.value = String(linha[respostaIndice] || "");
+        }
+    } catch (erro) {
+        if (mensagem) mensagem.textContent = erro.message || "Não foi possível salvar a resposta.";
+        toast(erro.message || "Não foi possível salvar a resposta.");
+    } finally {
+        if (botao) {
+            botao.disabled = false;
+            botao.textContent = "Salvar resposta";
+        }
+    }
+});
+
 document.addEventListener("click", (e) => {
     const registroCard = e.target.closest(".registro-card");
     if (registroCard) {
@@ -1691,6 +1744,24 @@ document.addEventListener("click", (e) => {
             '<div class="bloqueio-detalhe-campo"><span>' + escHtml(campo.nome) +
             '</span><strong>' + escHtml(campo.valor) + '</strong></div>'
         ).join("");
+
+        const areaResposta = $("#form-resposta-denuncia");
+        const campoResposta = $("#resposta-denuncia");
+        const mensagemResposta = $("#mensagem-resposta-denuncia");
+        if (areaResposta) areaResposta.hidden = bloqueios;
+        if (mensagemResposta) mensagemResposta.textContent = "";
+        if (campoResposta) {
+            const indiceResposta = dados.colunas.findIndex((c) =>
+                String(c || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR") === "respostasecretaria"
+            );
+            campoResposta.value = indiceResposta >= 0 ? String(linha[indiceResposta] || "") : "";
+            campoResposta.disabled = false;
+        }
+        const idIndice = dados.colunas.findIndex((c) =>
+            String(c || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR") === "denunciaid"
+        );
+        const botaoResposta = $("#btn-salvar-resposta-denuncia");
+        if (botaoResposta) botaoResposta.dataset.denunciaId = idIndice >= 0 ? String(linha[idIndice] || "") : "";
         modal.hidden = false;
         document.body.classList.add("modal-registro-aberto");
         return;
