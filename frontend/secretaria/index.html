@@ -473,39 +473,44 @@
                         </div>
                     </section>
 
-                    <!-- AUTORIZAR MATRÍCULA PARA CADASTRO PRÓPRIO -->
-                    <section class="page" id="p-autorizar-matricula">
-                        <div class="head">
-                            <div>
-                                <h1>Autorizar para cadastro próprio</h1>
-                                <p class="sub">Informe a matrícula do aluno para autorizar a criação da própria conta.</p>
-                            </div>
-                        </div>
-
-                        <div class="card usuarios-autorizacao">
+                    <!-- MODAL: AUTORIZAR MATRÍCULA PARA CADASTRO PRÓPRIO -->
+                    <div class="modal-autorizacao-overlay" id="modal-autorizar-matricula" hidden>
+                        <section class="modal-autorizacao" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-autorizacao">
+                            <header class="modal-autorizacao__cabecalho">
+                                <span class="modal-autorizacao__icone" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"></circle><path d="M2 20a7 7 0 0 1 14 0M19 8v6M22 11h-6"></path></svg>
+                                </span>
+                                <h2 id="titulo-modal-autorizacao">Autorizar para cadastro próprio</h2>
+                                <button class="modal-autorizacao__fechar" id="fechar-modal-autorizacao" type="button" aria-label="Fechar janela">×</button>
+                            </header>
                             <form id="form-autorizar-matricula">
-                                <div class="form">
-                                    <div>
-                                        <label for="matricula-autorizacao">MATRÍCULA</label>
-                                        <input
-                                            id="matricula-autorizacao"
-                                            name="matricula"
-                                            type="text"
-                                            autocomplete="off"
-                                            maxlength="50"
-                                            required
-                                            placeholder="Digite a matrícula do aluno"
-                                        />
+                                <div class="modal-autorizacao__conteudo">
+                                    <label for="matricula-autorizacao">MATRÍCULA <span aria-hidden="true">*</span></label>
+                                    <input
+                                        id="matricula-autorizacao"
+                                        name="matricula"
+                                        type="text"
+                                        autocomplete="off"
+                                        maxlength="50"
+                                        required
+                                        placeholder="Digite a matrícula do aluno"
+                                    />
+                                    <div class="modal-autorizacao__aviso">
+                                        <span aria-hidden="true">i</span>
+                                        <p>Ao salvar, será criado um registro na aba <strong>17_CADASTROS_AUTORIZADOS</strong> com o status <strong>PENDENTE</strong>.</p>
                                     </div>
+                                    <p class="modal-autorizacao__mensagem" id="mensagem-autorizacao-matricula" role="status" aria-live="polite"></p>
                                 </div>
-                                <div class="bar usuarios-autorizacao__acoes">
-                                    <button class="btn" id="btn-salvar-autorizacao-matricula" type="submit">Salvar autorização</button>
-                                    <button class="btn" type="button" data-go="usuarios">Voltar</button>
-                                </div>
-                                <p class="sub" id="mensagem-autorizacao-matricula" role="status" aria-live="polite"></p>
+                                <footer class="modal-autorizacao__acoes">
+                                    <button class="modal-autorizacao__cancelar" id="cancelar-modal-autorizacao" type="button">Cancelar</button>
+                                    <button class="modal-autorizacao__salvar" id="btn-salvar-autorizacao-matricula" type="submit">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h12l4 4v14H3V3zM7 3v6h10V3M7 21v-7h10v7"></path></svg>
+                                        Salvar autorização
+                                    </button>
+                                </footer>
                             </form>
-                        </div>
-                    </section>
+                        </section>
+                    </div>
 
                     <!-- ACERVO -->
                     <section class="page" id="p-acervo">
