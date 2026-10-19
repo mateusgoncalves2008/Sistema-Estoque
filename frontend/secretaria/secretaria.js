@@ -66,6 +66,23 @@ function obterUsuarioLogado() {
     }
 }
 
+// Sair da conta sem depender de onclick inline.
+document.addEventListener("click", (evento) => {
+    const botaoSair = evento.target.closest(".out");
+    if (!botaoSair) return;
+
+    evento.preventDefault();
+    sessionStorage.removeItem("usuarioLogado");
+    window.location.replace("/");
+});
+
+// Se a página voltar pelo histórico/cache após sair, retorna ao login.
+window.addEventListener("pageshow", () => {
+    if (!obterUsuarioLogado()) {
+        window.location.replace("/");
+    }
+});
+
 function headersAPI() {
     const usuario = obterUsuarioLogado();
 
