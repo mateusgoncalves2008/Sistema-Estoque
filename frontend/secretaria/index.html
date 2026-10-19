@@ -686,9 +686,55 @@
 
                     <!-- DENÚNCIAS -->
                     <section class="page" id="p-denuncias">
-                        <div class="head"><div><h1>Registrar denúncia</h1><p class="sub">Registros da aba 23_DENUNCIAS_SECRETARIA da planilha.</p></div></div>
-                        <div class="card">
-                            <div class="denuncias-resumo" id="denuncias-resumo"></div>
+                        <div class="denuncias-cabecalho">
+                            <div class="denuncias-cabecalho__texto">
+                                <span class="denuncias-etiqueta">ATENDIMENTO DA SECRETARIA</span>
+                                <h1>Denúncias recebidas</h1>
+                                <p>Acompanhe os relatos enviados à escola, consulte os detalhes e registre a resposta oficial da Secretaria.</p>
+                            </div>
+                            <div class="denuncias-cabecalho__icone" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v4m0 3h.01"/></svg>
+                            </div>
+                        </div>
+                        <div class="denuncias-indicadores" aria-label="Resumo das denúncias">
+                            <article class="denuncia-indicador">
+                                <span class="denuncia-indicador__icone denuncia-indicador__icone--total">▤</span>
+                                <span class="denuncia-indicador__rotulo">Total de denúncias</span>
+                                <strong id="denuncias-total">0</strong>
+                            </article>
+                            <article class="denuncia-indicador">
+                                <span class="denuncia-indicador__icone denuncia-indicador__icone--pendente">◷</span>
+                                <span class="denuncia-indicador__rotulo">Aguardando ação</span>
+                                <strong id="denuncias-pendentes">0</strong>
+                            </article>
+                            <article class="denuncia-indicador">
+                                <span class="denuncia-indicador__icone denuncia-indicador__icone--resolvido">✓</span>
+                                <span class="denuncia-indicador__rotulo">Resolvidas</span>
+                                <strong id="denuncias-resolvidas">0</strong>
+                            </article>
+                        </div>
+                        <div class="card denuncias-lista">
+                            <div class="denuncias-lista__cabecalho">
+                                <div>
+                                    <h2>Lista de denúncias</h2>
+                                    <p class="sub">Selecione um registro para ver todas as informações e responder.</p>
+                                </div>
+                                <div class="denuncias-resumo" id="denuncias-resumo"></div>
+                            </div>
+                            <div class="denuncias-filtros">
+                                <label class="denuncias-busca" for="buscar-denuncia">
+                                    <span aria-hidden="true">⌕</span>
+                                    <input id="buscar-denuncia" type="search" placeholder="Buscar por nome, motivo ou ID..." autocomplete="off">
+                                </label>
+                                <label class="denuncias-filtro-status" for="filtrar-status-denuncia">
+                                    <span>Status</span>
+                                    <select id="filtrar-status-denuncia">
+                                        <option value="TODOS">Todos os status</option>
+                                        <option value="PENDENTE">Pendente</option>
+                                        <option value="RESOLVIDO">Resolvido</option>
+                                    </select>
+                                </label>
+                            </div>
                             <div id="t-denuncias" class="secretaria-registros-tabela"></div>
                         </div>
                     </section>
