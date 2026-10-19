@@ -1535,10 +1535,43 @@ async function salvarAutorizacaoMatricula(evento) {
     }
 }
 
+function abrirModalAutorizacaoMatricula() {
+    const modal = $("#modal-autorizar-matricula");
+    if (!modal) return;
+    modal.hidden = false;
+    document.body.classList.add("modal-autorizacao-aberto");
+    window.requestAnimationFrame(() => $("#matricula-autorizacao")?.focus());
+}
+
+function fecharModalAutorizacaoMatricula() {
+    const modal = $("#modal-autorizar-matricula");
+    if (!modal) return;
+    modal.hidden = true;
+    document.body.classList.remove("modal-autorizacao-aberto");
+    $('[data-acao-usuario="autorizar"]')?.focus();
+}
+
 document.addEventListener("click", (e) => {
     const acao = e.target.closest('[data-acao-usuario="autorizar"]');
     if (acao) {
-        go("autorizar-matricula");
+        e.preventDefault();
+        abrirModalAutorizacaoMatricula();
+        return;
+    }
+
+    if (e.target.closest("#fechar-modal-autorizacao, #cancelar-modal-autorizacao")) {
+        fecharModalAutorizacaoMatricula();
+        return;
+    }
+
+    if (e.target.id === "modal-autorizar-matricula") {
+        fecharModalAutorizacaoMatricula();
+    }
+});
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$("#modal-autorizar-matricula")?.hidden) {
+        fecharModalAutorizacaoMatricula();
     }
 });
 
