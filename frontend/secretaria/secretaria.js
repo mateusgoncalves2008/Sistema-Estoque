@@ -704,20 +704,33 @@ async function addUser() {
    RESERVAS
 ========================================================= */
 
-async function resv(reservaID, status) {
+async function resv(reservaID, acao) {
+    const rotas = {
+        Aprovada: "aprovar",
+        Recusada: "recusar",
+        Cancelada: "cancelar",
+    };
+    const rota = rotas[acao];
+
+    if (!rota) return toast("Ação de reserva inválida.");
+
     try {
+        const corpo = rota === "aprovar"
+            ? { aprovadoPor: obterUsuarioLogado()?.id || "" }
+            : {};
+
         await api(
-            `/secretaria/reservas/${encodeURIComponent(reservaID)}/status`,
+            `/secretaria/reservas/${encodeURIComponent(reservaID)}/${rota}`,
             {
                 method: "PATCH",
-                body: JSON.stringify({
-                    status: status === "Aprovada" ? "APROVADA" : "CANCELADA",
-                }),
+                body: JSON.stringify(corpo),
             },
         );
 
         toast(
-            status === "Aprovada" ? "Reserva aprovada." : "Reserva cancelada.",
+            rota === "aprovar" ? "Reserva aprovada."
+                : rota === "recusar" ? "Reserva recusada."
+                : "Reserva cancelada.",
         );
 
         await carregarDados();
@@ -1335,14 +1348,21 @@ const R = {
                     ? `
                                 <button
                                     class="btn s"
-                                    onclick="resv('${r.id}', 'Aprovada')"
+                                    onclick="resv('${escHtml(r.id)}', 'Aprovada')"
                                 >
                                     Aprovar
                                 </button>
 
                                 <button
                                     class="btn s d"
-                                    onclick="resv('${r.id}', 'Cancelada')"
+                                    onclick="resv('${escHtml(r.id)}', 'Recusada')"
+                                >
+                                    Recusar
+                                </button>
+
+                                <button
+                                    class="btn s d"
+                                    onclick="resv('${escHtml(r.id)}', 'Cancelada')"
                                 >
                                     Cancelar
                                 </button>
