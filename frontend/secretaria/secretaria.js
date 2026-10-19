@@ -101,11 +101,12 @@ async function api(url, opcoes = {}) {
 
 async function carregarDados() {
     try {
-        const [dados, dadosTurmas, dadosUsuarios, dadosAcervo] = await Promise.all([
+        const [dados, dadosTurmas, dadosUsuarios, dadosAcervo, dadosMovimentacoes] = await Promise.all([
             api("/secretaria/dashboard"),
             api("/secretaria/turmas"),
             api("/secretaria/usuarios"),
             api("/secretaria/acervo"),
+            api("/secretaria/movimentacoes"),
         ]);
 
         indicadores = dados.indicadores || {};
@@ -161,12 +162,20 @@ async function carregarDados() {
                       : "Devolvido",
         }));
 
-        movs = (dados.movimentacoes || []).map((m) => [
-            m.dataHora ? new Date(m.dataHora).toLocaleDateString("pt-BR") : "-",
-            formatarTipoMovimentacao(m.tipo),
-            m.usuario || "Usuário",
-            m.produto || "Produto",
-        ]);
+        movs = (dadosMovimentacoes.movimentacoes || []).map((m) => {
+            const data = m.data ? new Date(String(m.data).replace(" ", "T")) : null;
+            return [
+                m.movimentacaoID || "-",
+                data && !Number.isNaN(data.getTime()) ? data.toLocaleString("pt-BR") : (m.data || "-"),
+                formatarTipoMovimentacao(m.tipo),
+                m.usuario || m.usuarioID || "—",
+                m.produto || m.produtoID || "—",
+                String(m.quantidade ?? 0),
+                m.localOrigem || "—",
+                m.localDestino || "—",
+                m.observacao || "—",
+            ];
+        });
 
         series = montarTurmas(dadosTurmas.turmas || []);
 
@@ -1425,11 +1434,10 @@ const R = {
 
     movs() {
         const filtro = $("#mf")?.value || "";
-
-        const dados = movs.filter((m) => !filtro || m[1] === filtro);
+        const dados = movs.filter((m) => !filtro || m[2] === filtro);
 
         $("#mt").innerHTML = T(
-            ["Data", "Tipo", "Pessoa", "Item"],
+            ["ID", "Data e hora", "Tipo", "Pessoa", "Item", "Quantidade", "Local de origem", "Local de destino", "Observação"],
             dados.map((m) => m.map((valor) => escHtml(valor))),
         );
     },
