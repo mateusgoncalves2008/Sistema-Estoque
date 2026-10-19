@@ -601,18 +601,17 @@ async function alternarStatusTurma(){
 
 function uList() {
     const busca = ($("#uq")?.value || "").trim().toLocaleLowerCase("pt-BR");
-
     const filtro = $("#uf")?.value || "";
 
     const filtrados = users.filter((u) => {
         const nome = String(u.n || "").toLocaleLowerCase("pt-BR");
-        const nomeOk = nome.startsWith(busca);
-        const perfilOk = !filtro || u.p === filtro;
-
-        return nomeOk && perfilOk;
+        return nome.startsWith(busca) && (!filtro || u.p === filtro);
     });
 
-    $("#ut2").innerHTML = T(
+    const tabela = $("#ut2");
+    if (!tabela) return;
+
+    tabela.innerHTML = T(
         ["Nome", "Turma", "Turno", "Situação", "Ações"],
         filtrados.map((u) => [
             `<b>${escHtml(u.n)}</b>`,
@@ -621,34 +620,64 @@ function uList() {
             u.a ? tg("Ativo") : tg("Inativo", "m"),
             `
                 <button
+                    type="button"
                     class="btn s"
+                    data-usuario-status="${escHtml(u.id || "")}"
+                    data-status-atual="${u.a ? "ATIVO" : "INATIVO"}"
                     ${u.id ? "" : "disabled"}
-                    onclick="togUser('${u.id}', ${u.a})"
-                >
-                    ${u.a ? "Desativar" : "Reativar"}
-                </button>
+                >${u.a ? "Desativar" : "Reativar"}</button>
             `,
         ]),
     );
 }
 
-async function togUser(usuarioID, ativo) {
+// Delegação de eventos: funciona mesmo quando a tabela é recriada.
+document.addEventListener("click", (evento) => {
+    const botao = evento.target.closest("#ut2 button[data-usuario-status]");
+    if (!botao || botao.disabled) return;
+
+    evento.preventDefault();
+    const usuarioID = botao.dataset.usuarioStatus;
+    const statusAtual = botao.dataset.statusAtual;
+
+    if (!usuarioID || !["ATIVO", "INATIVO"].includes(statusAtual)) {
+        toast("Não foi possível identificar o usuário.");
+        return;
+    }
+
+    togUser(usuarioID, statusAtual);
+});
+
+async function togUser(usuarioID, statusAtual) {
+    const tabela = $("#ut2");
+    const botao = tabela?.querySelector(
+        `button[data-usuario-status="${CSS.escape(usuarioID)}"]`,
+    );
+
+    if (botao) {
+        botao.disabled = true;
+        botao.textContent = "Salvando...";
+    }
+
     try {
+        const novoStatus = statusAtual === "ATIVO" ? "INATIVO" : "ATIVO";
+
         await api(
             `/secretaria/usuarios/${encodeURIComponent(usuarioID)}/status`,
             {
                 method: "PATCH",
-                body: JSON.stringify({
-                    status: ativo ? "INATIVO" : "ATIVO",
-                }),
+                body: JSON.stringify({ status: novoStatus }),
             },
         );
 
-        toast(ativo ? "Usuário desativado." : "Usuário reativado.");
-
+        toast(novoStatus === "INATIVO" ? "Usuário desativado." : "Usuário reativado.");
         await carregarDados();
     } catch (erro) {
-        toast(erro.message);
+        toast(erro.message || "Não foi possível alterar o status.");
+        if (botao) {
+            botao.disabled = false;
+            botao.textContent = statusAtual === "ATIVO" ? "Desativar" : "Reativar";
+        }
     }
 }
 
