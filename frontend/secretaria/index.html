@@ -124,6 +124,16 @@
                         <span>Movimentações</span>
                     </button>
 
+                    <button data-p="bloqueios">
+                        <svg class="i" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m5.6 5.6 12.8 12.8"></path></svg>
+                        <span>Bloquear usuário</span>
+                    </button>
+
+                    <button data-p="denuncias">
+                        <svg class="i" viewbox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"></path><path d="M12 9v4m0 3h.01"></path></svg>
+                        <span>Registrar denúncia</span>
+                    </button>
+
                     <button data-p="avisos">
                         <svg class="i" viewbox="0 0 24 24">
                             <use href="#ic-avisos"></use>
@@ -654,6 +664,24 @@
                             </div>
 
                             <div id="mt"></div>
+                        </div>
+                    </section>
+
+                    <!-- BLOQUEIOS DE SETOR -->
+                    <section class="page" id="p-bloqueios">
+                        <div class="head"><div><h1>Bloquear usuário</h1><p class="sub">Registros da aba 22_BLOQUEIOS_SETOR da planilha.</p></div></div>
+                        <div class="card">
+                            <div class="bloqueios-resumo" id="bloqueios-resumo"></div>
+                            <div id="t-bloqueios" class="secretaria-registros-tabela"></div>
+                        </div>
+                    </section>
+
+                    <!-- DENÚNCIAS -->
+                    <section class="page" id="p-denuncias">
+                        <div class="head"><div><h1>Registrar denúncia</h1><p class="sub">Registros da aba 23_DENUNCIAS_SECRETARIA da planilha.</p></div></div>
+                        <div class="card">
+                            <div class="denuncias-resumo" id="denuncias-resumo"></div>
+                            <div id="t-denuncias" class="secretaria-registros-tabela"></div>
                         </div>
                     </section>
 
