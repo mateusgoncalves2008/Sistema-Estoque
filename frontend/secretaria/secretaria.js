@@ -98,14 +98,15 @@ async function api(url, opcoes = {}) {
 
 async function carregarDados() {
     try {
-        const [dados, dadosTurmas] = await Promise.all([
+        const [dados, dadosTurmas, dadosUsuarios] = await Promise.all([
             api("/secretaria/dashboard"),
             api("/secretaria/turmas"),
+            api("/secretaria/usuarios"),
         ]);
 
         indicadores = dados.indicadores || {};
 
-        users = (dados.usuarios || []).map((u) => ({
+        users = (dadosUsuarios.usuarios || []).map((u) => ({
             id: u.usuarioID,
             n: u.nome,
             email: u.email,
@@ -604,13 +605,13 @@ async function alternarStatusTurma(){
 ========================================================= */
 
 function uList() {
-    const busca = ($("#uq")?.value || "").toLowerCase();
+    const busca = ($("#uq")?.value || "").trim().toLocaleLowerCase("pt-BR");
 
     const filtro = $("#uf")?.value || "";
 
     const filtrados = users.filter((u) => {
-        const nomeOk = u.n.toLowerCase().includes(busca);
-
+        const nome = String(u.n || "").toLocaleLowerCase("pt-BR");
+        const nomeOk = nome.startsWith(busca);
         const perfilOk = !filtro || u.p === filtro;
 
         return nomeOk && perfilOk;
