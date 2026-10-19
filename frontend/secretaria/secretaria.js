@@ -224,6 +224,7 @@ function formatarStatusReserva(status) {
         APROVADA: "Aprovada",
         CANCELADA: "Cancelada",
         REJEITADA: "Rejeitada",
+        RECUSADA: "Recusada",
         DEVOLVIDO: "Devolvido",
     };
 
