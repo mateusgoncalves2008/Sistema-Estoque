@@ -1173,7 +1173,7 @@ function ring(p, t) {
 
 function formatarNomeCampoPlanilha(nome) {
     const original = String(nome || "").trim();
-    const normalizado = original.replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR");
+    const normalizado = original.replace(/[_\s-]/g, "").toLocaleLowerCase("pt-BR");
     const nomes = {
         denunciadonome: "Denunciado",
         denunciantenome: "Denunciante",
@@ -1195,17 +1195,17 @@ function formatarNomeCampoPlanilha(nome) {
         .replace(/[_-]+/g, " ")
         .replace(/\s+/g, " ")
         .trim()
-        .replace(/^\p{L}/u, (letra) => letra.toLocaleUpperCase("pt-BR"));
+        .replace(/^([a-zá-ú])/i, (letra) => letra.toLocaleUpperCase("pt-BR"));
 }
 
 function separarDataHora(valor) {
     const texto = String(valor ?? "").trim();
     if (!texto) return { data: "", hora: "" };
-    const iso = texto.match(/^(\\d{4})-(\\d{2})-(\\d{2})[T ](\\d{2}:\\d{2}(?::\\d{2})?)/);
+    const iso = texto.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}:\d{2}(?::\d{2})?)/);
     if (iso) return { data: iso[3] + "/" + iso[2] + "/" + iso[1], hora: iso[4] };
-    const brasileira = texto.match(/^(\\d{1,2}\\/\\d{1,2}\\/\\d{2,4})[T ]+(\\d{1,2}:\\d{2}(?::\\d{2})?)/);
+    const brasileira = texto.match(/^(\d{1,2}\/\d{1,2}\/\d{2,4})[T ]+(\d{1,2}:\d{2}(?::\d{2})?)/);
     if (brasileira) return { data: brasileira[1], hora: brasileira[2] };
-    const dataSozinha = texto.match(/^\\d{4}-\\d{2}-\\d{2}$/);
+    const dataSozinha = texto.match(/^\d{4}-\d{2}-\d{2}$/);
     if (dataSozinha) return { data: texto.split("-").reverse().join("/"), hora: "" };
     return { data: texto, hora: "" };
 }
@@ -1213,7 +1213,7 @@ function separarDataHora(valor) {
 function camposExibicaoPlanilha(colunas, linha) {
     const campos = [];
     colunas.forEach((coluna, i) => {
-        const chave = String(coluna || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR");
+        const chave = String(coluna || "").replace(/[_\s-]/g, "").toLocaleLowerCase("pt-BR");
         const valor = String(linha[i] ?? "").trim() || "—";
         if (chave === "datahora") {
             const partes = separarDataHora(valor === "—" ? "" : valor);
@@ -1712,13 +1712,13 @@ $("#form-resposta-denuncia")?.addEventListener("submit", async (evento) => {
         await carregarDados();
         const atualizados = registrosDenuncias;
         const idIndice = atualizados.colunas.findIndex((c) =>
-            String(c || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR") === "denunciaid"
+            String(c || "").replace(/[_\s-]/g, "").toLocaleLowerCase("pt-BR") === "denunciaid"
         );
         const indice = atualizados.registros.findIndex((linha) => String(linha[idIndice] || "") === denunciaID);
         if (indice >= 0) {
             const linha = atualizados.registros[indice];
             const respostaIndice = atualizados.colunas.findIndex((c) =>
-                String(c || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR") === "respostasecretaria"
+                String(c || "").replace(/[_\s-]/g, "").toLocaleLowerCase("pt-BR") === "respostasecretaria"
             );
             if (respostaIndice >= 0 && campo) campo.value = String(linha[respostaIndice] || "");
         }
@@ -1758,13 +1758,13 @@ document.addEventListener("click", (e) => {
         if (mensagemResposta) mensagemResposta.textContent = "";
         if (campoResposta) {
             const indiceResposta = dados.colunas.findIndex((c) =>
-                String(c || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR") === "respostasecretaria"
+                String(c || "").replace(/[_\s-]/g, "").toLocaleLowerCase("pt-BR") === "respostasecretaria"
             );
             campoResposta.value = indiceResposta >= 0 ? String(linha[indiceResposta] || "") : "";
             campoResposta.disabled = false;
         }
         const idIndice = dados.colunas.findIndex((c) =>
-            String(c || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR") === "denunciaid"
+            String(c || "").replace(/[_\s-]/g, "").toLocaleLowerCase("pt-BR") === "denunciaid"
         );
         const botaoResposta = $("#btn-salvar-resposta-denuncia");
         if (botaoResposta) botaoResposta.dataset.denunciaId = idIndice >= 0 ? String(linha[idIndice] || "") : "";
