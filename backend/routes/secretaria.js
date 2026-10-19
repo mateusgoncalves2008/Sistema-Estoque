@@ -146,6 +146,8 @@ async function carregarDadosSecretaria() {
         "19_TURMAS!A:G",
         "20_DISCIPLINAS!A:D",
         "21_PROFESSOR_TURMAS!A:F",
+        "22_BLOQUEIOS_SETOR!A:Z",
+        "23_DENUNCIAS_SECRETARIA!A:Z",
     ];
 
     
@@ -1950,6 +1952,41 @@ router.get("/secretaria/movimentacoes", async (req, res) => {
             sucesso: false,
             erro: erro.message,
         });
+    }
+});
+
+
+/* =========================================================
+   BLOQUEIOS DE SETOR E DENÚNCIAS DA SECRETARIA
+   Retorna cabeçalhos e registros existentes nas abas.
+========================================================= */
+router.get("/secretaria/bloqueios-setor", async (req, res) => {
+    try {
+        const dados = await carregarDadosSecretaria();
+        const linhas = dados["22_BLOQUEIOS_SETOR"] || [];
+        return res.json({
+            sucesso: true,
+            colunas: linhas[0] || [],
+            registros: linhas.slice(1).filter((linha) => linha.some((valor) => texto(valor) !== "")),
+        });
+    } catch (erro) {
+        console.error("Erro ao carregar bloqueios de setor:", erro);
+        return res.status(500).json({ sucesso: false, erro: erro.message });
+    }
+});
+
+router.get("/secretaria/denuncias", async (req, res) => {
+    try {
+        const dados = await carregarDadosSecretaria();
+        const linhas = dados["23_DENUNCIAS_SECRETARIA"] || [];
+        return res.json({
+            sucesso: true,
+            colunas: linhas[0] || [],
+            registros: linhas.slice(1).filter((linha) => linha.some((valor) => texto(valor) !== "")),
+        });
+    } catch (erro) {
+        console.error("Erro ao carregar denúncias da Secretaria:", erro);
+        return res.status(500).json({ sucesso: false, erro: erro.message });
     }
 });
 
