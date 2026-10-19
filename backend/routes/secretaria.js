@@ -2012,17 +2012,39 @@ router.patch("/secretaria/denuncias/:denunciaID/resposta", async (req, res) => {
 
         const normalizarCabecalho = (valor) => String(valor || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR");
         const indiceID = linhas[0].findIndex((c) => normalizarCabecalho(c) === "denunciaid");
-        const indiceResposta = linhas[0].findIndex((c) => normalizarCabecalho(c) === "respostasecretaria");
+        let indiceResposta = linhas[0].findIndex((c) => normalizarCabecalho(c) === "respostasecretaria");
         const indiceDataAnalise = linhas[0].findIndex((c) => normalizarCabecalho(c) === "dataanalise");
         const indiceStatus = linhas[0].findIndex((c) => normalizarCabecalho(c) === "status");
+
         if (indiceID < 0) {
             return res.status(400).json({ sucesso: false, erro: "Adicione a coluna DenunciaID na aba 23_DENUNCIAS_SECRETARIA." });
         }
-        if (indiceResposta < 0) {
-            return res.status(400).json({ sucesso: false, erro: "Adicione a coluna RespostaSecretaria na aba 23_DENUNCIAS_SECRETARIA para salvar a resposta." });
-        }
         if (indiceDataAnalise < 0 || indiceDataAnalise !== 12) {
             return res.status(400).json({ sucesso: false, erro: "Confira se a coluna M da aba 23_DENUNCIAS_SECRETARIA se chama DataAnalise." });
+        }
+        if (indiceResposta < 0) {
+            // Cria o cabeçalho na primeira coluna livre, preservando a coluna M (DataAnalise).
+            let ultimaColunaPreenchida = linhas[0].length - 1;
+            while (ultimaColunaPreenchida >= 0 && !texto(linhas[0][ultimaColunaPreenchida])) {
+                ultimaColunaPreenchida--;
+            }
+            indiceResposta = Math.max(ultimaColunaPreenchida + 1, 13);
+            const colunaA1 = (numero) => {
+                let resultado = "";
+                while (numero > 0) {
+                    const resto = (numero - 1) % 26;
+                    resultado = String.fromCharCode(65 + resto) + resultado;
+                    numero = Math.floor((numero - 1) / 26);
+                }
+                return resultado;
+            };
+            await sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range: "23_DENUNCIAS_SECRETARIA!" + colunaA1(indiceResposta + 1) + "1",
+                valueInputOption: "RAW",
+                requestBody: { values: [["RespostaSecretaria"]] },
+            });
+            linhas[0][indiceResposta] = "RespostaSecretaria";
         }
         if (indiceStatus < 0) {
             return res.status(400).json({ sucesso: false, erro: "Adicione a coluna Status na aba 23_DENUNCIAS_SECRETARIA." });
