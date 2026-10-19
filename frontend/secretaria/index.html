@@ -1032,7 +1032,13 @@
                     <button type="button" class="modal-registro__fechar" aria-label="Fechar modal" data-fechar-modal-registro>×</button>
                 </header>
                 <div class="modal-registro__conteudo"><div id="modal-registro-conteudo" class="modal-registro__campos"></div></div>
-                <footer class="modal-registro__acoes"><button type="button" class="btn" data-fechar-modal-registro>Fechar</button></footer>
+                <form id="form-resposta-denuncia" class="form-resposta-denuncia" hidden>
+                    <label for="resposta-denuncia">Resposta da Secretaria</label>
+                    <textarea id="resposta-denuncia" rows="4" maxlength="5000" placeholder="Escreva aqui a resposta oficial da Secretaria..."></textarea>
+                    <p id="mensagem-resposta-denuncia" class="sub" role="status" aria-live="polite"></p>
+                    <div class="modal-registro__acoes"><button type="submit" id="btn-salvar-resposta-denuncia" class="btn">Salvar resposta</button><button type="button" class="btn btn-secundario" data-fechar-modal-registro>Fechar</button></div>
+                </form>
+                <footer class="modal-registro__acoes" id="acoes-modal-registro"><button type="button" class="btn" data-fechar-modal-registro>Fechar</button></footer>
             </section>
         </div>
         <div id="toast"></div>
