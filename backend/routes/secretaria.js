@@ -1700,6 +1700,44 @@ router.patch("/secretaria/reservas/:reservaID/cancelar", async (req, res) => {
 
 /*
 ==========================================================
+ RECUSAR RESERVA
+==========================================================
+*/
+
+router.patch("/secretaria/reservas/:reservaID/recusar", async (req, res) => {
+    try {
+        const reservaID = texto(req.params.reservaID);
+        const dados = await carregarDadosSecretaria();
+        const reservas = dados["08_RESERVAS"] || [];
+        const indice = reservas.findIndex(
+            (linha, index) => index > 0 && texto(linha[0]) === reservaID,
+        );
+
+        if (indice === -1) {
+            return res.status(404).json({ sucesso: false, erro: "Reserva não encontrada." });
+        }
+
+        if (texto(reservas[indice][9]).toUpperCase() !== "PENDENTE") {
+            return res.status(409).json({ sucesso: false, erro: "Somente reservas pendentes podem ser recusadas." });
+        }
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `08_RESERVAS!J${indice + 1}`,
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [["RECUSADA"]] },
+        });
+
+        limparCache();
+        return res.json({ sucesso: true, mensagem: "Reserva recusada." });
+    } catch (erro) {
+        console.error("❌ Erro ao recusar reserva:", erro);
+        return res.status(500).json({ sucesso: false, erro: erro.message });
+    }
+});
+
+/*
+==========================================================
  EMPRÉSTIMOS
 ==========================================================
 */
