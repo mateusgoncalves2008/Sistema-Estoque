@@ -630,6 +630,109 @@ router.post("/secretaria/usuarios", async (req, res) => {
     }
 });
 
+
+/*
+==========================================================
+ CADASTRAR ALUNO PELA SECRETARIA
+==========================================================
+*/
+router.post("/secretaria/alunos", async (req, res) => {
+    try {
+        const identificador = texto(req.body.identificador);
+        const nome = texto(req.body.nome);
+        const email = texto(req.body.email).toLowerCase();
+        const senha = String(req.body.senha || "");
+        const ano = texto(req.body.ano);
+        const turma = texto(req.body.turma);
+        const turno = texto(req.body.turno);
+        const idade = texto(req.body.idade);
+
+        if (![identificador, nome, email, senha, ano, turma, turno, idade].every(Boolean)) {
+            return res.status(400).json({ sucesso: false, erro: "Preencha todos os campos do aluno." });
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ sucesso: false, erro: "Informe um e-mail válido." });
+        }
+        if (senha.length < 8 || senha.length > 128) {
+            return res.status(400).json({ sucesso: false, erro: "A senha inicial deve ter entre 8 e 128 caracteres." });
+        }
+        if (!/^\d{1,2}$/.test(idade) || Number(idade) < 1 || Number(idade) > 120) {
+            return res.status(400).json({ sucesso: false, erro: "Informe uma idade válida." });
+        }
+
+        const dados = await carregarDadosSecretaria();
+        const usuarios = dados["01_USUARIOS"] || [];
+        const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
+        if (usuarios.slice(1).some(l => normalizar(l[2]) === normalizar(email))) {
+            return res.status(409).json({ sucesso: false, erro: "Já existe uma conta com esse e-mail." });
+        }
+        if (autorizados.slice(1).some(l => normalizar(l[2]) === normalizar(identificador))) {
+            return res.status(409).json({ sucesso: false, erro: "Esse identificador já está cadastrado ou autorizado." });
+        }
+
+        const usuarioID = gerarID("USR", usuarios, 0);
+        const cadastradoID = gerarID("AUT", autorizados, 0);
+        const salt = crypto.randomBytes(16).toString("hex");
+        const senhaHash = hashSenha(senha, salt);
+
+        await sheets.spreadsheets.values.batchUpdate({
+            spreadsheetId: SPREADSHEET_ID,
+            requestBody: {
+                valueInputOption: "USER_ENTERED",
+                data: [
+                    { range: "01_USUARIOS!A:K", values: [[usuarioID, nome, email, senhaHash, salt, "ALUNO", "ALUNO", "", "ATIVO", agora(), ""]] },
+                    { range: "17_CADASTROS_AUTORIZADOS!A:J", values: [[cadastradoID, "ALUNO", identificador, usuarioID, nome, ano, turma, turno, idade, "CADASTRADO"]] }
+                ]
+            }
+        });
+
+        limparCache();
+        return res.json({ sucesso: true, mensagem: "Aluno cadastrado nas duas abas.", usuarioID, cadastradoID });
+    } catch (erro) {
+        console.error("Erro ao cadastrar aluno pela Secretaria:", erro);
+        return res.status(500).json({ sucesso: false, erro: "Não foi possível cadastrar o aluno." });
+    }
+});
+
+/*
+==========================================================
+ ALTERAR ANO, TURMA E TURNO DO ALUNO
+==========================================================
+*/
+router.patch("/secretaria/alunos/:usuarioID/turma", async (req, res) => {
+    try {
+        const usuarioID = texto(req.params.usuarioID);
+        const ano = texto(req.body.ano);
+        const turma = texto(req.body.turma);
+        const turno = texto(req.body.turno);
+        if (!usuarioID || !ano || !turma || !turno) {
+            return res.status(400).json({ sucesso: false, erro: "Selecione o aluno e informe Ano, Turma e Turno." });
+        }
+
+        const dados = await carregarDadosSecretaria();
+        const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
+        const indice = autorizados.findIndex((linha, i) => i > 0 && texto(linha[3]) === usuarioID && normalizar(linha[1]) === "aluno");
+        if (indice < 1) {
+            return res.status(404).json({ sucesso: false, erro: "Não encontrei o cadastro escolar desse aluno." });
+        }
+
+        await sheets.spreadsheets.values.batchUpdate({
+            spreadsheetId: SPREADSHEET_ID,
+            requestBody: {
+                valueInputOption: "USER_ENTERED",
+                data: [
+                    { range: `17_CADASTROS_AUTORIZADOS!F${indice + 1}:H${indice + 1}`, values: [[ano, turma, turno]] }
+                ]
+            }
+        });
+        limparCache();
+        return res.json({ sucesso: true, mensagem: "Turma do aluno atualizada." });
+    } catch (erro) {
+        console.error("Erro ao mudar aluno de turma:", erro);
+        return res.status(500).json({ sucesso: false, erro: "Não foi possível mudar o aluno de turma." });
+    }
+});
+
 /*
 ==========================================================
  ALTERAR STATUS DO USUÁRIO
