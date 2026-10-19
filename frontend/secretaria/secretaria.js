@@ -1165,6 +1165,61 @@ function ring(p, t) {
 }
 
 
+function formatarNomeCampoPlanilha(nome) {
+    const original = String(nome || "").trim();
+    const normalizado = original.replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR");
+    const nomes = {
+        denunciadonome: "Denunciado",
+        denunciantenome: "Denunciante",
+        respostasecretaria: "Resposta Secretaria",
+        datahora: "Data e hora",
+        denunciaid: "ID da denúncia",
+        bloqueioid: "ID do bloqueio",
+        usuarioid: "ID do usuário",
+        setorid: "ID do setor",
+        datacadastro: "Data de cadastro",
+        dataregistro: "Data do registro",
+        motivo: "Motivo",
+        descricao: "Descrição",
+        status: "Status",
+    };
+    if (nomes[normalizado]) return nomes[normalizado];
+    return original
+        .replace(/([a-zá-ú])([A-ZÁ-Ú])/g, "$1 $2")
+        .replace(/[_-]+/g, " ")
+        .replace(/\\s+/g, " ")
+        .trim()
+        .replace(/^\\p{L}/u, (letra) => letra.toLocaleUpperCase("pt-BR"));
+}
+
+function separarDataHora(valor) {
+    const texto = String(valor ?? "").trim();
+    if (!texto) return { data: "", hora: "" };
+    const iso = texto.match(/^(\\d{4})-(\\d{2})-(\\d{2})[T ](\\d{2}:\\d{2}(?::\\d{2})?)/);
+    if (iso) return { data: iso[3] + "/" + iso[2] + "/" + iso[1], hora: iso[4] };
+    const brasileira = texto.match(/^(\\d{1,2}\\/\\d{1,2}\\/\\d{2,4})[T ]+(\\d{1,2}:\\d{2}(?::\\d{2})?)/);
+    if (brasileira) return { data: brasileira[1], hora: brasileira[2] };
+    const dataSozinha = texto.match(/^\\d{4}-\\d{2}-\\d{2}$/);
+    if (dataSozinha) return { data: texto.split("-").reverse().join("/"), hora: "" };
+    return { data: texto, hora: "" };
+}
+
+function camposExibicaoPlanilha(colunas, linha) {
+    const campos = [];
+    colunas.forEach((coluna, i) => {
+        const chave = String(coluna || "").replace(/[_\\s-]/g, "").toLocaleLowerCase("pt-BR");
+        const valor = String(linha[i] ?? "").trim() || "—";
+        if (chave === "datahora") {
+            const partes = separarDataHora(valor === "—" ? "" : valor);
+            campos.push({ nome: "Data", valor: partes.data || "—" });
+            campos.push({ nome: "Hora", valor: partes.hora || "—" });
+        } else {
+            campos.push({ nome: formatarNomeCampoPlanilha(coluna || ("Coluna " + (i + 1))), valor });
+        }
+    });
+    return campos;
+}
+
 function renderizarRegistrosPlanilha(seletorTabela, seletorResumo, dados, singular) {
     const tabela = $(seletorTabela);
     const resumo = $(seletorResumo);
@@ -1193,9 +1248,9 @@ function renderizarRegistrosPlanilha(seletorTabela, seletorResumo, dados, singul
         const motivo = motivoIndex >= 0 ? valor(motivoIndex) : "";
         const data = dataIndex >= 0 ? valor(dataIndex) : "";
         const status = statusIndex >= 0 && valor(statusIndex) ? valor(statusIndex) : (bloqueios ? "Bloqueio registrado" : "Denúncia registrada");
-        const detalhes = colunas.map((coluna, i) => '<div class="bloqueio-detalhe-campo"><span>' +
-            escHtml(coluna || ("Coluna " + (i + 1))) + '</span><strong>' +
-            escHtml(valor(i) || "—") + '</strong></div>').join("");
+        const detalhes = camposExibicaoPlanilha(colunas, linha).map((campo) => '<div class="bloqueio-detalhe-campo"><span>' +
+            escHtml(campo.nome) + '</span><strong>' +
+            escHtml(campo.valor) + '</strong></div>').join("");
         return '<button type="button" class="registro-card ' + (bloqueios ? 'registro-card--bloqueio' : 'registro-card--denuncia') +
             '" data-registro-tipo="' + (bloqueios ? 'bloqueio' : 'denuncia') + '" data-registro-indice="' + indice + '">' +
             '<span class="registro-card__topo"><span class="registro-card__icone"><svg viewBox="0 0 24 24" aria-hidden="true">' +
@@ -1632,9 +1687,9 @@ document.addEventListener("click", (e) => {
         const conteudo = $("#modal-registro-conteudo");
         titulo.textContent = bloqueios ? "Detalhes do bloqueio" : "Detalhes da denúncia";
         subtitulo.textContent = bloqueios ? "Registro da aba 22_BLOQUEIOS_SETOR" : "Registro da aba 23_DENUNCIAS_SECRETARIA";
-        conteudo.innerHTML = dados.colunas.map((coluna, i) =>
-            '<div class="bloqueio-detalhe-campo"><span>' + escHtml(coluna || ("Coluna " + (i + 1))) +
-            '</span><strong>' + escHtml(String(linha[i] ?? "").trim() || "—") + '</strong></div>'
+        conteudo.innerHTML = camposExibicaoPlanilha(dados.colunas, linha).map((campo) =>
+            '<div class="bloqueio-detalhe-campo"><span>' + escHtml(campo.nome) +
+            '</span><strong>' + escHtml(campo.valor) + '</strong></div>'
         ).join("");
         modal.hidden = false;
         document.body.classList.add("modal-registro-aberto");
