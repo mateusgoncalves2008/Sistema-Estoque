@@ -1960,6 +1960,67 @@ router.get("/secretaria/movimentacoes", async (req, res) => {
    BLOQUEIOS DE SETOR E DENÚNCIAS DA SECRETARIA
    Retorna cabeçalhos e registros existentes nas abas.
 ========================================================= */
+
+/* Bloquear ou desbloquear usuário a partir do modal da Secretaria. */
+router.patch("/secretaria/bloqueios-setor/:bloqueioID/status", async (req, res) => {
+    try {
+        const bloqueioID = texto(req.params.bloqueioID);
+        const acao = texto(req.body?.acao).toUpperCase();
+        if (!bloqueioID || !["BLOQUEAR", "DESBLOQUEAR"].includes(acao)) {
+            return res.status(400).json({ sucesso: false, erro: "Informe o registro e uma ação válida." });
+        }
+        const dados = await carregarDadosSecretaria();
+        const bloqueios = dados["22_BLOQUEIOS_SETOR"] || [];
+        const usuarios = dados["01_USUARIOS"] || [];
+        if (!bloqueios.length || !usuarios.length) {
+            return res.status(400).json({ sucesso: false, erro: "As abas de bloqueios ou usuários não possuem cabeçalhos." });
+        }
+        const normalizarCabecalho = (valor) => String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[_\s-]/g, "").trim().toLocaleLowerCase("pt-BR");
+        const colunasBloqueio = bloqueios[0];
+        const colunasUsuario = usuarios[0];
+        const indiceID = colunasBloqueio.findIndex((c) => ["bloqueioid", "registroid", "id"].includes(normalizarCabecalho(c)));
+        const indiceUsuarioID = colunasBloqueio.findIndex((c) => ["usuarioid", "userid", "idusuario"].includes(normalizarCabecalho(c)));
+        const indiceStatus = colunasBloqueio.findIndex((c) => ["status", "situacao"].includes(normalizarCabecalho(c)));
+        const indiceStatusUsuario = colunasUsuario.findIndex((c) => ["status", "situacao"].includes(normalizarCabecalho(c)));
+        const indiceIDUsuario = colunasUsuario.findIndex((c) => ["usuarioid", "userid", "idusuario"].includes(normalizarCabecalho(c)));
+        if (indiceID < 0 || indiceUsuarioID < 0 || indiceStatus < 0 || indiceStatusUsuario < 0 || indiceIDUsuario < 0) {
+            return res.status(400).json({ sucesso: false, erro: "Confira os cabeçalhos BloqueioID, UsuarioID e Status nas abas 22_BLOQUEIOS_SETOR e 01_USUARIOS." });
+        }
+        const linhaBloqueio = bloqueios.findIndex((linha, i) => i > 0 && texto(linha[indiceID]) === bloqueioID);
+        if (linhaBloqueio < 1) return res.status(404).json({ sucesso: false, erro: "Registro de bloqueio não encontrado." });
+        const usuarioID = texto(bloqueios[linhaBloqueio][indiceUsuarioID]);
+        if (!usuarioID) return res.status(400).json({ sucesso: false, erro: "O registro não possui UsuarioID vinculado." });
+        const linhaUsuario = usuarios.findIndex((linha, i) => i > 0 && texto(linha[indiceIDUsuario]) === usuarioID);
+        if (linhaUsuario < 1) return res.status(404).json({ sucesso: false, erro: "Usuário vinculado não encontrado." });
+        const novoStatusBloqueio = acao === "BLOQUEAR" ? "BLOQUEADO" : "INATIVO";
+        const novoStatusUsuario = acao === "BLOQUEAR" ? "INATIVO" : "ATIVO";
+        const colunaA1 = (numero) => {
+            let resultado = "";
+            while (numero > 0) {
+                const resto = (numero - 1) % 26;
+                resultado = String.fromCharCode(65 + resto) + resultado;
+                numero = Math.floor((numero - 1) / 26);
+            }
+            return resultado;
+        };
+        await sheets.spreadsheets.values.batchUpdate({
+            spreadsheetId: SPREADSHEET_ID,
+            requestBody: {
+                valueInputOption: "USER_ENTERED",
+                data: [
+                    { range: "22_BLOQUEIOS_SETOR!" + colunaA1(indiceStatus + 1) + (linhaBloqueio + 1), values: [[novoStatusBloqueio]] },
+                    { range: "01_USUARIOS!" + colunaA1(indiceStatusUsuario + 1) + (linhaUsuario + 1), values: [[novoStatusUsuario]] },
+                ],
+            },
+        });
+        limparCache();
+        return res.json({ sucesso: true, statusBloqueio: novoStatusBloqueio, statusUsuario: novoStatusUsuario, mensagem: acao === "BLOQUEAR" ? "Usuário bloqueado." : "Usuário desbloqueado." });
+    } catch (erro) {
+        console.error("Erro ao alterar bloqueio do usuário:", erro);
+        return res.status(500).json({ sucesso: false, erro: erro.message || "Não foi possível alterar o bloqueio." });
+    }
+});
+
 router.get("/secretaria/bloqueios-setor", async (req, res) => {
     try {
         const dados = await carregarDadosSecretaria();
