@@ -1187,9 +1187,9 @@ function formatarNomeCampoPlanilha(nome) {
     return original
         .replace(/([a-zá-ú])([A-ZÁ-Ú])/g, "$1 $2")
         .replace(/[_-]+/g, " ")
-        .replace(/\\s+/g, " ")
+        .replace(/\s+/g, " ")
         .trim()
-        .replace(/^\\p{L}/u, (letra) => letra.toLocaleUpperCase("pt-BR"));
+        .replace(/^\p{L}/u, (letra) => letra.toLocaleUpperCase("pt-BR"));
 }
 
 function separarDataHora(valor) {
