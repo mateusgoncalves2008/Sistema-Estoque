@@ -2014,6 +2014,7 @@ router.patch("/secretaria/denuncias/:denunciaID/resposta", async (req, res) => {
         const indiceID = linhas[0].findIndex((c) => normalizarCabecalho(c) === "denunciaid");
         const indiceResposta = linhas[0].findIndex((c) => normalizarCabecalho(c) === "respostasecretaria");
         const indiceDataAnalise = linhas[0].findIndex((c) => normalizarCabecalho(c) === "dataanalise");
+        const indiceStatus = linhas[0].findIndex((c) => normalizarCabecalho(c) === "status");
         if (indiceID < 0) {
             return res.status(400).json({ sucesso: false, erro: "Adicione a coluna DenunciaID na aba 23_DENUNCIAS_SECRETARIA." });
         }
@@ -2022,6 +2023,9 @@ router.patch("/secretaria/denuncias/:denunciaID/resposta", async (req, res) => {
         }
         if (indiceDataAnalise < 0 || indiceDataAnalise !== 12) {
             return res.status(400).json({ sucesso: false, erro: "Confira se a coluna M da aba 23_DENUNCIAS_SECRETARIA se chama DataAnalise." });
+        }
+        if (indiceStatus < 0) {
+            return res.status(400).json({ sucesso: false, erro: "Adicione a coluna Status na aba 23_DENUNCIAS_SECRETARIA." });
         }
 
         const indiceLinha = linhas.findIndex((linha, i) => i > 0 && texto(linha[indiceID]) === denunciaID);
@@ -2041,6 +2045,7 @@ router.patch("/secretaria/denuncias/:denunciaID/resposta", async (req, res) => {
         const numeroLinhaPlanilha = indiceLinha + 1;
         const celulaResposta = colunaA1(indiceResposta + 1) + numeroLinhaPlanilha;
         const celulaDataAnalise = "M" + numeroLinhaPlanilha;
+        const celulaStatus = colunaA1(indiceStatus + 1) + numeroLinhaPlanilha;
         const dataAnalise = agora();
 
         await sheets.spreadsheets.values.batchUpdate({
@@ -2055,6 +2060,10 @@ router.patch("/secretaria/denuncias/:denunciaID/resposta", async (req, res) => {
                     {
                         range: "23_DENUNCIAS_SECRETARIA!" + celulaDataAnalise,
                         values: [[dataAnalise]],
+                    },
+                    {
+                        range: "23_DENUNCIAS_SECRETARIA!" + celulaStatus,
+                        values: [["RESOLVIDO"]],
                     },
                 ],
             },
