@@ -677,9 +677,58 @@
 
                     <!-- BLOQUEIOS DE SETOR -->
                     <section class="page" id="p-bloqueios">
-                        <div class="head"><div><h1>Bloquear usuário</h1><p class="sub">Registros da aba 22_BLOQUEIOS_SETOR da planilha.</p></div></div>
-                        <div class="card">
-                            <div class="bloqueios-resumo" id="bloqueios-resumo"></div>
+                        <div class="denuncias-cabecalho bloqueios-cabecalho">
+                            <div class="denuncias-cabecalho__texto">
+                                <span class="denuncias-etiqueta">CONTROLE DE ACESSO</span>
+                                <h1>Bloquear usuário</h1>
+                                <p>Consulte os registros de bloqueio, pesquise informações e acompanhe o status de cada registro.</p>
+                            </div>
+                            <div class="denuncias-cabecalho__icone" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.5 3 7.5 7 10 4-2.5 7-5.5 7-10V6l-7-3Z"/><path d="m9 9 6 6m0-6-6 6"/></svg>
+                            </div>
+                        </div>
+                        <div class="denuncias-indicadores" aria-label="Resumo dos bloqueios">
+                            <article class="denuncia-indicador">
+                                <span class="denuncia-indicador__icone denuncia-indicador__icone--total">▤</span>
+                                <span class="denuncia-indicador__rotulo">Total de registros</span>
+                                <strong id="bloqueios-total">0</strong>
+                            </article>
+                            <article class="denuncia-indicador">
+                                <span class="denuncia-indicador__icone denuncia-indicador__icone--pendente">◷</span>
+                                <span class="denuncia-indicador__rotulo">Pendentes</span>
+                                <strong id="bloqueios-pendentes">0</strong>
+                            </article>
+                            <article class="denuncia-indicador">
+                                <span class="denuncia-indicador__icone bloqueio-indicador__icone--outros">✓</span>
+                                <span class="denuncia-indicador__rotulo">Outros status</span>
+                                <strong id="bloqueios-outros">0</strong>
+                            </article>
+                        </div>
+                        <div class="card denuncias-lista">
+                            <div class="denuncias-lista__cabecalho">
+                                <div>
+                                    <h2>Lista de bloqueios</h2>
+                                    <p class="sub">Selecione um registro para consultar todas as informações.</p>
+                                </div>
+                                <div class="bloqueios-resumo" id="bloqueios-resumo"></div>
+                            </div>
+                            <div class="denuncias-filtros">
+                                <label class="denuncias-busca" for="buscar-bloqueio">
+                                    <span aria-hidden="true">⌕</span>
+                                    <input id="buscar-bloqueio" type="search" placeholder="Buscar por usuário, motivo ou ID..." autocomplete="off">
+                                </label>
+                                <label class="denuncias-filtro-status" for="filtrar-status-bloqueio">
+                                    <span>Status</span>
+                                    <select id="filtrar-status-bloqueio">
+                                        <option value="TODOS">Todos os status</option>
+                                        <option value="PENDENTE">Pendente</option>
+                                        <option value="ATIVO">Ativo</option>
+                                        <option value="INATIVO">Inativo</option>
+                                        <option value="BLOQUEADO">Bloqueado</option>
+                                        <option value="RESOLVIDO">Resolvido</option>
+                                    </select>
+                                </label>
+                            </div>
                             <div id="t-bloqueios" class="secretaria-registros-tabela"></div>
                         </div>
                     </section>
