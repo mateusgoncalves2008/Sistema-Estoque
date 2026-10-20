@@ -134,7 +134,7 @@ router.get("/admin/dashboard", async (req, res) => {
                 devolucoes: devolucoes.length,
                 setores: setores.length,
                 registrosDeAuditoria: logs.length,
-                avisosPublicados: avisos.slice(1).filter((linha) => String(linha[7] || "").trim().toUpperCase() === "PUBLICADO").length,
+                avisosPublicados: avisos.filter((linha) => String(linha[7] || "").trim().toUpperCase() === "PUBLICADO").length,
             },
             usuarios: usuariosSeguros,
             atividadesRecentes,
