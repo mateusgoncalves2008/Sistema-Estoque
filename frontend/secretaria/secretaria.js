@@ -1369,8 +1369,7 @@ function eventosVisiveisCalSecretaria() {
             cor: CORES_CAL_SECRETARIA[tipo] || CORES_CAL_SECRETARIA.EVENTO,
             categoria: ({ FERIADO: "Feriado", RECESSO: "Recesso", PROVA: "Prova", REUNIAO: "Reunião", EVENTO: "Evento escolar" })[tipo] || "Evento escolar",
         };
-    }).filter((evento) => evento.data && !Number.isNaN(evento.data.getTime()) &&
-        (filtroCalendarioSecretaria !== "eventos" || true));
+    }).filter((evento) => evento.data && !Number.isNaN(evento.data.getTime()));
 }
 
 function renderizarCalendarioSecretaria() {
