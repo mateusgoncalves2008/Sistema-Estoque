@@ -1755,7 +1755,7 @@ window.addAv = async function addAv() {
         "Professores": "PROFESSOR",
     };
 
-    const botao = document.querySelector('#p-avisos button[onclick="addAv()"]');
+    const botao = $("#btn-publicar-aviso");
     if (botao) {
         botao.disabled = true;
         botao.textContent = "Publicando...";
@@ -2545,3 +2545,15 @@ if (document.readyState === "loading") {
     configurarEventosBotoesProfessores();
 }
 
+
+
+// Liga o botão de publicação sem usar onclick inline (compatível com a CSP do Helmet).
+function configurarBotaoPublicarAviso() {
+    $("#btn-publicar-aviso")?.addEventListener("click", addAv);
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", configurarBotaoPublicarAviso);
+} else {
+    configurarBotaoPublicarAviso();
+}
