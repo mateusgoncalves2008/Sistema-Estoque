@@ -1660,14 +1660,39 @@ const R = {
          */
     },
 
-    avisos() {
-        /*
-         * A planilha atual não possui
-         * uma tabela própria para avisos
-         * gerais.
-         *
-         * Não vamos inventar dados aqui.
-         */
+    async avisos() {
+        const container = $("#avisos");
+        if (!container) return;
+
+        container.innerHTML = '<p class="sub">Carregando avisos...</p>';
+
+        try {
+            const dados = await api("/secretaria/avisos");
+            const avisos = dados.avisos || [];
+
+            container.innerHTML = avisos.map((aviso) => {
+                const urgente = String(aviso.prioridade || "").toUpperCase() === "URGENTE";
+                const destino = String(aviso.destinatarios || "").split(",").join(", ");
+
+                return `
+                    <article class="card" style="margin-bottom:12px">
+                        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                            <h3>${escHtml(aviso.titulo)}</h3>
+                            <span class="dot" style="--c:${urgente ? "#B42318" : "#2F6FB5"}"></span>
+                        </div>
+                        <p>${escHtml(aviso.mensagem)}</p>
+                        <p class="sub">
+                            ${urgente ? "URGENTE" : "Normal"} ·
+                            Destino: ${escHtml(destino || "—")} ·
+                            ${escHtml(aviso.dataPublicacao || "")}
+                        </p>
+                    </article>
+                `;
+            }).join("") || '<div class="card"><p class="sub">Nenhum aviso publicado ainda.</p></div>';
+        } catch (erro) {
+            console.error("Erro ao carregar avisos:", erro);
+            container.innerHTML = `<div class="card"><p class="sub">${escHtml(erro.message || "Não foi possível carregar os avisos.")}</p></div>`;
+        }
     },
 
     relatorios() {
@@ -1702,6 +1727,65 @@ const R = {
                 Nenhuma ação registrada.
             </p>`;
     },
+};
+
+
+/* =========================================================
+   PUBLICAR AVISOS
+========================================================= */
+window.addAv = async function addAv() {
+    const tituloCampo = $("#at");
+    const destinoCampo = $("#ad");
+    const prioridadeCampo = $("#au");
+    const mensagemCampo = $("#ax");
+
+    const titulo = tituloCampo?.value.trim() || "";
+    const mensagem = mensagemCampo?.value.trim() || "";
+    const destino = destinoCampo?.value || "Todos";
+    const prioridade = prioridadeCampo?.value || "Normal";
+
+    if (!titulo || !mensagem) {
+        alert("Preencha o título e a mensagem do aviso.");
+        return;
+    }
+
+    const destinoAPI = {
+        "Todos": "TODOS",
+        "Alunos": "ALUNO",
+        "Professores": "PROFESSOR",
+    };
+
+    const botao = document.querySelector('#p-avisos button[onclick="addAv()"]');
+    if (botao) {
+        botao.disabled = true;
+        botao.textContent = "Publicando...";
+    }
+
+    try {
+        await api("/secretaria/avisos", {
+            method: "POST",
+            body: JSON.stringify({
+                titulo,
+                mensagem,
+                prioridade,
+                destinatarios: [destinoAPI[destino] || "TODOS"],
+            }),
+        });
+
+        if (tituloCampo) tituloCampo.value = "";
+        if (mensagemCampo) mensagemCampo.value = "";
+
+        await R.avisos();
+        alert("Aviso publicado com sucesso.");
+    } catch (erro) {
+        console.error("Erro ao publicar aviso:", erro);
+        alert(erro.message || "Não foi possível publicar o aviso.");
+    } finally {
+        if (botao) {
+            botao.disabled = false;
+            botao.textContent = "Publicar";
+        }
+    }
 };
 
 /* =========================================================
