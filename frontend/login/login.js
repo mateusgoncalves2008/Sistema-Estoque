@@ -327,7 +327,7 @@ function redirecionarUsuario(usuario) {
 
     // ADMIN
     if (perfil === "ADMIN" || tipoUsuario === "ADMIN") {
-        window.location.href = "./frontend/adm/index.html";
+        window.location.href = "./frontend/adm/dashboard.html";
         return;
     }
 
