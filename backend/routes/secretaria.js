@@ -2771,6 +2771,9 @@ router.get("/avisos/leituras", async (req, res) => {
     }
 });
 
+// Serializa as gravações para que cliques simultâneos não reutilizem o mesmo LeituraID.
+let filaGravacaoLeiturasAvisos = Promise.resolve();
+
 router.post("/avisos/leituras", async (req, res) => {
     try {
         const usuario = req.session?.usuario;
@@ -2783,36 +2786,59 @@ router.post("/avisos/leituras", async (req, res) => {
             return res.status(400).json({ sucesso: false, erro: "Informe um aviso válido." });
         }
 
-        const resposta = await sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEET_ID,
-            range: "25_AVISOS_LEITURA!A:D",
-        });
-        const linhas = resposta.data.values || [];
-        const jaLido = linhas.slice(1).some((linha) =>
-            texto(linha[1]) === avisoID && texto(linha[2]) === texto(usuario.id)
-        );
+        const usuarioID = texto(usuario.id);
 
-        if (jaLido) {
+        // A leitura da planilha e a geração do ID ocorrem dentro da fila.
+        // Assim, cada operação vê as linhas gravadas pela operação anterior.
+        const gravarLeitura = async () => {
+            const resposta = await sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEET_ID,
+                range: "25_AVISOS_LEITURA!A:D",
+            });
+            const linhas = resposta.data.values || [];
+
+            const jaLido = linhas.slice(1).some((linha) =>
+                texto(linha[1]) === avisoID && texto(linha[2]) === usuarioID
+            );
+
+            if (jaLido) {
+                return { jaLido: true };
+            }
+
+            let maiorID = 0;
+            for (const linha of linhas.slice(1)) {
+                const match = texto(linha[0]).match(/^LEI-(\d+)$/);
+                if (match) maiorID = Math.max(maiorID, Number(match[1]));
+            }
+
+            const leituraID = `LEI-${String(maiorID + 1).padStart(5, "0")}`;
+
+            await sheets.spreadsheets.values.append({
+                spreadsheetId: SPREADSHEET_ID,
+                range: "25_AVISOS_LEITURA!A:D",
+                valueInputOption: "USER_ENTERED",
+                requestBody: {
+                    values: [[leituraID, avisoID, usuarioID, agora()]],
+                },
+            });
+
+            return { jaLido: false, leituraID };
+        };
+
+        const operacao = filaGravacaoLeiturasAvisos.then(gravarLeitura, gravarLeitura);
+        // Mantém a fila utilizável mesmo se uma gravação falhar.
+        filaGravacaoLeiturasAvisos = operacao.then(() => undefined, () => undefined);
+
+        const resultado = await operacao;
+        if (resultado.jaLido) {
             return res.json({ sucesso: true, mensagem: "Aviso já estava marcado como lido." });
         }
 
-        let maiorID = 0;
-        for (const linha of linhas.slice(1)) {
-            const match = texto(linha[0]).match(/^LEI-(\d+)$/);
-            if (match) maiorID = Math.max(maiorID, Number(match[1]));
-        }
-        const leituraID = `LEI-${String(maiorID + 1).padStart(5, "0")}`;
-
-        await sheets.spreadsheets.values.append({
-            spreadsheetId: SPREADSHEET_ID,
-            range: "25_AVISOS_LEITURA!A:D",
-            valueInputOption: "USER_ENTERED",
-            requestBody: {
-                values: [[leituraID, avisoID, texto(usuario.id), agora()]],
-            },
+        return res.json({
+            sucesso: true,
+            mensagem: "Leitura registrada.",
+            leituraID: resultado.leituraID,
         });
-
-        return res.json({ sucesso: true, mensagem: "Leitura registrada.", leituraID });
     } catch (erro) {
         console.error("Erro ao registrar leitura do aviso:", erro);
         return res.status(500).json({ sucesso: false, erro: "Não foi possível registrar a leitura." });
