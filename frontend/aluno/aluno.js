@@ -2742,12 +2742,14 @@ async function carregarItensPesquisa() {
 async function iniciarPainel() {
     try {
         configurarSidebar();
+        criarBotaoAvisos();
 
         const perfilCarregado = await carregarPerfilAluno();
 
         if (!perfilCarregado) return;
 
         await Promise.all([
+            carregarAvisosAluno(),
             carregarItensPesquisa(),
             carregarReservas(),
             carregarEmprestimos(),
@@ -2781,6 +2783,171 @@ function atualizarRelogioAluno() {
 
 atualizarRelogioAluno();
 setInterval(atualizarRelogioAluno, 1000);
+
+
+/* ============================================================
+   CENTRAL DE AVISOS DO ALUNO
+   O estado de leitura fica salvo neste navegador por usuário.
+============================================================ */
+
+let avisosAluno = [];
+let centralAvisosAberta = false;
+
+function chaveAvisosLidos() {
+    const usuarioID = usuarioLogado?.id || "aluno";
+    return `avisosLidos_${usuarioID}`;
+}
+
+function obterAvisosLidos() {
+    try {
+        const dados = JSON.parse(localStorage.getItem(chaveAvisosLidos()) || "[]");
+        return Array.isArray(dados) ? dados : [];
+    } catch (erro) {
+        console.error("Erro ao ler avisos já visualizados:", erro);
+        return [];
+    }
+}
+
+function salvarAvisosLidos(ids) {
+    try {
+        localStorage.setItem(chaveAvisosLidos(), JSON.stringify(ids));
+    } catch (erro) {
+        console.error("Não foi possível salvar a leitura dos avisos:", erro);
+    }
+}
+
+async function carregarAvisosAluno() {
+    try {
+        const resposta = await fetch(`${API_URL}/avisos`, {
+            credentials: "same-origin",
+        });
+        const resultado = await resposta.json();
+
+        if (!resposta.ok || !resultado.sucesso) {
+            throw new Error(resultado.erro || "Não foi possível carregar os avisos.");
+        }
+
+        avisosAluno = Array.isArray(resultado.avisos) ? resultado.avisos : [];
+        renderizarCentralAvisos();
+        atualizarContadorAvisos();
+    } catch (erro) {
+        console.error("Erro ao carregar avisos:", erro);
+        // A falha nos avisos não deve impedir o restante do painel de abrir.
+        atualizarContadorAvisos();
+    }
+}
+
+function atualizarContadorAvisos() {
+    const botao = document.getElementById("botaoAvisosAluno");
+    const contador = document.getElementById("contadorAvisosAluno");
+    if (!botao || !contador) return;
+
+    const lidos = obterAvisosLidos();
+    const naoLidos = avisosAluno.filter((aviso) => !lidos.includes(aviso.id)).length;
+
+    contador.textContent = naoLidos > 99 ? "99+" : String(naoLidos);
+    contador.hidden = naoLidos === 0;
+    botao.setAttribute(
+        "aria-label",
+        naoLidos ? `Avisos. ${naoLidos} não lidos` : "Avisos",
+    );
+}
+
+function criarBotaoAvisos() {
+    if (document.getElementById("botaoAvisosAluno")) return;
+
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.id = "botaoAvisosAluno";
+    botao.className = "botao-avisos-aluno";
+    botao.setAttribute("aria-label", "Avisos");
+    botao.title = "Avisos da escola";
+    botao.innerHTML = '<i data-lucide="bell"></i><span id="contadorAvisosAluno" class="contador-avisos-aluno" hidden>0</span>';
+
+    const central = document.createElement("section");
+    central.id = "centralAvisosAluno";
+    central.className = "central-avisos-aluno";
+    central.hidden = true;
+    central.setAttribute("aria-label", "Central de avisos");
+    central.innerHTML = `
+        <div class="cabecalho-avisos-aluno">
+            <div><h2>Avisos da escola</h2><p>Comunicados destinados aos alunos</p></div>
+            <button type="button" id="fecharAvisosAluno" class="fechar-avisos-aluno" aria-label="Fechar avisos">×</button>
+        </div>
+        <div class="acoes-avisos-aluno"><button type="button" id="marcarAvisosLidosAluno">Marcar todos como lidos</button></div>
+        <div id="listaAvisosAluno" class="lista-avisos-aluno"><p class="avisos-vazio-aluno">Carregando avisos...</p></div>
+    `;
+
+    document.body.append(botao, central);
+    botao.addEventListener("click", alternarCentralAvisos);
+    central.querySelector("#fecharAvisosAluno").addEventListener("click", fecharCentralAvisos);
+    central.querySelector("#marcarAvisosLidosAluno").addEventListener("click", marcarAvisosComoLidos);
+    inicializarIcones();
+    atualizarContadorAvisos();
+}
+
+function alternarCentralAvisos() {
+    centralAvisosAberta = !centralAvisosAberta;
+    const central = document.getElementById("centralAvisosAluno");
+    if (!central) return;
+    central.hidden = !centralAvisosAberta;
+    if (centralAvisosAberta) renderizarCentralAvisos();
+}
+
+function fecharCentralAvisos() {
+    centralAvisosAberta = false;
+    const central = document.getElementById("centralAvisosAluno");
+    if (central) central.hidden = true;
+}
+
+function marcarAvisosComoLidos() {
+    salvarAvisosLidos(avisosAluno.map((aviso) => aviso.id));
+    atualizarContadorAvisos();
+    renderizarCentralAvisos();
+}
+
+function renderizarCentralAvisos() {
+    const lista = document.getElementById("listaAvisosAluno");
+    if (!lista) return;
+
+    if (!avisosAluno.length) {
+        lista.innerHTML = '<p class="avisos-vazio-aluno">Nenhum aviso publicado para os alunos.</p>';
+        return;
+    }
+
+    const lidos = obterAvisosLidos();
+    lista.innerHTML = avisosAluno.map((aviso) => {
+        const lido = lidos.includes(aviso.id);
+        const prioridade = String(aviso.prioridade || "NORMAL").toUpperCase();
+        const data = aviso.dataPublicacao ? new Date(aviso.dataPublicacao) : null;
+        const dataTexto = data && !Number.isNaN(data.getTime())
+            ? data.toLocaleString("pt-BR")
+            : "";
+        return `
+            <article class="aviso-aluno ${lido ? "aviso-lido-aluno" : "aviso-nao-lido-aluno"}">
+                <div class="aviso-aluno-topo">
+                    <strong>${escapeHtml(aviso.titulo || "Aviso")}</strong>
+                    <span class="prioridade-aviso-aluno ${prioridade === "URGENTE" ? "urgente" : ""}">${escapeHtml(prioridade)}</span>
+                </div>
+                <p>${escapeHtml(aviso.mensagem || "")}</p>
+                <div class="aviso-aluno-rodape"><small>${escapeHtml(dataTexto)}</small>
+                ${lido ? '<span class="estado-aviso-aluno">Lido</span>' : `<button type="button" data-aviso-lido="${escapeHtml(aviso.id)}">Marcar como lido</button>`}</div>
+            </article>
+        `;
+    }).join("");
+
+    lista.querySelectorAll("[data-aviso-lido]").forEach((botao) => {
+        botao.addEventListener("click", () => {
+            const ids = obterAvisosLidos();
+            const id = botao.dataset.avisoLido;
+            if (!ids.includes(id)) ids.push(id);
+            salvarAvisosLidos(ids);
+            atualizarContadorAvisos();
+            renderizarCentralAvisos();
+        });
+    });
+}
+
 
 document.addEventListener("DOMContentLoaded", iniciarPainel);
 
