@@ -2022,10 +2022,10 @@ th {
 .aviso-professor:last-child {
     margin-bottom: 0;
 }
-.aviso-professor-nao-lido {
+.aviso-nao-lido-professor {
     border-left: 4px solid var(--laranja, #c65a32);
 }
-.aviso-professor-lido {
+.aviso-lido-professor {
     opacity: .78;
 }
 .aviso-professor-topo {
