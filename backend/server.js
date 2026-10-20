@@ -11,6 +11,7 @@ const express = require("express");
 const helmet = require("helmet");
 const session = require("express-session");
 const authRoutes = require("./routes/auth");
+const adminRoutes = require("./routes/admin");
 const rateLimit = require("express-rate-limit");
 const sheets = require("./database/googleSheets");
 const cadastroRoutes = require("./routes/cadastro");
@@ -135,6 +136,7 @@ app.use("/api/cadastro", cadastroLimiter);
 // ============================================================
 
 app.use("/api", authRoutes);
+app.use("/api", adminRoutes);
 app.use("/api", cadastroRoutes);
 app.use("/api", produtosRoutes);
 app.use("/api", reservasRoutes);
