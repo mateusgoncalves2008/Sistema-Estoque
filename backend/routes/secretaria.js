@@ -148,6 +148,7 @@ async function carregarDadosSecretaria() {
         "21_PROFESSOR_TURMAS!A:F",
         "22_BLOQUEIOS_SETOR!A:Z",
         "23_DENUNCIAS_SECRETARIA!A:Z",
+        "24_AVISOS_SISTEMA!A:H",
     ];
 
     
@@ -2265,37 +2266,164 @@ router.post("/secretaria/calendario", async (req, res) => {
 router.get("/secretaria/avisos", async (req, res) => {
     try {
         const dados = await carregarDadosSecretaria();
+        const linhas = dados["24_AVISOS_SISTEMA"] || [];
 
-        const avisos = dados["15_COMUNICACOES_ESTOQUE"] || [];
+        const avisos = linhas.slice(1)
+            .filter((linha) => texto(linha[0]) && normalizar(linha[7]) === "publicado")
+            .map((linha) => ({
+                id: texto(linha[0]),
+                titulo: texto(linha[1]),
+                mensagem: texto(linha[2]),
+                prioridade: texto(linha[3]),
+                destinatarios: texto(linha[4]),
+                autorID: texto(linha[5]),
+                dataPublicacao: texto(linha[6]),
+                status: texto(linha[7]),
+            }))
+            .reverse();
 
-        const lista = avisos.slice(1).map((linha) => ({
-            id: linha[0] || "",
+        return res.json({ sucesso: true, avisos });
+    } catch (erro) {
+        console.error("Erro ao carregar avisos:", erro);
+        return res.status(500).json({
+            sucesso: false,
+            erro: "Não foi possível carregar os avisos.",
+        });
+    }
+});
 
-            titulo: linha[1] || "",
+router.post("/secretaria/avisos", async (req, res) => {
+    try {
+        const usuario = req.session?.usuario;
 
-            mensagem: linha[2] || "",
+        if (!usuario) {
+            return res.status(401).json({
+                sucesso: false,
+                erro: "Faça login para publicar avisos.",
+            });
+        }
 
-            tipo: linha[3] || "",
+        if (!usuarioTemPermissao(usuario)) {
+            return res.status(403).json({
+                sucesso: false,
+                erro: "Somente a Secretaria e o ADM podem publicar avisos.",
+            });
+        }
 
-            destinatario: linha[4] || "",
+        const titulo = texto(req.body?.titulo);
+        const mensagem = texto(req.body?.mensagem);
+        const prioridade = normalizar(req.body?.prioridade || "NORMAL");
+        const valorDestinatarios = req.body?.destinatarios ?? req.body?.destinatario;
 
-            data: linha[5] || "",
+        if (!titulo || titulo.length > 150) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "Informe um título com até 150 caracteres.",
+            });
+        }
 
-            status: linha[6] || "",
+        if (!mensagem || mensagem.length > 10000) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "Informe uma mensagem com até 10.000 caracteres.",
+            });
+        }
 
-            observacao: linha[7] || "",
-        }));
+        if (!["normal", "urgente"].includes(prioridade)) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "A prioridade deve ser Normal ou Urgente.",
+            });
+        }
 
-        res.json({
+        const permitidos = ["TODOS", "ALUNO", "PROFESSOR", "RESPONSAVEL", "SECRETARIA", "ADM"];
+        const entrada = Array.isArray(valorDestinatarios)
+            ? valorDestinatarios
+            : [valorDestinatarios];
+
+        const destinatarios = [...new Set(
+            entrada
+                .map((valor) => texto(valor).toUpperCase())
+                .filter(Boolean)
+        )];
+
+        if (
+            !destinatarios.length ||
+            destinatarios.some((valor) => !permitidos.includes(valor)) ||
+            (destinatarios.includes("TODOS") && destinatarios.length > 1)
+        ) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "Selecione destinatários válidos.",
+            });
+        }
+
+        const resposta = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "24_AVISOS_SISTEMA!A:H",
+        });
+
+        const linhas = resposta.data.values || [];
+        const cabecalhosEsperados = [
+            "AvisoID", "Titulo", "Mensagem", "Prioridade",
+            "Destinatarios", "AutorID", "DataPublicacao", "Status",
+        ];
+
+        if (
+            !linhas.length ||
+            cabecalhosEsperados.some((cabecalho, indice) =>
+                texto(linhas[0][indice]) !== cabecalho
+            )
+        ) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "Confira os cabeçalhos A:H da aba 24_AVISOS_SISTEMA.",
+            });
+        }
+
+        const id = gerarID("AVI", linhas, 0);
+        const autorID = texto(usuario.usuarioID || usuario.id || usuario.UsuarioID);
+
+        const aviso = [
+            id,
+            titulo,
+            mensagem,
+            prioridade.toUpperCase(),
+            destinatarios.join(","),
+            autorID,
+            agora(),
+            "PUBLICADO",
+        ];
+
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "24_AVISOS_SISTEMA!A:H",
+            valueInputOption: "RAW",
+            insertDataOption: "INSERT_ROWS",
+            requestBody: { values: [aviso] },
+        });
+
+        limparCache();
+
+        return res.status(201).json({
             sucesso: true,
-            avisos: lista,
+            mensagem: "Aviso publicado com sucesso.",
+            aviso: {
+                id,
+                titulo,
+                mensagem,
+                prioridade: prioridade.toUpperCase(),
+                destinatarios: destinatarios.join(","),
+                autorID,
+                dataPublicacao: aviso[6],
+                status: "PUBLICADO",
+            },
         });
     } catch (erro) {
-        console.error("❌ Erro ao carregar avisos:", erro);
-
-        res.status(500).json({
+        console.error("Erro ao publicar aviso:", erro);
+        return res.status(500).json({
             sucesso: false,
-            erro: erro.message,
+            erro: "Não foi possível publicar o aviso.",
         });
     }
 });
