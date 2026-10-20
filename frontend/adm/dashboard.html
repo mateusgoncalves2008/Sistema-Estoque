@@ -24,14 +24,13 @@
             <div class="user-mini-info"><strong id="nomeAdmin">Administrador</strong><span>Administrador geral</span></div>
             <span class="status-online" title="Sessão conectada"></span>
         </div>
-        <nav class="navegacao" aria-label="Navegação administrativa">
-            <span class="nav-titulo">PAINEL PRINCIPAL</span>
-            <a class="nav-link ativo" href="#visao-geral"><i data-lucide="layout-dashboard"></i>Visão geral</a>
-            <a class="nav-link" href="#usuarios"><i data-lucide="users"></i>Usuários e acessos</a>
-            <a class="nav-link" href="#estoque"><i data-lucide="package"></i>Estoque e patrimônio</a>
-            <a class="nav-link" href="#operacoes"><i data-lucide="clipboard-list"></i>Reservas e empréstimos</a>
-            <a class="nav-link" href="#auditoria"><i data-lucide="history"></i>Auditoria e atividade</a>
-            <a class="nav-link" href="#sistema"><i data-lucide="server-cog"></i>Saúde do sistema</a>
+        <nav class="navegacao sidebar-nav" aria-label="Navegação administrativa">
+            <button class="nav-link nav-item ativo" type="button" data-tela="inicio"><i data-lucide="house"></i><span>Início</span></button>
+            <button class="nav-link nav-item" type="button" data-tela="usuarios"><i data-lucide="users"></i><span>Usuários e acessos</span></button>
+            <button class="nav-link nav-item" type="button" data-tela="estoque"><i data-lucide="package"></i><span>Estoque e patrimônio</span></button>
+            <button class="nav-link nav-item" type="button" data-tela="operacoes"><i data-lucide="clipboard-list"></i><span>Reservas e empréstimos</span></button>
+            <button class="nav-link nav-item" type="button" data-tela="auditoria"><i data-lucide="history"></i><span>Auditoria e atividade</span></button>
+            <button class="nav-link nav-item" type="button" data-tela="sistema"><i data-lucide="server-cog"></i><span>Saúde do sistema</span></button>
         </nav>
         <div class="sidebar-bottom sidebar-rodape">
             <span class="selo-seguranca"><i data-lucide="lock-keyhole"></i>Área administrativa protegida</span>
@@ -43,7 +42,7 @@
     <main class="conteudo">
         <header class="topbar">
             <span class="breadcrumb"><i data-lucide="shield-check"></i><strong id="tituloTela">Início</strong></span>
-            <div class="breadcrumb"><span>Administração</span><i data-lucide="chevron-right"></i><strong>Visão geral</strong></div>
+            <span class="texto-administracao">Painel de administração escolar</span>
             <div class="topbar-acoes">
                 <span class="data-atual" id="dataAtual"></span>
                 <a class="btn-atalho" href="/frontend/adm/index.html"><i data-lucide="user-round-plus"></i><span>Cadastrar conta</span></a>
