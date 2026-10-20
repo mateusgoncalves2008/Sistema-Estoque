@@ -188,25 +188,52 @@ async function sairPainelAdmin() {
     }
 }
 
+function mudarTelaAdmin(tela) {
+    const titulos = {
+        inicio: "Início",
+        usuarios: "Usuários e acessos",
+        estoque: "Estoque e patrimônio",
+        operacoes: "Reservas e empréstimos",
+        auditoria: "Auditoria e atividade",
+        sistema: "Saúde do sistema",
+    };
+
+    document.querySelectorAll("[data-pagina]").forEach((secao) => {
+        secao.hidden = secao.dataset.pagina !== tela;
+    });
+
+    document.querySelectorAll("[data-tela]").forEach((botao) => {
+        const ativo = botao.dataset.tela === tela;
+        botao.classList.toggle("ativo", ativo);
+        botao.classList.toggle("on", ativo);
+        botao.setAttribute("aria-current", ativo ? "page" : "false");
+    });
+
+    elAdmin("tituloTela").textContent = titulos[tela] || "Painel ADM";
+    document.title = `${titulos[tela] || "Painel ADM"} | Painel ADM`;
+    elAdmin("sidebar").classList.remove("aberto");
+    elAdmin("overlayMenu").classList.remove("visivel");
+}
+
 function configurarMenuAdmin() {
     const sidebar = elAdmin("sidebar");
     const overlay = elAdmin("overlayMenu");
-    const fechar = () => {
-        sidebar.classList.remove("aberto");
-        overlay.classList.remove("visivel");
-    };
+
     elAdmin("btnMenu").addEventListener("click", () => {
         sidebar.classList.toggle("aberto");
         overlay.classList.toggle("visivel");
     });
-    overlay.addEventListener("click", fechar);
-    document.querySelectorAll(".nav-link").forEach((link) => {
-        link.addEventListener("click", () => {
-            document.querySelectorAll(".nav-link").forEach((item) => item.classList.remove("ativo"));
-            link.classList.add("ativo");
-            fechar();
-        });
+
+    overlay.addEventListener("click", () => {
+        sidebar.classList.remove("aberto");
+        overlay.classList.remove("visivel");
     });
+
+    document.querySelectorAll("[data-tela]").forEach((botao) => {
+        botao.addEventListener("click", () => mudarTelaAdmin(botao.dataset.tela));
+    });
+
+    mudarTelaAdmin("inicio");
 }
 
 elAdmin("btnAtualizar").addEventListener("click", carregarPainelAdmin);
