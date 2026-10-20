@@ -1411,7 +1411,9 @@ function renderizarCalendarioSecretaria() {
         <div class="cal-prof-upcoming">
             <div class="cal-prof-datebox"><strong>${String(e.data.getDate()).padStart(2, "0")}</strong><span>${meses[e.data.getMonth()].slice(0, 3)}</span></div>
             <div class="cal-prof-upcoming-info"><strong><i class="cal-prof-dot" style="display:inline-block;background:${e.cor}"></i> ${escaparCalSecretaria(e.titulo)}</strong><span>${escaparCalSecretaria(e.categoria)}${e.descricao ? " · " + escaparCalSecretaria(e.descricao) : ""}</span></div>
-        </div>`).join("") : '<div class="cal-prof-empty-list">Nenhum próximo evento cadastrado.</div>';
+        </div>`).join("") : filtroCalendarioSecretaria === "reservas"
+        ? '<div class="cal-prof-empty-list">As reservas de salas ainda não estão conectadas ao calendário.</div>'
+        : '<div class="cal-prof-empty-list">Nenhum próximo evento cadastrado.</div>';
 
     const legenda = [["FERIADO", "Feriado"], ["RECESSO", "Recesso"], ["EVENTO", "Evento escolar"], ["REUNIAO", "Reunião"], ["PROVA", "Prova"]].map(([tipo, nome]) =>
         `<span><i class="cal-prof-dot" style="--event-color:${CORES_CAL_SECRETARIA[tipo]}"></i>${nome}</span>`).join("");
