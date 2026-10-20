@@ -619,6 +619,8 @@ document.getElementById("sair")?.addEventListener("click", async (event) => {
 
 atualizarTabelas();
 carregarPerfilProfessor();
+criarBotaoAvisosProfessor();
+carregarAvisosProfessor();
 
 if (window.lucide) lucide.createIcons();
 
@@ -1117,4 +1119,199 @@ async function carregarPerfilProfessor() {
         console.error("Erro ao carregar perfil:", erro);
         aviso("Não foi possível carregar os dados do professor.");
     }
+}
+
+
+/* ============================================================
+   CENTRAL DE AVISOS DO PROFESSOR
+   Usa a API e o registro de leitura compartilhados com o painel Aluno.
+============================================================ */
+
+let avisosProfessor = [];
+let avisosLidosProfessor = [];
+let centralAvisosProfessorAberta = false;
+
+async function carregarAvisosProfessor() {
+    try {
+        const [respostaAvisos, respostaLeituras] = await Promise.all([
+            fetch(`${API_URL}/avisos`, { credentials: "same-origin" }),
+            fetch(`${API_URL}/avisos/leituras`, { credentials: "same-origin" }),
+        ]);
+
+        const resultadoAvisos = await respostaAvisos.json();
+        const resultadoLeituras = await respostaLeituras.json();
+
+        if (!respostaAvisos.ok || !resultadoAvisos.sucesso) {
+            throw new Error(resultadoAvisos.erro || "Não foi possível carregar os avisos.");
+        }
+        if (!respostaLeituras.ok || !resultadoLeituras.sucesso) {
+            throw new Error(resultadoLeituras.erro || "Não foi possível carregar as leituras.");
+        }
+
+        avisosProfessor = Array.isArray(resultadoAvisos.avisos) ? resultadoAvisos.avisos : [];
+        avisosLidosProfessor = Array.isArray(resultadoLeituras.avisosLidos)
+            ? resultadoLeituras.avisosLidos
+            : [];
+
+        renderizarAvisosProfessor();
+        atualizarContadorAvisosProfessor();
+    } catch (erro) {
+        console.error("Erro ao carregar avisos do professor:", erro);
+        const lista = document.getElementById("listaAvisosProfessor");
+        if (lista) {
+            lista.innerHTML = '<p class="avisos-vazio-professor">Não foi possível carregar os avisos. Tente atualizar a página.</p>';
+        }
+    }
+}
+
+async function registrarLeituraAvisoProfessor(avisoID) {
+    const resposta = await fetch(`${API_URL}/avisos/leituras`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avisoID }),
+    });
+    const resultado = await resposta.json();
+
+    if (!resposta.ok || !resultado.sucesso) {
+        throw new Error(resultado.erro || "Não foi possível registrar a leitura.");
+    }
+
+    if (!avisosLidosProfessor.includes(avisoID)) {
+        avisosLidosProfessor.push(avisoID);
+    }
+}
+
+function atualizarContadorAvisosProfessor() {
+    const botao = document.getElementById("botaoAvisosProfessor");
+    const contador = document.getElementById("contadorAvisosProfessor");
+    if (!botao || !contador) return;
+
+    const naoLidos = avisosProfessor.filter(
+        (aviso) => !avisosLidosProfessor.includes(aviso.id),
+    ).length;
+
+    contador.textContent = naoLidos > 99 ? "99+" : String(naoLidos);
+    contador.hidden = naoLidos === 0;
+    botao.setAttribute(
+        "aria-label",
+        naoLidos ? `Avisos. ${naoLidos} não lidos` : "Avisos",
+    );
+}
+
+function criarBotaoAvisosProfessor() {
+    if (document.getElementById("botaoAvisosProfessor")) return;
+
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.id = "botaoAvisosProfessor";
+    botao.className = "botao-avisos-professor";
+    botao.setAttribute("aria-label", "Avisos");
+    botao.title = "Avisos da escola";
+    botao.innerHTML = '<i data-lucide="bell" aria-hidden="true"></i><span id="contadorAvisosProfessor" class="contador-avisos-professor" hidden>0</span>';
+
+    const central = document.createElement("section");
+    central.id = "centralAvisosProfessor";
+    central.className = "central-avisos-professor";
+    central.hidden = true;
+    central.setAttribute("aria-label", "Central de avisos");
+    central.innerHTML = `
+        <div class="cabecalho-avisos-professor">
+            <div><h2>Avisos da escola</h2><p>Comunicados destinados aos professores</p></div>
+            <button type="button" id="fecharAvisosProfessor" class="fechar-avisos-professor" aria-label="Fechar avisos">×</button>
+        </div>
+        <div class="acoes-avisos-professor">
+            <button type="button" id="marcarAvisosLidosProfessor">Marcar todos como lidos</button>
+        </div>
+        <div id="listaAvisosProfessor" class="lista-avisos-professor">
+            <p class="avisos-vazio-professor">Carregando avisos...</p>
+        </div>
+    `;
+
+    document.body.append(botao, central);
+    botao.addEventListener("click", alternarCentralAvisosProfessor);
+    central.querySelector("#fecharAvisosProfessor").addEventListener("click", fecharCentralAvisosProfessor);
+    central.querySelector("#marcarAvisosLidosProfessor").addEventListener("click", marcarTodosAvisosProfessorComoLidos);
+
+    if (window.lucide) window.lucide.createIcons();
+}
+
+function alternarCentralAvisosProfessor() {
+    centralAvisosProfessorAberta = !centralAvisosProfessorAberta;
+    const central = document.getElementById("centralAvisosProfessor");
+    if (!central) return;
+
+    central.hidden = !centralAvisosProfessorAberta;
+    if (centralAvisosProfessorAberta) renderizarAvisosProfessor();
+}
+
+function fecharCentralAvisosProfessor() {
+    centralAvisosProfessorAberta = false;
+    const central = document.getElementById("centralAvisosProfessor");
+    if (central) central.hidden = true;
+}
+
+async function marcarTodosAvisosProfessorComoLidos() {
+    const pendentes = avisosProfessor.filter(
+        (aviso) => !avisosLidosProfessor.includes(aviso.id),
+    );
+
+    try {
+        await Promise.all(pendentes.map((aviso) => registrarLeituraAvisoProfessor(aviso.id)));
+        atualizarContadorAvisosProfessor();
+        renderizarAvisosProfessor();
+    } catch (erro) {
+        console.error("Erro ao marcar avisos do professor como lidos:", erro);
+        aviso("Não foi possível salvar a leitura dos avisos.");
+    }
+}
+
+function renderizarAvisosProfessor() {
+    const lista = document.getElementById("listaAvisosProfessor");
+    if (!lista) return;
+
+    if (!avisosProfessor.length) {
+        lista.innerHTML = '<p class="avisos-vazio-professor">Nenhum aviso publicado para os professores.</p>';
+        return;
+    }
+
+    lista.innerHTML = avisosProfessor.map((item) => {
+        const lido = avisosLidosProfessor.includes(item.id);
+        const prioridade = String(item.prioridade || "NORMAL").toUpperCase();
+        const data = item.dataPublicacao ? new Date(item.dataPublicacao) : null;
+        const dataTexto = data && !Number.isNaN(data.getTime())
+            ? data.toLocaleString("pt-BR")
+            : "";
+
+        return `
+            <article class="aviso-professor ${lido ? "aviso-lido-professor" : "aviso-nao-lido-professor"}">
+                <div class="aviso-professor-topo">
+                    <strong>${escaparCalProf(item.titulo || "Aviso")}</strong>
+                    <span class="prioridade-aviso-professor ${prioridade === "URGENTE" ? "urgente" : ""}">${escaparCalProf(prioridade)}</span>
+                </div>
+                <p>${escaparCalProf(item.mensagem || "")}</p>
+                <div class="aviso-professor-rodape">
+                    <small>${escaparCalProf(dataTexto)}</small>
+                    ${lido
+                        ? '<span class="estado-aviso-professor">Lido</span>'
+                        : `<button type="button" data-aviso-lido-professor="${escaparCalProf(item.id)}">Marcar como lido</button>`}
+                </div>
+            </article>
+        `;
+    }).join("");
+
+    lista.querySelectorAll("[data-aviso-lido-professor]").forEach((botao) => {
+        botao.addEventListener("click", async () => {
+            botao.disabled = true;
+            try {
+                await registrarLeituraAvisoProfessor(botao.dataset.avisoLidoProfessor);
+                atualizarContadorAvisosProfessor();
+                renderizarAvisosProfessor();
+            } catch (erro) {
+                console.error("Erro ao marcar aviso do professor como lido:", erro);
+                aviso("Não foi possível salvar a leitura do aviso.");
+                botao.disabled = false;
+            }
+        });
+    });
 }
