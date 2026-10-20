@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f7f5f1">
+    <title>Painel ADM | Sistema de Estoque Escolar</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="dashboard.js" defer></script>
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <a class="marca" href="/frontend/adm/dashboard.html" aria-label="Painel ADM">
+            <span class="marca-icone"><i data-lucide="shield-check"></i></span>
+            <span><strong>HAUY</strong><small>CONTROLE ADMINISTRATIVO</small></span>
+        </a>
+        <div class="perfil-admin">
+            <div class="avatar-admin" id="avatarAdmin">A</div>
+            <div><strong id="nomeAdmin">Administrador</strong><small>Administrador geral</small></div>
+            <span class="status-online" title="Sessão conectada"></span>
+        </div>
+        <nav class="navegacao" aria-label="Navegação administrativa">
+            <span class="nav-titulo">PAINEL PRINCIPAL</span>
+            <a class="nav-link ativo" href="#visao-geral"><i data-lucide="layout-dashboard"></i>Visão geral</a>
+            <a class="nav-link" href="#usuarios"><i data-lucide="users"></i>Usuários e acessos</a>
+            <a class="nav-link" href="#estoque"><i data-lucide="package"></i>Estoque e patrimônio</a>
+            <a class="nav-link" href="#operacoes"><i data-lucide="clipboard-list"></i>Reservas e empréstimos</a>
+            <a class="nav-link" href="#auditoria"><i data-lucide="history"></i>Auditoria e atividade</a>
+            <a class="nav-link" href="#sistema"><i data-lucide="server-cog"></i>Saúde do sistema</a>
+        </nav>
+        <div class="sidebar-rodape">
+            <span class="selo-seguranca"><i data-lucide="lock-keyhole"></i>Área administrativa protegida</span>
+            <a href="/index.html" class="link-voltar"><i data-lucide="arrow-left"></i>Voltar ao site</a>
+            <button id="btnSair" class="btn-sair" type="button"><i data-lucide="log-out"></i>Sair da conta</button>
+        </div>
+    </aside>
+
+    <main class="conteudo">
+        <header class="topbar">
+            <button class="btn-menu" id="btnMenu" type="button" aria-label="Abrir menu"><i data-lucide="menu"></i></button>
+            <div class="breadcrumb"><span>Administração</span><i data-lucide="chevron-right"></i><strong>Visão geral</strong></div>
+            <div class="topbar-acoes">
+                <span class="data-atual" id="dataAtual"></span>
+                <a class="btn-atalho" href="/frontend/adm/index.html"><i data-lucide="user-round-plus"></i><span>Cadastrar conta</span></a>
+                <button class="btn-atualizar" id="btnAtualizar" type="button" title="Atualizar dados"><i data-lucide="refresh-cw"></i></button>
+            </div>
+        </header>
+
+        <section class="boas-vindas" id="visao-geral">
+            <div>
+                <p class="sobretitulo">CENTRAL DE COMANDO</p>
+                <h1>Visão geral da escola</h1>
+                <p>Acompanhe os registros, o estoque e a atividade do sistema em um só lugar.</p>
+            </div>
+            <div class="status-painel"><span></span>PAINEL ADM</div>
+        </section>
+
+        <div id="mensagemEstado" class="mensagem-estado" role="status" aria-live="polite">Carregando dados reais da planilha...</div>
+
+        <section class="metricas" aria-label="Indicadores gerais">
+            <article class="metrica metrica-destaque">
+                <div class="metrica-topo"><span>Usuários cadastrados</span><i data-lucide="users"></i></div>
+                <strong id="totalUsuarios">—</strong>
+                <small><span id="usuariosAtivos">—</span> contas ativas</small>
+            </article>
+            <article class="metrica">
+                <div class="metrica-topo"><span>Produtos cadastrados</span><i data-lucide="package"></i></div>
+                <strong id="totalProdutos">—</strong>
+                <small>Itens no catálogo</small>
+            </article>
+            <article class="metrica">
+                <div class="metrica-topo"><span>Quantidade em estoque</span><i data-lucide="boxes"></i></div>
+                <strong id="totalEstoque">—</strong>
+                <small><span id="estoqueDisponivel">—</span> disponíveis</small>
+            </article>
+            <article class="metrica">
+                <div class="metrica-topo"><span>Registros de auditoria</span><i data-lucide="scan-eye"></i></div>
+                <strong id="totalLogs">—</strong>
+                <small>Eventos registrados na planilha</small>
+            </article>
+        </section>
+
+        <section class="bloco" id="usuarios">
+            <div class="bloco-cabecalho">
+                <div><p class="sobretitulo">ACESSO E RESPONSABILIDADE</p><h2>Usuários e acessos</h2><p>Consulta administrativa dos usuários cadastrados. Senhas e hashes nunca são exibidos.</p></div>
+                <a class="btn-secundario" href="/frontend/adm/index.html"><i data-lucide="user-round-plus"></i>Cadastrar conta</a>
+            </div>
+            <div class="resumo-papeis" id="resumoPapeis">
+                <div class="papel-card"><span>Alunos</span><strong id="qtdAlunos">—</strong></div>
+                <div class="papel-card"><span>Professores</span><strong id="qtdProfessores">—</strong></div>
+                <div class="papel-card"><span>Responsáveis</span><strong id="qtdResponsaveis">—</strong></div>
+                <div class="papel-card"><span>Secretaria</span><strong id="qtdSecretaria">—</strong></div>
+                <div class="papel-card"><span>Administradores</span><strong id="qtdAdmins">—</strong></div>
+            </div>
+            <div class="filtros-tabela">
+                <label class="busca"><i data-lucide="search"></i><input id="buscarUsuario" type="search" placeholder="Buscar por nome, e-mail ou ID..." autocomplete="off"></label>
+                <label class="filtro-status"><span>Status</span><select id="filtroStatus"><option value="">Todos</option><option value="ATIVO">Ativo</option><option value="INATIVO">Inativo</option><option value="PENDENTE">Pendente</option><option value="BLOQUEADO">Bloqueado</option></select></label>
+            </div>
+            <div class="tabela-container">
+                <table>
+                    <thead><tr><th>Usuário</th><th>Tipo / Perfil</th><th>Setor</th><th>Status</th><th>Último acesso</th></tr></thead>
+                    <tbody id="tabelaUsuarios"><tr><td colspan="5" class="vazio">Carregando usuários...</td></tr></tbody>
+                </table>
+            </div>
+            <div class="tabela-rodape"><span id="totalExibidos">0 usuários</span><span>Dados consultados com permissão de ADM</span></div>
+        </section>
+
+        <section class="grade-paineis" id="estoque">
+            <article class="bloco bloco-resumo">
+                <div class="bloco-cabecalho compacto"><div><p class="sobretitulo">PATRIMÔNIO</p><h2>Estoque e locais</h2></div><i data-lucide="warehouse"></i></div>
+                <div class="linha-dado"><span>Locais cadastrados</span><strong id="totalLocais">—</strong></div>
+                <div class="linha-dado"><span>Registros por local</span><strong id="registrosEstoque">—</strong></div>
+                <div class="linha-dado"><span>Quantidade disponível</span><strong id="disponivelDetalhe">—</strong></div>
+                <p class="nota-modulo">Visão consolidada dos dados existentes na planilha.</p>
+            </article>
+            <article class="bloco bloco-resumo" id="operacoes">
+                <div class="bloco-cabecalho compacto"><div><p class="sobretitulo">CIRCULAÇÃO DE MATERIAIS</p><h2>Reservas e empréstimos</h2></div><i data-lucide="clipboard-check"></i></div>
+                <div class="linha-dado"><span>Reservas registradas</span><strong id="totalReservas">—</strong></div>
+                <div class="linha-dado"><span>Empréstimos registrados</span><strong id="totalEmprestimos">—</strong></div>
+                <div class="linha-dado"><span>Devoluções registradas</span><strong id="totalDevolucoes">—</strong></div>
+                <div class="linha-dado"><span>Movimentações de estoque</span><strong id="totalMovimentacoes">—</strong></div>
+            </article>
+        </section>
+
+        <section class="bloco" id="auditoria">
+            <div class="bloco-cabecalho"><div><p class="sobretitulo">RASTREABILIDADE</p><h2>Atividade recente</h2><p>Últimos registros encontrados na aba de logs.</p></div><span class="tag-auditoria"><i data-lucide="shield-check"></i>Auditoria</span></div>
+            <div id="listaAtividades" class="lista-atividades"><p class="vazio">Carregando atividade...</p></div>
+        </section>
+
+        <section class="bloco sistema-bloco" id="sistema">
+            <div class="bloco-cabecalho compacto"><div><p class="sobretitulo">INFRAESTRUTURA</p><h2>Saúde do sistema</h2></div><i data-lucide="activity"></i></div>
+            <div class="sistema-linha"><span><i data-lucide="file-spreadsheet"></i> Conexão com a planilha escolar</span><strong id="statusPlanilha" class="status-verificando">Verificando...</strong></div>
+            <div class="sistema-linha"><span><i data-lucide="bell"></i> Avisos publicados</span><strong id="totalAvisos">—</strong></div>
+            <div class="sistema-linha"><span><i data-lucide="clock-3"></i> Última atualização</span><strong id="ultimaAtualizacao">—</strong></div>
+        </section>
+
+        <footer class="rodape"><span>Sistema de Estoque Escolar · Painel Administrativo</span><span>O acesso e as operações devem respeitar as permissões do servidor.</span></footer>
+    </main>
+    <div class="overlay-menu" id="overlayMenu"></div>
+    <script src="/lucide/lucide.js"></script>
+    <script>if (window.lucide) window.lucide.createIcons();</script>
+</body>
+</html>
