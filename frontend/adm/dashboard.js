@@ -225,7 +225,9 @@ function configurarMenuAdmin() {
     };
 
     elAdmin("btnMenu").addEventListener("click", alternarMenu);
-    elAdmin("btnSidebarToggle").addEventListener("click", alternarMenu);
+    elAdmin("btnSidebarToggle").addEventListener("click", () => {
+        document.body.classList.toggle("menu-recolhido");
+    });
 
     overlay.addEventListener("click", () => {
         sidebar.classList.remove("aberto");
