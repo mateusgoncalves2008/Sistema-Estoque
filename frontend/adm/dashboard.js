@@ -219,10 +219,13 @@ function configurarMenuAdmin() {
     const sidebar = elAdmin("sidebar");
     const overlay = elAdmin("overlayMenu");
 
-    elAdmin("btnMenu").addEventListener("click", () => {
+    const alternarMenu = () => {
         sidebar.classList.toggle("aberto");
         overlay.classList.toggle("visivel");
-    });
+    };
+
+    elAdmin("btnMenu").addEventListener("click", alternarMenu);
+    elAdmin("btnSidebarToggle").addEventListener("click", alternarMenu);
 
     overlay.addEventListener("click", () => {
         sidebar.classList.remove("aberto");
