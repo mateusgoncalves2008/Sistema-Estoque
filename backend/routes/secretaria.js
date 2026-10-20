@@ -2740,4 +2740,83 @@ router.get("/avisos", async (req, res) => {
     }
 });
 
+
+// ==========================================================
+// LEITURAS DOS AVISOS
+// Aba: 25_AVISOS_LEITURA
+// Colunas: LeituraID | AvisoID | UsuarioID | DataLeitura
+// ==========================================================
+
+router.get("/avisos/leituras", async (req, res) => {
+    try {
+        const usuario = req.session?.usuario;
+        if (!usuario?.id) {
+            return res.status(401).json({ sucesso: false, erro: "Faça login para consultar as leituras." });
+        }
+
+        const resposta = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "25_AVISOS_LEITURA!A:D",
+        });
+        const linhas = resposta.data.values || [];
+        const avisosLidos = linhas.slice(1)
+            .filter((linha) => texto(linha[2]) === texto(usuario.id))
+            .map((linha) => texto(linha[1]))
+            .filter(Boolean);
+
+        return res.json({ sucesso: true, avisosLidos });
+    } catch (erro) {
+        console.error("Erro ao consultar leituras dos avisos:", erro);
+        return res.status(500).json({ sucesso: false, erro: "Não foi possível consultar as leituras." });
+    }
+});
+
+router.post("/avisos/leituras", async (req, res) => {
+    try {
+        const usuario = req.session?.usuario;
+        if (!usuario?.id) {
+            return res.status(401).json({ sucesso: false, erro: "Faça login para registrar a leitura." });
+        }
+
+        const avisoID = texto(req.body?.avisoID);
+        if (!avisoID || avisoID.length > 100) {
+            return res.status(400).json({ sucesso: false, erro: "Informe um aviso válido." });
+        }
+
+        const resposta = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "25_AVISOS_LEITURA!A:D",
+        });
+        const linhas = resposta.data.values || [];
+        const jaLido = linhas.slice(1).some((linha) =>
+            texto(linha[1]) === avisoID && texto(linha[2]) === texto(usuario.id)
+        );
+
+        if (jaLido) {
+            return res.json({ sucesso: true, mensagem: "Aviso já estava marcado como lido." });
+        }
+
+        let maiorID = 0;
+        for (const linha of linhas.slice(1)) {
+            const match = texto(linha[0]).match(/^LEI-(\d+)$/);
+            if (match) maiorID = Math.max(maiorID, Number(match[1]));
+        }
+        const leituraID = `LEI-${String(maiorID + 1).padStart(5, "0")}`;
+
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "25_AVISOS_LEITURA!A:D",
+            valueInputOption: "USER_ENTERED",
+            requestBody: {
+                values: [[leituraID, avisoID, texto(usuario.id), agora()]],
+            },
+        });
+
+        return res.json({ sucesso: true, mensagem: "Leitura registrada.", leituraID });
+    } catch (erro) {
+        console.error("Erro ao registrar leitura do aviso:", erro);
+        return res.status(500).json({ sucesso: false, erro: "Não foi possível registrar a leitura." });
+    }
+});
+
 module.exports = router;
