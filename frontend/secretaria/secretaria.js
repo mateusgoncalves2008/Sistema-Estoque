@@ -224,6 +224,7 @@ async function carregarDados() {
         evs = (dadosCalendario.eventos || []).map((e) => ({
             id: e.id || e.eventoID || "",
             d: e.data ? String(e.data).substring(0, 10) : "",
+            dataFim: e.dataFim ? String(e.dataFim).substring(0, 10) : "",
             t: String(e.tipo || "EVENTO").toUpperCase(),
             n: e.titulo || "Evento escolar",
             descricao: e.descricao || "",
@@ -1365,10 +1366,11 @@ function eventosVisiveisCalSecretaria() {
         .filter((evento) => filtroCalendarioSecretaria === "geral" || filtroCalendarioSecretaria === "eventos")
         .map((evento) => {
         const data = evento.d ? new Date(evento.d + "T00:00:00") : null;
+        const dataFim = evento.dataFim ? new Date(evento.dataFim + "T00:00:00") : data;
         const tipo = String(evento.t || "evento").toUpperCase();
         return {
             data,
-            dataFim: data,
+            dataFim,
             titulo: evento.n || "Evento escolar",
             descricao: evento.descricao || "",
             tipo,
@@ -1399,7 +1401,7 @@ function renderizarCalendarioSecretaria() {
         diasHTML += `
             <div class="cal-prof-day ${data.getMonth() !== mesCalendarioSecretaria ? "outside" : ""} ${data.getDay() === 0 || data.getDay() === 6 ? "weekend" : ""} ${chave === hoje ? "today" : ""}"
                  aria-label="${escaparCalSecretaria(data.getDate() + " de " + meses[data.getMonth()])}"
-                 title="${escaparCalSecretaria(doDia.map((e) => e.categoria + ": " + e.titulo).join(" | "))}">
+                 title="${escaparCalSecretaria(doDia.map((e) => e.titulo + (e.descricao ? " — Descrição: " + e.descricao : "")).join(" | "))}">
                 <span class="cal-prof-number">${data.getDate()}</span>
                 ${doDia.slice(0, 3).map((e) => `<span class="cal-prof-event" style="--event-color:${e.cor}"><i class="cal-prof-dot"></i><span class="cal-prof-event-label">${escaparCalSecretaria(e.titulo)}</span></span>`).join("")}
                 ${doDia.length > 3 ? `<span class="cal-prof-event">+${doDia.length - 3} eventos</span>` : ""}
