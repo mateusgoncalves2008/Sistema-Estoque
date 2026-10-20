@@ -2818,23 +2818,45 @@ function salvarAvisosLidos(ids) {
 
 async function carregarAvisosAluno() {
     try {
-        const resposta = await fetch(`${API_URL}/avisos`, {
-            credentials: "same-origin",
-        });
-        const resultado = await resposta.json();
+        const [respostaAvisos, respostaLeituras] = await Promise.all([
+            fetch(`${API_URL}/avisos`, { credentials: "same-origin" }),
+            fetch(`${API_URL}/avisos/leituras`, { credentials: "same-origin" }),
+        ]);
+        const resultadoAvisos = await respostaAvisos.json();
+        const resultadoLeituras = await respostaLeituras.json();
 
-        if (!resposta.ok || !resultado.sucesso) {
-            throw new Error(resultado.erro || "Não foi possível carregar os avisos.");
+        if (!respostaAvisos.ok || !resultadoAvisos.sucesso) {
+            throw new Error(resultadoAvisos.erro || "Não foi possível carregar os avisos.");
+        }
+        if (!respostaLeituras.ok || !resultadoLeituras.sucesso) {
+            throw new Error(resultadoLeituras.erro || "Não foi possível carregar as leituras.");
         }
 
-        avisosAluno = Array.isArray(resultado.avisos) ? resultado.avisos : [];
+        avisosAluno = Array.isArray(resultadoAvisos.avisos) ? resultadoAvisos.avisos : [];
+        salvarAvisosLidos(Array.isArray(resultadoLeituras.avisosLidos) ? resultadoLeituras.avisosLidos : []);
         renderizarCentralAvisos();
         atualizarContadorAvisos();
     } catch (erro) {
-        console.error("Erro ao carregar avisos:", erro);
-        // A falha nos avisos não deve impedir o restante do painel de abrir.
+        console.error("Erro ao carregar avisos e leituras:", erro);
         atualizarContadorAvisos();
     }
+}
+
+async function registrarAvisoComoLido(avisoID) {
+    const resposta = await fetch(`${API_URL}/avisos/leituras`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avisoID }),
+    });
+    const resultado = await resposta.json();
+    if (!resposta.ok || !resultado.sucesso) {
+        throw new Error(resultado.erro || "Não foi possível registrar a leitura.");
+    }
+
+    const ids = obterAvisosLidos();
+    if (!ids.includes(avisoID)) ids.push(avisoID);
+    salvarAvisosLidos(ids);
 }
 
 function atualizarContadorAvisos() {
@@ -2900,10 +2922,15 @@ function fecharCentralAvisos() {
     if (central) central.hidden = true;
 }
 
-function marcarAvisosComoLidos() {
-    salvarAvisosLidos(avisosAluno.map((aviso) => aviso.id));
-    atualizarContadorAvisos();
-    renderizarCentralAvisos();
+async function marcarAvisosComoLidos() {
+    try {
+        await Promise.all(avisosAluno.map((aviso) => registrarAvisoComoLido(aviso.id)));
+        atualizarContadorAvisos();
+        renderizarCentralAvisos();
+    } catch (erro) {
+        console.error("Erro ao marcar avisos como lidos:", erro);
+        showToast("Não foi possível salvar a leitura dos avisos.");
+    }
 }
 
 function renderizarCentralAvisos() {
@@ -2937,13 +2964,15 @@ function renderizarCentralAvisos() {
     }).join("");
 
     lista.querySelectorAll("[data-aviso-lido]").forEach((botao) => {
-        botao.addEventListener("click", () => {
-            const ids = obterAvisosLidos();
-            const id = botao.dataset.avisoLido;
-            if (!ids.includes(id)) ids.push(id);
-            salvarAvisosLidos(ids);
-            atualizarContadorAvisos();
-            renderizarCentralAvisos();
+        botao.addEventListener("click", async () => {
+            try {
+                await registrarAvisoComoLido(botao.dataset.avisoLido);
+                atualizarContadorAvisos();
+                renderizarCentralAvisos();
+            } catch (erro) {
+                console.error("Erro ao marcar aviso como lido:", erro);
+                showToast("Não foi possível salvar a leitura do aviso.");
+            }
         });
     });
 }
