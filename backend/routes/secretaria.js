@@ -2174,18 +2174,12 @@ router.get("/secretaria/calendario", async (req, res) => {
 
         const lista = calendario.slice(1).map((linha) => ({
             id: linha[0] || "",
-
             data: linha[1] || "",
-
-            tipo: linha[2] || "",
-
-            titulo: linha[3] || "",
-
-            descricao: linha[4] || "",
-
-            status: linha[5] || "",
-
-            observacao: linha[6] || "",
+            dataFim: linha[2] || "",
+            tipo: linha[3] || "",
+            titulo: linha[4] || "",
+            descricao: linha[5] || "",
+            status: linha[6] || "",
         }));
 
         res.json({
