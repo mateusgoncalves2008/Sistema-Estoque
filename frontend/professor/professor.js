@@ -137,11 +137,15 @@ function carregarCalendarioProfessor() {
                     Não foi possível carregar os eventos da escola.
                     Verifique a conexão e tente abrir o calendário novamente.
                     <br><br>
-                    <button class="primary-btn" onclick="carregarCalendarioProfessor()">
+                    <button type="button" class="primary-btn" data-cal-prof-action="retry">
                         Tentar novamente
                     </button>
                 </div>
             `;
+            area.querySelector('[data-cal-prof-action="retry"]')?.addEventListener(
+                "click",
+                carregarCalendarioProfessor,
+            );
         });
 }
 
@@ -294,7 +298,7 @@ function renderizarCalendarioProfessor() {
                     <button
                         type="button"
                         class="${filtroCalendarioProfessor === id ? "active" : ""}"
-                        onclick="filtrarCalendarioProfessor('${id}')"
+                        data-cal-prof-filter="${id}"
                     >${nome}</button>
                 `,
                     )
@@ -303,9 +307,9 @@ function renderizarCalendarioProfessor() {
 
             <div class="cal-prof-spacer"></div>
 
-            <button type="button" onclick="moverMesCalendarioProfessor(-1)">Anterior</button>
+            <button type="button" data-cal-prof-month="-1">Anterior</button>
 
-            <select aria-label="Mês" onchange="selecionarMesCalendarioProfessor(this.value)">
+            <select aria-label="Mês" data-cal-prof-select="mes">
                 ${meses
                     .map(
                         (mes, i) => `
@@ -317,7 +321,7 @@ function renderizarCalendarioProfessor() {
                     .join("")}
             </select>
 
-            <select aria-label="Ano" onchange="selecionarAnoCalendarioProfessor(this.value)">
+            <select aria-label="Ano" data-cal-prof-select="ano">
                 ${anos
                     .map(
                         (ano) => `
@@ -329,7 +333,7 @@ function renderizarCalendarioProfessor() {
                     .join("")}
             </select>
 
-            <button type="button" onclick="moverMesCalendarioProfessor(1)">Próximo</button>
+            <button type="button" data-cal-prof-month="1">Próximo</button>
         </div>
 
         <div class="cal-prof-layout">
@@ -353,6 +357,28 @@ function renderizarCalendarioProfessor() {
             </aside>
         </div>
     `;
+
+    area.querySelectorAll("[data-cal-prof-filter]").forEach((botao) => {
+        botao.addEventListener("click", () => {
+            filtrarCalendarioProfessor(botao.dataset.calProfFilter);
+        });
+    });
+
+    area.querySelectorAll("[data-cal-prof-month]").forEach((botao) => {
+        botao.addEventListener("click", () => {
+            moverMesCalendarioProfessor(Number(botao.dataset.calProfMonth));
+        });
+    });
+
+    area.querySelector('[data-cal-prof-select="mes"]')?.addEventListener(
+        "change",
+        (evento) => selecionarMesCalendarioProfessor(evento.target.value),
+    );
+
+    area.querySelector('[data-cal-prof-select="ano"]')?.addEventListener(
+        "change",
+        (evento) => selecionarAnoCalendarioProfessor(evento.target.value),
+    );
 }
 
 function filtrarCalendarioProfessor(filtro) {
