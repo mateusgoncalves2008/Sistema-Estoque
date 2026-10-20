@@ -1605,6 +1605,8 @@ document.addEventListener("DOMContentLoaded", () => {
     updateClock();
     setInterval(updateClock, 1000);
     carregarPainel();
+    criarBotaoAvisosResponsavel();
+    carregarAvisosResponsavel();
 });
 
 /* =====================================================
@@ -1842,4 +1844,162 @@ function formatarTelefonePerfil(value) {
     return digits.length > 10
         ? digits.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3")
         : digits.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+}
+
+
+/* ============================================================
+   CENTRAL DE AVISOS DO RESPONSÁVEL PELO SETOR
+============================================================ */
+let avisosResponsavel = [];
+let avisosLidosResponsavel = [];
+let centralAvisosResponsavelAberta = false;
+
+async function carregarAvisosResponsavel() {
+    try {
+        const [respostaAvisos, respostaLeituras] = await Promise.all([
+            fetch(`${API_BASE}/avisos`, { credentials: "include" }),
+            fetch(`${API_BASE}/avisos/leituras`, { credentials: "include" }),
+        ]);
+        const dadosAvisos = await respostaAvisos.json();
+        const dadosLeituras = await respostaLeituras.json();
+
+        if (!respostaAvisos.ok || !dadosAvisos.sucesso) {
+            throw new Error(dadosAvisos.erro || "Não foi possível carregar os avisos.");
+        }
+        if (!respostaLeituras.ok || !dadosLeituras.sucesso) {
+            throw new Error(dadosLeituras.erro || "Não foi possível carregar as leituras.");
+        }
+
+        avisosResponsavel = Array.isArray(dadosAvisos.avisos) ? dadosAvisos.avisos : [];
+        avisosLidosResponsavel = Array.isArray(dadosLeituras.avisosLidos) ? dadosLeituras.avisosLidos : [];
+        renderizarAvisosResponsavel();
+        atualizarContadorAvisosResponsavel();
+    } catch (erro) {
+        console.error("Erro ao carregar avisos do responsável:", erro);
+        const lista = el("listaAvisosResponsavel");
+        if (lista) lista.innerHTML = '<p class="avisos-vazio-responsavel">Não foi possível carregar os avisos. Atualize a página e tente novamente.</p>';
+    }
+}
+
+async function registrarLeituraAvisoResponsavel(avisoID) {
+    const resposta = await fetch(`${API_BASE}/avisos/leituras`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avisoID }),
+    });
+    const dados = await resposta.json();
+    if (!resposta.ok || !dados.sucesso) {
+        throw new Error(dados.erro || "Não foi possível registrar a leitura.");
+    }
+    if (!avisosLidosResponsavel.includes(avisoID)) avisosLidosResponsavel.push(avisoID);
+}
+
+function atualizarContadorAvisosResponsavel() {
+    const botao = el("botaoAvisosResponsavel");
+    const contador = el("contadorAvisosResponsavel");
+    if (!botao || !contador) return;
+    const naoLidos = avisosResponsavel.filter((item) => !avisosLidosResponsavel.includes(item.id)).length;
+    contador.textContent = naoLidos > 99 ? "99+" : String(naoLidos);
+    contador.hidden = naoLidos === 0;
+    botao.setAttribute("aria-label", naoLidos ? `Avisos. ${naoLidos} não lidos` : "Avisos");
+}
+
+function criarBotaoAvisosResponsavel() {
+    if (el("botaoAvisosResponsavel")) return;
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.id = "botaoAvisosResponsavel";
+    botao.className = "botao-avisos-responsavel";
+    botao.title = "Avisos da escola";
+    botao.setAttribute("aria-label", "Avisos");
+    botao.innerHTML = '<i class="fa-solid fa-bell" aria-hidden="true"></i><span id="contadorAvisosResponsavel" class="contador-avisos-responsavel" hidden>0</span>';
+
+    const central = document.createElement("section");
+    central.id = "centralAvisosResponsavel";
+    central.className = "central-avisos-responsavel";
+    central.hidden = true;
+    central.setAttribute("aria-label", "Central de avisos");
+    central.innerHTML = `
+        <div class="cabecalho-avisos-responsavel">
+            <div><h2>Avisos da escola</h2><p>Comunicados destinados aos responsáveis pelos setores</p></div>
+            <button type="button" id="fecharAvisosResponsavel" class="fechar-avisos-responsavel" aria-label="Fechar avisos">&times;</button>
+        </div>
+        <div class="acoes-avisos-responsavel"><button type="button" id="marcarAvisosLidosResponsavel">Marcar todos como lidos</button></div>
+        <div id="listaAvisosResponsavel" class="lista-avisos-responsavel"><p class="avisos-vazio-responsavel">Carregando avisos...</p></div>
+    `;
+    document.body.append(botao, central);
+    botao.addEventListener("click", alternarCentralAvisosResponsavel);
+    central.querySelector("#fecharAvisosResponsavel").addEventListener("click", fecharCentralAvisosResponsavel);
+    central.querySelector("#marcarAvisosLidosResponsavel").addEventListener("click", marcarTodosAvisosResponsavelComoLidos);
+}
+
+function alternarCentralAvisosResponsavel() {
+    centralAvisosResponsavelAberta = !centralAvisosResponsavelAberta;
+    const central = el("centralAvisosResponsavel");
+    if (!central) return;
+    central.hidden = !centralAvisosResponsavelAberta;
+    if (centralAvisosResponsavelAberta) renderizarAvisosResponsavel();
+}
+
+function fecharCentralAvisosResponsavel() {
+    centralAvisosResponsavelAberta = false;
+    const central = el("centralAvisosResponsavel");
+    if (central) central.hidden = true;
+}
+
+async function marcarTodosAvisosResponsavelComoLidos() {
+    const pendentes = avisosResponsavel.filter((item) => !avisosLidosResponsavel.includes(item.id));
+    try {
+        await Promise.all(pendentes.map((item) => registrarLeituraAvisoResponsavel(item.id)));
+        atualizarContadorAvisosResponsavel();
+        renderizarAvisosResponsavel();
+    } catch (erro) {
+        console.error("Erro ao marcar avisos do responsável como lidos:", erro);
+        showNotice("Não foi possível salvar a leitura dos avisos.", true);
+    }
+}
+
+function renderizarAvisosResponsavel() {
+    const lista = el("listaAvisosResponsavel");
+    if (!lista) return;
+    if (!avisosResponsavel.length) {
+        lista.innerHTML = '<p class="avisos-vazio-responsavel">Nenhum aviso publicado para os responsáveis pelos setores.</p>';
+        return;
+    }
+
+    lista.innerHTML = avisosResponsavel.map((item) => {
+        const lido = avisosLidosResponsavel.includes(item.id);
+        const prioridade = String(item.prioridade || "NORMAL").toUpperCase();
+        const data = item.dataPublicacao ? new Date(item.dataPublicacao) : null;
+        const dataTexto = data && !Number.isNaN(data.getTime()) ? data.toLocaleString("pt-BR") : "";
+        return `
+            <article class="aviso-responsavel ${lido ? "aviso-lido-responsavel" : "aviso-nao-lido-responsavel"}">
+                <div class="aviso-responsavel-topo">
+                    <strong>${escapeHTML(item.titulo || "Aviso")}</strong>
+                    <span class="prioridade-aviso-responsavel ${prioridade === "URGENTE" ? "urgente" : ""}">${escapeHTML(prioridade)}</span>
+                </div>
+                <p>${escapeHTML(item.mensagem || "")}</p>
+                <div class="aviso-responsavel-rodape">
+                    <small>${escapeHTML(dataTexto)}</small>
+                    ${lido ? '<span class="estado-aviso-responsavel">Lido</span>' : `<button type="button" data-aviso-lido-responsavel="${escapeHTML(item.id)}">Marcar como lido</button>`}
+                </div>
+            </article>
+        `;
+    }).join("");
+
+    lista.querySelectorAll("[data-aviso-lido-responsavel]").forEach((botao) => {
+        botao.addEventListener("click", async () => {
+            botao.disabled = true;
+            try {
+                await registrarLeituraAvisoResponsavel(botao.dataset.avisoLidoResponsavel);
+                atualizarContadorAvisosResponsavel();
+                renderizarAvisosResponsavel();
+            } catch (erro) {
+                console.error("Erro ao marcar aviso como lido:", erro);
+                showNotice("Não foi possível salvar a leitura do aviso.", true);
+                botao.disabled = false;
+            }
+        });
+    });
 }
