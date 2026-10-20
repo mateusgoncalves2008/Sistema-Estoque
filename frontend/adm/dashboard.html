@@ -10,13 +10,18 @@
 </head>
 <body>
     <aside class="sidebar" id="sidebar">
-        <a class="marca" href="/frontend/adm/dashboard.html" aria-label="Painel ADM">
-            <span class="marca-icone"><i data-lucide="shield-check"></i></span>
-            <span><strong>HAUY</strong><small>CONTROLE ADMINISTRATIVO</small></span>
-        </a>
-        <div class="perfil-admin">
-            <div class="avatar-admin" id="avatarAdmin">A</div>
-            <div><strong id="nomeAdmin">Administrador</strong><small>Administrador geral</small></div>
+        <div class="sidebar-top">
+            <div class="school-brand">
+                <div class="logo-box"><img src="../img/logo_cor.png" alt="Logo da E.E. Hauy Petruceli Mayrink"></div>
+                <div class="school-name"><strong>Hauy Petruceli</strong><span>Mayrink</span></div>
+            </div>
+            <button class="sidebar-toggle" id="btnMenu" type="button" aria-label="Abrir ou recolher menu" title="Menu">
+                <i data-lucide="panel-left-close"></i>
+            </button>
+        </div>
+        <div class="perfil-admin user-mini">
+            <div class="avatar-admin user-avatar" id="avatarAdmin">A</div>
+            <div class="user-mini-info"><strong id="nomeAdmin">Administrador</strong><span>Administrador geral</span></div>
             <span class="status-online" title="Sessão conectada"></span>
         </div>
         <nav class="navegacao" aria-label="Navegação administrativa">
@@ -28,7 +33,7 @@
             <a class="nav-link" href="#auditoria"><i data-lucide="history"></i>Auditoria e atividade</a>
             <a class="nav-link" href="#sistema"><i data-lucide="server-cog"></i>Saúde do sistema</a>
         </nav>
-        <div class="sidebar-rodape">
+        <div class="sidebar-bottom sidebar-rodape">
             <span class="selo-seguranca"><i data-lucide="lock-keyhole"></i>Área administrativa protegida</span>
             <a href="/index.html" class="link-voltar"><i data-lucide="arrow-left"></i>Voltar ao site</a>
             <button id="btnSair" class="btn-sair" type="button"><i data-lucide="log-out"></i>Sair da conta</button>
@@ -37,7 +42,7 @@
 
     <main class="conteudo">
         <header class="topbar">
-            <button class="btn-menu" id="btnMenu" type="button" aria-label="Abrir menu"><i data-lucide="menu"></i></button>
+            <span class="breadcrumb"><i data-lucide="shield-check"></i><strong id="tituloTela">Início</strong></span>
             <div class="breadcrumb"><span>Administração</span><i data-lucide="chevron-right"></i><strong>Visão geral</strong></div>
             <div class="topbar-acoes">
                 <span class="data-atual" id="dataAtual"></span>
@@ -46,7 +51,7 @@
             </div>
         </header>
 
-        <section class="boas-vindas" id="visao-geral">
+        <section class="boas-vindas tela-admin" data-pagina="inicio" id="visao-geral">
             <div>
                 <p class="sobretitulo">CENTRAL DE COMANDO</p>
                 <h1>Visão geral da escola</h1>
@@ -57,7 +62,7 @@
 
         <div id="mensagemEstado" class="mensagem-estado" role="status" aria-live="polite">Carregando dados reais da planilha...</div>
 
-        <section class="metricas" aria-label="Indicadores gerais">
+        <section class="metricas tela-admin" data-pagina="inicio" aria-label="Indicadores gerais">
             <article class="metrica metrica-destaque">
                 <div class="metrica-topo"><span>Usuários cadastrados</span><i data-lucide="users"></i></div>
                 <strong id="totalUsuarios">—</strong>
@@ -80,7 +85,7 @@
             </article>
         </section>
 
-        <section class="bloco" id="usuarios">
+        <section class="bloco tela-admin" data-pagina="usuarios" id="usuarios">
             <div class="bloco-cabecalho">
                 <div><p class="sobretitulo">ACESSO E RESPONSABILIDADE</p><h2>Usuários e acessos</h2><p>Consulta administrativa dos usuários cadastrados. Senhas e hashes nunca são exibidos.</p></div>
                 <a class="btn-secundario" href="/frontend/adm/index.html"><i data-lucide="user-round-plus"></i>Cadastrar conta</a>
@@ -105,7 +110,7 @@
             <div class="tabela-rodape"><span id="totalExibidos">0 usuários</span><span>Dados consultados com permissão de ADM</span></div>
         </section>
 
-        <section class="grade-paineis" id="estoque">
+        <section class="grade-paineis tela-admin" data-pagina="estoque" id="estoque">
             <article class="bloco bloco-resumo">
                 <div class="bloco-cabecalho compacto"><div><p class="sobretitulo">PATRIMÔNIO</p><h2>Estoque e locais</h2></div><i data-lucide="warehouse"></i></div>
                 <div class="linha-dado"><span>Locais cadastrados</span><strong id="totalLocais">—</strong></div>
@@ -113,7 +118,7 @@
                 <div class="linha-dado"><span>Quantidade disponível</span><strong id="disponivelDetalhe">—</strong></div>
                 <p class="nota-modulo">Visão consolidada dos dados existentes na planilha.</p>
             </article>
-            <article class="bloco bloco-resumo" id="operacoes">
+        </section>\n\n        <section class="bloco tela-admin" data-pagina="operacoes" id="operacoes">\n            <article class="bloco-resumo">
                 <div class="bloco-cabecalho compacto"><div><p class="sobretitulo">CIRCULAÇÃO DE MATERIAIS</p><h2>Reservas e empréstimos</h2></div><i data-lucide="clipboard-check"></i></div>
                 <div class="linha-dado"><span>Reservas registradas</span><strong id="totalReservas">—</strong></div>
                 <div class="linha-dado"><span>Empréstimos registrados</span><strong id="totalEmprestimos">—</strong></div>
@@ -127,7 +132,7 @@
             <div id="listaAtividades" class="lista-atividades"><p class="vazio">Carregando atividade...</p></div>
         </section>
 
-        <section class="bloco sistema-bloco" id="sistema">
+        <section class="bloco sistema-bloco tela-admin" data-pagina="sistema" id="sistema">
             <div class="bloco-cabecalho compacto"><div><p class="sobretitulo">INFRAESTRUTURA</p><h2>Saúde do sistema</h2></div><i data-lucide="activity"></i></div>
             <div class="sistema-linha"><span><i data-lucide="file-spreadsheet"></i> Conexão com a planilha escolar</span><strong id="statusPlanilha" class="status-verificando">Verificando...</strong></div>
             <div class="sistema-linha"><span><i data-lucide="bell"></i> Avisos publicados</span><strong id="totalAvisos">—</strong></div>
