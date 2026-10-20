@@ -223,11 +223,12 @@ async function carregarDados() {
 
         evs = (dadosCalendario.eventos || []).map((e) => ({
             id: e.id || e.eventoID || "",
-            d: e.data ? String(e.data).substring(0, 10) : "",
-            dataFim: e.dataFim ? String(e.dataFim).substring(0, 10) : "",
+            d: e.data || "",
+            dataFim: e.dataFim || e.data || "",
             t: String(e.tipo || "EVENTO").toUpperCase(),
             n: e.titulo || "Evento escolar",
             descricao: e.descricao || "",
+            status: String(e.status || "ATIVO").toUpperCase(),
         }));
 
         locais = dados.locais || [];
@@ -1357,16 +1358,36 @@ function chaveCalSecretaria(data) {
     return [data.getFullYear(), String(data.getMonth() + 1).padStart(2, "0"), String(data.getDate()).padStart(2, "0")].join("-");
 }
 
+function dataCalSecretaria(valor) {
+    const texto = String(valor || "").trim();
+    if (!texto) return null;
+
+    let ano, mes, dia;
+    if (texto.includes("/")) {
+        const partes = texto.split("/");
+        if (partes.length !== 3) return null;
+        [dia, mes, ano] = partes.map(Number);
+    } else {
+        const partes = texto.substring(0, 10).split("-");
+        if (partes.length !== 3) return null;
+        [ano, mes, dia] = partes.map(Number);
+    }
+
+    const data = new Date(ano, mes - 1, dia);
+    if (data.getFullYear() !== ano || data.getMonth() !== mes - 1 || data.getDate() !== dia) return null;
+    data.setHours(0, 0, 0, 0);
+    return data;
+}
+
 function eventosVisiveisCalSecretaria() {
-    // A API atual fornece eventos escolares, mas ainda não possui uma fonte
-    // específica de reservas de salas para exibir neste calendário.
+    // As reservas de salas ainda não possuem uma fonte ligada a este calendário.
     if (filtroCalendarioSecretaria === "reservas") return [];
 
     return evs
-        .filter((evento) => filtroCalendarioSecretaria === "geral" || filtroCalendarioSecretaria === "eventos")
+        .filter((evento) => (filtroCalendarioSecretaria === "geral" || filtroCalendarioSecretaria === "eventos") && evento.status !== "INATIVO" && evento.status !== "CANCELADO")
         .map((evento) => {
-        const data = evento.d ? new Date(evento.d + "T00:00:00") : null;
-        const dataFim = evento.dataFim ? new Date(evento.dataFim + "T00:00:00") : data;
+        const data = dataCalSecretaria(evento.d);
+        const dataFim = dataCalSecretaria(evento.dataFim) || data;
         const tipo = String(evento.t || "evento").toUpperCase();
         return {
             data,
@@ -1408,7 +1429,7 @@ function renderizarCalendarioSecretaria() {
             </div>`;
     }
 
-    const proximos = eventos.filter((e) => e.data >= new Date(new Date().setHours(0, 0, 0, 0))).sort((a, b) => a.data - b.data).slice(0, 6);
+    const proximos = eventos.filter((e) => e.dataFim >= new Date(new Date().setHours(0, 0, 0, 0))).sort((a, b) => a.data - b.data).slice(0, 6);
     const listaHTML = proximos.length ? proximos.map((e) => `
         <div class="cal-prof-upcoming">
             <div class="cal-prof-datebox"><strong>${String(e.data.getDate()).padStart(2, "0")}</strong><span>${meses[e.data.getMonth()].slice(0, 3)}</span></div>
