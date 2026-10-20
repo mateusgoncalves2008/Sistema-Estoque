@@ -261,3 +261,28 @@ tbody tr:hover { background: #fdfbf8; }
     .sidebar-top .sidebar-toggle { display: none; }
     .texto-administracao { display: none; }
 }
+
+
+/* Menu recolhível no computador, como no Painel do Aluno */
+@media (min-width: 821px) {
+    .sidebar { transition: width .25s ease, padding .25s ease; }
+    .conteudo { transition: margin-left .25s ease; }
+    body.menu-recolhido .sidebar {
+        width: 86px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+    body.menu-recolhido .conteudo { margin-left: 86px; }
+    body.menu-recolhido .school-brand { justify-content: center; }
+    body.menu-recolhido .school-name,
+    body.menu-recolhido .perfil-admin .user-mini-info,
+    body.menu-recolhido .status-online,
+    body.menu-recolhido .nav-item span,
+    body.menu-recolhido .selo-seguranca,
+    body.menu-recolhido .link-voltar,
+    body.menu-recolhido .btn-sair { display: none; }
+    body.menu-recolhido .sidebar-top { flex-direction: column; }
+    body.menu-recolhido .nav-item { justify-content: center; padding-right: 8px; padding-left: 8px; }
+    body.menu-recolhido .perfil-admin { justify-content: center; padding-right: 0; padding-left: 0; }
+    body.menu-recolhido .sidebar-rodape { justify-items: center; }
+}
