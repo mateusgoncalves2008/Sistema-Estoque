@@ -2671,4 +2671,73 @@ async function validarProfessor(usuarioID) {
     };
 }
 
+
+/*
+==========================================================
+ AVISOS PARA OS PAINÉIS
+==========================================================
+*/
+
+router.get("/avisos", async (req, res) => {
+    try {
+        const usuario = req.session?.usuario;
+
+        if (!usuario) {
+            return res.status(401).json({
+                sucesso: false,
+                erro: "Faça login para consultar os avisos.",
+            });
+        }
+
+        const tipoUsuario = normalizar(usuario.tipoUsuario || usuario.tipo);
+        const perfil = normalizar(usuario.perfil);
+        const destinatarioUsuario =
+            ["adm", "admin", "administrador"].includes(tipoUsuario) ||
+            ["adm", "admin", "administrador"].includes(perfil)
+                ? "ADM"
+                : tipoUsuario === "secretaria" || perfil === "secretaria"
+                  ? "SECRETARIA"
+                  : tipoUsuario === "professor" || perfil === "professor"
+                    ? "PROFESSOR"
+                    : tipoUsuario === "responsavel" || perfil === "responsavel"
+                      ? "RESPONSAVEL"
+                      : "ALUNO";
+
+        const dados = await carregarDadosSecretaria();
+        const linhas = dados["24_AVISOS_SISTEMA"] || [];
+
+        const avisos = linhas
+            .slice(1)
+            .filter((linha) => {
+                if (!texto(linha[0]) || normalizar(linha[7]) !== "publicado") {
+                    return false;
+                }
+
+                const destinatarios = texto(linha[4])
+                    .split(/[,;|]/)
+                    .map((item) => normalizar(item).toUpperCase());
+
+                return destinatarios.includes("TODOS") ||
+                    destinatarios.includes(destinatarioUsuario);
+            })
+            .map((linha) => ({
+                id: texto(linha[0]),
+                titulo: texto(linha[1]),
+                mensagem: texto(linha[2]),
+                prioridade: texto(linha[3]),
+                destinatarios: texto(linha[4]),
+                dataPublicacao: texto(linha[6]),
+            }))
+            .reverse();
+
+        return res.json({ sucesso: true, avisos });
+    } catch (erro) {
+        console.error("Erro ao carregar avisos dos painéis:", erro);
+        return res.status(500).json({
+            sucesso: false,
+            erro: "Não foi possível carregar os avisos.",
+        });
+    }
+});
+
 module.exports = router;
