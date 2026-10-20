@@ -120,7 +120,7 @@ async function api(url, opcoes = {}) {
 
 async function carregarDados() {
     try {
-        const [dados, dadosTurmas, dadosUsuarios, dadosAcervo, dadosMovimentacoes, dadosBloqueios, dadosDenuncias] = await Promise.all([
+        const [dados, dadosTurmas, dadosUsuarios, dadosAcervo, dadosMovimentacoes, dadosBloqueios, dadosDenuncias, dadosCalendario] = await Promise.all([
             api("/secretaria/dashboard"),
             api("/secretaria/turmas"),
             api("/secretaria/usuarios"),
@@ -134,6 +134,7 @@ async function carregarDados() {
                 console.warn("Não foi possível carregar as denúncias da Secretaria:", erro);
                 return { colunas: [], registros: [] };
             }),
+            api("/secretaria/calendario"),
         ]);
 
         registrosBloqueios = { colunas: dadosBloqueios.colunas || [], registros: dadosBloqueios.registros || [] };
@@ -220,11 +221,11 @@ async function carregarDados() {
             professorTurmas,
         );
 
-        evs = (dados.calendario || []).map((e) => ({
-            id: e.eventoID,
-            d: e.data ? e.data.substring(0, 10) : "",
-            t: String(e.tipo || "").toLowerCase(),
-            n: e.titulo,
+        evs = (dadosCalendario.eventos || []).map((e) => ({
+            id: e.id || e.eventoID || "",
+            d: e.data ? String(e.data).substring(0, 10) : "",
+            t: String(e.tipo || "EVENTO").toUpperCase(),
+            n: e.titulo || "Evento escolar",
             descricao: e.descricao || "",
         }));
 
@@ -1356,8 +1357,13 @@ function chaveCalSecretaria(data) {
 }
 
 function eventosVisiveisCalSecretaria() {
+    // A API atual fornece eventos escolares, mas ainda não possui uma fonte
+    // específica de reservas de salas para exibir neste calendário.
     if (filtroCalendarioSecretaria === "reservas") return [];
-    return evs.map((evento) => {
+
+    return evs
+        .filter((evento) => filtroCalendarioSecretaria === "geral" || filtroCalendarioSecretaria === "eventos")
+        .map((evento) => {
         const data = evento.d ? new Date(evento.d + "T00:00:00") : null;
         const tipo = String(evento.t || "evento").toUpperCase();
         return {
