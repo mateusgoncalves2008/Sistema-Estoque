@@ -1391,47 +1391,47 @@ function renderizarCalendarioSecretaria() {
         data.setDate(inicio.getDate() + i);
         const chave = chaveCalSecretaria(data);
         const doDia = eventos.filter((e) => chaveCalSecretaria(e.data) === chave);
-        diasHTML += \`
-            <div class="cal-prof-day \${data.getMonth() !== mesCalendarioSecretaria ? "outside" : ""} \${data.getDay() === 0 || data.getDay() === 6 ? "weekend" : ""} \${chave === hoje ? "today" : ""}"
-                 aria-label="\${escaparCalSecretaria(data.getDate() + " de " + meses[data.getMonth()])}"
-                 title="\${escaparCalSecretaria(doDia.map((e) => e.categoria + ": " + e.titulo).join(" | "))}">
-                <span class="cal-prof-number">\${data.getDate()}</span>
-                \${doDia.slice(0, 3).map((e) => \`<span class="cal-prof-event" style="--event-color:\${e.cor}"><i class="cal-prof-dot"></i><span class="cal-prof-event-label">\${escaparCalSecretaria(e.titulo)}</span></span>\`).join("")}
-                \${doDia.length > 3 ? \`<span class="cal-prof-event">+\${doDia.length - 3} eventos</span>\` : ""}
-            </div>\`;
+        diasHTML += `
+            <div class="cal-prof-day ${data.getMonth() !== mesCalendarioSecretaria ? "outside" : ""} ${data.getDay() === 0 || data.getDay() === 6 ? "weekend" : ""} ${chave === hoje ? "today" : ""}"
+                 aria-label="${escaparCalSecretaria(data.getDate() + " de " + meses[data.getMonth()])}"
+                 title="${escaparCalSecretaria(doDia.map((e) => e.categoria + ": " + e.titulo).join(" | "))}">
+                <span class="cal-prof-number">${data.getDate()}</span>
+                ${doDia.slice(0, 3).map((e) => `<span class="cal-prof-event" style="--event-color:${e.cor}"><i class="cal-prof-dot"></i><span class="cal-prof-event-label">${escaparCalSecretaria(e.titulo)}</span></span>`).join("")}
+                ${doDia.length > 3 ? `<span class="cal-prof-event">+${doDia.length - 3} eventos</span>` : ""}
+            </div>`;
     }
 
     const proximos = eventos.filter((e) => e.data >= new Date(new Date().setHours(0, 0, 0, 0))).sort((a, b) => a.data - b.data).slice(0, 6);
-    const listaHTML = proximos.length ? proximos.map((e) => \`
+    const listaHTML = proximos.length ? proximos.map((e) => `
         <div class="cal-prof-upcoming">
-            <div class="cal-prof-datebox"><strong>\${String(e.data.getDate()).padStart(2, "0")}</strong><span>\${meses[e.data.getMonth()].slice(0, 3)}</span></div>
-            <div class="cal-prof-upcoming-info"><strong><i class="cal-prof-dot" style="display:inline-block;background:\${e.cor}"></i> \${escaparCalSecretaria(e.titulo)}</strong><span>\${escaparCalSecretaria(e.categoria)}\${e.descricao ? " · " + escaparCalSecretaria(e.descricao) : ""}</span></div>
-        </div>\`).join("") : '<div class="cal-prof-empty-list">Nenhum próximo evento cadastrado.</div>';
+            <div class="cal-prof-datebox"><strong>${String(e.data.getDate()).padStart(2, "0")}</strong><span>${meses[e.data.getMonth()].slice(0, 3)}</span></div>
+            <div class="cal-prof-upcoming-info"><strong><i class="cal-prof-dot" style="display:inline-block;background:${e.cor}"></i> ${escaparCalSecretaria(e.titulo)}</strong><span>${escaparCalSecretaria(e.categoria)}${e.descricao ? " · " + escaparCalSecretaria(e.descricao) : ""}</span></div>
+        </div>`).join("") : '<div class="cal-prof-empty-list">Nenhum próximo evento cadastrado.</div>';
 
     const legenda = [["FERIADO", "Feriado"], ["RECESSO", "Recesso"], ["EVENTO", "Evento escolar"], ["REUNIAO", "Reunião"], ["PROVA", "Prova"]].map(([tipo, nome]) =>
-        \`<span><i class="cal-prof-dot" style="--event-color:\${CORES_CAL_SECRETARIA[tipo]}"></i>\${nome}</span>\`).join("");
+        `<span><i class="cal-prof-dot" style="--event-color:${CORES_CAL_SECRETARIA[tipo]}"></i>${nome}</span>`).join("");
 
-    area.innerHTML = \`
+    area.innerHTML = `
         <header class="cal-prof-header"><h2>Calendário escolar</h2><p>Confira os eventos e as datas importantes da escola.</p></header>
         <div class="cal-prof-toolbar">
             <div class="cal-prof-filters">
-                \${[["geral", "Geral"], ["reservas", "Reservas de salas"], ["eventos", "Eventos"]].map(([id, nome]) =>
-                    \`<button type="button" class="\${filtroCalendarioSecretaria === id ? "active" : ""}" data-cal-sec-filter="\${id}">\${nome}</button>\`).join("")}
+                ${[["geral", "Geral"], ["reservas", "Reservas de salas"], ["eventos", "Eventos"]].map(([id, nome]) =>
+                    `<button type="button" class="${filtroCalendarioSecretaria === id ? "active" : ""}" data-cal-sec-filter="${id}">${nome}</button>`).join("")}
             </div>
             <div class="cal-prof-spacer"></div>
             <button type="button" data-cal-sec-month="-1">Anterior</button>
-            <select aria-label="Mês" data-cal-sec-select="mes">\${meses.map((mes, i) => \`<option value="\${i}" \${i === mesCalendarioSecretaria ? "selected" : ""}>\${mes}</option>\`).join("")}</select>
-            <select aria-label="Ano" data-cal-sec-select="ano">\${anos.map((ano) => \`<option value="\${ano}" \${ano === anoCalendarioSecretaria ? "selected" : ""}>\${ano}</option>\`).join("")}</select>
+            <select aria-label="Mês" data-cal-sec-select="mes">${meses.map((mes, i) => `<option value="${i}" ${i === mesCalendarioSecretaria ? "selected" : ""}>${mes}</option>`).join("")}</select>
+            <select aria-label="Ano" data-cal-sec-select="ano">${anos.map((ano) => `<option value="${ano}" ${ano === anoCalendarioSecretaria ? "selected" : ""}>${ano}</option>`).join("")}</select>
             <button type="button" data-cal-sec-month="1">Próximo</button>
         </div>
         <div class="cal-prof-layout">
             <section class="cal-prof-main" aria-label="Calendário mensal">
-                <div class="cal-prof-weekdays">\${["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((dia) => \`<div>\${dia}</div>\`).join("")}</div>
-                <div class="cal-prof-grid">\${diasHTML}</div>
+                <div class="cal-prof-weekdays">${["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((dia) => `<div>${dia}</div>`).join("")}</div>
+                <div class="cal-prof-grid">${diasHTML}</div>
                 <div class="cal-prof-note"><strong>Detalhes dos eventos</strong>Passe o mouse sobre uma data marcada para consultar seus detalhes.</div>
             </section>
-            <aside class="cal-prof-side"><h2>Próximos eventos</h2><div class="cal-prof-event-list">\${listaHTML}</div><div class="cal-prof-legend">\${legenda}</div></aside>
-        </div>\`;
+            <aside class="cal-prof-side"><h2>Próximos eventos</h2><div class="cal-prof-event-list">${listaHTML}</div><div class="cal-prof-legend">${legenda}</div></aside>
+        </div>`;
 
     area.querySelectorAll("[data-cal-sec-filter]").forEach((botao) => botao.addEventListener("click", () => {
         filtroCalendarioSecretaria = botao.dataset.calSecFilter;
