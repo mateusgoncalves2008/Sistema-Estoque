@@ -2557,3 +2557,171 @@ if (document.readyState === "loading") {
 } else {
     configurarBotaoPublicarAviso();
 }
+
+
+/* =========================================================
+   CENTRAL DE AVISOS DA SECRETARIA
+========================================================= */
+let avisosSecretariaPainel = [];
+let avisosLidosSecretariaPainel = [];
+let centralAvisosSecretariaAberta = false;
+
+async function carregarAvisosSecretariaPainel() {
+    try {
+        const [respostaAvisos, respostaLeituras] = await Promise.all([
+            fetch(`${API_URL}/avisos`, { credentials: "same-origin" }),
+            fetch(`${API_URL}/avisos/leituras`, { credentials: "same-origin" }),
+        ]);
+        const dadosAvisos = await respostaAvisos.json();
+        const dadosLeituras = await respostaLeituras.json();
+
+        if (!respostaAvisos.ok || !dadosAvisos.sucesso) {
+            throw new Error(dadosAvisos.erro || "Não foi possível carregar os avisos.");
+        }
+        if (!respostaLeituras.ok || !dadosLeituras.sucesso) {
+            throw new Error(dadosLeituras.erro || "Não foi possível carregar as leituras.");
+        }
+
+        avisosSecretariaPainel = Array.isArray(dadosAvisos.avisos) ? dadosAvisos.avisos : [];
+        avisosLidosSecretariaPainel = Array.isArray(dadosLeituras.avisosLidos) ? dadosLeituras.avisosLidos : [];
+        renderizarAvisosSecretariaPainel();
+        atualizarContadorAvisosSecretariaPainel();
+    } catch (erro) {
+        console.error("Erro ao carregar avisos da Secretaria:", erro);
+        const lista = $("#listaAvisosSecretariaPainel");
+        if (lista) lista.innerHTML = '<p class="avisos-vazio-secretaria-painel">Não foi possível carregar os avisos. Atualize a página e tente novamente.</p>';
+    }
+}
+
+async function registrarLeituraAvisoSecretariaPainel(avisoID) {
+    const resposta = await fetch(`${API_URL}/avisos/leituras`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avisoID }),
+    });
+    const dados = await resposta.json();
+    if (!resposta.ok || !dados.sucesso) {
+        throw new Error(dados.erro || "Não foi possível registrar a leitura.");
+    }
+    if (!avisosLidosSecretariaPainel.includes(avisoID)) avisosLidosSecretariaPainel.push(avisoID);
+}
+
+function atualizarContadorAvisosSecretariaPainel() {
+    const botao = $("#botaoAvisosSecretariaPainel");
+    const contador = $("#contadorAvisosSecretariaPainel");
+    if (!botao || !contador) return;
+    const naoLidos = avisosSecretariaPainel.filter((item) => !avisosLidosSecretariaPainel.includes(item.id)).length;
+    contador.textContent = naoLidos > 99 ? "99+" : String(naoLidos);
+    contador.hidden = naoLidos === 0;
+    botao.setAttribute("aria-label", naoLidos ? `Avisos. ${naoLidos} não lidos` : "Avisos");
+}
+
+function criarBotaoAvisosSecretaria() {
+    if ($("#botaoAvisosSecretariaPainel")) return;
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.id = "botaoAvisosSecretariaPainel";
+    botao.className = "botao-avisos-secretaria-painel";
+    botao.title = "Avisos da escola";
+    botao.setAttribute("aria-label", "Avisos");
+    botao.innerHTML = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-avisos"></use></svg><span id="contadorAvisosSecretariaPainel" class="contador-avisos-secretaria-painel" hidden>0</span>';
+
+    const central = document.createElement("section");
+    central.id = "centralAvisosSecretariaPainel";
+    central.className = "central-avisos-secretaria-painel";
+    central.hidden = true;
+    central.setAttribute("aria-label", "Central de avisos");
+    central.innerHTML = `
+        <div class="cabecalho-avisos-secretaria-painel">
+            <div><h2>Avisos da escola</h2><p>Comunicados destinados à Secretaria</p></div>
+            <button type="button" id="fecharAvisosSecretariaPainel" class="fechar-avisos-secretaria-painel" aria-label="Fechar avisos">&times;</button>
+        </div>
+        <div class="acoes-avisos-secretaria-painel"><button type="button" id="marcarAvisosLidosSecretariaPainel">Marcar todos como lidos</button></div>
+        <div id="listaAvisosSecretariaPainel" class="lista-avisos-secretaria-painel"><p class="avisos-vazio-secretaria-painel">Carregando avisos...</p></div>
+    `;
+    document.body.append(botao, central);
+    botao.addEventListener("click", alternarCentralAvisosSecretariaPainel);
+    central.querySelector("#fecharAvisosSecretariaPainel").addEventListener("click", fecharCentralAvisosSecretariaPainel);
+    central.querySelector("#marcarAvisosLidosSecretariaPainel").addEventListener("click", marcarTodosAvisosSecretariaPainelComoLidos);
+}
+
+function alternarCentralAvisosSecretariaPainel() {
+    centralAvisosSecretariaAberta = !centralAvisosSecretariaAberta;
+    const central = $("#centralAvisosSecretariaPainel");
+    if (!central) return;
+    central.hidden = !centralAvisosSecretariaAberta;
+    if (centralAvisosSecretariaAberta) renderizarAvisosSecretariaPainel();
+}
+
+function fecharCentralAvisosSecretariaPainel() {
+    centralAvisosSecretariaAberta = false;
+    const central = $("#centralAvisosSecretariaPainel");
+    if (central) central.hidden = true;
+}
+
+async function marcarTodosAvisosSecretariaPainelComoLidos() {
+    const pendentes = avisosSecretariaPainel.filter((item) => !avisosLidosSecretariaPainel.includes(item.id));
+    try {
+        await Promise.all(pendentes.map((item) => registrarLeituraAvisoSecretariaPainel(item.id)));
+        atualizarContadorAvisosSecretariaPainel();
+        renderizarAvisosSecretariaPainel();
+    } catch (erro) {
+        console.error("Erro ao marcar avisos da Secretaria como lidos:", erro);
+        toast("Não foi possível salvar a leitura dos avisos.");
+    }
+}
+
+function renderizarAvisosSecretariaPainel() {
+    const lista = $("#listaAvisosSecretariaPainel");
+    if (!lista) return;
+    if (!avisosSecretariaPainel.length) {
+        lista.innerHTML = '<p class="avisos-vazio-secretaria-painel">Nenhum aviso publicado para a Secretaria.</p>';
+        return;
+    }
+
+    lista.innerHTML = avisosSecretariaPainel.map((item) => {
+        const lido = avisosLidosSecretariaPainel.includes(item.id);
+        const prioridade = String(item.prioridade || "NORMAL").toUpperCase();
+        const data = item.dataPublicacao ? new Date(item.dataPublicacao) : null;
+        const dataTexto = data && !Number.isNaN(data.getTime()) ? data.toLocaleString("pt-BR") : "";
+        return `
+            <article class="aviso-secretaria-painel ${lido ? "aviso-lido-secretaria-painel" : "aviso-nao-lido-secretaria-painel"}">
+                <div class="aviso-secretaria-painel-topo">
+                    <strong>${escHtml(item.titulo || "Aviso")}</strong>
+                    <span class="prioridade-aviso-secretaria-painel ${prioridade === "URGENTE" ? "urgente" : ""}">${escHtml(prioridade)}</span>
+                </div>
+                <p>${escHtml(item.mensagem || "")}</p>
+                <div class="aviso-secretaria-painel-rodape">
+                    <small>${escHtml(dataTexto)}</small>
+                    ${lido ? '<span class="estado-aviso-secretaria-painel">Lido</span>' : `<button type="button" data-aviso-lido-secretaria-painel="${escHtml(item.id)}">Marcar como lido</button>`}
+                </div>
+            </article>
+        `;
+    }).join("");
+
+    lista.querySelectorAll("[data-aviso-lido-secretaria-painel]").forEach((botao) => {
+        botao.addEventListener("click", async () => {
+            botao.disabled = true;
+            try {
+                await registrarLeituraAvisoSecretariaPainel(botao.dataset.avisoLidoSecretariaPainel);
+                atualizarContadorAvisosSecretariaPainel();
+                renderizarAvisosSecretariaPainel();
+            } catch (erro) {
+                console.error("Erro ao marcar aviso como lido:", erro);
+                toast("Não foi possível salvar a leitura do aviso.");
+                botao.disabled = false;
+            }
+        });
+    });
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+        criarBotaoAvisosSecretaria();
+        carregarAvisosSecretariaPainel();
+    });
+} else {
+    criarBotaoAvisosSecretaria();
+    carregarAvisosSecretariaPainel();
+}
