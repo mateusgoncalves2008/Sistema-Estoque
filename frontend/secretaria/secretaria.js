@@ -1434,7 +1434,9 @@ function eventosVisiveisCalSecretaria() {
 
             const categoria = normalizarReservaEspaco(produto.categoria);
             const subcategoria = normalizarReservaEspaco(produto.subcategoria);
-            if (categoria !== "patrimonio" || !subcategoriasReservaveis.has(subcategoria)) return null;
+            // "Salas" é a subcategoria dedicada aos espaços; outros espaços também
+            // podem ter subcategorias próprias com seus nomes.
+            if (categoria !== "patrimonio" || (subcategoria !== "salas" && !subcategoriasReservaveis.has(subcategoria))) return null;
 
             const data = dataCalSecretaria(emprestimo.dataRetirada);
             const dataFim = dataCalSecretaria(emprestimo.dataPrevista) || data;
