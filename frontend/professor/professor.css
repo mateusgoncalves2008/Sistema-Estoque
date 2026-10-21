@@ -2089,3 +2089,9 @@ th {
         max-height: calc(100vh - 82px);
     }
 }
+
+/* Mantém avisos longos dentro do cartão e quebra frases grandes. */
+.aviso-professor { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.aviso-professor-topo { min-width: 0; flex-wrap: wrap; }
+.aviso-professor-topo strong { min-width: 0; max-width: 100%; overflow-wrap: anywhere; word-break: normal; }
+.aviso-professor > p { min-width: 0; max-width: 100%; overflow-wrap: anywhere; word-break: normal; white-space: pre-wrap; }
