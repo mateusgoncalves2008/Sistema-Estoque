@@ -1521,7 +1521,7 @@ function renderizarCalendarioSecretaria() {
         <header class="cal-prof-header"><h2>Calendário escolar</h2><p>Confira os eventos e as datas importantes da escola.</p></header>
         <div class="cal-prof-toolbar">
             <div class="cal-prof-filters">
-                ${[["geral", "Geral"], ["reservas", "Reservas de salas"], ["eventos", "Eventos"]].map(([id, nome]) =>
+                ${[["geral", "Geral"], ["eventos", "Eventos"]].map(([id, nome]) =>
                     `<button type="button" class="${filtroCalendarioSecretaria === id ? "active" : ""}" data-cal-sec-filter="${id}">${nome}</button>`).join("")}
             </div>
             <div class="cal-prof-spacer"></div>
