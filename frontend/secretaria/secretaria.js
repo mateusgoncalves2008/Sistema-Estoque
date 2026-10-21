@@ -1520,10 +1520,6 @@ function renderizarCalendarioSecretaria() {
     area.innerHTML = `
         <header class="cal-prof-header"><h2>Calendário escolar</h2><p>Confira os eventos e as datas importantes da escola.</p></header>
         <div class="cal-prof-toolbar">
-            <div class="cal-prof-filters">
-                ${[["geral", "Geral"], ["eventos", "Eventos"]].map(([id, nome]) =>
-                    `<button type="button" class="${filtroCalendarioSecretaria === id ? "active" : ""}" data-cal-sec-filter="${id}">${nome}</button>`).join("")}
-            </div>
             <div class="cal-prof-spacer"></div>
             <button type="button" data-cal-sec-month="-1">Anterior</button>
             <select aria-label="Mês" data-cal-sec-select="mes">${meses.map((mes, i) => `<option value="${i}" ${i === mesCalendarioSecretaria ? "selected" : ""}>${mes}</option>`).join("")}</select>
