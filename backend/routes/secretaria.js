@@ -1770,7 +1770,8 @@ router.get("/secretaria/emprestimos", async (req, res) => {
         const lista = emprestimos.slice(1).map((linha) => {
             const usuarioID = texto(linha[1]);
 
-            const produtoID = texto(linha[2]);
+            // Na aba 09_EMPRESTIMOS, ProdutoID fica na coluna D.
+            const produtoID = texto(linha[3]);
 
             return {
                 emprestimoID: linha[0] || "",
@@ -1783,17 +1784,17 @@ router.get("/secretaria/emprestimos", async (req, res) => {
 
                 produto: mapaProdutos.get(produtoID) || "",
 
-                dataRetirada: linha[3] || "",
+                dataRetirada: linha[4] || "",
 
-                dataPrevista: linha[4] || "",
+                dataPrevista: linha[5] || "",
 
-                dataDevolucao: linha[5] || "",
+                dataDevolucao: linha[6] || "",
 
-                quantidade: numero(linha[6]),
+                quantidade: numero(linha[7]),
 
-                status: linha[7] || "",
+                status: linha[8] || "",
 
-                observacao: linha[8] || "",
+                observacao: linha[9] || "",
             };
         });
 
