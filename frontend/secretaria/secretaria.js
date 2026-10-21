@@ -1391,8 +1391,8 @@ function dataCalSecretaria(valor) {
 function normalizarReservaEspaco(valor) {
     return String(valor || "")
         .normalize("NFD")
-        .replace(/[\\u0300-\\u036f]/g, "")
-        .replace(/\\s+/g, " ")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, " ")
         .trim()
         .toLocaleLowerCase("pt-BR");
 }
