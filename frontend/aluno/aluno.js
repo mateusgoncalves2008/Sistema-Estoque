@@ -95,7 +95,6 @@ const MENU = [
     ["pesquisar", "Pesquisar item", "search"],
     ["perfil", "Meu Perfil", "user-round"],
     ["calendario", "Calendário", "calendar-days"],
-    ["cardapio", "Cardápio", "utensils"],
 ];
 
 // ============================================================
