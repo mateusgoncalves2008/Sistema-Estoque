@@ -2452,3 +2452,9 @@ body.reserva-modal-open {
 @media (max-width: 480px) {
     .central-avisos-aluno { width: calc(100vw - 24px); max-height: 75vh; }
 }
+
+/* Mantém avisos longos dentro do cartão e quebra frases grandes. */
+.aviso-aluno { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.aviso-aluno-topo { min-width: 0; flex-wrap: wrap; }
+.aviso-aluno-topo strong { min-width: 0; max-width: 100%; overflow-wrap: anywhere; word-break: normal; }
+.aviso-aluno > p { min-width: 0; max-width: 100%; overflow-wrap: anywhere; word-break: normal; white-space: pre-wrap; }
