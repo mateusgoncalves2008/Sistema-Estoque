@@ -36,6 +36,7 @@ let categorias = [];
 let acervoProdutos = [];
 let acervoLocais = [];
 let acervoCategorias = [];
+let emprestimosCalendario = [];
 
 let indicadores = {};
 
@@ -120,7 +121,7 @@ async function api(url, opcoes = {}) {
 
 async function carregarDados() {
     try {
-        const [dados, dadosTurmas, dadosUsuarios, dadosAcervo, dadosMovimentacoes, dadosBloqueios, dadosDenuncias, dadosCalendario] = await Promise.all([
+        const [dados, dadosTurmas, dadosUsuarios, dadosAcervo, dadosMovimentacoes, dadosBloqueios, dadosDenuncias, dadosCalendario, dadosEmprestimos] = await Promise.all([
             api("/secretaria/dashboard"),
             api("/secretaria/turmas"),
             api("/secretaria/usuarios"),
@@ -135,6 +136,7 @@ async function carregarDados() {
                 return { colunas: [], registros: [] };
             }),
             api("/secretaria/calendario"),
+            api("/secretaria/emprestimos"),
         ]);
 
         registrosBloqueios = { colunas: dadosBloqueios.colunas || [], registros: dadosBloqueios.registros || [] };
@@ -155,6 +157,13 @@ async function carregarDados() {
         acervoProdutos = dadosAcervo.produtos || [];
         acervoLocais = dadosAcervo.locais || [];
         acervoCategorias = dadosAcervo.categorias || [];
+
+        emprestimosCalendario = (dadosEmprestimos.emprestimos || []).map((emprestimo) => ({
+            ...emprestimo,
+            dataRetirada: emprestimo.dataRetirada || "",
+            dataPrevista: emprestimo.dataPrevista || "",
+            status: String(emprestimo.status || "").trim().toUpperCase(),
+        }));
         prods = acervoProdutos.map((p) => ({
             id: p.produtoID, codigo: p.codigo || "", n: p.nome || "Sem nome", autor: p.autor || "",
             c: p.categoria || "Sem categoria", sub: p.subcategoria || "Sem subcategoria",
@@ -1379,26 +1388,77 @@ function dataCalSecretaria(valor) {
     return data;
 }
 
-function eventosVisiveisCalSecretaria() {
-    // As reservas de salas ainda não possuem uma fonte ligada a este calendário.
-    if (filtroCalendarioSecretaria === "reservas") return [];
+function normalizarReservaEspaco(valor) {
+    return String(valor || "")
+        .normalize("NFD")
+        .replace(/[\\u0300-\\u036f]/g, "")
+        .replace(/\\s+/g, " ")
+        .trim()
+        .toLocaleLowerCase("pt-BR");
+}
 
-    return evs
+function eventosVisiveisCalSecretaria() {
+    const eventosEscolares = evs
         .filter((evento) => (filtroCalendarioSecretaria === "geral" || filtroCalendarioSecretaria === "eventos") && evento.status !== "INATIVO" && evento.status !== "CANCELADO")
         .map((evento) => {
-        const data = dataCalSecretaria(evento.d);
-        const dataFim = dataCalSecretaria(evento.dataFim) || data;
-        const tipo = String(evento.t || "evento").toUpperCase();
-        return {
-            data,
-            dataFim,
-            titulo: evento.n || "Evento escolar",
-            descricao: evento.descricao || "",
-            tipo,
-            cor: CORES_CAL_SECRETARIA[tipo] || CORES_CAL_SECRETARIA.EVENTO,
-            categoria: ({ FERIADO: "Feriado", RECESSO: "Recesso", PROVA: "Prova", REUNIAO: "Reunião", EVENTO: "Evento escolar" })[tipo] || "Evento escolar",
-        };
-    }).filter((evento) => evento.data && !Number.isNaN(evento.data.getTime()));
+            const data = dataCalSecretaria(evento.d);
+            const dataFim = dataCalSecretaria(evento.dataFim) || data;
+            const tipo = String(evento.t || "evento").toUpperCase();
+            return {
+                data,
+                dataFim,
+                titulo: evento.n || "Evento escolar",
+                descricao: evento.descricao || "",
+                tipo,
+                cor: CORES_CAL_SECRETARIA[tipo] || CORES_CAL_SECRETARIA.EVENTO,
+                categoria: ({ FERIADO: "Feriado", RECESSO: "Recesso", PROVA: "Prova", REUNIAO: "Reunião", EVENTO: "Evento escolar" })[tipo] || "Evento escolar",
+            };
+        })
+        .filter((evento) => evento.data && !Number.isNaN(evento.data.getTime()));
+
+    const subcategoriasReservaveis = new Set([
+        "salas",
+        "jardim",
+        "quadra 01",
+        "quadra 02",
+        "refeitorio",
+    ]);
+
+    const reservasEspacos = emprestimosCalendario
+        .filter((emprestimo) => !["DEVOLVIDO", "DEVOLVIDA", "CONCLUIDO", "CONCLUIDA", "CANCELADO", "CANCELADA", "RECUSADO", "RECUSADA", "REJEITADO", "REJEITADA", "INATIVO", "INATIVA"].includes(emprestimo.status))
+        .map((emprestimo) => {
+            const produto = acervoProdutos.find((item) =>
+                String(item.produtoID || "").trim() === String(emprestimo.produtoID || "").trim()
+            );
+            if (!produto) return null;
+
+            const categoria = normalizarReservaEspaco(produto.categoria);
+            const subcategoria = normalizarReservaEspaco(produto.subcategoria);
+            if (categoria !== "patrimonio" || !subcategoriasReservaveis.has(subcategoria)) return null;
+
+            const data = dataCalSecretaria(emprestimo.dataRetirada);
+            const dataFim = dataCalSecretaria(emprestimo.dataPrevista) || data;
+            if (!data || Number.isNaN(data.getTime())) return null;
+
+            return {
+                data,
+                dataFim,
+                titulo: produto.nome || emprestimo.produto || "Espaço escolar",
+                descricao: [
+                    emprestimo.usuario ? "Responsável: " + emprestimo.usuario : "",
+                    emprestimo.status ? "Status: " + emprestimo.status : "",
+                    emprestimo.observacao || "",
+                ].filter(Boolean).join(" · "),
+                tipo: "RESERVA_SALA",
+                cor: "#27836b",
+                categoria: "Reserva de espaço",
+            };
+        })
+        .filter(Boolean);
+
+    if (filtroCalendarioSecretaria === "eventos") return eventosEscolares;
+    if (filtroCalendarioSecretaria === "reservas") return reservasEspacos;
+    return [...eventosEscolares, ...reservasEspacos];
 }
 
 function renderizarCalendarioSecretaria() {
@@ -1435,7 +1495,7 @@ function renderizarCalendarioSecretaria() {
             <div class="cal-prof-datebox"><strong>${String(e.data.getDate()).padStart(2, "0")}</strong><span>${meses[e.data.getMonth()].slice(0, 3)}</span></div>
             <div class="cal-prof-upcoming-info"><strong><i class="cal-prof-dot" style="display:inline-block;background:${e.cor}"></i> ${escaparCalSecretaria(e.titulo)}</strong><span>${escaparCalSecretaria(e.categoria)}${e.descricao ? " · " + escaparCalSecretaria(e.descricao) : ""}</span></div>
         </div>`).join("") : filtroCalendarioSecretaria === "reservas"
-        ? '<div class="cal-prof-empty-list">As reservas de salas ainda não estão conectadas ao calendário.</div>'
+        ? '<div class="cal-prof-empty-list">Nenhuma reserva de espaço encontrada.</div>'
         : '<div class="cal-prof-empty-list">Nenhum próximo evento cadastrado.</div>';
 
     const legenda = [["FERIADO", "Feriado"], ["RECESSO", "Recesso"], ["EVENTO", "Evento escolar"], ["REUNIAO", "Reunião"], ["PROVA", "Prova"]].map(([tipo, nome]) =>
