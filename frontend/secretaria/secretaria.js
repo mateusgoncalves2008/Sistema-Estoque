@@ -1368,22 +1368,34 @@ function chaveCalSecretaria(data) {
 }
 
 function dataCalSecretaria(valor) {
-    const texto = String(valor || "").trim();
-    if (!texto) return null;
+    const bruto = String(valor ?? "").trim();
+    if (!bruto) return null;
+
+    // O Google Sheets pode devolver datas como número serial.
+    if (/^\d+(\.\d+)?$/.test(bruto)) {
+        const serial = Number(bruto);
+        if (serial > 20000 && serial < 80000) {
+            const dataSerial = new Date(Date.UTC(1899, 11, 30) + Math.floor(serial) * 86400000);
+            const data = new Date(dataSerial.getUTCFullYear(), dataSerial.getUTCMonth(), dataSerial.getUTCDate());
+            data.setHours(0, 0, 0, 0);
+            return data;
+        }
+    }
 
     let ano, mes, dia;
-    if (texto.includes("/")) {
-        const partes = texto.split("/");
+    if (bruto.includes("/")) {
+        const partes = bruto.split("/");
         if (partes.length !== 3) return null;
         [dia, mes, ano] = partes.map(Number);
+        if (ano < 100) ano += 2000;
     } else {
-        const partes = texto.substring(0, 10).split("-");
+        const partes = bruto.substring(0, 10).split("-");
         if (partes.length !== 3) return null;
         [ano, mes, dia] = partes.map(Number);
     }
 
     const data = new Date(ano, mes - 1, dia);
-    if (data.getFullYear() !== ano || data.getMonth() !== mes - 1 || data.getDate() !== dia) return null;
+    if (!ano || !mes || !dia || data.getFullYear() !== ano || data.getMonth() !== mes - 1 || data.getDate() !== dia) return null;
     data.setHours(0, 0, 0, 0);
     return data;
 }
@@ -1434,9 +1446,11 @@ function eventosVisiveisCalSecretaria() {
 
             const categoria = normalizarReservaEspaco(produto.categoria);
             const subcategoria = normalizarReservaEspaco(produto.subcategoria);
-            // "Salas" é a subcategoria dedicada aos espaços; outros espaços também
-            // podem ter subcategorias próprias com seus nomes.
-            if (categoria !== "patrimonio" || (subcategoria !== "salas" && !subcategoriasReservaveis.has(subcategoria))) return null;
+            // Aceita apenas itens de Patrimônio que sejam espaços reserváveis.
+            // Normaliza espaços e acentos antes da comparação.
+            const categoriaPatrimonio = categoria === "patrimonio" || categoria === "patrimonio escolar";
+            const subcategoriaReservavel = subcategoriasReservaveis.has(subcategoria);
+            if (!categoriaPatrimonio || !subcategoriaReservavel) return null;
 
             const data = dataCalSecretaria(emprestimo.dataRetirada);
             const dataFim = dataCalSecretaria(emprestimo.dataPrevista) || data;
