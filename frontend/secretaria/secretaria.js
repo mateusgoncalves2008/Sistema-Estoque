@@ -436,18 +436,19 @@ function montarGraficos() {
         }).length,
     );
 
-    const tipos = {};
+    // Situação dos empréstimos, calculada a partir da aba 09_EMPRESTIMOS.
+    G.situacao = [
+        ["Em andamento", emps.filter((e) => e.s === "Em andamento").length],
+        ["Atrasados", emps.filter((e) => e.s === "Atrasado").length],
+        ["Devolvidos", emps.filter((e) => e.s === "Devolvido").length],
+    ];
 
-    movs.forEach((m) => {
-        const tipo = m[2] || "Outro";
-        tipos[tipo] = (tipos[tipo] || 0) + 1;
-    });
-
-    G.cat = Object.entries(tipos);
-
-    if (!G.cat.length) {
-        G.cat = [["Nenhum", 1]];
-    }
+    // Quantidades do acervo a partir dos saldos reais dos produtos.
+    G.estoque = [
+        ["Disponíveis", prods.reduce((total, p) => total + Number(p.disponivel || 0), 0)],
+        ["Reservados", prods.reduce((total, p) => total + Number(p.reservado || 0), 0)],
+        ["Indisponíveis", prods.reduce((total, p) => total + Number(p.indisponivel || 0), 0)],
+    ];
 
     // Conta movimentações reais do mês atual por faixa de dias.
     // Aceita "14/10/2026", "17/10/2026, 21:38:02" e datas ISO.
@@ -476,14 +477,7 @@ function montarGraficos() {
         semanas,
     ];
 
-    // Conta somente empréstimos realmente atrasados e associa cada um à turma do aluno.
-    // Inclui turmas sem atrasos para manter o comparativo completo.
-    G.atr = turmasParaGraficos.map((turma) => [
-        [turma.serie, turma.nome].filter(Boolean).join(" "),
-        emps.filter((emprestimo) =>
-            emprestimo.s === "Atrasado" && emprestimo.turmaID === turma.turmaID
-        ).length,
-    ]);
+
 }
 
 /* =========================================================
@@ -1667,7 +1661,10 @@ const R = {
 
         $("#ch-emp").innerHTML = bars(G.emp[1], G.emp[0]);
 
-        $("#ch-cat").innerHTML = donut(G.cat);
+        $("#ch-situacao").innerHTML = bars(
+            G.situacao.map((item) => item[1]),
+            G.situacao.map((item) => item[0]),
+        );
 
         $("#ch-sem").innerHTML = line(G.sem[1], G.sem[0]);
 
@@ -1866,7 +1863,10 @@ const R = {
 
         $("#resumo").innerHTML = resumo;
 
-        $("#ch-atr").innerHTML = hb(G.atr);
+        $("#ch-estoque-emprestimos").innerHTML = bars(
+            G.estoque.map((item) => item[1]),
+            G.estoque.map((item) => item[0]),
+        );
 
         $("#t-emp").innerHTML = T(
             ["Pessoa", "Item", "Retirada", "Prevista", "Situação", "Ações"],
@@ -1965,11 +1965,14 @@ const R = {
 
         $("#r2").innerHTML = line(G.sem[1], G.sem[0]);
 
-        $("#r3").innerHTML = donut(G.cat);
+        $("#r3").innerHTML = bars(
+            G.situacao.map((item) => item[1]),
+            G.situacao.map((item) => item[0]),
+        );
 
-        $("#r4").innerHTML = line(
-            G.atr.map((turma) => turma[1]),
-            G.atr.map((turma) => turma[0]),
+        $("#r4").innerHTML = bars(
+            G.estoque.map((item) => item[1]),
+            G.estoque.map((item) => item[0]),
         );
     },
 
