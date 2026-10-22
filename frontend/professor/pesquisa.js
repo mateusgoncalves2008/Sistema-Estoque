@@ -219,20 +219,34 @@ function aplicarFiltros() {
         // Filtro por categoria cadastrada na aba 03_CATEGORIAS
         if (tipo !== "todos" && categoriaID !== tipo) return false;
 
-        // Ao selecionar Informática, não exibe impressoras nessa lista.
-        const tipoSelecionado = String(
+        // Na categoria Informática, exibe somente computadores nos três locais permitidos.
+        const normalizarTexto = (valor) =>
+            String(valor || "")
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .trim()
+                .toLowerCase();
+
+        const tipoSelecionado = normalizarTexto(
             document.getElementById("pesquisaTipo")?.selectedOptions?.[0]?.textContent || "",
-        )
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .trim()
-            .toLowerCase();
-        const nomeItem = String(item.nome || "")
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase();
-        if (tipoSelecionado === "informatica" && nomeItem.includes("impressora")) {
-            return false;
+        );
+
+        if (tipoSelecionado === "informatica") {
+            const nomeItem = normalizarTexto(item.nome);
+            const localItem = normalizarTexto(item.local);
+            const ehComputador =
+                nomeItem.includes("computador") ||
+                nomeItem.includes("desktop");
+
+            const locaisPermitidos = [
+                "laboratorio de informatica",
+                "sala dos professores",
+                "supervisao",
+            ];
+
+            if (!ehComputador || !locaisPermitidos.includes(localItem)) {
+                return false;
+            }
         }
 
         // Filtro por situação
