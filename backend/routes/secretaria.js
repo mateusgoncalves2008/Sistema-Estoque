@@ -2206,8 +2206,9 @@ router.get("/secretaria/calendario", async (req, res) => {
 router.post("/secretaria/calendario", async (req, res) => {
     try {
         const { data, dataFim, tipo, titulo, descricao, status } = req.body;
+        const tipoMaiusculo = String(tipo || "EVENTO").trim().toLocaleUpperCase("pt-BR");
 
-        if (!data || !titulo) {
+        if (!data || !titulo || !tipoMaiusculo) {
             return res.status(400).json({
                 sucesso: false,
                 erro: "Data e título são obrigatórios.",
@@ -2233,7 +2234,7 @@ router.post("/secretaria/calendario", async (req, res) => {
                         id,
                         data,
                         dataFim || data,
-                        tipo || "EVENTO",
+                        tipoMaiusculo,
                         titulo,
                         descricao || "",
                         status || "ATIVO",
