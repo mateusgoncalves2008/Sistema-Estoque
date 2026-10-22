@@ -2958,3 +2958,72 @@ if (document.readyState === "loading") {
     criarBotaoAvisosSecretaria();
     carregarAvisosSecretariaPainel();
 }
+
+
+// Autocomplete visual do tipo de evento (sem o menu preto nativo do navegador).
+(() => {
+    const tipos = [
+        "Feriado", "Recesso", "Férias escolares", "Início das aulas",
+        "Término das aulas", "Prova", "Avaliação", "Recuperação",
+        "Reunião de pais", "Reunião pedagógica", "Conselho de classe",
+        "Planejamento escolar", "Evento cultural", "Feira de ciências",
+        "Gincana", "Passeio escolar", "Excursão", "Entrega de boletins",
+        "Matrícula", "Formação de professores", "Atividade escolar", "Outro",
+    ];
+
+    function configurarSugestoesTipoEvento() {
+        const campo = document.getElementById("ct");
+        const lista = document.getElementById("sugestoes-tipo-evento");
+        if (!campo || !lista || campo.dataset.sugestoesConfiguradas) return;
+        campo.dataset.sugestoesConfiguradas = "true";
+
+        function renderizar() {
+            const consulta = campo.value.trim().toLocaleLowerCase("pt-BR");
+            const correspondencias = tipos.filter((tipo) =>
+                tipo.toLocaleLowerCase("pt-BR").includes(consulta)
+            );
+            lista.replaceChildren();
+
+            if (!correspondencias.length || document.activeElement !== campo) {
+                lista.hidden = true;
+                return;
+            }
+
+            correspondencias.forEach((tipo) => {
+                const opcao = document.createElement("button");
+                opcao.type = "button";
+                opcao.className = "sugestoes-tipo-evento__opcao";
+                opcao.role = "option";
+                opcao.textContent = tipo;
+                opcao.addEventListener("pointerdown", (evento) => {
+                    evento.preventDefault();
+                    campo.value = tipo;
+                    lista.hidden = true;
+                    campo.focus();
+                });
+                lista.append(opcao);
+            });
+            lista.hidden = false;
+        }
+
+        campo.addEventListener("focus", renderizar);
+        campo.addEventListener("input", renderizar);
+        campo.addEventListener("keydown", (evento) => {
+            if (evento.key === "Escape") lista.hidden = true;
+        });
+        campo.addEventListener("blur", () => {
+            window.setTimeout(() => { lista.hidden = true; }, 120);
+        });
+        document.addEventListener("pointerdown", (evento) => {
+            if (!lista.contains(evento.target) && evento.target !== campo) {
+                lista.hidden = true;
+            }
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", configurarSugestoesTipoEvento);
+    } else {
+        configurarSugestoesTipoEvento();
+    }
+})();
