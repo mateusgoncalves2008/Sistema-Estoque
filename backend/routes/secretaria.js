@@ -429,10 +429,10 @@ router.post("/secretaria/autorizar-matricula", async (req, res) => {
             });
         }
 
-        if (matricula.length > 50) {
+        if (!/^\\d{5,10}$/.test(matricula)) {
             return res.status(400).json({
                 sucesso: false,
-                erro: "A matrícula deve ter no máximo 50 caracteres.",
+                erro: "A matrícula deve conter somente números, entre 5 e 10 dígitos.",
             });
         }
 
@@ -636,6 +636,12 @@ router.post("/secretaria/alunos", async (req, res) => {
 
         if (![identificador, nome, email, senha, ano, turma, turno, idade].every(Boolean)) {
             return res.status(400).json({ sucesso: false, erro: "Preencha todos os campos do aluno." });
+        }
+        if (!/^\\d{5,10}$/.test(identificador)) {
+            return res.status(400).json({
+                sucesso: false,
+                erro: "A matrícula deve conter somente números, entre 5 e 10 dígitos.",
+            });
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             return res.status(400).json({ sucesso: false, erro: "Informe um e-mail válido." });
