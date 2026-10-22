@@ -1951,32 +1951,27 @@ router.get("/secretaria/movimentacoes", async (req, res) => {
         }
 
         const lista = movimentacoes.slice(1).map((linha) => {
-            const usuarioID = texto(linha[1]);
-
-            const produtoID = texto(linha[2]);
+            // 07_MOVIMENTACOES: A ID, B DataHora, C Tipo, D ProdutoID,
+            // E Quantidade, F OrigemID, G DestinoID, H UsuarioID,
+            // I ResponsavelID, J Motivo, K Status, L Observacao.
+            const produtoID = texto(linha[3]);
+            const usuarioID = texto(linha[7]);
 
             return {
                 movimentacaoID: linha[0] || "",
-
-                usuarioID,
-
-                usuario: mapaUsuarios.get(usuarioID) || "",
-
+                data: linha[1] || "",
+                tipo: linha[2] || "",
                 produtoID,
-
                 produto: mapaProdutos.get(produtoID) || "",
-
-                tipo: linha[3] || "",
-
                 quantidade: numero(linha[4]),
-
-                data: linha[5] || "",
-
-                localOrigem: linha[6] || "",
-
-                localDestino: linha[7] || "",
-
-                observacao: linha[8] || "",
+                localOrigem: linha[5] || "",
+                localDestino: linha[6] || "",
+                usuarioID,
+                usuario: mapaUsuarios.get(usuarioID) || "",
+                responsavelID: texto(linha[8]),
+                motivo: linha[9] || "",
+                status: linha[10] || "",
+                observacao: linha[11] || "",
             };
         });
 
