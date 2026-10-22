@@ -841,33 +841,39 @@
                                 </div>
 
                                 <div>
-                                    <label for="ct">Tipo (selecione uma opção)</label>
-                                    <select id="ct">
-                                        <option value="FERIADO">Feriado</option>
-                                        <option value="RECESSO">Recesso</option>
-                                        <option value="FÉRIAS ESCOLARES">Férias escolares</option>
-                                        <option value="INÍCIO DAS AULAS">Início das aulas</option>
-                                        <option value="TÉRMINO DAS AULAS">Término das aulas</option>
-                                        <option value="PROVA">Prova</option>
-                                        <option value="AVALIAÇÃO">Avaliação</option>
-                                        <option value="RECUPERAÇÃO">Recuperação</option>
-                                        <option value="REUNIÃO DE PAIS">Reunião de pais</option>
-                                        <option value="REUNIÃO PEDAGÓGICA">Reunião pedagógica</option>
-                                        <option value="CONSELHO DE CLASSE">Conselho de classe</option>
-                                        <option value="PLANEJAMENTO ESCOLAR">Planejamento escolar</option>
-                                        <option value="EVENTO CULTURAL">Evento cultural</option>
-                                        <option value="FEIRA DE CIÊNCIAS">Feira de ciências</option>
-                                        <option value="GINCANA">Gincana</option>
-                                        <option value="PASSEIO ESCOLAR">Passeio escolar</option>
-                                        <option value="EXCURSÃO">Excursão</option>
-                                        <option value="ENTREGA DE BOLETINS">Entrega de boletins</option>
-                                        <option value="MATRÍCULA">Matrícula</option>
-                                        <option value="FORMAÇÃO DE PROFESSORES">Formação de professores</option>
-                                        <option value="ATIVIDADE ESCOLAR">Atividade escolar</option>
-                                        <option value="OUTRO">Outro</option>
-                                    </select>
-                                    <label for="ct-personalizado">Ou escreva um tipo personalizado</label>
-                                    <input id="ct-personalizado" type="text" maxlength="100" placeholder="Ex.: REUNIÃO EXTRAORDINÁRIA" />
+                                    <label for="ct">Tipo do evento</label>
+                                    <input
+                                        id="ct"
+                                        type="text"
+                                        list="tipos-evento-escolar"
+                                        maxlength="100"
+                                        placeholder="Digite para ver sugestões ou escreva um tipo novo"
+                                        autocomplete="off"
+                                    />
+                                    <datalist id="tipos-evento-escolar">
+                                        <option value="Feriado"></option>
+                                        <option value="Recesso"></option>
+                                        <option value="Férias escolares"></option>
+                                        <option value="Início das aulas"></option>
+                                        <option value="Término das aulas"></option>
+                                        <option value="Prova"></option>
+                                        <option value="Avaliação"></option>
+                                        <option value="Recuperação"></option>
+                                        <option value="Reunião de pais"></option>
+                                        <option value="Reunião pedagógica"></option>
+                                        <option value="Conselho de classe"></option>
+                                        <option value="Planejamento escolar"></option>
+                                        <option value="Evento cultural"></option>
+                                        <option value="Feira de ciências"></option>
+                                        <option value="Gincana"></option>
+                                        <option value="Passeio escolar"></option>
+                                        <option value="Excursão"></option>
+                                        <option value="Entrega de boletins"></option>
+                                        <option value="Matrícula"></option>
+                                        <option value="Formação de professores"></option>
+                                        <option value="Atividade escolar"></option>
+                                        <option value="Outro"></option>
+                                    </datalist>
                                 </div>
 
                                 <div>
