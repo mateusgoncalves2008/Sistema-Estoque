@@ -6,7 +6,7 @@ const sheets = require("../database/googleSheets");
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
-// Padroniza Ano e Turma para manter os dados consistentes na planilha.
+// Padroniza o Ano escolar e mantém a Turma sem prefixo na planilha.
 function normalizarAnoEscolar(valor) {
     const texto = String(valor || "").trim();
     const numero = texto.match(/^(\d+)\s*(?:[º°o]?\s*ano)?$/i);
@@ -15,8 +15,8 @@ function normalizarAnoEscolar(valor) {
 
 function normalizarNomeTurma(valor) {
     const texto = String(valor || "").trim();
-    const numero = texto.match(/^(?:turma\s*)?(\d+)$/i);
-    return numero ? `Turma ${numero[1]}` : texto;
+    const numero = texto.match(/^(?:turma\\s*)?(\\d+)$/i);
+    return numero ? numero[1] : texto;
 }
 
 // ============================================================
