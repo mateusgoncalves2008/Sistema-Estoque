@@ -862,7 +862,9 @@ async function addEv(botao) {
 
     try {
         const data = $("#cd")?.value;
-        const tipo = $("#ct")?.value;
+        const tipoSelecionado = $("#ct")?.value;
+        const tipoPersonalizado = $("#ct-personalizado")?.value.trim();
+        const tipo = (tipoPersonalizado || tipoSelecionado || "").toLocaleUpperCase("pt-BR");
         const titulo = $("#cn")?.value.trim();
 
         if (!data || !tipo || !titulo) {
