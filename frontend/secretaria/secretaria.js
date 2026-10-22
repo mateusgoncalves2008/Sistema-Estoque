@@ -433,14 +433,31 @@ function montarGraficos() {
         G.cat = [["Nenhum", 1]];
     }
 
+    // Conta movimentações reais do mês atual por faixa de dias.
+    // Aceita "14/10/2026", "17/10/2026, 21:38:02" e datas ISO.
+    const extrairDataMovimentacao = (valor) => {
+        const textoData = String(valor ?? "").trim();
+        const br = textoData.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:,?\s+\d{2}:\d{2}(?::\d{2})?)?$/);
+        if (br) return { dia: Number(br[1]), mes: Number(br[2]) - 1, ano: Number(br[3]) };
+
+        const iso = textoData.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (iso) return { dia: Number(iso[3]), mes: Number(iso[2]) - 1, ano: Number(iso[1]) };
+
+        return null;
+    };
+
+    const semanas = [0, 0, 0, 0];
+    movs.forEach((movimentacao) => {
+        const data = extrairDataMovimentacao(movimentacao[1]);
+        if (!data || data.mes !== agora.getMonth() || data.ano !== agora.getFullYear()) return;
+
+        const indiceSemana = Math.min(3, Math.floor((data.dia - 1) / 7));
+        if (indiceSemana >= 0) semanas[indiceSemana]++;
+    });
+
     G.sem = [
         ["S1", "S2", "S3", "S4"],
-        [
-            Math.ceil(indicadores.movimentacoesMes / 4),
-            Math.ceil(indicadores.movimentacoesMes / 3),
-            Math.ceil(indicadores.movimentacoesMes / 2),
-            indicadores.movimentacoesMes,
-        ],
+        semanas,
     ];
 
     G.atr = series.map((s) => [
