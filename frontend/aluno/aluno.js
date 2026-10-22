@@ -999,21 +999,6 @@ function criarModalReserva() {
 
                     </div>
 
-                    <div class="reserva-field">
-
-                        <label for="reservaObservacao">
-                            Observação
-                        </label>
-
-                        <textarea
-                            id="reservaObservacao"
-                            rows="2"
-                            maxlength="500"
-                            placeholder="Alguma observação? Opcional."
-                        ></textarea>
-
-                    </div>
-
                     <div class="reserva-alert">
 
                         ${icon("info")}
@@ -1151,14 +1136,9 @@ function abrirReserva(produtoID) {
     }
 
     const motivo = $("#reservaMotivo");
-    const observacao = $("#reservaObservacao");
 
     if (motivo) {
         motivo.value = "";
-    }
-
-    if (observacao) {
-        observacao.value = "";
     }
 
     if (dataRetirada) {
@@ -1229,8 +1209,6 @@ async function confirmarReserva() {
 
     const motivo = $("#reservaMotivo")?.value.trim() || "";
 
-    const observacao = $("#reservaObservacao")?.value.trim() || "";
-
     if (!dataRetirada || !horaRetirada || !dataDevolucao || !horaDevolucao) {
         showToast("Preencha a data e a hora da retirada e da devolução.");
         return;
@@ -1291,7 +1269,6 @@ async function confirmarReserva() {
                 horaDevolucao,
 
                 motivo,
-                observacao,
             }),
         });
 
