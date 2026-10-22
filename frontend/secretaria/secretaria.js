@@ -191,7 +191,7 @@ async function carregarDados() {
 
             // Datas já formatadas como dd/mm/aaaa não devem passar pelo Date(),
             // pois esse formato não é interpretado de maneira confiável por JavaScript.
-            const br = textoData.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            const br = textoData.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+\d{2}:\d{2}(?::\d{2})?)?$/);
             if (br) return `${br[1]}/${br[2]}/${br[3]}`;
 
             const iso = textoData.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -413,7 +413,7 @@ function montarGraficos() {
 
     G.emp[1] = meses.map((m) =>
         emps.filter((e) => {
-            const partes = String(e.r || "").match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            const partes = String(e.r || "").match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+\d{2}:\d{2}(?::\d{2})?)?$/);
             if (!partes) return false;
 
             return Number(partes[2]) - 1 === m.mes && Number(partes[3]) === m.ano;
