@@ -1773,10 +1773,35 @@ router.get("/secretaria/emprestimos", async (req, res) => {
             mapaProdutos.set(texto(linha[0]), linha[2] || "");
         }
 
-        const lista = emprestimos.slice(1).map((linha) => {
-            const usuarioID = texto(linha[1]);
+        const formatarDataBR = (valor) => {
+            if (valor === null || valor === undefined || valor === "") return "";
 
-            // Na aba 09_EMPRESTIMOS, ProdutoID fica na coluna D.
+            const dataTexto = String(valor).trim();
+
+            // Já está no formato dd/mm/aaaa.
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(dataTexto)) return dataTexto;
+
+            // Converte datas no formato aaaa-mm-dd (inclusive data/hora ISO).
+            const iso = dataTexto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+
+            // Converte números seriais de data usados por planilhas.
+            if (/^\d+(\.\d+)?$/.test(dataTexto)) {
+                const numeroData = Number(dataTexto);
+                if (numeroData > 20000 && numeroData < 100000) {
+                    const data = new Date(Date.UTC(1899, 11, 30) + numeroData * 86400000);
+                    const dia = String(data.getUTCDate()).padStart(2, "0");
+                    const mes = String(data.getUTCMonth() + 1).padStart(2, "0");
+                    return `${dia}/${mes}/${data.getUTCFullYear()}`;
+                }
+            }
+
+            return dataTexto;
+        };
+
+        const lista = emprestimos.slice(1).map((linha) => {
+            // Colunas conforme a estrutura real da aba 09_EMPRESTIMOS.
+            const usuarioID = texto(linha[2]);
             const produtoID = texto(linha[3]);
 
             return {
@@ -1790,17 +1815,23 @@ router.get("/secretaria/emprestimos", async (req, res) => {
 
                 produto: mapaProdutos.get(produtoID) || "",
 
-                dataRetirada: linha[4] || "",
+                localID: linha[4] || "",
 
-                dataPrevista: linha[5] || "",
+                quantidade: numero(linha[5]),
 
-                dataDevolucao: linha[6] || "",
+                dataRetirada: linha[1] || "",
 
-                quantidade: numero(linha[7]),
+                dataPrevista: formatarDataBR(linha[6]),
+
+                dataDevolucao: linha[7] || "",
 
                 status: linha[8] || "",
 
-                observacao: linha[9] || "",
+                responsavelID: linha[9] || "",
+
+                observacao: linha[10] || "",
+
+                reservaID: linha[11] || "",
             };
         });
 
