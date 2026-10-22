@@ -1819,7 +1819,7 @@ router.get("/secretaria/emprestimos", async (req, res) => {
 
                 quantidade: numero(linha[5]),
 
-                dataRetirada: linha[1] || "",
+                dataRetirada: formatarDataBR(linha[1]),
 
                 dataPrevista: formatarDataBR(linha[6]),
 
