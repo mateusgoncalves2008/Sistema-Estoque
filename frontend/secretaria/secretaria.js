@@ -184,22 +184,35 @@ async function carregarDados() {
             s: formatarStatusReserva(r.status),
         }));
 
-        emps = (dados.emprestimos || []).map((e) => ({
+        const dataParaGraficoBR = (valor) => {
+            if (valor === null || valor === undefined || valor === "") return "";
+
+            const textoData = String(valor).trim();
+
+            // Datas já formatadas como dd/mm/aaaa não devem passar pelo Date(),
+            // pois esse formato não é interpretado de maneira confiável por JavaScript.
+            const br = textoData.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (br) return `${br[1]}/${br[2]}/${br[3]}`;
+
+            const iso = textoData.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+
+            const data = new Date(textoData);
+            return Number.isNaN(data.getTime()) ? "" : data.toLocaleDateString("pt-BR");
+        };
+
+        // O relatório usa os empréstimos da rota própria, que lê a aba 09_EMPRESTIMOS.
+        emps = (dadosEmprestimos.emprestimos || []).map((e) => ({
             id: e.emprestimoID,
             q: e.usuario || "Usuário",
             i: e.produto || "Produto",
-            r: e.dataEmprestimo
-                ? new Date(e.dataEmprestimo).toLocaleDateString("pt-BR")
-                : "-",
-            p: e.dataPrevista
-                ? new Date(e.dataPrevista).toLocaleDateString("pt-BR")
-                : "-",
-            s:
-                e.situacao === "ATRASADO"
-                    ? "Atrasado"
-                    : e.situacao === "ABERTO"
-                      ? "Em andamento"
-                      : "Devolvido",
+            r: dataParaGraficoBR(e.dataRetirada),
+            p: dataParaGraficoBR(e.dataPrevista),
+            s: String(e.status || "").trim().toUpperCase() === "ATRASADO"
+                ? "Atrasado"
+                : String(e.status || "").trim().toUpperCase() === "ABERTO"
+                  ? "Em andamento"
+                  : "Devolvido",
         }));
 
         movs = (dadosMovimentacoes.movimentacoes || []).map((m) => {
@@ -398,22 +411,13 @@ function montarGraficos() {
 
     G.emp[0] = meses.map((m) => m.nome.replace(".", ""));
 
-    G.emp[1] = meses.map(
-        (m) =>
-            emps.filter((e) => {
-                if (!e.r) return false;
+    G.emp[1] = meses.map((m) =>
+        emps.filter((e) => {
+            const partes = String(e.r || "").match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (!partes) return false;
 
-                const partes = e.r.split("/");
-
-                if (partes.length !== 3) {
-                    return false;
-                }
-
-                return (
-                    Number(partes[1]) - 1 === m.mes &&
-                    Number(partes[2]) === m.ano
-                );
-            }).length,
+            return Number(partes[2]) - 1 === m.mes && Number(partes[3]) === m.ano;
+        }).length,
     );
 
     const tipos = {};
