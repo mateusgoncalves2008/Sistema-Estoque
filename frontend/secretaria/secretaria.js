@@ -851,18 +851,25 @@ async function ajusta(estoqueID, quantidade) {
    CALENDÁRIO
 ========================================================= */
 
-async function addEv() {
-    const data = $("#cd")?.value;
+async function addEv(botao) {
+    if (botao?.disabled) return;
 
-    const tipo = $("#ct")?.value;
-
-    const titulo = $("#cn")?.value.trim();
-
-    if (!data || !tipo || !titulo) {
-        return toast("Preencha data, tipo e descrição.");
+    if (botao) {
+        botao.disabled = true;
+        botao.dataset.textoOriginal = botao.textContent;
+        botao.textContent = "Salvando...";
     }
 
     try {
+        const data = $("#cd")?.value;
+        const tipo = $("#ct")?.value;
+        const titulo = $("#cn")?.value.trim();
+
+        if (!data || !tipo || !titulo) {
+            toast("Preencha data, tipo e descrição.");
+            return;
+        }
+
         await api("/secretaria/calendario", {
             method: "POST",
             body: JSON.stringify({
@@ -875,12 +882,23 @@ async function addEv() {
         });
 
         toast("Evento criado.");
-
         await carregarDados();
     } catch (erro) {
         toast(erro.message);
+    } finally {
+        if (botao) {
+            botao.disabled = false;
+            botao.textContent = botao.dataset.textoOriginal || "Adicionar";
+            delete botao.dataset.textoOriginal;
+        }
     }
 }
+
+document.addEventListener("click", (evento) => {
+    const botao = evento.target.closest("#btn-adicionar-evento");
+    if (!botao) return;
+    addEv(botao);
+});
 
 /* =========================================================
    CONFIGURAÇÕES
