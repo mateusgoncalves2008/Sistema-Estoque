@@ -219,6 +219,22 @@ function aplicarFiltros() {
         // Filtro por categoria cadastrada na aba 03_CATEGORIAS
         if (tipo !== "todos" && categoriaID !== tipo) return false;
 
+        // Ao selecionar Informática, não exibe impressoras nessa lista.
+        const tipoSelecionado = String(
+            document.getElementById("pesquisaTipo")?.selectedOptions?.[0]?.textContent || "",
+        )
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim()
+            .toLowerCase();
+        const nomeItem = String(item.nome || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase();
+        if (tipoSelecionado === "informatica" && nomeItem.includes("impressora")) {
+            return false;
+        }
+
         // Filtro por situação
         if (situacao !== "todas" && item.situacao !== situacao) {
             return false;
@@ -310,9 +326,11 @@ async function carregarCatalogo() {
             const categorias = Array.isArray(resultado.categorias)
                 ? resultado.categorias.filter((categoria) => {
                       const nome = String(categoria.nome || "")
+                          .normalize("NFD")
+                          .replace(/[\u0300-\u036f]/g, "")
                           .trim()
-                          .toLocaleLowerCase("pt-BR");
-                      return !["equipamentos", "mobiliário", "cantina"].includes(nome);
+                          .toLowerCase();
+                      return !["equipamentos", "mobiliario", "cantina", "laboratorio"].includes(nome);
                   })
                 : [];
             filtroTipo.innerHTML =
