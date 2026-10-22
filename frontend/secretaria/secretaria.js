@@ -864,11 +864,12 @@ async function addEv(botao) {
         const data = $("#cd")?.value;
         const tipoSelecionado = $("#ct")?.value;
         const tipoPersonalizado = $("#ct-personalizado")?.value.trim();
-        const tipo = (tipoPersonalizado || tipoSelecionado || "").toLocaleUpperCase("pt-BR");
-        const titulo = $("#cn")?.value.trim();
+        const tipo = (tipoPersonalizado || tipoSelecionado || "").trim().toLocaleUpperCase("pt-BR");
+        const titulo = $("#ctitulo")?.value.trim();
+        const descricao = $("#cn")?.value.trim();
 
         if (!data || !tipo || !titulo) {
-            toast("Preencha data, tipo e descrição.");
+            toast("Preencha data, tipo e título.");
             return;
         }
 
@@ -879,7 +880,7 @@ async function addEv(botao) {
                 dataFim: data,
                 tipo,
                 titulo,
-                descricao: titulo,
+                descricao,
             }),
         });
 
