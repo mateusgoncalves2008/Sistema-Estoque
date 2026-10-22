@@ -482,10 +482,12 @@
                                         id="matricula-autorizacao"
                                         name="matricula"
                                         type="text"
+                                        inputmode="numeric"
                                         autocomplete="off"
-                                        maxlength="50"
+                                        maxlength="10"
+                                        pattern="[0-9]{5,10}"
                                         required
-                                        placeholder="Digite a matrícula do aluno"
+                                        placeholder="Digite de 5 a 10 números"
                                     />
                                     <div class="modal-autorizacao__aviso">
                                         <span aria-hidden="true">i</span>
@@ -515,7 +517,7 @@
                             </header>
                             <form id="form-novo-aluno">
                                 <div class="modal-autorizacao__conteudo modal-aluno__campos">
-                                    <div><label for="novo-aluno-identificador">IDENTIFICADOR / MATRÍCULA *</label><input id="novo-aluno-identificador" name="identificador" maxlength="50" required /></div>
+                                    <div><label for="novo-aluno-identificador">IDENTIFICADOR / MATRÍCULA *</label><input id="novo-aluno-identificador" name="identificador" type="text" inputmode="numeric" maxlength="10" pattern="[0-9]{5,10}" required /></div>
                                     <div><label for="novo-aluno-nome">NOME COMPLETO *</label><input id="novo-aluno-nome" name="nome" maxlength="120" autocomplete="name" required /></div>
                                     <div><label for="novo-aluno-email">E-MAIL *</label><input id="novo-aluno-email" name="email" type="email" maxlength="150" autocomplete="email" required /></div>
                                     <div><label for="novo-aluno-senha">SENHA INICIAL *</label><input id="novo-aluno-senha" name="senha" type="password" minlength="8" maxlength="128" autocomplete="new-password" required /><small>A senha será armazenada como hash; nunca em texto puro.</small></div>
