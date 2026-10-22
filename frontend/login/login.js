@@ -13,8 +13,8 @@ function normalizarAnoEscolar(valor) {
 
 function normalizarNomeTurma(valor) {
     const texto = String(valor || "").trim();
-    const numero = texto.match(/^(?:turma\s*)?(\d+)$/i);
-    return numero ? `Turma ${numero[1]}` : texto;
+    const numero = texto.match(/^(?:turma\\s*)?(\\d+)$/i);
+    return numero ? numero[1] : texto;
 }
 // ============================================================
 // QUANDO A PÁGINA CARREGAR
