@@ -26,12 +26,13 @@ function exigirProfessor(req, res, next) {
 
 router.get("/professor/itens", exigirProfessor, async (req, res) => {
     try {
-        const { itens, grupos } = await buscarCatalogo();
+        const { itens, grupos, categorias } = await buscarCatalogo();
 
         return res.json({
             sucesso: true,
             total: itens.length,
             grupos,
+            categorias,
             itens,
         });
     } catch (erro) {
