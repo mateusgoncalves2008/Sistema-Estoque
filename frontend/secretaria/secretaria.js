@@ -2200,6 +2200,12 @@ async function salvarAutorizacaoMatricula(evento) {
         return;
     }
 
+    if (!/^\\d{5,10}$/.test(matricula)) {
+        if (mensagem) mensagem.textContent = "A matrícula deve conter somente números, entre 5 e 10 dígitos.";
+        campo?.focus();
+        return;
+    }
+
     if (botao) {
         botao.disabled = true;
         botao.textContent = "Salvando...";
@@ -2352,6 +2358,14 @@ $("#form-novo-aluno")?.addEventListener("submit", async e => {
     const mensagem = $("#mensagem-novo-aluno");
     const botao = $("#btn-salvar-novo-aluno");
     const dados = Object.fromEntries(new FormData(form).entries());
+    const identificador = String(dados.identificador || "").trim();
+
+    if (!/^\\d{5,10}$/.test(identificador)) {
+        mensagem.textContent = "A matrícula deve conter somente números, entre 5 e 10 dígitos.";
+        $("#novo-aluno-identificador")?.focus();
+        return;
+    }
+
     botao.disabled = true;
     botao.textContent = "Salvando...";
     mensagem.textContent = "";
