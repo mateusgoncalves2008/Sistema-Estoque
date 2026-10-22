@@ -224,15 +224,9 @@ function aplicarFiltros() {
             return false;
         }
 
-        // Mantém os itens que a pesquisa do professor deve exibir
-        const local = String(item.local || "").toLowerCase();
-        const ehBiblioteca = grupo === "biblioteca";
-        const ehSala = grupo === "salas";
-        const ehEquipamentoInfo =
-            ["informática", "audiovisual"].includes(grupo) &&
-            local.includes("laboratório de informática");
-
-        return ehBiblioteca || ehSala || ehEquipamentoInfo;
+        // Exibe todos os produtos do catálogo que correspondem aos filtros.
+        // Assim, qualquer categoria selecionada mostra todos os seus produtos.
+        return true;
     });
 
     const contagem = document.getElementById("pesquisaContagem");
