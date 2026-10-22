@@ -37,6 +37,7 @@ let acervoProdutos = [];
 let acervoLocais = [];
 let acervoCategorias = [];
 let emprestimosCalendario = [];
+let turmasParaGraficos = [];
 
 let indicadores = {};
 
@@ -141,6 +142,7 @@ async function carregarDados() {
 
         registrosBloqueios = { colunas: dadosBloqueios.colunas || [], registros: dadosBloqueios.registros || [] };
         registrosDenuncias = { colunas: dadosDenuncias.colunas || [], registros: dadosDenuncias.registros || [] };
+        turmasParaGraficos = dadosTurmas.turmas || [];
 
         indicadores = dados.indicadores || {};
 
@@ -150,6 +152,8 @@ async function carregarDados() {
             email: u.email,
             p: "Aluno",
             t: u.turma || u.ano || "-",
+            ano: u.ano || "",
+            turma: u.turma || "",
             tu: u.turno || "-",
             a: String(u.status || "").toUpperCase() === "ATIVO",
         }));
@@ -202,18 +206,30 @@ async function carregarDados() {
         };
 
         // O relatório usa os empréstimos da rota própria, que lê a aba 09_EMPRESTIMOS.
-        emps = (dadosEmprestimos.emprestimos || []).map((e) => ({
-            id: e.emprestimoID,
-            q: e.usuario || "Usuário",
-            i: e.produto || "Produto",
-            r: dataParaGraficoBR(e.dataRetirada),
-            p: dataParaGraficoBR(e.dataPrevista),
-            s: String(e.status || "").trim().toUpperCase() === "ATRASADO"
-                ? "Atrasado"
-                : String(e.status || "").trim().toUpperCase() === "ABERTO"
-                  ? "Em andamento"
-                  : "Devolvido",
-        }));
+        emps = (dadosEmprestimos.emprestimos || []).map((e) => {
+            const usuarioEmprestimo = users.find((u) => u.id === e.usuarioID);
+            const turmaEmprestimo = turmasParaGraficos.find((turma) =>
+                usuarioEmprestimo &&
+                String(turma.serie || "").trim().toLocaleLowerCase("pt-BR") === String(usuarioEmprestimo.ano || "").trim().toLocaleLowerCase("pt-BR") &&
+                String(turma.nome || "").trim().toLocaleLowerCase("pt-BR") === String(usuarioEmprestimo.turma || "").trim().toLocaleLowerCase("pt-BR") &&
+                String(turma.turno || "").trim().toLocaleLowerCase("pt-BR") === String(usuarioEmprestimo.tu || "").trim().toLocaleLowerCase("pt-BR")
+            );
+
+            return {
+                id: e.emprestimoID,
+                usuarioID: e.usuarioID || "",
+                turmaID: turmaEmprestimo?.turmaID || "",
+                q: e.usuario || "Usuário",
+                i: e.produto || "Produto",
+                r: dataParaGraficoBR(e.dataRetirada),
+                p: dataParaGraficoBR(e.dataPrevista),
+                s: String(e.status || "").trim().toUpperCase() === "ATRASADO"
+                    ? "Atrasado"
+                    : String(e.status || "").trim().toUpperCase() === "ABERTO"
+                      ? "Em andamento"
+                      : "Devolvido",
+            };
+        });
 
         movs = (dadosMovimentacoes.movimentacoes || []).map((m) => {
             const data = m.data ? new Date(String(m.data).replace(" ", "T")) : null;
@@ -460,15 +476,13 @@ function montarGraficos() {
         semanas,
     ];
 
-    G.atr = series.map((s) => [
-        s.s,
-        emps.filter((e) => {
-            if (e.s !== "Atrasado") {
-                return false;
-            }
-
-            return e.q;
-        }).length,
+    // Conta somente empréstimos realmente atrasados e associa cada um à turma do aluno.
+    // Inclui turmas sem atrasos para manter o comparativo completo.
+    G.atr = turmasParaGraficos.map((turma) => [
+        [turma.serie, turma.nome].filter(Boolean).join(" "),
+        emps.filter((emprestimo) =>
+            emprestimo.s === "Atrasado" && emprestimo.turmaID === turma.turmaID
+        ).length,
     ]);
 }
 
@@ -1086,6 +1100,15 @@ function line(v, l) {
                 stroke="var(--c2)"
                 stroke-width="3"
             />
+
+            <text
+                x="${p[0]}"
+                y="${p[1] - 12}"
+                text-anchor="middle"
+                font-size="12"
+                font-weight="700"
+                fill="var(--text)"
+            >${v[i]}</text>
 
             <text
                 x="${p[0]}"
@@ -1944,7 +1967,10 @@ const R = {
 
         $("#r3").innerHTML = donut(G.cat);
 
-        $("#r4").innerHTML = hb(G.atr);
+        $("#r4").innerHTML = line(
+            G.atr.map((turma) => turma[1]),
+            G.atr.map((turma) => turma[0]),
+        );
     },
 
     config() {
