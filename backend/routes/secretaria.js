@@ -2205,7 +2205,7 @@ router.get("/secretaria/calendario", async (req, res) => {
 
 router.post("/secretaria/calendario", async (req, res) => {
     try {
-        const { data, tipo, titulo, descricao, status } = req.body;
+        const { data, dataFim, tipo, titulo, descricao, status } = req.body;
 
         if (!data || !titulo) {
             return res.status(400).json({
@@ -2232,11 +2232,11 @@ router.post("/secretaria/calendario", async (req, res) => {
                     [
                         id,
                         data,
+                        dataFim || data,
                         tipo || "EVENTO",
                         titulo,
                         descricao || "",
                         status || "ATIVO",
-                        "",
                     ],
                 ],
             },
