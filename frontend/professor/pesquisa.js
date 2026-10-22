@@ -91,12 +91,7 @@ function montarPesquisa() {
         <div class="search-filtro-campo">
             <label for="pesquisaTipo">Tipo</label>
             <select id="pesquisaTipo">
-                <option value="todos">Todos</option>
-                <option value="biblioteca">Biblioteca</option>
-                <option value="informatica">Informática</option>
-                <option value="laboratorio">Laboratórios</option>
-                <option value="audiovisual">Audiovisual</option>
-                <option value="outros">Outros</option>
+                <option value="todos">Todas as categorias</option>
             </select>
         </div>
 
@@ -203,6 +198,7 @@ function aplicarFiltros() {
 
     const filtrados = ITENS_CATALOGO.filter((item) => {
         const grupo = String(item.grupo || "").toLowerCase();
+        const categoriaID = String(item.categoriaID || "");
         const categoria = String(item.categoria || "").toLowerCase();
 
         // Pesquisa por nome, código, autor, local ou categoria
@@ -220,38 +216,8 @@ function aplicarFiltros() {
 
         if (termo && !texto.includes(termo)) return false;
 
-        // Filtro por tipo
-        if (tipo === "biblioteca" && grupo !== "biblioteca") return false;
-
-        if (
-            tipo === "informatica" &&
-            grupo !== "informática" &&
-            !String(item.local || "")
-                .toLowerCase()
-                .includes("laboratório de informática")
-        )
-            return false;
-
-        if (
-            tipo === "laboratorio" &&
-            grupo !== "salas" &&
-            grupo !== "laboratório"
-        )
-            return false;
-
-        if (tipo === "audiovisual" && grupo !== "audiovisual") return false;
-
-        if (
-            tipo === "outros" &&
-            [
-                "biblioteca",
-                "informática",
-                "salas",
-                "laboratório",
-                "audiovisual",
-            ].includes(grupo)
-        )
-            return false;
+        // Filtro por categoria cadastrada na aba 03_CATEGORIAS
+        if (tipo !== "todos" && categoriaID !== tipo) return false;
 
         // Filtro por situação
         if (situacao !== "todas" && item.situacao !== situacao) {
@@ -341,6 +307,31 @@ async function carregarCatalogo() {
 
         ITENS_CATALOGO = resultado.itens || [];
         GRUPOS_CATALOGO = resultado.grupos || [];
+
+        // As opções são recebidas da planilha pela API.
+        // Mantém a seleção atual quando o catálogo é atualizado.
+        const filtroTipo = document.getElementById("pesquisaTipo");
+        if (filtroTipo) {
+            const selecaoAtual = filtroTipo.value || "todos";
+            const categorias = Array.isArray(resultado.categorias)
+                ? resultado.categorias
+                : [];
+            filtroTipo.innerHTML =
+                '<option value="todos">Todas as categorias</option>' +
+                categorias
+                    .map((categoria) => {
+                        const id = escapeHtml(categoria.categoriaID);
+                        const nome = escapeHtml(categoria.nome);
+                        return '<option value="' + id + '">' + nome + "</option>";
+                    })
+                    .join("");
+
+            filtroTipo.value = categorias.some(
+                (categoria) => String(categoria.categoriaID) === selecaoAtual,
+            )
+                ? selecaoAtual
+                : "todos";
+        }
 
         aplicarFiltros();
     } catch (erro) {
