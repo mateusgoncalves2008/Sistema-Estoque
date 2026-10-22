@@ -81,10 +81,34 @@ async function buscarCatalogo() {
     ]);
 
     const categorias = new Map();
+    const categoriasDisponiveis = [];
     categoriasL.slice(1).forEach((l) => {
-        if (!l[0]) return;
-        categorias.set(texto(l[0]), { nome: texto(l[1]), status: texto(l[3]) });
+        if (!l[0] || !texto(l[1])) return;
+
+        const categoria = {
+            categoriaID: texto(l[0]),
+            nome: texto(l[1]),
+            status: texto(l[3]),
+        };
+
+        categorias.set(categoria.categoriaID, {
+            nome: categoria.nome,
+            status: categoria.status,
+        });
+
+        // Mantém apenas categorias ativas (ou sem status preenchido),
+        // seguindo a regra já usada pelo catálogo para categorias.
+        if (!categoria.status || normalizar(categoria.status) === "ATIVO") {
+            categoriasDisponiveis.push({
+                categoriaID: categoria.categoriaID,
+                nome: categoria.nome,
+            });
+        }
     });
+
+    categoriasDisponiveis.sort((a, b) =>
+        a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" }),
+    );
 
     const subcategorias = new Map();
     subcategoriasL.slice(1).forEach((l) => {
@@ -233,7 +257,7 @@ async function buscarCatalogo() {
         return a.localeCompare(b, "pt-BR");
     });
 
-    return { itens, grupos };
+    return { itens, grupos, categorias: categoriasDisponiveis };
 }
 
 function detalheDoItem(base, localNome) {
