@@ -308,7 +308,12 @@ async function carregarCatalogo() {
         if (filtroTipo) {
             const selecaoAtual = filtroTipo.value || "todos";
             const categorias = Array.isArray(resultado.categorias)
-                ? resultado.categorias
+                ? resultado.categorias.filter((categoria) => {
+                      const nome = String(categoria.nome || "")
+                          .trim()
+                          .toLocaleLowerCase("pt-BR");
+                      return !["equipamentos", "mobiliário", "cantina"].includes(nome);
+                  })
                 : [];
             filtroTipo.innerHTML =
                 '<option value="todos">Todas as categorias</option>' +
