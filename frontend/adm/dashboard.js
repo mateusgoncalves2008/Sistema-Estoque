@@ -219,8 +219,15 @@ async function carregarOperacoesAdmin() {
             const dataInicio = String(r.dataInicio || "");
             const dataFim = String(r.dataFim || "");
             const status = String(r.status || "").toUpperCase();
-            return !(usuarioID === "USR-00001" && produtoID === "PRD-00002" &&
-                dataInicio.startsWith("25/09/2026") && dataFim.startsWith("26/09/2026") && status === "PENDENTE");
+            const nomeUsuario = String(r.usuario || "");
+            const reservaRenanDevolvida = nomeUsuario === "Renan Santos" &&
+                dataInicio.startsWith("26/09/2026 21:28:26") &&
+                dataFim.startsWith("27/09/2026 20:00:00") && status === "DEVOLVIDO";
+            return !(
+                (usuarioID === "USR-00001" && produtoID === "PRD-00002" &&
+                    dataInicio.startsWith("25/09/2026") && dataFim.startsWith("26/09/2026") && status === "PENDENTE") ||
+                (produtoID === "PRD-00002" && reservaRenanDevolvida)
+            );
         });
         tabelaReservas.innerHTML = reservasVisiveis.length ? reservasVisiveis.slice().reverse().map((r) => {
             const status = String(r.status || "—").toUpperCase();
