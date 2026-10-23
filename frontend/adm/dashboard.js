@@ -95,13 +95,6 @@ function renderizarResumoAdmin(dados) {
     elAdmin("qtdSecretaria").textContent = formatarNumero(papeis.secretaria);
     elAdmin("qtdAdmins").textContent = formatarNumero(papeis.administradores);
 
-    elAdmin("totalLocais").textContent = formatarNumero(resumo.locaisCadastrados);
-    elAdmin("registrosEstoque").textContent = formatarNumero(resumo.registrosDeEstoque);
-    elAdmin("disponivelDetalhe").textContent = formatarNumero(resumo.quantidadeDisponivel);
-    elAdmin("totalReservas").textContent = formatarNumero(resumo.reservas);
-    elAdmin("totalEmprestimos").textContent = formatarNumero(resumo.emprestimos);
-    elAdmin("totalDevolucoes").textContent = formatarNumero(resumo.devolucoes);
-    elAdmin("totalMovimentacoes").textContent = formatarNumero(resumo.movimentacoes);
     elAdmin("totalAvisos").textContent = formatarNumero(resumo.avisosPublicados);
     elAdmin("dataAtual").textContent = new Date().toLocaleDateString("pt-BR", { dateStyle: "medium" });
 }
