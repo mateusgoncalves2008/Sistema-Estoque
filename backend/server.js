@@ -99,6 +99,7 @@ app.use((req, res, next) => {
         const resultado = statusHTTP >= 200 && statusHTTP < 400 ? "SUCESSO" : "ERRO";
         const segmentos = caminho.replace("/api/", "").split("/").filter(Boolean);
         const rota = segmentos[0] || "sistema";
+        const recurso = rota === "secretaria" ? (segmentos[1] || rota) : rota;
         let tabela = "";
         if (caminho.endsWith("/login") || caminho.includes("/cadastro") || caminho.includes("/usuarios") || caminho.includes("/alunos") || caminho.includes("/professores") || caminho.includes("/perfil")) tabela = "01_USUARIOS";
         else if (caminho.includes("autorizar-matricula")) tabela = "17_CADASTROS_AUTORIZADOS";
@@ -132,7 +133,7 @@ app.use((req, res, next) => {
         else if (caminho.includes("calendario")) acao = metodo === "POST" ? "CRIAR_EVENTO_CALENDARIO" : "ALTERAR_EVENTO_CALENDARIO";
         else if (caminho.includes("emprestimo")) acao = metodo === "POST" ? "CRIAR_EMPRESTIMO" : "ALTERAR_EMPRESTIMO";
         else if (caminho.includes("devolu")) acao = metodo === "POST" ? "REGISTRAR_DEVOLUCAO" : "ALTERAR_DEVOLUCAO";
-        else acao = (metodo === "POST" ? "CRIAR_" : metodo === "DELETE" ? "EXCLUIR_" : "ALTERAR_") + rota.replace(/[^a-z0-9]/gi, "_").toUpperCase();
+        else acao = (metodo === "POST" ? "CRIAR_" : metodo === "DELETE" ? "EXCLUIR_" : "ALTERAR_") + recurso.replace(/[^a-z0-9]/gi, "_").toUpperCase();
         const registroID = corpoResposta?.registroID || corpoResposta?.reservaID || corpoResposta?.emprestimoID || corpoResposta?.produtoID || corpoResposta?.usuarioID || corpoResposta?.usuario?.id || corpoResposta?.produto?.produtoID || corpoResposta?.id || usuarioDepois?.id || req.params?.id || req.params?.usuarioID || req.params?.reservaID || req.params?.turmaID || req.body?.registroID || req.body?.reservaID || req.body?.emprestimoID || req.body?.produtoID || req.body?.usuarioID || "";
         const descricao = metodo + " " + caminho + " — HTTP " + statusHTTP;
         void registrarAuditoria({ usuarioID: usuarioDepois?.id || usuarioAntes?.id || "", acao, tabela, registroID, descricao, resultado });
