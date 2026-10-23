@@ -135,7 +135,14 @@ app.use((req, res, next) => {
         else if (caminho.includes("devolu")) acao = metodo === "POST" ? "REGISTRAR_DEVOLUCAO" : "ALTERAR_DEVOLUCAO";
         else acao = (metodo === "POST" ? "CRIAR_" : metodo === "DELETE" ? "EXCLUIR_" : "ALTERAR_") + recurso.replace(/[^a-z0-9]/gi, "_").toUpperCase();
         const registroID = corpoResposta?.registroID || corpoResposta?.reservaID || corpoResposta?.emprestimoID || corpoResposta?.produtoID || corpoResposta?.usuarioID || corpoResposta?.usuario?.id || corpoResposta?.produto?.produtoID || corpoResposta?.id || usuarioDepois?.id || req.params?.id || req.params?.usuarioID || req.params?.reservaID || req.params?.turmaID || req.body?.registroID || req.body?.reservaID || req.body?.emprestimoID || req.body?.produtoID || req.body?.usuarioID || "";
-        const descricao = metodo + " " + caminho + " — HTTP " + statusHTTP;
+        const nomeUsuario = String(usuarioDepois?.nome || usuarioAntes?.nome || "").trim();
+        const descricao = caminho.endsWith("/login")
+            ? (resultado === "SUCESSO" && nomeUsuario ? "Login realizado por " + nomeUsuario : "Tentativa de login sem sucesso")
+            : caminho.endsWith("/logout")
+                ? (nomeUsuario ? "Logout realizado por " + nomeUsuario : "Sessão encerrada")
+                : nomeUsuario
+                    ? nomeUsuario + " realizou a ação " + acao.replace(/_/g, " ").toLowerCase()
+                    : "Ação " + acao.replace(/_/g, " ").toLowerCase() + (resultado === "SUCESSO" ? " realizada com sucesso" : " não realizada");
         void registrarAuditoria({ usuarioID: usuarioDepois?.id || usuarioAntes?.id || "", acao, tabela, registroID, descricao, resultado });
     });
     next();
