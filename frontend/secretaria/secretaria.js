@@ -1667,31 +1667,7 @@ const R = {
 
         $("#ch-emp").innerHTML = bars(G.emp[1], G.emp[0]);
 
-        const chSituacao = $("#ch-situacao");
-        if (chSituacao) {
-            chSituacao.innerHTML = bars(
-                G.situacao.map((item) => item[1]),
-                G.situacao.map((item) => item[0]),
-            );
-        }
-
         $("#ch-sem").innerHTML = line(G.sem[1], G.sem[0]);
-
-        const chOcupacao = $("#ch-oc");
-        if (chOcupacao) {
-            chOcupacao.innerHTML = ring(
-                ocupacao,
-                `${alunos} alunos matriculados e ${vagas} vagas livres.`,
-            );
-        }
-
-        const chServicos = $("#ch-ser");
-        if (chServicos) {
-            chServicos.innerHTML = bars(
-                series.map((s) => s.t.reduce((a, t) => a + Number(t.al || 0), 0)),
-                series.map((s) => s.s),
-            );
-        }
 
     },
 
