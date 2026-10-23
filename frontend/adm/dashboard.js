@@ -61,6 +61,7 @@ async function carregarPainelAdmin() {
         usuariosAdmin = Array.isArray(dados.usuarios) ? dados.usuarios : [];
         renderizarResumoAdmin(dados);
         renderizarUsuariosAdmin();
+        await carregarEstoqueAdmin();
         await carregarOperacoesAdmin();
         await carregarRelatoriosAdmin();
         renderizarAtividadesAdmin(dados.atividadesRecentes || []);
@@ -300,6 +301,29 @@ async function carregarRelatoriosAdmin() {
     } catch (erro) {
         tabelaD.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
         tabelaB.innerHTML = '<tr><td colspan="5" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+    }
+}
+
+
+async function carregarEstoqueAdmin() {
+    const tabelaP = elAdmin("tabelaEstoqueAdmin");
+    const tabelaL = elAdmin("tabelaLocaisAdmin");
+    if (!tabelaP || !tabelaL) return;
+    try {
+        const resposta = await fetch(API_ADMIN + "/admin/estoque", { credentials: "include", headers: { Accept: "application/json" } });
+        const dados = await resposta.json();
+        if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar o estoque.");
+        const produtos = dados.produtos || [];
+        tabelaP.innerHTML = produtos.length ? produtos.map((p) =>
+            "<tr><td>" + escaparAdmin(p.produtoID) + "</td><td>" + escaparAdmin(p.codigo) + "</td><td>" + escaparAdmin(p.nome) + "</td><td>" + escaparAdmin(p.categoria || p.categoriaID) + "</td><td>" + escaparAdmin(p.subcategoria || p.subcategoriaID) + "</td><td>" + escaparAdmin(p.status) + "</td></tr>"
+        ).join("") : '<tr><td colspan="6" class="vazio">Nenhum produto cadastrado.</td></tr>';
+        const locais = dados.locais || [];
+        tabelaL.innerHTML = locais.length ? locais.map((l) =>
+            "<tr><td>" + escaparAdmin(l.localID) + "</td><td>" + escaparAdmin(l.codigo) + "</td><td>" + escaparAdmin(l.nome) + "</td><td>" + escaparAdmin(l.tipo) + "</td><td>" + escaparAdmin(l.responsavelID) + "</td><td>" + escaparAdmin(l.status) + "</td></tr>"
+        ).join("") : '<tr><td colspan="6" class="vazio">Nenhum local cadastrado.</td></tr>';
+    } catch (erro) {
+        tabelaP.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+        tabelaL.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
     }
 }
 
