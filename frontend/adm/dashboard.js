@@ -247,8 +247,8 @@ async function carregarOperacoesAdmin() {
             }
         }));
     } catch (erro) {
-        tabelaReservas.innerHTML = '<tr><td colspan="5" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
-        tabelaEmprestimos.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+        tabelaReservas.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+        tabelaEmprestimos.innerHTML = '<tr><td colspan="5" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
     }
 }
 
@@ -292,8 +292,8 @@ async function carregarRelatoriosAdmin() {
             }
         }));
     } catch (erro) {
-        tabelaD.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
-        tabelaB.innerHTML = '<tr><td colspan="5" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+        tabelaD.innerHTML = '<tr><td colspan="5" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+        tabelaB.innerHTML = '<tr><td colspan="4" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
     }
 }
 
@@ -315,8 +315,8 @@ async function carregarEstoqueAdmin() {
             "<tr><td>" + escaparAdmin(l.nome) + "</td><td>" + escaparAdmin(l.tipo) + "</td><td>" + escaparAdmin(l.responsavelID) + "</td><td>" + escaparAdmin(l.status) + "</td></tr>"
         ).join("") : '<tr><td colspan="4" class="vazio">Nenhum local cadastrado.</td></tr>';
     } catch (erro) {
-        tabelaP.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
-        tabelaL.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+        tabelaP.innerHTML = '<tr><td colspan="4" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+        tabelaL.innerHTML = '<tr><td colspan="4" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
     }
 }
 
