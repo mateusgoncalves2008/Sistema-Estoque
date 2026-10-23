@@ -132,7 +132,7 @@ function renderizarUsuariosAdmin() {
 
     const tabela = elAdmin("tabelaUsuarios");
     if (!filtrados.length) {
-        tabela.innerHTML = '<tr><td colspan="5" class="vazio">Nenhum usuário encontrado com esses filtros.</td></tr>';
+        tabela.innerHTML = '<tr><td colspan="6" class="vazio">Nenhum usuário encontrado com esses filtros.</td></tr>';
         elAdmin("totalExibidos").textContent = "0 usuários";
         return;
     }
