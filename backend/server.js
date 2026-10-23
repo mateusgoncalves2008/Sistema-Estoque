@@ -97,7 +97,7 @@ app.use((req, res, next) => {
         const usuarioDepois = req.session?.usuario || corpoResposta?.usuario || null;
         const statusHTTP = Number(res.statusCode || 500);
         const resultado = statusHTTP >= 200 && statusHTTP < 400 ? "SUCESSO" : "ERRO";
-        const segmentos = caminho.replace(/^\\/api\\//, "").split("/").filter(Boolean);
+        const segmentos = caminho.replace("/api/", "").split("/").filter(Boolean);
         const rota = segmentos[0] || "sistema";
         let tabela = "";
         if (caminho.includes("/login") || caminho.includes("/cadastro")) tabela = "01_USUARIOS";
