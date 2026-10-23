@@ -196,6 +196,7 @@ function mudarTelaAdmin(tela) {
         operacoes: "Reservas e empréstimos",
         auditoria: "Auditoria e atividade",
         sistema: "Saúde do sistema",
+        cadastro: "Cadastrar conta",
     };
 
     document.querySelectorAll("[data-pagina]").forEach((secao) => {
@@ -213,6 +214,96 @@ function mudarTelaAdmin(tela) {
     document.title = `${titulos[tela] || "Painel ADM"} | Painel ADM`;
     elAdmin("sidebar").classList.remove("aberto");
     elAdmin("overlayMenu").classList.remove("visivel");
+}
+
+
+function configurarCadastroAdmin() {
+    const form = elAdmin("formCadastroAdmin");
+    if (!form) return;
+    const tipo = elAdmin("tipoContaAdmin");
+    const grupo = elAdmin("grupoSetorAdminCadastro");
+    const setor = elAdmin("setorAdminCadastro");
+    const mensagem = elAdmin("mensagemCadastroAdmin");
+    const botao = elAdmin("btnCadastrarAdmin");
+    const mostrar = (texto, classe = "erro") => {
+        mensagem.textContent = texto;
+        mensagem.className = "mensagem-cadastro-admin " + classe;
+    };
+    const carregarSetores = async () => {
+        setor.disabled = true;
+        try {
+            const resp = await fetch("/api/setores-disponiveis", { credentials: "include" });
+            const data = await resp.json();
+            if (!resp.ok || !data.sucesso) throw new Error(data.mensagem || "Não foi possível carregar os setores.");
+            setor.replaceChildren();
+            const inicial = document.createElement("option");
+            inicial.value = "";
+            inicial.textContent = data.setores.length ? "Selecione um setor" : "Nenhum setor disponível";
+            setor.appendChild(inicial);
+            data.setores.forEach((item) => {
+                const opcao = document.createElement("option");
+                opcao.value = item.setorID;
+                opcao.textContent = item.nome + " (" + item.setorID + ")";
+                setor.appendChild(opcao);
+            });
+            setor.disabled = !data.setores.length;
+        } catch (erro) {
+            mostrar(erro.message);
+        }
+    };
+    const atualizarTipo = () => {
+        const exigeSetor = tipo.value === "RESPONSAVEL";
+        grupo.hidden = !exigeSetor;
+        setor.required = exigeSetor;
+        if (exigeSetor) carregarSetores();
+    };
+    tipo.addEventListener("change", atualizarTipo);
+    elAdmin("cpfAdminCadastro").addEventListener("input", (evento) => {
+        const v = evento.target.value.replace(/[^0-9]/g, "").slice(0, 11);
+        evento.target.value = v.length > 9 ? v.slice(0,3)+"."+v.slice(3,6)+"."+v.slice(6,9)+"-"+v.slice(9) : v.length > 6 ? v.slice(0,3)+"."+v.slice(3,6)+"."+v.slice(6) : v.length > 3 ? v.slice(0,3)+"."+v.slice(3) : v;
+    });
+    elAdmin("telefoneAdminCadastro").addEventListener("input", (evento) => {
+        const v = evento.target.value.replace(/[^0-9]/g, "").slice(0, 11);
+        evento.target.value = v.length > 10 ? "(" + v.slice(0,2) + ") " + v.slice(2,7) + "-" + v.slice(7) : v.length > 6 ? "(" + v.slice(0,2) + ") " + v.slice(2,6) + "-" + v.slice(6) : v;
+    });
+    form.addEventListener("submit", async (evento) => {
+        evento.preventDefault();
+        const senha = elAdmin("senhaAdminCadastro").value;
+        const confirmacao = elAdmin("confirmacaoAdminCadastro").value;
+        if (senha !== confirmacao) return mostrar("As senhas não coincidem.");
+        const dados = {
+            tipoConta: tipo.value,
+            nome: elAdmin("nomeAdminCadastro").value.trim(),
+            cpf: elAdmin("cpfAdminCadastro").value.replace(/[^0-9]/g, ""),
+            dataNascimento: elAdmin("nascimentoAdminCadastro").value,
+            telefone: elAdmin("telefoneAdminCadastro").value.replace(/[^0-9]/g, ""),
+            email: elAdmin("emailAdminCadastro").value.trim(),
+            setorID: tipo.value === "RESPONSAVEL" ? setor.value : "",
+            senha,
+            confirmacaoSenha: confirmacao
+        };
+        botao.disabled = true;
+        mostrar("Cadastrando...");
+        try {
+            const rota = tipo.value === "SECRETARIA" ? "cadastro-secretaria" : "cadastro-responsavel";
+            const resp = await fetch("/api/" + rota, {
+                method: "POST", credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dados)
+            });
+            const resultado = await resp.json();
+            if (!resp.ok || !resultado.sucesso) throw new Error(resultado.mensagem || "Não foi possível cadastrar a conta.");
+            mostrar(resultado.mensagem + " ID: " + resultado.usuario.id, "sucesso");
+            form.reset();
+            atualizarTipo();
+            await carregarPainelAdmin();
+        } catch (erro) {
+            mostrar(erro.message);
+        } finally {
+            botao.disabled = false;
+        }
+    });
+    atualizarTipo();
 }
 
 function configurarMenuAdmin() {
@@ -245,5 +336,6 @@ elAdmin("btnAtualizar").addEventListener("click", carregarPainelAdmin);
 elAdmin("buscarUsuario").addEventListener("input", renderizarUsuariosAdmin);
 elAdmin("filtroStatus").addEventListener("change", renderizarUsuariosAdmin);
 elAdmin("btnSair").addEventListener("click", sairPainelAdmin);
+configurarCadastroAdmin();
 configurarMenuAdmin();
 carregarPainelAdmin();
