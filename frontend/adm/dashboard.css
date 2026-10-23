@@ -130,10 +130,10 @@ tbody tr:hover { background: #fdfbf8; }
     gap: 16px;
     min-width: 0;
     padding: 14px 19px;
-    border: 1px solid #303030;
+    border: 1px solid #e6d8cc;
     border-radius: 13px;
-    background: #151515;
-    color: #f1f1f1;
+    background: #fffdfa;
+    color: #3c291f;
 }
 .atividade-icone {
     display: grid;
@@ -144,16 +144,16 @@ tbody tr:hover { background: #fdfbf8; }
     color: #fff;
 }
 .atividade-icone svg { width: 23px; height: 23px; stroke-width: 2.5; }
-.atividade-azul { background: #3689df; }
-.atividade-verde { background: #619d1c; }
-.atividade-laranja { background: #bd770e; }
-.atividade-vermelha { background: #e74747; }
-.atividade-azul-escuro { background: #104d85; }
-.atividade-neutra { background: #686868; }
+.atividade-azul { background: #3977b9; }
+.atividade-verde { background: #23845b; }
+.atividade-laranja { background: #c95730; }
+.atividade-vermelha { background: #bd4a42; }
+.atividade-azul-escuro { background: #352219; }
+.atividade-neutra { background: #8a786b; }
 .atividade-conteudo { min-width: 0; }
 .atividade strong { display: block; margin: 0 0 4px; font-size: 16px; line-height: 1.35; font-weight: 650; overflow-wrap: anywhere; }
-.atividade-nome { color: #f4f4f4; }
-.atividade small { display: block; color: #969696; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.atividade-nome { color: #3c291f; }
+.atividade small { display: block; color: #8a786b; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
 .atividade-hora { padding-left: 12px; color: #969696; font-size: 14px; white-space: nowrap; }
 @media (max-width: 600px) {
     .atividade { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 12px; }
