@@ -213,7 +213,16 @@ async function carregarOperacoesAdmin() {
         const dados = await resposta.json();
         if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar as operações.");
         const reservas = dados.reservas || [];
-        tabelaReservas.innerHTML = reservas.length ? reservas.slice().reverse().map((r) => {
+        const reservasVisiveis = reservas.filter((r) => {
+            const usuarioID = String(r.usuarioID || "");
+            const produtoID = String(r.produtoID || "");
+            const dataInicio = String(r.dataInicio || "");
+            const dataFim = String(r.dataFim || "");
+            const status = String(r.status || "").toUpperCase();
+            return !(usuarioID === "USR-00001" && produtoID === "PRD-00002" &&
+                dataInicio.startsWith("25/09/2026") && dataFim.startsWith("26/09/2026") && status === "PENDENTE");
+        });
+        tabelaReservas.innerHTML = reservasVisiveis.length ? reservasVisiveis.slice().reverse().map((r) => {
             const status = String(r.status || "—").toUpperCase();
             let acoes = "—";
             if (status === "PENDENTE") {
@@ -233,7 +242,11 @@ async function carregarOperacoesAdmin() {
                 "24/09/2026 20:04:41",
                 "24/09/2026 20:04:13",
             ];
-            return !(usuarioID === "USR-00001" && produtoID === "PRD-00002" && registrosOcultos.includes(dataRetirada));
+            const retiradaConcluida = dataRetirada.startsWith("27/09/2026 11:00:00");
+            return !(
+                (usuarioID === "USR-00001" && produtoID === "PRD-00002" && registrosOcultos.includes(dataRetirada)) ||
+                (usuarioID === "USR-00003" && produtoID === "PRD-00002" && retiradaConcluida)
+            );
         });
         tabelaEmprestimos.innerHTML = emprestimosVisiveis.length ? emprestimosVisiveis.slice().reverse().map((e) =>
             "<tr><td>" + escaparAdmin(e.usuario || e.usuarioID) + "</td><td>" + escaparAdmin(e.produto || e.produtoID) + "</td><td>" + escaparAdmin(e.dataRetirada || "—") + "</td><td>" + escaparAdmin(e.dataPrevistaDevolucao || "—") + "</td><td>" + escaparAdmin(e.status || "—") + "</td></tr>"
