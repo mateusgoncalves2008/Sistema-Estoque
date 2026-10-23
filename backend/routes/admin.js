@@ -145,4 +145,157 @@ router.get("/admin/dashboard", async (req, res) => {
     }
 });
 
+
+// ============================================================
+// ADMINISTRAÇÃO DE USUÁRIOS
+// Somente ADM. Não retorna nem modifica hash/salt de senha.
+// ============================================================
+
+function exigirAdmin(req, res) {
+    const usuario = req.session?.usuario;
+    if (!usuario) {
+        res.status(401).json({ sucesso: false, mensagem: "Faça login novamente." });
+        return false;
+    }
+    if (!ehAdmin(usuario)) {
+        res.status(403).json({ sucesso: false, mensagem: "Operação permitida somente ao ADM." });
+        return false;
+    }
+    if (!SPREADSHEET_ID) {
+        res.status(500).json({ sucesso: false, mensagem: "A planilha não está configurada no servidor." });
+        return false;
+    }
+    return true;
+}
+
+function textoAdmin(valor) {
+    return String(valor ?? "").trim();
+}
+
+async function lerUsuariosAdmin() {
+    const resposta = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "01_USUARIOS!A:K",
+    });
+    return resposta.data.values || [];
+}
+
+function indiceUsuarioAdmin(linhas, usuarioID) {
+    return linhas.findIndex((linha, indice) =>
+        indice > 0 && textoAdmin(linha[0]) === textoAdmin(usuarioID)
+    );
+}
+
+function ehPropriaContaAdmin(req, usuarioID) {
+    return textoAdmin(req.session?.usuario?.id) === textoAdmin(usuarioID);
+}
+
+// Edita nome, e-mail e setor; tipo/perfil e credenciais não são alterados aqui.
+router.patch("/admin/usuarios/:usuarioID", async (req, res) => {
+    if (!exigirAdmin(req, res)) return;
+    try {
+        const usuarioID = textoAdmin(req.params.usuarioID);
+        const nome = textoAdmin(req.body?.nome);
+        const email = textoAdmin(req.body?.email).toLowerCase();
+        const setorID = textoAdmin(req.body?.setorID);
+
+        if (!usuarioID || !nome || !email) {
+            return res.status(400).json({ sucesso: false, mensagem: "ID, nome e e-mail são obrigatórios." });
+        }
+        if (nome.length > 150 || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ sucesso: false, mensagem: "Confira o nome e o formato do e-mail." });
+        }
+
+        const linhas = await lerUsuariosAdmin();
+        const indice = indiceUsuarioAdmin(linhas, usuarioID);
+        if (indice < 0) return res.status(404).json({ sucesso: false, mensagem: "Usuário não encontrado." });
+
+        const emailEmUso = linhas.some((linha, i) =>
+            i > 0 && i !== indice && textoAdmin(linha[2]).toLowerCase() === email
+        );
+        if (emailEmUso) return res.status(409).json({ sucesso: false, mensagem: "Este e-mail já está sendo usado por outra conta." });
+
+        const linhaPlanilha = indice + 1;
+        await sheets.spreadsheets.values.batchUpdate({
+            spreadsheetId: SPREADSHEET_ID,
+            requestBody: {
+                valueInputOption: "RAW",
+                data: [
+                    { range: \`01_USUARIOS!B\${linhaPlanilha}:C\${linhaPlanilha}\`, values: [[nome, email]] },
+                    { range: \`01_USUARIOS!H\${linhaPlanilha}\`, values: [[setorID]] },
+                ],
+            },
+        });
+
+        return res.json({ sucesso: true, mensagem: "Dados do usuário atualizados na planilha." });
+    } catch (erro) {
+        console.error("Erro ao editar usuário pelo ADM:", erro.message);
+        return res.status(500).json({ sucesso: false, mensagem: "Não foi possível atualizar os dados do usuário." });
+    }
+});
+
+// ATIVO permite login; INATIVO impede login. BLOQUEADO não é usado porque o login
+// existente reconhece ATIVO como único status permitido.
+router.patch("/admin/usuarios/:usuarioID/status", async (req, res) => {
+    if (!exigirAdmin(req, res)) return;
+    try {
+        const usuarioID = textoAdmin(req.params.usuarioID);
+        const status = textoAdmin(req.body?.status).toUpperCase();
+        if (!usuarioID || !["ATIVO", "INATIVO"].includes(status)) {
+            return res.status(400).json({ sucesso: false, mensagem: "Informe um status válido: ATIVO ou INATIVO." });
+        }
+        if (ehPropriaContaAdmin(req, usuarioID)) {
+            return res.status(400).json({ sucesso: false, mensagem: "Você não pode alterar o status da própria conta." });
+        }
+
+        const linhas = await lerUsuariosAdmin();
+        const indice = indiceUsuarioAdmin(linhas, usuarioID);
+        if (indice < 0) return res.status(404).json({ sucesso: false, mensagem: "Usuário não encontrado." });
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: \`01_USUARIOS!I\${indice + 1}\`,
+            valueInputOption: "RAW",
+            requestBody: { values: [[status]] },
+        });
+        return res.json({
+            sucesso: true,
+            mensagem: status === "ATIVO" ? "Conta reativada." : "Conta desativada; o histórico foi preservado.",
+        });
+    } catch (erro) {
+        console.error("Erro ao alterar status de usuário pelo ADM:", erro.message);
+        return res.status(500).json({ sucesso: false, mensagem: "Não foi possível alterar o status do usuário." });
+    }
+});
+
+// Exclusão lógica: preserva os vínculos com reservas, empréstimos e auditoria.
+router.delete("/admin/usuarios/:usuarioID", async (req, res) => {
+    if (!exigirAdmin(req, res)) return;
+    try {
+        const usuarioID = textoAdmin(req.params.usuarioID);
+        if (!usuarioID) return res.status(400).json({ sucesso: false, mensagem: "ID do usuário não informado." });
+        if (ehPropriaContaAdmin(req, usuarioID)) {
+            return res.status(400).json({ sucesso: false, mensagem: "Você não pode desativar a própria conta." });
+        }
+
+        const linhas = await lerUsuariosAdmin();
+        const indice = indiceUsuarioAdmin(linhas, usuarioID);
+        if (indice < 0) return res.status(404).json({ sucesso: false, mensagem: "Usuário não encontrado." });
+        if (textoAdmin(linhas[indice][8]).toUpperCase() === "INATIVO") {
+            return res.json({ sucesso: true, mensagem: "A conta já está desativada." });
+        }
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: \`01_USUARIOS!I\${indice + 1}\`,
+            valueInputOption: "RAW",
+            requestBody: { values: [["INATIVO"]] },
+        });
+        return res.json({ sucesso: true, mensagem: "Conta desativada. O histórico foi preservado." });
+    } catch (erro) {
+        console.error("Erro ao desativar usuário pelo ADM:", erro.message);
+        return res.status(500).json({ sucesso: false, mensagem: "Não foi possível desativar o usuário." });
+    }
+});
+
 module.exports = router;
