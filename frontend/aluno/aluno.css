@@ -2458,3 +2458,21 @@ body.reserva-modal-open {
 .aviso-aluno-topo { min-width: 0; flex-wrap: wrap; }
 .aviso-aluno-topo strong { min-width: 0; max-width: 100%; overflow-wrap: anywhere; word-break: normal; }
 .aviso-aluno > p { min-width: 0; max-width: 100%; overflow-wrap: anywhere; word-break: normal; white-space: pre-wrap; }
+
+/* Pequeno alinhamento do menu para manter o mesmo espaçamento visual */
+.sidebar-top {
+    padding-top: 10px;
+    padding-bottom: 24px;
+}
+.sidebar-nav { gap: 7px; }
+.sidebar-nav .nav-item {
+    min-height: 59px;
+    padding-left: 18px;
+    padding-right: 18px;
+    border-radius: 15px;
+    font-weight: 700;
+}
+.sidebar-bottom {
+    padding-top: 18px;
+    border-top: 1px solid #ffffff24;
+}
