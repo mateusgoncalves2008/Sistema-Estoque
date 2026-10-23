@@ -147,6 +147,40 @@ router.get("/admin/dashboard", async (req, res) => {
 });
 
 
+// Histórico completo de auditoria, exclusivo do ADM.
+router.get("/admin/logs", async (req, res) => {
+    if (!exigirAdmin(req, res)) return;
+    try {
+        const [respostaLogs, respostaUsuarios] = await Promise.all([
+            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "LOG!A:H" }),
+            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "01_USUARIOS!A:K" }),
+        ]);
+        const linhas = respostaLogs.data.values || [];
+        const cabecalhos = linhas[0] || [];
+        const nomesUsuarios = new Map((respostaUsuarios.data.values || []).slice(1).map(linha => [textoAdmin(linha[0]), textoAdmin(linha[1])]));
+        const logs = linhas.slice(1).filter(linha => linha.some(celula => textoAdmin(celula))).map(linha => {
+            const registro = {};
+            cabecalhos.forEach((cabecalho, indice) => { registro[String(cabecalho || "").trim()] = textoAdmin(linha[indice]); });
+            const usuarioID = textoAdmin(registro.UsuarioID);
+            return {
+                logID: textoAdmin(registro.LogID),
+                dataHora: textoAdmin(registro.DataHora),
+                usuarioID,
+                usuarioNome: nomesUsuarios.get(usuarioID) || (usuarioID ? "Usuário não encontrado" : "Sistema"),
+                acao: textoAdmin(registro.Acao),
+                tabela: textoAdmin(registro.Tabela),
+                registroID: textoAdmin(registro.RegistroID),
+                descricao: textoAdmin(registro.Descricao),
+                resultado: textoAdmin(registro.Resultado),
+            };
+        }).reverse();
+        return res.json({ sucesso: true, total: logs.length, logs });
+    } catch (erro) {
+        console.error("Erro ao carregar histórico completo de logs:", erro.message);
+        return res.status(500).json({ sucesso: false, mensagem: "Não foi possível carregar o histórico completo de logs da aba LOG." });
+    }
+});
+
 // ============================================================
 // ADMINISTRAÇÃO DE USUÁRIOS
 // Somente ADM. Não retorna nem modifica hash/salt de senha.
