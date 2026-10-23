@@ -357,7 +357,7 @@ router.patch("/admin/reservas/:reservaID/status", async (req, res) => {
         const indice = linhas.findIndex((l, i) => i > 0 && textoAdmin(l[0]) === reservaID);
         if (indice < 0) return res.status(404).json({ sucesso: false, mensagem: "Reserva não encontrada." });
         const atual = textoAdmin(linhas[indice][9]).toUpperCase();
-        if (atual !== "PENDENTE" && !(statusNovo === "CANCELADA" && ["APROVADA", "APROVADA"].includes(atual))) {
+        if (atual !== "PENDENTE" && !(statusNovo === "CANCELADA" && atual === "APROVADA")) {
             return res.status(409).json({ sucesso: false, mensagem: "Só é possível decidir reservas pendentes ou cancelar uma reserva aprovada." });
         }
         await sheets.spreadsheets.values.update({
