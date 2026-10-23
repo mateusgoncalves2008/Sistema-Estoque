@@ -272,15 +272,21 @@ async function carregarDados() {
         locais = dados.locais || [];
         categorias = dados.categorias || [];
 
-        audit = (dados.logs || []).map((l) => [
-            l.descricao || l.acao || "Ação",
-            l.dataHora
-                ? new Date(l.dataHora).toLocaleTimeString("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                  })
-                : "",
-        ]);
+        audit = (dados.logs || []).map((l) => {
+            const dataHoraTexto = String(l.dataHora || "").trim();
+            const horaBR = dataHoraTexto.match(/\\b(\\d{2}:\\d{2})(?::\\d{2})?\\b/);
+            const hora = horaBR
+                ? horaBR[1]
+                : (() => {
+                      const data = new Date(dataHoraTexto);
+                      return Number.isNaN(data.getTime())
+                          ? ""
+                          : data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+                  })();
+            const acao = l.acao || "AÇÃO";
+            const resultado = l.resultado ? " — " + l.resultado : "";
+            return [acao + resultado, hora];
+        });
 
         const prazo = Number(dados.configuracoes?.PRAZO_EMPRESTIMO?.valor);
 
