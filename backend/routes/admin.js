@@ -50,6 +50,7 @@ router.get("/admin/dashboard", async (req, res) => {
         "01_USUARIOS!A:K",
         "02_PRODUTOS!A:K",
         "05_LOCAIS!A:G",
+            "01_USUARIOS!A:K",
         "06_ESTOQUE_LOCAIS!A:I",
         "07_MOVIMENTACOES!A:L",
         "08_RESERVAS!A:L",
@@ -449,10 +450,11 @@ router.get("/admin/estoque", async (req, res) => {
         const dados = {};
         ranges.forEach((range, i) => { dados[range.split("!")[0]] = resposta.data.valueRanges?.[i]?.values || []; });
         const categorias = new Map((dados["03_CATEGORIAS"] || []).slice(1).map(l => [textoAdmin(l[0]), textoAdmin(l[1])]));
+        const nomesUsuarios = new Map((dados["01_USUARIOS"] || []).slice(1).map(l => [textoAdmin(l[0]), textoAdmin(l[1])]));
         const subcategorias = new Map((dados["04_SUBCATEGORIAS"] || []).slice(1).map(l => [textoAdmin(l[0]), textoAdmin(l[2])]));
         const locais = (dados["05_LOCAIS"] || []).slice(1).filter(l => textoAdmin(l[0])).map(l => ({
             localID: textoAdmin(l[0]), codigo: textoAdmin(l[1]), nome: textoAdmin(l[2]),
-            tipo: textoAdmin(l[3]), responsavelID: textoAdmin(l[4]), descricao: textoAdmin(l[5]), status: textoAdmin(l[6]),
+            tipo: textoAdmin(l[3]), responsavelID: textoAdmin(l[4]), responsavelNome: nomesUsuarios.get(textoAdmin(l[4])) || textoAdmin(l[4]) || "Não informado", descricao: textoAdmin(l[5]), status: textoAdmin(l[6]),
         }));
         const estoque = (dados["06_ESTOQUE_LOCAIS"] || []).slice(1).filter(l => textoAdmin(l[0])).map(l => ({
             estoqueID: textoAdmin(l[0]), produtoID: textoAdmin(l[1]), localID: textoAdmin(l[2]),
