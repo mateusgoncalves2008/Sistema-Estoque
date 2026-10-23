@@ -158,7 +158,14 @@
                 <div class="linha-dado"><span>Quantidade disponível</span><strong id="disponivelDetalhe">—</strong></div>
                 <p class="nota-modulo">Visão consolidada dos dados existentes na planilha.</p>
             </article>
-        </section>\n\n        <section class="bloco tela-admin" data-pagina="operacoes" id="operacoes">\n            <article class="bloco-resumo">
+            <div class="bloco-cabecalho"><div><h2>Catálogo de produtos</h2><p>Consulta consolidada de produtos, categorias e subcategorias.</p></div></div>
+            <div class="tabela-container"><table><thead><tr><th>ID</th><th>Código</th><th>Produto</th><th>Categoria</th><th>Subcategoria</th><th>Status</th></tr></thead><tbody id="tabelaEstoqueAdmin"><tr><td colspan="6" class="vazio">Carregando catálogo...</td></tr></tbody></table></div>
+            <div class="bloco-cabecalho"><div><h2>Locais da escola</h2><p>Biblioteca, laboratórios e demais locais cadastrados.</p></div></div>
+            <div class="tabela-container"><table><thead><tr><th>ID</th><th>Código</th><th>Local</th><th>Tipo</th><th>Responsável</th><th>Status</th></tr></thead><tbody id="tabelaLocaisAdmin"><tr><td colspan="6" class="vazio">Carregando locais...</td></tr></tbody></table></div>
+        </section>
+
+        <section class="bloco tela-admin" data-pagina="operacoes" id="operacoes">
+            <article class="bloco-resumo">
                 <div class="bloco-cabecalho compacto"><div><p class="sobretitulo">CIRCULAÇÃO DE MATERIAIS</p><h2>Reservas e empréstimos</h2></div><i data-lucide="clipboard-check"></i></div>
                 <div class="linha-dado"><span>Reservas registradas</span><strong id="totalReservas">—</strong></div>
                 <div class="linha-dado"><span>Empréstimos registrados</span><strong id="totalEmprestimos">—</strong></div>
