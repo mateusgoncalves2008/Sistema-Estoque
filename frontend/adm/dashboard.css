@@ -286,3 +286,75 @@ tbody tr:hover { background: #fdfbf8; }
     body.menu-recolhido .perfil-admin { justify-content: center; padding-right: 0; padding-left: 0; }
     body.menu-recolhido .sidebar-rodape { justify-items: center; }
 }
+
+
+/* Formulário de cadastro dentro do Painel ADM */
+.form-cadastro-admin {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px;
+    max-width: 900px;
+}
+.form-cadastro-admin label {
+    align-self: end;
+    margin-top: 5px;
+    color: var(--texto);
+    font-size: 12px;
+    font-weight: 700;
+}
+.form-cadastro-admin input,
+.form-cadastro-admin select {
+    width: 100%;
+    min-width: 0;
+    min-height: 43px;
+    padding: 10px 12px;
+    border: 1px solid var(--linha);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--texto);
+    font: inherit;
+    font-size: 12px;
+}
+.form-cadastro-admin input:focus,
+.form-cadastro-admin select:focus {
+    outline: 2px solid #c98d63;
+    outline-offset: 1px;
+}
+.form-cadastro-admin small,
+.form-cadastro-admin #grupoSetorAdminCadastro,
+.form-cadastro-admin button,
+.form-cadastro-admin .mensagem-cadastro-admin {
+    grid-column: 1 / -1;
+}
+.form-cadastro-admin #grupoSetorAdminCadastro {
+    display: grid;
+    gap: 10px;
+}
+.form-cadastro-admin #grupoSetorAdminCadastro[hidden] {
+    display: none;
+}
+.form-cadastro-admin button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    margin-top: 10px;
+    padding: 11px 16px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--laranja);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 750;
+}
+.form-cadastro-admin button:hover { filter: brightness(.94); }
+.form-cadastro-admin button:disabled { opacity: .65; cursor: wait; }
+.form-cadastro-admin button svg { width: 16px; height: 16px; }
+.mensagem-cadastro-admin { margin: 0; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.mensagem-cadastro-admin.erro { color: var(--vermelho); }
+.mensagem-cadastro-admin.sucesso { color: var(--verde); }
+@media (max-width: 600px) {
+    .form-cadastro-admin { grid-template-columns: minmax(0, 1fr); }
+    .form-cadastro-admin > label { margin-top: 7px; }
+}
