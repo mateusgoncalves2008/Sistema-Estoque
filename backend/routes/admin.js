@@ -221,8 +221,8 @@ router.patch("/admin/usuarios/:usuarioID", async (req, res) => {
             requestBody: {
                 valueInputOption: "RAW",
                 data: [
-                    { range: \`01_USUARIOS!B\${linhaPlanilha}:C\${linhaPlanilha}\`, values: [[nome, email]] },
-                    { range: \`01_USUARIOS!H\${linhaPlanilha}\`, values: [[setorID]] },
+                    { range: `01_USUARIOS!B${linhaPlanilha}:C${linhaPlanilha}`, values: [[nome, email]] },
+                    { range: `01_USUARIOS!H${linhaPlanilha}`, values: [[setorID]] },
                 ],
             },
         });
@@ -254,7 +254,7 @@ router.patch("/admin/usuarios/:usuarioID/status", async (req, res) => {
 
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
-            range: \`01_USUARIOS!I\${indice + 1}\`,
+            range: `01_USUARIOS!I${indice + 1}`,
             valueInputOption: "RAW",
             requestBody: { values: [[status]] },
         });
@@ -287,7 +287,7 @@ router.delete("/admin/usuarios/:usuarioID", async (req, res) => {
 
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
-            range: \`01_USUARIOS!I\${indice + 1}\`,
+            range: `01_USUARIOS!I${indice + 1}`,
             valueInputOption: "RAW",
             requestBody: { values: [["INATIVO"]] },
         });
@@ -362,11 +362,11 @@ router.patch("/admin/reservas/:reservaID/status", async (req, res) => {
         }
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
-            range: \`08_RESERVAS!J\${indice + 1}:K\${indice + 1}\`,
+            range: `08_RESERVAS!J${indice + 1}:K${indice + 1}`,
             valueInputOption: "USER_ENTERED",
             requestBody: { values: [[statusNovo, textoAdmin(req.session.usuario.id)]] },
         });
-        return res.json({ sucesso: true, mensagem: \`Reserva \${statusNovo.toLowerCase()}.\` });
+        return res.json({ sucesso: true, mensagem: `Reserva ${statusNovo.toLowerCase()}.` });
     } catch (erro) {
         console.error("Erro ao alterar reserva pelo ADM:", erro.message);
         return res.status(500).json({ sucesso: false, mensagem: "Não foi possível atualizar a reserva." });
@@ -423,7 +423,7 @@ router.patch("/admin/denuncias/:denunciaID/resposta", async (req, res) => {
             requestBody: {
                 valueInputOption: "USER_ENTERED",
                 data: [
-                    { range: \`23_DENUNCIAS_SECRETARIA!K\${indice + 1}:M\${indice + 1}\`, values: [[status, respostaTexto, new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })]] },
+                    { range: `23_DENUNCIAS_SECRETARIA!K${indice + 1}:M${indice + 1}`, values: [[status, respostaTexto, new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })]] },
                 ],
             },
         });
