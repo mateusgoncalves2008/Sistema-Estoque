@@ -2,6 +2,9 @@ const API_ADMIN = "/api";
 
 let usuariosAdmin = [];
 let dadosPainelAdmin = null;
+let logsCompletosAdmin = [];
+let paginaLogsAtualAdmin = 1;
+const TAMANHO_PAGINA_LOGS = 50;
 
 const elAdmin = (id) => document.getElementById(id);
 
@@ -455,6 +458,42 @@ window.addEventListener("pageshow", (evento) => {
     }
 });
 
+async function carregarLogsCompletosAdmin() {
+    const tabela = elAdmin("tabelaLogsAdmin");
+    tabela.innerHTML = '<tr><td colspan="7" class="vazio">Carregando logs...</td></tr>';
+    elAdmin("resumoLogsAdmin").textContent = "Carregando histórico completo...";
+    try {
+        const resposta = await fetch(`${API_ADMIN}/admin/logs`, { method: "GET", credentials: "include", headers: { Accept: "application/json" } });
+        const dados = await resposta.json();
+        if (resposta.status === 401) { window.location.replace("/index.html"); return; }
+        if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar os logs.");
+        logsCompletosAdmin = Array.isArray(dados.logs) ? dados.logs : [];
+        paginaLogsAtualAdmin = 1;
+        renderizarLogsCompletosAdmin();
+    } catch (erro) {
+        tabela.innerHTML = `<tr><td colspan="7" class="vazio">${escaparAdmin(erro.message)}</td></tr>`;
+        elAdmin("resumoLogsAdmin").textContent = "Falha ao carregar o histórico.";
+    }
+}
+
+function renderizarLogsCompletosAdmin() {
+    const termo = String(elAdmin("buscarLogsAdmin").value || "").trim().toLocaleLowerCase("pt-BR");
+    const filtrados = logsCompletosAdmin.filter(log => [log.usuarioNome, log.usuarioID].some(valor => String(valor || "").toLocaleLowerCase("pt-BR").includes(termo)));
+    const totalPaginas = Math.max(1, Math.ceil(filtrados.length / TAMANHO_PAGINA_LOGS));
+    paginaLogsAtualAdmin = Math.min(Math.max(1, paginaLogsAtualAdmin), totalPaginas);
+    const inicio = (paginaLogsAtualAdmin - 1) * TAMANHO_PAGINA_LOGS;
+    const pagina = filtrados.slice(inicio, inicio + TAMANHO_PAGINA_LOGS);
+    const tabela = elAdmin("tabelaLogsAdmin");
+    if (!pagina.length) { tabela.innerHTML = '<tr><td colspan="7" class="vazio">Nenhum log corresponde à pesquisa.</td></tr>'; }
+    else {
+        tabela.innerHTML = pagina.map(log => `<tr><td>${escaparAdmin(log.dataHora || "—")}</td><td><strong>${escaparAdmin(log.usuarioNome || "Sistema")}</strong>${log.usuarioID ? `<small class="log-id-usuario">${escaparAdmin(log.usuarioID)}</small>` : ""}</td><td>${escaparAdmin(log.acao || "—")}</td><td>${escaparAdmin(log.tabela || "—")}</td><td>${escaparAdmin(log.registroID || "—")}</td><td class="log-descricao">${escaparAdmin(log.descricao || "—")}</td><td>${escaparAdmin(log.resultado || "—")}</td></tr>`).join("");
+    }
+    elAdmin("resumoLogsAdmin").textContent = `${filtrados.length.toLocaleString("pt-BR")} registro(s) encontrado(s) • ${logsCompletosAdmin.length.toLocaleString("pt-BR")} no total`;
+    elAdmin("paginaLogsAdmin").textContent = `Página ${paginaLogsAtualAdmin} de ${totalPaginas}`;
+    elAdmin("btnLogsAnterior").disabled = paginaLogsAtualAdmin <= 1;
+    elAdmin("btnLogsProxima").disabled = paginaLogsAtualAdmin >= totalPaginas;
+}
+
 function mudarTelaAdmin(tela) {
     const titulos = {
         inicio: "Início",
@@ -464,6 +503,7 @@ function mudarTelaAdmin(tela) {
         denuncias: "Denúncias",
         bloqueios: "Bloqueios por setor",
         atividades: "Atividades",
+        logs: "Histórico completo de logs",
         sistema: "Saúde do sistema",
         cadastro: "Cadastrar conta",
     };
@@ -648,6 +688,11 @@ function configurarMenuAdmin() {
 }
 
 elAdmin("btnAtualizar").addEventListener("click", carregarPainelAdmin);
+elAdmin("btnVerTodosLogs").addEventListener("click", async () => { mudarTelaAdmin("logs"); if (!logsCompletosAdmin.length) await carregarLogsCompletosAdmin(); });
+elAdmin("btnVoltarAtividades").addEventListener("click", () => mudarTelaAdmin("atividades"));
+elAdmin("buscarLogsAdmin").addEventListener("input", () => { paginaLogsAtualAdmin = 1; renderizarLogsCompletosAdmin(); });
+elAdmin("btnLogsAnterior").addEventListener("click", () => { paginaLogsAtualAdmin--; renderizarLogsCompletosAdmin(); });
+elAdmin("btnLogsProxima").addEventListener("click", () => { paginaLogsAtualAdmin++; renderizarLogsCompletosAdmin(); });
 elAdmin("buscarUsuario").addEventListener("input", renderizarUsuariosAdmin);
 elAdmin("filtroStatus").addEventListener("change", renderizarUsuariosAdmin);
 elAdmin("buscarOperacoesAdmin").addEventListener("input", carregarOperacoesAdmin);
