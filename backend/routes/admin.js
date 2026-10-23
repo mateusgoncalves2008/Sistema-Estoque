@@ -445,6 +445,7 @@ router.get("/admin/estoque", async (req, res) => {
             "04_SUBCATEGORIAS!A:E",
             "05_LOCAIS!A:G",
             "06_ESTOQUE_LOCAIS!A:I",
+            "01_USUARIOS!A:K",
         ];
         const resposta = await sheets.spreadsheets.values.batchGet({ spreadsheetId: SPREADSHEET_ID, ranges });
         const dados = {};
