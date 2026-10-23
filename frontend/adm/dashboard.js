@@ -402,7 +402,11 @@ function renderizarAtividadesAdmin(atividades) {
     };
 
     lista.innerHTML = atividades.map((atividade) => {
-        const nome = atividade.usuarioNome || atividade.nomeUsuario || atividade.nome || atividade.usuario || atividade.usuarioID || atividade.UsuarioID || "Usuário";
+        const usuarioID = atividade.usuarioID || atividade.UsuarioID || "";
+        const usuarioEncontrado = usuariosAdmin.find((usuario) =>
+            String(usuario.usuarioID || usuario.UsuarioID || usuario.id || usuario.ID || "").toLowerCase() === String(usuarioID).toLowerCase()
+        );
+        const nome = atividade.usuarioNome || atividade.nomeUsuario || atividade.nome || usuarioEncontrado?.nome || usuarioEncontrado?.Nome || atividade.usuario || (usuarioID && !usuarioID.startsWith("USR-") ? usuarioID : "Usuário");
         const acaoOriginal = atividade.acao || atividade.Acao || atividade.acaoRealizada || "";
         const descricao = atividade.descricao || atividade.Descricao || "";
         const tabela = atividade.tabela || atividade.Tabela || "";
