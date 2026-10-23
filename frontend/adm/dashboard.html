@@ -31,7 +31,7 @@
             <button class="nav-link nav-item" type="button" data-tela="operacoes"><i data-lucide="clipboard-list"></i><span>Reservas e empréstimos</span></button>
             <button class="nav-link nav-item" type="button" data-tela="auditoria"><i data-lucide="history"></i><span>Auditoria e atividade</span></button>
             <button class="nav-link nav-item" type="button" data-tela="sistema"><i data-lucide="server-cog"></i><span>Saúde do sistema</span></button>
-            <a class="nav-link nav-item" href="/frontend/adm/index.html"><i data-lucide="user-round-plus"></i><span>Cadastrar conta</span></a>
+            <button class="nav-link nav-item" type="button" data-tela="cadastro"><i data-lucide="user-round-plus"></i><span>Cadastrar conta</span></button>
         </nav>
         <div class="sidebar-bottom sidebar-rodape">
             <span class="selo-seguranca"><i data-lucide="lock-keyhole"></i>Área administrativa protegida</span>
@@ -85,10 +85,55 @@
             </article>
         </section>
 
+        <section class="bloco tela-admin" data-pagina="cadastro" id="cadastro">
+            <div class="bloco-cabecalho">
+                <div><p class="sobretitulo">NOVO ACESSO</p><h2>Dados da conta</h2><p>Cadastre uma conta de responsável pelo setor ou da Secretaria.</p></div>
+            </div>
+            <form id="formCadastroAdmin" class="form-cadastro-admin">
+                <label for="tipoContaAdmin">Tipo de conta</label>
+                <select id="tipoContaAdmin" name="tipoConta" required>
+                    <option value="RESPONSAVEL">Responsável pelo setor</option>
+                    <option value="SECRETARIA">Secretaria</option>
+                </select>
+
+                <label for="nomeAdminCadastro">Nome completo</label>
+                <input id="nomeAdminCadastro" name="nome" type="text" autocomplete="name" maxlength="150" required>
+
+                <label for="cpfAdminCadastro">CPF</label>
+                <input id="cpfAdminCadastro" name="cpf" type="text" inputmode="numeric" autocomplete="off" maxlength="14" required>
+
+                <label for="nascimentoAdminCadastro">Data de nascimento</label>
+                <input id="nascimentoAdminCadastro" name="dataNascimento" type="date" required>
+
+                <label for="telefoneAdminCadastro">Telefone</label>
+                <input id="telefoneAdminCadastro" name="telefone" type="tel" inputmode="tel" maxlength="15" required>
+
+                <label for="emailAdminCadastro">E-mail</label>
+                <input id="emailAdminCadastro" name="email" type="email" autocomplete="email" maxlength="254" required>
+
+                <div id="grupoSetorAdminCadastro">
+                    <label for="setorAdminCadastro">Setor sob responsabilidade</label>
+                    <select id="setorAdminCadastro" name="setorID" required>
+                        <option value="">Carregando setores...</option>
+                    </select>
+                </div>
+
+                <label for="senhaAdminCadastro">Senha</label>
+                <input id="senhaAdminCadastro" name="senha" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                <small>A senha deve ter entre 12 e 128 caracteres.</small>
+
+                <label for="confirmacaoAdminCadastro">Confirmar senha</label>
+                <input id="confirmacaoAdminCadastro" name="confirmacaoSenha" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+
+                <button id="btnCadastrarAdmin" type="submit"><i data-lucide="user-round-plus"></i>Cadastrar conta</button>
+                <p id="mensagemCadastroAdmin" class="mensagem-cadastro-admin" role="status" aria-live="polite"></p>
+            </form>
+        </section>
+
         <section class="bloco tela-admin" data-pagina="usuarios" id="usuarios">
             <div class="bloco-cabecalho">
                 <div><p class="sobretitulo">ACESSO E RESPONSABILIDADE</p><h2>Usuários e acessos</h2><p>Consulta administrativa dos usuários cadastrados. Senhas e hashes nunca são exibidos.</p></div>
-                <a class="btn-secundario" href="/frontend/adm/index.html"><i data-lucide="user-round-plus"></i>Cadastrar conta</a>
+                <button class="btn-secundario" type="button" data-tela="cadastro"><i data-lucide="user-round-plus"></i>Cadastrar conta</button>
             </div>
             <div class="resumo-papeis" id="resumoPapeis">
                 <div class="papel-card"><span>Alunos</span><strong id="qtdAlunos">—</strong></div>
