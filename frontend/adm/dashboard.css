@@ -473,3 +473,42 @@ tbody tr:hover { background: #fdfbf8; }
 .btn-acao-usuario.perigo { color: #9f2d2d; border-color: #e8c6c2; }
 .btn-acao-usuario.positivo { color: #176b45; border-color: #b9dfca; }
 .btn-acao-usuario:disabled { opacity: .5; cursor: not-allowed; }
+
+
+/* Abas da área Estoque e patrimônio */
+.abas-estoque {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 22px 0 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--linha);
+}
+.aba-estoque {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 44px;
+    padding: 11px 16px;
+    border: 1px solid var(--linha);
+    border-radius: 11px;
+    background: var(--cartao);
+    color: var(--suave);
+    font-size: 12px;
+    font-weight: 750;
+    transition: background .15s, border-color .15s, color .15s;
+}
+.aba-estoque svg { width: 17px; height: 17px; }
+.aba-estoque:hover { border-color: #d8b69d; color: var(--laranja); }
+.aba-estoque.ativa {
+    border-color: var(--laranja);
+    background: var(--laranja);
+    color: #fff;
+}
+.painel-aba-estoque { min-width: 0; }
+.painel-aba-estoque[hidden] { display: none !important; }
+@media (max-width: 600px) {
+    .abas-estoque { display: grid; grid-template-columns: 1fr; }
+    .aba-estoque { width: 100%; }
+}
