@@ -118,7 +118,7 @@ router.get("/admin/dashboard", async (req, res) => {
         return res.json({
             sucesso: true,
             atualizadoEm: new Date().toISOString(),
-            administrador: { nome: String(usuarioSessao.nome || ""), perfil: String(usuarioSessao.perfil || "") },
+            administrador: { usuarioID: String(usuarioSessao.id || ""), nome: String(usuarioSessao.nome || ""), perfil: String(usuarioSessao.perfil || "") },
             resumo: {
                 totalUsuarios: usuarios.length,
                 usuariosAtivos: usuariosAtivos.length,
