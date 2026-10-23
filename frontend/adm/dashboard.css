@@ -514,6 +514,37 @@ tbody tr:hover { background: #fdfbf8; }
 }
 
 
+
+.busca-operacoes {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 560px;
+    min-height: 46px;
+    margin: 20px 0 8px;
+    padding: 0 14px;
+    border: 1px solid var(--linha);
+    border-radius: 12px;
+    background: var(--cartao);
+    color: var(--suave);
+}
+.busca-operacoes svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.busca-operacoes input {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--texto);
+    font-size: 13px;
+}
+.busca-operacoes:focus-within {
+    border-color: var(--laranja);
+    box-shadow: 0 0 0 3px rgb(169 99 53 / 10%);
+}
+
 /* Melhor legibilidade nas tabelas do Painel ADM */
 .tela-admin .tabela-container {
     width: 100%;
