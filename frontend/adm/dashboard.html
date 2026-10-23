@@ -169,10 +169,19 @@
         </section>
 
         <section class="bloco tela-admin" data-pagina="operacoes" id="operacoes">
-            <div class="bloco-cabecalho"><div><h2>Reservas</h2><p>Decida reservas pendentes ou cancele as aprovadas.</p></div></div>
-            <div class="tabela-container"><table><thead><tr><th>Usuário</th><th>Produto</th><th>Início</th><th>Fim</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaReservasAdmin"><tr><td colspan="7" class="vazio">Carregando reservas...</td></tr></tbody></table></div>
-            <div class="bloco-cabecalho"><div><h2>Empréstimos</h2><p>Consulta geral; devoluções devem usar o fluxo que atualiza o estoque.</p></div></div>
-            <div class="tabela-container"><table><thead><tr><th>Usuário</th><th>Produto</th><th>Retirada</th><th>Devolução prevista</th><th>Status</th></tr></thead><tbody id="tabelaEmprestimosAdmin"><tr><td colspan="6" class="vazio">Carregando empréstimos...</td></tr></tbody></table></div>
+            <div class="bloco-cabecalho"><div><h2>Reservas e empréstimos</h2><p>Escolha qual conjunto de registros deseja consultar.</p></div></div>
+            <div class="abas-estoque" role="tablist" aria-label="Seções de reservas e empréstimos">
+                <button class="aba-estoque ativa" type="button" role="tab" aria-selected="true" aria-controls="painelReservas" data-aba-operacoes="reservas"><i data-lucide="calendar-check"></i>Reservas</button>
+                <button class="aba-estoque" type="button" role="tab" aria-selected="false" aria-controls="painelEmprestimos" data-aba-operacoes="emprestimos"><i data-lucide="handshake"></i>Empréstimos</button>
+            </div>
+            <div class="painel-aba-estoque" id="painelReservas" role="tabpanel">
+                <div class="bloco-cabecalho"><div><h2>Reservas</h2><p>Decida reservas pendentes ou cancele as aprovadas.</p></div></div>
+                <div class="tabela-container"><table><thead><tr><th>Usuário</th><th>Produto</th><th>Início</th><th>Fim</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaReservasAdmin"><tr><td colspan="6" class="vazio">Carregando reservas...</td></tr></tbody></table></div>
+            </div>
+            <div class="painel-aba-estoque" id="painelEmprestimos" role="tabpanel" hidden>
+                <div class="bloco-cabecalho"><div><h2>Empréstimos</h2><p>Consulta geral; devoluções devem usar o fluxo que atualiza o estoque.</p></div></div>
+                <div class="tabela-container"><table><thead><tr><th>Usuário</th><th>Produto</th><th>Retirada</th><th>Devolução prevista</th><th>Status</th></tr></thead><tbody id="tabelaEmprestimosAdmin"><tr><td colspan="5" class="vazio">Carregando empréstimos...</td></tr></tbody></table></div>
+            </div>
         </section>
 
         <section class="bloco tela-admin" data-pagina="auditoria" id="auditoria">
