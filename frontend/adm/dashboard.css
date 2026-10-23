@@ -568,3 +568,10 @@ tbody tr:hover { background: #fdfbf8; }
     padding: 28px 18px;
     font-size: 13px;
 }
+
+
+/* Espaçamento entre as barras de pesquisa e as tabelas de denúncias/bloqueios. */
+.busca-denuncias,
+.busca-bloqueios {
+    margin-bottom: 16px;
+}
