@@ -61,6 +61,7 @@ async function carregarPainelAdmin() {
         usuariosAdmin = Array.isArray(dados.usuarios) ? dados.usuarios : [];
         renderizarResumoAdmin(dados);
         renderizarUsuariosAdmin();
+        await carregarOperacoesAdmin();
         renderizarAtividadesAdmin(dados.atividadesRecentes || []);
         mostrarEstadoPainel("Dados carregados com sucesso da planilha escolar.", "sucesso");
         elAdmin("ultimaAtualizacao").textContent = formatarData(dados.atualizadoEm);
@@ -204,6 +205,55 @@ async function enviarAcaoUsuarioAdmin(usuarioID, metodo, sufixo, corpo) {
         alert(erro.message);
     } finally {
         botoes.forEach((botao) => { botao.disabled = false; });
+    }
+}
+
+
+async function carregarOperacoesAdmin() {
+    const tabelaReservas = elAdmin("tabelaReservasAdmin");
+    const tabelaEmprestimos = elAdmin("tabelaEmprestimosAdmin");
+    if (!tabelaReservas || !tabelaEmprestimos) return;
+    try {
+        const resposta = await fetch(API_ADMIN + "/admin/operacoes", { credentials: "include", headers: { Accept: "application/json" } });
+        const dados = await resposta.json();
+        if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar as operações.");
+        const reservas = dados.reservas || [];
+        tabelaReservas.innerHTML = reservas.length ? reservas.slice().reverse().map((r) => {
+            const status = String(r.status || "—").toUpperCase();
+            let acoes = "—";
+            if (status === "PENDENTE") {
+                acoes = '<button class="btn-acao-usuario positivo" data-reserva-id="' + escaparAdmin(r.reservaID) + '" data-reserva-status="APROVADA">Aprovar</button> <button class="btn-acao-usuario perigo" data-reserva-id="' + escaparAdmin(r.reservaID) + '" data-reserva-status="RECUSADA">Recusar</button>';
+            } else if (status === "APROVADA") {
+                acoes = '<button class="btn-acao-usuario perigo" data-reserva-id="' + escaparAdmin(r.reservaID) + '" data-reserva-status="CANCELADA">Cancelar</button>';
+            }
+            return "<tr><td>" + escaparAdmin(r.reservaID) + "</td><td>" + escaparAdmin(r.usuario || r.usuarioID) + "</td><td>" + escaparAdmin(r.produto || r.produtoID) + "</td><td>" + escaparAdmin(r.dataInicio || "—") + "</td><td>" + escaparAdmin(r.dataFim || "—") + "</td><td>" + escaparAdmin(status) + "</td><td class=\"acoes-usuario\">" + acoes + "</td></tr>";
+        }).join("") : '<tr><td colspan="7" class="vazio">Nenhuma reserva registrada.</td></tr>';
+        const emprestimos = dados.emprestimos || [];
+        tabelaEmprestimos.innerHTML = emprestimos.length ? emprestimos.slice().reverse().map((e) =>
+            "<tr><td>" + escaparAdmin(e.emprestimoID) + "</td><td>" + escaparAdmin(e.usuario || e.usuarioID) + "</td><td>" + escaparAdmin(e.produto || e.produtoID) + "</td><td>" + escaparAdmin(e.dataRetirada || "—") + "</td><td>" + escaparAdmin(e.dataPrevistaDevolucao || "—") + "</td><td>" + escaparAdmin(e.status || "—") + "</td></tr>"
+        ).join("") : '<tr><td colspan="6" class="vazio">Nenhum empréstimo registrado.</td></tr>';
+        tabelaReservas.querySelectorAll("[data-reserva-status]").forEach((botao) => botao.addEventListener("click", async () => {
+            const statusNovo = botao.dataset.reservaStatus;
+            if (!confirm("Confirma " + statusNovo.toLowerCase() + " a reserva " + botao.dataset.reservaId + "?")) return;
+            botao.disabled = true;
+            try {
+                const resp = await fetch(API_ADMIN + "/admin/reservas/" + encodeURIComponent(botao.dataset.reservaId) + "/status", {
+                    method: "PATCH", credentials: "include",
+                    headers: { "Content-Type": "application/json", Accept: "application/json" },
+                    body: JSON.stringify({ status: statusNovo })
+                });
+                const resultado = await resp.json();
+                if (!resp.ok || !resultado.sucesso) throw new Error(resultado.mensagem || "Não foi possível atualizar a reserva.");
+                mostrarEstadoPainel(resultado.mensagem, "sucesso");
+                await carregarOperacoesAdmin();
+            } catch (erro) {
+                alert(erro.message);
+                botao.disabled = false;
+            }
+        }));
+    } catch (erro) {
+        tabelaReservas.innerHTML = '<tr><td colspan="7" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+        tabelaEmprestimos.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
     }
 }
 
