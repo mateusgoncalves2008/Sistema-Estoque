@@ -364,15 +364,59 @@ function renderizarAtividadesAdmin(atividades) {
         return;
     }
 
+    const formatarHoraAtividade = (valor) => {
+        if (!valor) return "";
+        const texto = String(valor).trim();
+        const hora = texto.match(/(?:^|\\s)(\\d{1,2}:\\d{2})(?::\\d{2})?/);
+        return hora ? hora[1] : "";
+    };
+
+    const descreverAcao = (valor) => {
+        const acao = String(valor || "").trim().toUpperCase();
+        const descricoes = {
+            LOGIN: "fez login",
+            LOGOUT: "saiu do sistema",
+            CRIAR_USUARIO: "criou uma nova conta",
+            CADASTRAR_USUARIO: "cadastrou um usuário",
+            CRIAR: "criou um novo registro",
+            CREATE: "criou um novo registro",
+            EDITAR: "editou um registro",
+            ATUALIZAR: "editou dados",
+            UPDATE: "editou dados",
+            EXCLUIR: "excluiu um registro",
+            DELETAR: "deletou um registro",
+            DELETE: "deletou um registro",
+            EXPORTAR: "exportou um relatório",
+        };
+        return descricoes[acao] || String(valor || "realizou uma atividade").replace(/[_-]+/g, " ").toLocaleLowerCase("pt-BR");
+    };
+
+    const estiloAcao = (valor) => {
+        const acao = String(valor || "").toUpperCase();
+        if (/LOGIN|LOGOUT|SAIR/.test(acao)) return { icone: "log-in", classe: "atividade-azul" };
+        if (/CRIAR|CADASTR|CREATE|ADD/.test(acao)) return { icone: "plus", classe: "atividade-verde" };
+        if (/EDITAR|ATUALIZAR|UPDATE|ALTERAR/.test(acao)) return { icone: "file-pen-line", classe: "atividade-laranja" };
+        if (/EXCLUIR|DELETAR|DELETE|REMOVER/.test(acao)) return { icone: "trash-2", classe: "atividade-vermelha" };
+        if (/EXPORTAR|DOWNLOAD|PDF/.test(acao)) return { icone: "download", classe: "atividade-azul-escuro" };
+        return { icone: "file-clock", classe: "atividade-neutra" };
+    };
+
     lista.innerHTML = atividades.map((atividade) => {
-        const pares = Object.entries(atividade).filter(([, valor]) => String(valor || "").trim());
-        const titulo = pares.slice(0, 2).map(([chave, valor]) => `${chave}: ${valor}`).join(" · ") || "Registro de atividade";
-        const detalhe = pares.slice(2, 6).map(([chave, valor]) => `${chave}: ${valor}`).join(" · ");
+        const nome = atividade.usuarioNome || atividade.nomeUsuario || atividade.nome || atividade.usuario || atividade.usuarioID || atividade.UsuarioID || "Usuário";
+        const acaoOriginal = atividade.acao || atividade.Acao || atividade.acaoRealizada || "";
+        const descricao = atividade.descricao || atividade.Descricao || "";
+        const tabela = atividade.tabela || atividade.Tabela || "";
+        const hora = formatarHoraAtividade(atividade.dataHora || atividade.DataHora || atividade.data || atividade.Data);
+        const estilo = estiloAcao(acaoOriginal);
+        const complemento = descricao || (tabela ? "em " + tabela.replace(/_/g, " ").toLocaleLowerCase("pt-BR") : "realizou uma atividade no sistema");
         return `<article class="atividade">
-            <span class="atividade-icone"><i data-lucide="file-clock"></i></span>
-            <div><strong>${escaparAdmin(titulo)}</strong><small>${escaparAdmin(detalhe || "Registro mantido na planilha de auditoria.")}</small></div>
+            <span class="atividade-icone ${estilo.classe}"><i data-lucide="${estilo.icone}"></i></span>
+            <div class="atividade-conteudo"><strong><span class="atividade-nome">${escaparAdmin(nome)}</span> ${escaparAdmin(descreverAcao(acaoOriginal))}</strong><small>${escaparAdmin(complemento)}</small></div>
+            <time class="atividade-hora">${escaparAdmin(hora)}</time>
         </article>`;
     }).join("");
+
+    if (window.lucide) window.lucide.createIcons();
 }
 
 async function sairPainelAdmin() {
