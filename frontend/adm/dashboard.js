@@ -62,6 +62,7 @@ async function carregarPainelAdmin() {
         renderizarResumoAdmin(dados);
         renderizarUsuariosAdmin();
         await carregarOperacoesAdmin();
+        await carregarRelatoriosAdmin();
         renderizarAtividadesAdmin(dados.atividadesRecentes || []);
         mostrarEstadoPainel("Dados carregados com sucesso da planilha escolar.", "sucesso");
         elAdmin("ultimaAtualizacao").textContent = formatarData(dados.atualizadoEm);
@@ -254,6 +255,51 @@ async function carregarOperacoesAdmin() {
     } catch (erro) {
         tabelaReservas.innerHTML = '<tr><td colspan="7" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
         tabelaEmprestimos.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+    }
+}
+
+
+async function carregarRelatoriosAdmin() {
+    const tabelaD = elAdmin("tabelaDenunciasAdmin");
+    const tabelaB = elAdmin("tabelaBloqueiosAdmin");
+    if (!tabelaD || !tabelaB) return;
+    try {
+        const resp = await fetch(API_ADMIN + "/admin/denuncias-bloqueios", { credentials: "include", headers: { Accept: "application/json" } });
+        const dados = await resp.json();
+        if (!resp.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar denúncias e bloqueios.");
+        const denuncias = dados.denuncias || [];
+        tabelaD.innerHTML = denuncias.length ? denuncias.slice().reverse().map((d) =>
+            "<tr><td>" + escaparAdmin(d.denunciaID) + "</td><td>" + escaparAdmin(d.denuncianteNome || d.denuncianteID) + "</td><td>" + escaparAdmin(d.denunciadoNome || d.denunciadoID) + "</td><td>" + escaparAdmin(d.motivo) + "</td><td>" + escaparAdmin(d.status || "—") + "</td><td><button class=\"btn-acao-usuario\" type=\"button\" data-denuncia-id=\"" + escaparAdmin(d.denunciaID) + "\">Analisar / responder</button></td></tr>"
+        ).join("") : '<tr><td colspan="6" class="vazio">Nenhuma denúncia registrada.</td></tr>';
+        const bloqueios = dados.bloqueios || [];
+        tabelaB.innerHTML = bloqueios.length ? bloqueios.slice().reverse().map((b) =>
+            "<tr><td>" + escaparAdmin(b.bloqueioID) + "</td><td>" + escaparAdmin(b.usuarioBloqueadoNome || b.usuarioBloqueadoID) + "</td><td>" + escaparAdmin(b.setorNome || b.setorID) + "</td><td>" + escaparAdmin(b.motivo) + "</td><td>" + escaparAdmin(b.status || "—") + "</td></tr>"
+        ).join("") : '<tr><td colspan="5" class="vazio">Nenhum bloqueio registrado.</td></tr>';
+        tabelaD.querySelectorAll("[data-denuncia-id]").forEach((botao) => botao.addEventListener("click", async () => {
+            const d = denuncias.find((item) => String(item.denunciaID) === String(botao.dataset.denunciaId));
+            const resposta = prompt("Denúncia " + d.denunciaID + "\n" + (d.descricao || d.motivo) + "\n\nResposta da administração:", d.resposta || "");
+            if (resposta === null) return;
+            const status = prompt("Status: ANALISADA, RESOLVIDA ou ARQUIVADA", "ANALISADA");
+            if (status === null) return;
+            botao.disabled = true;
+            try {
+                const r = await fetch(API_ADMIN + "/admin/denuncias/" + encodeURIComponent(d.denunciaID) + "/resposta", {
+                    method: "PATCH", credentials: "include",
+                    headers: { "Content-Type": "application/json", Accept: "application/json" },
+                    body: JSON.stringify({ resposta, status })
+                });
+                const resultado = await r.json();
+                if (!r.ok || !resultado.sucesso) throw new Error(resultado.mensagem || "Não foi possível registrar a análise.");
+                mostrarEstadoPainel(resultado.mensagem, "sucesso");
+                await carregarRelatoriosAdmin();
+            } catch (erro) {
+                alert(erro.message);
+                botao.disabled = false;
+            }
+        }));
+    } catch (erro) {
+        tabelaD.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+        tabelaB.innerHTML = '<tr><td colspan="5" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
     }
 }
 
