@@ -312,7 +312,7 @@ async function carregarEstoqueAdmin() {
         ).join("") : '<tr><td colspan="4" class="vazio">Nenhum produto cadastrado.</td></tr>';
         const locais = dados.locais || [];
         tabelaL.innerHTML = locais.length ? locais.map((l) =>
-            "<tr><td>" + escaparAdmin(l.nome) + "</td><td>" + escaparAdmin(l.tipo) + "</td><td>" + escaparAdmin(l.responsavelID) + "</td><td>" + escaparAdmin(l.status) + "</td></tr>"
+            "<tr><td>" + escaparAdmin(l.nome) + "</td><td>" + escaparAdmin(l.tipo) + "</td><td>" + escaparAdmin(l.responsavelNome || l.responsavelID || "Não informado") + "</td><td>" + escaparAdmin(l.status) + "</td></tr>"
         ).join("") : '<tr><td colspan="4" class="vazio">Nenhum local cadastrado.</td></tr>';
     } catch (erro) {
         tabelaP.innerHTML = '<tr><td colspan="4" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
