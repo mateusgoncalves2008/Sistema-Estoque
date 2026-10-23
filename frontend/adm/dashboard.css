@@ -358,3 +358,45 @@ tbody tr:hover { background: #fdfbf8; }
     .form-cadastro-admin { grid-template-columns: minmax(0, 1fr); }
     .form-cadastro-admin > label { margin-top: 7px; }
 }
+
+
+/* Ajuste do menu ADM para seguir o layout de referência */
+.sidebar {
+    background: linear-gradient(180deg, #3b261c 0%, #43291e 100%);
+    padding: 24px 20px 20px;
+}
+.sidebar-top {
+    padding: 10px 6px 24px;
+    margin-bottom: 4px;
+}
+.logo-box {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+    border-radius: 17px;
+}
+.perfil-admin {
+    margin: 18px 0 26px;
+    padding: 12px 8px;
+    background: transparent;
+}
+.sidebar-nav { gap: 7px; }
+.nav-link {
+    min-height: 59px;
+    padding: 0 18px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: 700;
+}
+.nav-link svg { width: 21px; height: 21px; }
+.nav-link:hover { background: #ffffff12; color: #fff; }
+.nav-link.ativo, .nav-link.on {
+    background: #bb542f;
+    color: #fff;
+    box-shadow: 0 8px 20px #1c100b26;
+}
+.sidebar-rodape {
+    padding-top: 18px;
+    border-top: 1px solid #ffffff24;
+}
+.btn-sair { min-height: 48px; font-size: 13px; }
