@@ -656,3 +656,34 @@ tbody tr:hover { background: #fdfbf8; }
     .acoes-historico-logs button { width: 100%; justify-content: center; }
     .paginacao-logs { justify-content: space-between; gap: 8px; }
 }
+
+
+/* Botão de acesso ao histórico completo de logs */
+#btnVerTodosLogs {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 42px;
+    padding: 11px 16px;
+    border: 1px solid #a94c2b;
+    border-radius: 11px;
+    background: #bb542f;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 750;
+    box-shadow: 0 5px 12px rgb(169 76 43 / 16%);
+    transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+#btnVerTodosLogs svg { width: 16px; height: 16px; }
+#btnVerTodosLogs:hover {
+    background: #a94728;
+    box-shadow: 0 7px 16px rgb(169 76 43 / 22%);
+    transform: translateY(-1px);
+}
+#btnVerTodosLogs:active { transform: translateY(0); }
+#btnVerTodosLogs:focus-visible { outline: 3px solid #d99b78; outline-offset: 3px; }
+@media (max-width: 600px) {
+    #btnVerTodosLogs { min-height: 38px; padding: 9px 11px; font-size: 11px; }
+}
