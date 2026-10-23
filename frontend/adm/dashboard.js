@@ -79,8 +79,6 @@ function renderizarResumoAdmin(dados) {
     const resumo = dados.resumo || {};
     const papeis = resumo.usuariosPorTipo || {};
 
-    elAdmin("nomeAdmin").textContent = dados.administrador?.nome || "Administrador";
-    elAdmin("avatarAdmin").textContent = (dados.administrador?.nome || "A").trim().charAt(0).toUpperCase();
     elAdmin("totalUsuarios").textContent = formatarNumero(resumo.totalUsuarios);
     elAdmin("usuariosAtivos").textContent = formatarNumero(resumo.usuariosAtivos);
     elAdmin("totalProdutos").textContent = formatarNumero(resumo.produtosCadastrados);
