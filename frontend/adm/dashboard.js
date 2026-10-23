@@ -150,7 +150,7 @@ function renderizarUsuariosAdmin() {
             <td>${escaparAdmin(formatarData(usuario.ultimoLogin))}</td>
             <td class="acoes-usuario">
                 <button type="button" class="btn-acao-usuario" data-acao-usuario="editar" data-usuario-id="${escaparAdmin(usuario.usuarioID)}">Editar</button>
-                <button type="button" class="btn-acao-usuario ${ativo ? "perigo" : "positivo"}" data-acao-usuario="status" data-status-alvo="${ativo ? "INATIVO" : "ATIVO"}" data-usuario-id="${escaparAdmin(usuario.usuarioID)}">${ativo ? "Desativar" : "Reativar"}</button>
+                <button type="button" class="btn-acao-usuario ${ativo ? "perigo" : "positivo"}" data-acao-usuario="status" data-status-alvo="${ativo ? "INATIVO" : "ATIVO"}" data-usuario-id="${escaparAdmin(usuario.usuarioID)}" ${propriaConta ? "disabled title=\"Não é possível alterar a própria conta\"" : ""}>${ativo ? "Desativar" : "Reativar"}</button>
             </td>
         </tr>`;
     }).join("");
