@@ -274,7 +274,7 @@ async function carregarDados() {
 
         audit = (dados.logs || []).map((l) => {
             const dataHoraTexto = String(l.dataHora || "").trim();
-            const horaBR = dataHoraTexto.match(/\\b(\\d{2}:\\d{2})(?::\\d{2})?\\b/);
+            const horaBR = dataHoraTexto.match(/\b(\d{2}:\d{2})(?::\d{2})?\b/);
             const hora = horaBR
                 ? horaBR[1]
                 : (() => {
