@@ -512,3 +512,28 @@ tbody tr:hover { background: #fdfbf8; }
     .abas-estoque { display: grid; grid-template-columns: 1fr; }
     .aba-estoque { width: 100%; }
 }
+
+
+/* Melhor legibilidade nas tabelas do Painel ADM */
+.tela-admin .tabela-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+}
+.tela-admin .tabela-container table {
+    min-width: 760px;
+}
+.tela-admin .tabela-container th {
+    padding: 15px 16px;
+    font-size: 12px;
+    letter-spacing: .35px;
+}
+.tela-admin .tabela-container td {
+    padding: 15px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.tela-admin .tabela-container .vazio {
+    padding: 28px 18px;
+    font-size: 13px;
+}
