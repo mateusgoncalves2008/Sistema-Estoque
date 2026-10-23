@@ -298,4 +298,140 @@ router.delete("/admin/usuarios/:usuarioID", async (req, res) => {
     }
 });
 
+
+// ============================================================
+// OPERAÇÕES GERAIS: reservas, empréstimos, bloqueios e denúncias
+// ============================================================
+
+router.get("/admin/operacoes", async (req, res) => {
+    if (!exigirAdmin(req, res)) return;
+    try {
+        const ranges = [
+            "08_RESERVAS!A:L",
+            "09_EMPRESTIMOS!A:L",
+            "01_USUARIOS!A:K",
+            "02_PRODUTOS!A:K",
+        ];
+        const resposta = await sheets.spreadsheets.values.batchGet({ spreadsheetId: SPREADSHEET_ID, ranges });
+        const dados = {};
+        ranges.forEach((range, i) => { dados[range.split("!")[0]] = resposta.data.valueRanges?.[i]?.values || []; });
+        const usuarios = new Map((dados["01_USUARIOS"] || []).slice(1).map(l => [textoAdmin(l[0]), textoAdmin(l[1])]));
+        const produtos = new Map((dados["02_PRODUTOS"] || []).slice(1).map(l => [textoAdmin(l[0]), textoAdmin(l[2])]));
+        const reservas = (dados["08_RESERVAS"] || []).slice(1).filter(l => textoAdmin(l[0])).map(l => ({
+            reservaID: textoAdmin(l[0]), dataSolicitacao: textoAdmin(l[1]),
+            usuarioID: textoAdmin(l[2]), usuario: usuarios.get(textoAdmin(l[2])) || "",
+            produtoID: textoAdmin(l[3]), produto: produtos.get(textoAdmin(l[3])) || "",
+            localID: textoAdmin(l[4]), quantidade: textoAdmin(l[5]),
+            dataInicio: textoAdmin(l[6]), dataFim: textoAdmin(l[7]),
+            motivo: textoAdmin(l[8]), status: textoAdmin(l[9]),
+            aprovadoPor: textoAdmin(l[10]), observacao: textoAdmin(l[11]),
+        }));
+        const emprestimos = (dados["09_EMPRESTIMOS"] || []).slice(1).filter(l => textoAdmin(l[0])).map(l => ({
+            emprestimoID: textoAdmin(l[0]), dataRetirada: textoAdmin(l[1]),
+            usuarioID: textoAdmin(l[2]), usuario: usuarios.get(textoAdmin(l[2])) || "",
+            produtoID: textoAdmin(l[3]), produto: produtos.get(textoAdmin(l[3])) || "",
+            localID: textoAdmin(l[4]), quantidade: textoAdmin(l[5]),
+            dataPrevistaDevolucao: textoAdmin(l[6]), dataDevolucao: textoAdmin(l[7]),
+            status: textoAdmin(l[8]), reservaID: textoAdmin(l[9]),
+            observacao: textoAdmin(l[10]), responsavel: textoAdmin(l[11]),
+        }));
+        return res.json({ sucesso: true, reservas, emprestimos });
+    } catch (erro) {
+        console.error("Erro ao carregar operações do ADM:", erro.message);
+        return res.status(500).json({ sucesso: false, mensagem: "Não foi possível carregar reservas e empréstimos." });
+    }
+});
+
+// O ADM pode decidir reservas pendentes. Empréstimos concluídos exigem o fluxo
+// de devolução existente para que estoque e histórico permaneçam consistentes.
+router.patch("/admin/reservas/:reservaID/status", async (req, res) => {
+    if (!exigirAdmin(req, res)) return;
+    try {
+        const reservaID = textoAdmin(req.params.reservaID);
+        const statusNovo = textoAdmin(req.body?.status).toUpperCase();
+        if (!reservaID || !["APROVADA", "RECUSADA", "CANCELADA"].includes(statusNovo)) {
+            return res.status(400).json({ sucesso: false, mensagem: "Status de reserva inválido." });
+        }
+        const resposta = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "08_RESERVAS!A:L" });
+        const linhas = resposta.data.values || [];
+        const indice = linhas.findIndex((l, i) => i > 0 && textoAdmin(l[0]) === reservaID);
+        if (indice < 0) return res.status(404).json({ sucesso: false, mensagem: "Reserva não encontrada." });
+        const atual = textoAdmin(linhas[indice][9]).toUpperCase();
+        if (atual !== "PENDENTE" && !(statusNovo === "CANCELADA" && ["APROVADA", "APROVADA"].includes(atual))) {
+            return res.status(409).json({ sucesso: false, mensagem: "Só é possível decidir reservas pendentes ou cancelar uma reserva aprovada." });
+        }
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: \`08_RESERVAS!J\${indice + 1}:K\${indice + 1}\`,
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [[statusNovo, textoAdmin(req.session.usuario.id)]] },
+        });
+        return res.json({ sucesso: true, mensagem: \`Reserva \${statusNovo.toLowerCase()}.\` });
+    } catch (erro) {
+        console.error("Erro ao alterar reserva pelo ADM:", erro.message);
+        return res.status(500).json({ sucesso: false, mensagem: "Não foi possível atualizar a reserva." });
+    }
+});
+
+router.get("/admin/denuncias-bloqueios", async (req, res) => {
+    if (!exigirAdmin(req, res)) return;
+    try {
+        const [d, b] = await Promise.all([
+            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "23_DENUNCIAS_SECRETARIA!A:M" }),
+            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "22_BLOQUEIOS_SETOR!A:J" }),
+        ]);
+        const denuncias = (d.data.values || []).slice(1).filter(l => textoAdmin(l[0])).map(l => ({
+            denunciaID: textoAdmin(l[0]), dataHora: textoAdmin(l[1]),
+            denuncianteID: textoAdmin(l[2]), denuncianteNome: textoAdmin(l[3]),
+            setorID: textoAdmin(l[4]), setorNome: textoAdmin(l[5]),
+            denunciadoID: textoAdmin(l[6]), denunciadoNome: textoAdmin(l[7]),
+            motivo: textoAdmin(l[8]), descricao: textoAdmin(l[9]),
+            status: textoAdmin(l[10]), resposta: textoAdmin(l[11]), dataAnalise: textoAdmin(l[12]),
+        }));
+        const bloqueios = (b.data.values || []).slice(1).filter(l => textoAdmin(l[0])).map(l => ({
+            bloqueioID: textoAdmin(l[0]), dataHora: textoAdmin(l[1]),
+            responsavelID: textoAdmin(l[2]), responsavelNome: textoAdmin(l[3]),
+            setorID: textoAdmin(l[4]), setorNome: textoAdmin(l[5]),
+            usuarioBloqueadoID: textoAdmin(l[6]), usuarioBloqueadoNome: textoAdmin(l[7]),
+            motivo: textoAdmin(l[8]), status: textoAdmin(l[9]),
+        }));
+        return res.json({ sucesso: true, denuncias, bloqueios });
+    } catch (erro) {
+        console.error("Erro ao carregar denúncias e bloqueios do ADM:", erro.message);
+        return res.status(500).json({ sucesso: false, mensagem: "Não foi possível carregar denúncias e bloqueios." });
+    }
+});
+
+router.patch("/admin/denuncias/:denunciaID/resposta", async (req, res) => {
+    if (!exigirAdmin(req, res)) return;
+    try {
+        const denunciaID = textoAdmin(req.params.denunciaID);
+        const respostaTexto = textoAdmin(req.body?.resposta);
+        const status = textoAdmin(req.body?.status || "ANALISADA").toUpperCase();
+        if (!denunciaID || respostaTexto.length < 3 || respostaTexto.length > 2000) {
+            return res.status(400).json({ sucesso: false, mensagem: "Informe uma resposta entre 3 e 2000 caracteres." });
+        }
+        if (!["ANALISADA", "RESOLVIDA", "ARQUIVADA"].includes(status)) {
+            return res.status(400).json({ sucesso: false, mensagem: "Status de análise inválido." });
+        }
+        const leitura = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "23_DENUNCIAS_SECRETARIA!A:M" });
+        const linhas = leitura.data.values || [];
+        const indice = linhas.findIndex((l, i) => i > 0 && textoAdmin(l[0]) === denunciaID);
+        if (indice < 0) return res.status(404).json({ sucesso: false, mensagem: "Denúncia não encontrada." });
+        await sheets.spreadsheets.values.batchUpdate({
+            spreadsheetId: SPREADSHEET_ID,
+            requestBody: {
+                valueInputOption: "USER_ENTERED",
+                data: [
+                    { range: \`23_DENUNCIAS_SECRETARIA!K\${indice + 1}:M\${indice + 1}\`, values: [[status, respostaTexto, new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })]] },
+                ],
+            },
+        });
+        return res.json({ sucesso: true, mensagem: "Análise da denúncia registrada." });
+    } catch (erro) {
+        console.error("Erro ao responder denúncia pelo ADM:", erro.message);
+        return res.status(500).json({ sucesso: false, mensagem: "Não foi possível registrar a resposta da denúncia." });
+    }
+});
+
 module.exports = router;
