@@ -449,3 +449,27 @@ tbody tr:hover { background: #fdfbf8; }
     border-radius: 8px;
 }
 .btn-sair svg { width: 20px; height: 20px; }
+
+
+/* Ações da tabela administrativa de usuários */
+.acoes-usuario {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 150px;
+}
+.btn-acao-usuario {
+    border: 1px solid #d8d5cd;
+    border-radius: 8px;
+    background: #fff;
+    color: #334155;
+    padding: 7px 9px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.btn-acao-usuario:hover { background: #f3f1ec; }
+.btn-acao-usuario.perigo { color: #9f2d2d; border-color: #e8c6c2; }
+.btn-acao-usuario.positivo { color: #176b45; border-color: #b9dfca; }
+.btn-acao-usuario:disabled { opacity: .5; cursor: not-allowed; }
