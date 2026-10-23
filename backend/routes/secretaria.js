@@ -263,6 +263,7 @@ router.get("/secretaria/dashboard", async (req, res) => {
         const devolucoes = dados["10_DEVOLUCOES"] || [];
 
         const calendario = dados["18_CALENDARIO_ESCOLAR"] || [];
+        const logs = dados["13_LOGS"] || [];
 
         const hoje = new Date().toISOString().slice(0, 10);
 
@@ -330,6 +331,17 @@ router.get("/secretaria/dashboard", async (req, res) => {
                 titulo: linha[3] || "",
                 descricao: linha[4] || "",
                 status: linha[5] || "",
+            })),
+
+            logs: logs.slice(1).reverse().slice(0, 20).map((linha) => ({
+                logID: linha[0] || "",
+                dataHora: linha[1] || "",
+                usuarioID: linha[2] || "",
+                acao: linha[3] || "",
+                tabela: linha[4] || "",
+                registroID: linha[5] || "",
+                descricao: linha[6] || "",
+                resultado: linha[7] || "",
             })),
         });
     } catch (erro) {
@@ -2598,22 +2610,18 @@ router.get("/secretaria/logs", async (req, res) => {
 
         const logs = dados["13_LOGS"] || [];
 
-        const lista = logs.slice(1).map((linha) => ({
+        const lista = logs.slice(1).reverse().map((linha) => ({
             id: linha[0] || "",
-
-            usuarioID: linha[1] || "",
-
-            acao: linha[2] || "",
-
-            entidade: linha[3] || "",
-
-            registroID: linha[4] || "",
-
-            data: linha[5] || "",
-
+            logID: linha[0] || "",
+            dataHora: linha[1] || "",
+            usuarioID: linha[2] || "",
+            acao: linha[3] || "",
+            tabela: linha[4] || "",
+            entidade: linha[4] || "",
+            registroID: linha[5] || "",
+            descricao: linha[6] || "",
             detalhes: linha[6] || "",
-
-            ip: linha[7] || "",
+            resultado: linha[7] || "",
         }));
 
         res.json({
