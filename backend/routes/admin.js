@@ -434,4 +434,43 @@ router.patch("/admin/denuncias/:denunciaID/resposta", async (req, res) => {
     }
 });
 
+
+router.get("/admin/estoque", async (req, res) => {
+    if (!exigirAdmin(req, res)) return;
+    try {
+        const ranges = [
+            "02_PRODUTOS!A:K",
+            "03_CATEGORIAS!A:D",
+            "04_SUBCATEGORIAS!A:E",
+            "05_LOCAIS!A:G",
+            "06_ESTOQUE_LOCAIS!A:I",
+        ];
+        const resposta = await sheets.spreadsheets.values.batchGet({ spreadsheetId: SPREADSHEET_ID, ranges });
+        const dados = {};
+        ranges.forEach((range, i) => { dados[range.split("!")[0]] = resposta.data.valueRanges?.[i]?.values || []; });
+        const categorias = new Map((dados["03_CATEGORIAS"] || []).slice(1).map(l => [textoAdmin(l[0]), textoAdmin(l[1])]));
+        const subcategorias = new Map((dados["04_SUBCATEGORIAS"] || []).slice(1).map(l => [textoAdmin(l[0]), textoAdmin(l[2])]));
+        const locais = (dados["05_LOCAIS"] || []).slice(1).filter(l => textoAdmin(l[0])).map(l => ({
+            localID: textoAdmin(l[0]), codigo: textoAdmin(l[1]), nome: textoAdmin(l[2]),
+            tipo: textoAdmin(l[3]), responsavelID: textoAdmin(l[4]), descricao: textoAdmin(l[5]), status: textoAdmin(l[6]),
+        }));
+        const estoque = (dados["06_ESTOQUE_LOCAIS"] || []).slice(1).filter(l => textoAdmin(l[0])).map(l => ({
+            estoqueID: textoAdmin(l[0]), produtoID: textoAdmin(l[1]), localID: textoAdmin(l[2]),
+            quantidade: textoAdmin(l[3]), reservado: textoAdmin(l[4]), disponivel: textoAdmin(l[5]),
+            indisponivel: textoAdmin(l[6]), ultimaAtualizacao: textoAdmin(l[7]), status: textoAdmin(l[8]),
+        }));
+        const produtos = (dados["02_PRODUTOS"] || []).slice(1).filter(l => textoAdmin(l[0])).map(l => ({
+            produtoID: textoAdmin(l[0]), codigo: textoAdmin(l[1]), nome: textoAdmin(l[2]), autor: textoAdmin(l[3]),
+            categoriaID: textoAdmin(l[4]), categoria: categorias.get(textoAdmin(l[4])) || "",
+            subcategoriaID: textoAdmin(l[5]), subcategoria: subcategorias.get(textoAdmin(l[5])) || "",
+            estoqueMinimo: textoAdmin(l[6]), estado: textoAdmin(l[7]), status: textoAdmin(l[8]),
+            dataCadastro: textoAdmin(l[9]), observacao: textoAdmin(l[10]),
+        }));
+        return res.json({ sucesso: true, produtos, locais, estoque });
+    } catch (erro) {
+        console.error("Erro ao carregar estoque do ADM:", erro.message);
+        return res.status(500).json({ sucesso: false, mensagem: "Não foi possível carregar o estoque e os locais." });
+    }
+});
+
 module.exports = router;
