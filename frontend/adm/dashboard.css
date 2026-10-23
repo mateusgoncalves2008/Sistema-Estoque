@@ -610,3 +610,49 @@ tbody tr:hover { background: #fdfbf8; }
 .busca-bloqueios {
     margin-bottom: 16px;
 }
+
+
+/* Histórico completo de auditoria */
+.acoes-historico-logs {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+.busca-logs { margin: 20px 0 10px; }
+.resumo-logs {
+    margin: 0 0 14px;
+    color: var(--suave);
+    font-size: 12px;
+}
+#logs .tabela-container { overflow-x: auto; }
+#logs .tabela-container table { min-width: 1050px; }
+#logs .log-id-usuario {
+    display: block;
+    margin-top: 4px;
+    color: var(--suave);
+    font-size: 11px;
+}
+#logs .log-descricao {
+    min-width: 240px;
+    max-width: 420px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.paginacao-logs {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+    margin-top: 18px;
+}
+.paginacao-logs span {
+    color: var(--suave);
+    font-size: 12px;
+    font-weight: 650;
+}
+.paginacao-logs button:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 600px) {
+    .acoes-historico-logs { justify-content: stretch; }
+    .acoes-historico-logs button { width: 100%; justify-content: center; }
+    .paginacao-logs { justify-content: space-between; gap: 8px; }
+}
