@@ -174,19 +174,34 @@ function renderizarAtividadesAdmin(atividades) {
 async function sairPainelAdmin() {
     const botao = elAdmin("btnSair");
     botao.disabled = true;
+    botao.querySelector("span").textContent = "Saindo...";
     try {
-        await fetch(`${API_ADMIN}/logout`, {
+        const resposta = await fetch(`${API_ADMIN}/logout`, {
             method: "POST",
             credentials: "include",
+            cache: "no-store",
             headers: { "Content-Type": "application/json" },
         });
-    } catch (erro) {
-        console.error("Erro ao encerrar sessão:", erro);
-    } finally {
+        const resultado = await resposta.json().catch(() => ({}));
+        if (!resposta.ok || resultado.sucesso !== true) {
+            throw new Error(resultado.mensagem || "Não foi possível encerrar a sessão.");
+        }
         sessionStorage.removeItem("usuarioLogado");
         window.location.replace("/index.html");
+    } catch (erro) {
+        console.error("Erro ao encerrar sessão:", erro);
+        botao.disabled = false;
+        botao.querySelector("span").textContent = "Sair";
+        alert("Não foi possível confirmar a saída. Verifique sua conexão e tente novamente.");
     }
 }
+
+// Evita exibir a tela antiga ao voltar pelo histórico do navegador.
+window.addEventListener("pageshow", (evento) => {
+    if (evento.persisted && !sessionStorage.getItem("usuarioLogado")) {
+        window.location.replace("/index.html");
+    }
+});
 
 function mudarTelaAdmin(tela) {
     const titulos = {
