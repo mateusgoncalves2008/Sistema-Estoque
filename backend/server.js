@@ -107,6 +107,7 @@ app.use((req, res, next) => {
         else if (caminho.includes("reserva")) tabela = "08_RESERVAS";
         else if (caminho.includes("devolu")) tabela = "10_DEVOLUCOES";
         else if (caminho.includes("emprestimo")) tabela = "09_EMPRESTIMOS";
+        else if (caminho.includes("/responsavel/itens")) tabela = "02_PRODUTOS + 06_ESTOQUE_LOCAIS";
         else if (caminho.includes("produto") || caminho.includes("acervo") || caminho.includes("estoque") || caminho.includes("/itens")) tabela = "02_PRODUTOS";
         else if (caminho.includes("bloqueio")) tabela = "22_BLOQUEIOS_SETOR";
         else if (caminho.includes("denuncia")) tabela = "23_DENUNCIAS_SECRETARIA";
@@ -132,7 +133,7 @@ app.use((req, res, next) => {
         else if (caminho.includes("emprestimo")) acao = metodo === "POST" ? "CRIAR_EMPRESTIMO" : "ALTERAR_EMPRESTIMO";
         else if (caminho.includes("devolu")) acao = metodo === "POST" ? "REGISTRAR_DEVOLUCAO" : "ALTERAR_DEVOLUCAO";
         else acao = (metodo === "POST" ? "CRIAR_" : metodo === "DELETE" ? "EXCLUIR_" : "ALTERAR_") + rota.replace(/[^a-z0-9]/gi, "_").toUpperCase();
-        const registroID = corpoResposta?.registroID || corpoResposta?.reservaID || corpoResposta?.emprestimoID || corpoResposta?.produtoID || corpoResposta?.usuarioID || corpoResposta?.id || req.params?.id || req.body?.registroID || req.body?.reservaID || req.body?.emprestimoID || req.body?.produtoID || req.body?.usuarioID || "";
+        const registroID = corpoResposta?.registroID || corpoResposta?.reservaID || corpoResposta?.emprestimoID || corpoResposta?.produtoID || corpoResposta?.usuarioID || corpoResposta?.usuario?.id || corpoResposta?.produto?.produtoID || corpoResposta?.id || usuarioDepois?.id || req.params?.id || req.params?.usuarioID || req.params?.reservaID || req.params?.turmaID || req.body?.registroID || req.body?.reservaID || req.body?.emprestimoID || req.body?.produtoID || req.body?.usuarioID || "";
         const descricao = metodo + " " + caminho + " — HTTP " + statusHTTP;
         void registrarAuditoria({ usuarioID: usuarioDepois?.id || usuarioAntes?.id || "", acao, tabela, registroID, descricao, resultado });
     });
