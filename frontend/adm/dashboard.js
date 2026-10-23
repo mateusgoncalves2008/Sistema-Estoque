@@ -140,15 +140,71 @@ function renderizarUsuariosAdmin() {
         const nome = usuario.nome || "Sem nome";
         const status = String(usuario.status || "SEM STATUS").trim();
         const classeStatus = status.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const ativo = status.toUpperCase() === "ATIVO";
+        const propriaConta = String(usuario.usuarioID) === String(dadosPainelAdmin?.administrador?.usuarioID || "");
         return `<tr>
             <td><div class="usuario-identidade"><span class="usuario-avatar">${escaparAdmin(nome.trim().charAt(0).toUpperCase() || "?")}</span><span><strong class="usuario-nome">${escaparAdmin(nome)}</strong><small class="usuario-email">${escaparAdmin(usuario.email || "Sem e-mail")} · ${escaparAdmin(usuario.usuarioID)}</small></span></div></td>
             <td>${escaparAdmin(usuario.tipoUsuario || "—")}<br><small class="usuario-email">${escaparAdmin(usuario.perfil || "Sem perfil")}</small></td>
             <td>${escaparAdmin(usuario.setorID || "—")}</td>
             <td><span class="pilula-status ${escaparAdmin(classeStatus)}">${escaparAdmin(status)}</span></td>
             <td>${escaparAdmin(formatarData(usuario.ultimoLogin))}</td>
+            <td class="acoes-usuario">
+                <button type="button" class="btn-acao-usuario" data-acao-usuario="editar" data-usuario-id="${escaparAdmin(usuario.usuarioID)}">Editar</button>
+                <button type="button" class="btn-acao-usuario ${ativo ? "perigo" : "positivo"}" data-acao-usuario="status" data-status-alvo="${ativo ? "INATIVO" : "ATIVO"}" data-usuario-id="${escaparAdmin(usuario.usuarioID)}">${ativo ? "Desativar" : "Reativar"}</button>
+            </td>
         </tr>`;
     }).join("");
     elAdmin("totalExibidos").textContent = `${formatarNumero(filtrados.length)} de ${formatarNumero(usuariosAdmin.length)} usuários`;
+    tabela.querySelectorAll("[data-acao-usuario]").forEach((botao) => {
+        botao.addEventListener("click", () => executarAcaoUsuarioAdmin(botao));
+    });
+}
+
+async function executarAcaoUsuarioAdmin(botao) {
+    const usuarioID = botao.dataset.usuarioId;
+    const usuario = usuariosAdmin.find((item) => String(item.usuarioID) === String(usuarioID));
+    if (!usuario) return;
+
+    if (botao.dataset.acaoUsuario === "editar") {
+        const nome = window.prompt("Nome completo:", usuario.nome || "");
+        if (nome === null) return;
+        const email = window.prompt("E-mail:", usuario.email || "");
+        if (email === null) return;
+        const setorID = window.prompt("ID do setor (deixe vazio se não houver):", usuario.setorID || "");
+        if (setorID === null) return;
+        if (!nome.trim() || !email.trim()) {
+            alert("Nome e e-mail são obrigatórios.");
+            return;
+        }
+        await enviarAcaoUsuarioAdmin(usuarioID, "PATCH", "", { nome: nome.trim(), email: email.trim(), setorID: setorID.trim() });
+        return;
+    }
+
+    const status = botao.dataset.statusAlvo;
+    const acao = status === "ATIVO" ? "reativar" : "desativar";
+    if (!window.confirm(`Deseja ${acao} a conta de ${usuario.nome}?`)) return;
+    await enviarAcaoUsuarioAdmin(usuarioID, "PATCH", "/status", { status });
+}
+
+async function enviarAcaoUsuarioAdmin(usuarioID, metodo, sufixo, corpo) {
+    const botoes = document.querySelectorAll(`[data-usuario-id="${CSS.escape(usuarioID)}"]`);
+    botoes.forEach((botao) => { botao.disabled = true; });
+    try {
+        const resposta = await fetch(`${API_ADMIN}/admin/usuarios/${encodeURIComponent(usuarioID)}${sufixo}`, {
+            method: metodo,
+            credentials: "include",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify(corpo),
+        });
+        const resultado = await resposta.json().catch(() => ({}));
+        if (!resposta.ok || resultado.sucesso !== true) throw new Error(resultado.mensagem || "Não foi possível atualizar o usuário.");
+        mostrarEstadoPainel(resultado.mensagem || "Usuário atualizado.", "sucesso");
+        await carregarPainelAdmin();
+    } catch (erro) {
+        alert(erro.message);
+    } finally {
+        botoes.forEach((botao) => { botao.disabled = false; });
+    }
 }
 
 function renderizarAtividadesAdmin(atividades) {
