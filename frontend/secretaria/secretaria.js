@@ -1693,20 +1693,6 @@ const R = {
             );
         }
 
-        $("#log-ini").innerHTML =
-            audit
-                .slice(0, 5)
-                .map(
-                    (a) =>
-                        `<div class="log">
-                            ${escHtml(a[0])}
-                            <span>${escHtml(a[1])}</span>
-                        </div>`,
-                )
-                .join("") ||
-            `<p class="sub">
-                Nenhuma ação registrada ainda.
-            </p>`;
     },
 
     turmas() {
