@@ -2521,3 +2521,54 @@ footer {
     .botao-avisos-responsavel { top: 12px; right: 14px; width: 42px; height: 42px; border-radius: 12px; }
     .central-avisos-responsavel { top: 64px; right: 12px; width: calc(100vw - 24px); max-height: calc(100vh - 82px); }
 }
+
+
+/* Menu lateral padronizado com o layout de referência */
+.sidebar, aside.sidebar, .sidebar-menu {
+    background: linear-gradient(180deg, #3b261c 0%, #43291e 100%);
+}
+.sidebar {
+    padding-top: 24px;
+    padding-bottom: 20px;
+}
+.sidebar nav, .sidebar .menu, .sidebar .navegacao {
+    gap: 7px;
+}
+.sidebar nav button, .sidebar nav a,
+.sidebar .menu button, .sidebar .navegacao button,
+.sidebar .nav-link, .sidebar .menu-item {
+    min-height: 59px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 0 18px;
+    border-radius: 15px;
+    font-weight: 700;
+    text-align: left;
+    transition: background .18s ease, color .18s ease;
+}
+.sidebar nav button:hover, .sidebar nav a:hover,
+.sidebar .menu button:hover, .sidebar .navegacao button:hover,
+.sidebar .nav-link:hover, .sidebar .menu-item:hover {
+    background: #ffffff12;
+}
+.sidebar nav button.active, .sidebar nav button.ativo,
+.sidebar nav a.active, .sidebar nav a.ativo,
+.sidebar .nav-link.active, .sidebar .nav-link.ativo,
+.sidebar .menu-item.active, .sidebar .menu-item.ativo,
+.sidebar [aria-current="page"] {
+    background: #bb542f;
+    color: #fff;
+    box-shadow: 0 8px 20px #1c100b26;
+}
+.sidebar .sidebar-bottom, .sidebar .menu-footer, .sidebar footer {
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px solid #ffffff24;
+}
+@media (max-width: 700px) {
+    .sidebar { padding: 20px 14px; }
+    .sidebar nav button, .sidebar nav a,
+    .sidebar .menu button, .sidebar .navegacao button,
+    .sidebar .nav-link, .sidebar .menu-item { min-height: 52px; }
+}
