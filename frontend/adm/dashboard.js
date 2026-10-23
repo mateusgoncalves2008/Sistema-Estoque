@@ -511,6 +511,29 @@ function configurarAbasEstoqueAdmin() {
     });
 }
 
+function configurarAbasOperacoesAdmin() {
+    const botoes = document.querySelectorAll("[data-aba-operacoes]");
+    const paineis = {
+        reservas: elAdmin("painelReservas"),
+        emprestimos: elAdmin("painelEmprestimos"),
+    };
+
+    botoes.forEach((botao) => {
+        botao.addEventListener("click", () => {
+            const abaSelecionada = botao.dataset.abaOperacoes;
+            botoes.forEach((item) => {
+                const ativo = item === botao;
+                item.classList.toggle("ativa", ativo);
+                item.setAttribute("aria-selected", String(ativo));
+            });
+            Object.entries(paineis).forEach(([nome, painel]) => {
+                painel.hidden = nome !== abaSelecionada;
+            });
+            if (window.lucide) window.lucide.createIcons();
+        });
+    });
+}
+
 function configurarMenuAdmin() {
     const sidebar = elAdmin("sidebar");
     const overlay = elAdmin("overlayMenu");
@@ -543,5 +566,6 @@ elAdmin("filtroStatus").addEventListener("change", renderizarUsuariosAdmin);
 elAdmin("btnSair").addEventListener("click", sairPainelAdmin);
 configurarCadastroAdmin();
 configurarAbasEstoqueAdmin();
+configurarAbasOperacoesAdmin();
 configurarMenuAdmin();
 carregarPainelAdmin();
