@@ -399,4 +399,22 @@ tbody tr:hover { background: #fdfbf8; }
     padding-top: 18px;
     border-top: 1px solid #ffffff24;
 }
-.btn-sair { min-height: 48px; font-size: 13px; }
+.btn-sair {
+    width: 100%;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 10px 8px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #d9c8bc;
+    font-size: 20px;
+    font-weight: 500;
+    text-align: left;
+    transition: background .18s ease, color .18s ease;
+}
+.btn-sair svg { width: 24px; height: 24px; }
+.btn-sair:hover { background: #ffffff12; color: #fff; }
+.btn-sair:disabled { opacity: .6; cursor: wait; }
