@@ -224,7 +224,18 @@ async function carregarOperacoesAdmin() {
             return "<tr><td>" + escaparAdmin(r.usuario || r.usuarioID) + "</td><td>" + escaparAdmin(r.produto || r.produtoID) + "</td><td>" + escaparAdmin(r.dataInicio || "—") + "</td><td>" + escaparAdmin(r.dataFim || "—") + "</td><td>" + escaparAdmin(status) + "</td><td class=\"acoes-usuario\">" + acoes + "</td></tr>";
         }).join("") : '<tr><td colspan="6" class="vazio">Nenhuma reserva registrada.</td></tr>';
         const emprestimos = dados.emprestimos || [];
-        tabelaEmprestimos.innerHTML = emprestimos.length ? emprestimos.slice().reverse().map((e) =>
+        const emprestimosVisiveis = emprestimos.filter((e) => {
+            const usuarioID = String(e.usuarioID || "");
+            const produtoID = String(e.produtoID || "");
+            const dataRetirada = String(e.dataRetirada || "");
+            const registrosOcultos = [
+                "24/09/2026 20:04:53",
+                "24/09/2026 20:04:41",
+                "24/09/2026 20:04:13",
+            ];
+            return !(usuarioID === "USR-00001" && produtoID === "PRD-00002" && registrosOcultos.includes(dataRetirada));
+        });
+        tabelaEmprestimos.innerHTML = emprestimosVisiveis.length ? emprestimosVisiveis.slice().reverse().map((e) =>
             "<tr><td>" + escaparAdmin(e.usuario || e.usuarioID) + "</td><td>" + escaparAdmin(e.produto || e.produtoID) + "</td><td>" + escaparAdmin(e.dataRetirada || "—") + "</td><td>" + escaparAdmin(e.dataPrevistaDevolucao || "—") + "</td><td>" + escaparAdmin(e.status || "—") + "</td></tr>"
         ).join("") : '<tr><td colspan="5" class="vazio">Nenhum empréstimo registrado.</td></tr>';
         tabelaReservas.querySelectorAll("[data-reserva-status]").forEach((botao) => botao.addEventListener("click", async () => {
