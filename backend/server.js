@@ -23,6 +23,7 @@ const responsavelRoutes = require("./routes/responsavel");
 const bloqueiosDenunciasRoutes = require("./routes/bloqueios-denuncias");
 const emprestimosRoutes = require("./routes/emprestimos");
 const professorItensRoutes = require("./routes/professorItens");
+const { registrarAuditoria } = require("./services/auditoria");
 
 const app = express();
 
@@ -77,9 +78,55 @@ app.use(
 );
 
 // ============================================================
-// SITE (FRONTEND)
+// AUDITORIA AUTOMÁTICA DAS OPERAÇÕES
 // ============================================================
 
+app.use((req, res, next) => {
+    const metodo = String(req.method || "").toUpperCase();
+    const caminho = String(req.path || "").split("?")[0];
+    const registrar = ["POST", "PUT", "PATCH", "DELETE"].includes(metodo);
+    if (!registrar || !caminho.startsWith("/api/")) return next();
+    if (caminho.includes("/verificar-matricula") || caminho.endsWith("/teste") || caminho.endsWith("/teste-planilha")) return next();
+
+    const usuarioAntes = req.session?.usuario || null;
+    let corpoResposta = null;
+    const jsonOriginal = res.json.bind(res);
+    res.json = (corpo) => { corpoResposta = corpo; return jsonOriginal(corpo); };
+
+    res.on("finish", () => {
+        const usuarioDepois = req.session?.usuario || corpoResposta?.usuario || null;
+        const statusHTTP = Number(res.statusCode || 500);
+        const resultado = statusHTTP >= 200 && statusHTTP < 400 ? "SUCESSO" : "ERRO";
+        const segmentos = caminho.replace(/^\\/api\\//, "").split("/").filter(Boolean);
+        const rota = segmentos[0] || "sistema";
+        let tabela = "";
+        if (caminho.includes("/login") || caminho.includes("/cadastro")) tabela = "01_USUARIOS";
+        else if (caminho.includes("reserva")) tabela = "08_RESERVAS";
+        else if (caminho.includes("emprestimo") || caminho.includes("devolu")) tabela = "09_EMPRESTIMOS";
+        else if (caminho.includes("produto") || caminho.includes("acervo") || caminho.includes("estoque")) tabela = "02_PRODUTOS";
+        else if (caminho.includes("bloqueio")) tabela = "22_BLOQUEIOS_SETOR";
+        else if (caminho.includes("denuncia")) tabela = "23_DENUNCIAS_SECRETARIA";
+        else if (caminho.includes("calendario") || caminho.includes("evento")) tabela = "18_CALENDARIO_ESCOLAR";
+        else if (caminho.includes("turma")) tabela = "19_TURMAS";
+        else if (caminho.includes("disciplina")) tabela = "20_DISCIPLINAS";
+        else if (caminho.includes("setor")) tabela = "12_SETORES";
+        else if (caminho.includes("aviso") || caminho.includes("comunicacao")) tabela = "15_COMUNICACOES_ESTOQUE";
+        else if (caminho.includes("usuario") || caminho.includes("perfil")) tabela = "01_USUARIOS";
+        else tabela = rota.toUpperCase();
+
+        const acao = caminho.endsWith("/login") ? "LOGIN"
+            : caminho.endsWith("/logout") ? "LOGOUT"
+            : (metodo === "POST" ? "CRIAR_" : metodo === "DELETE" ? "EXCLUIR_" : "ALTERAR_") + rota.replace(/[^a-z0-9]/gi, "_").toUpperCase();
+        const registroID = corpoResposta?.registroID || corpoResposta?.reservaID || corpoResposta?.emprestimoID || corpoResposta?.produtoID || corpoResposta?.usuarioID || corpoResposta?.id || req.params?.id || req.body?.registroID || req.body?.reservaID || req.body?.emprestimoID || req.body?.produtoID || req.body?.usuarioID || "";
+        const descricao = metodo + " " + caminho + " — HTTP " + statusHTTP;
+        void registrarAuditoria({ usuarioID: usuarioDepois?.id || usuarioAntes?.id || "", acao, tabela, registroID, descricao, resultado });
+    });
+    next();
+});
+
+// ============================================================
+// SITE (FRONTEND)
+// ============================================================
 // Telas do site (pasta frontend)
 app.use("/frontend", express.static(path.join(__dirname, "../frontend")));
 
