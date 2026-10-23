@@ -212,6 +212,8 @@ async function carregarOperacoesAdmin() {
         const resposta = await fetch(API_ADMIN + "/admin/operacoes", { credentials: "include", headers: { Accept: "application/json" } });
         const dados = await resposta.json();
         if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar as operações.");
+        const termoBuscaOperacoes = String(elAdmin("buscarOperacoesAdmin")?.value || "").trim().toLocaleLowerCase("pt-BR");
+        const correspondeUsuario = (registro) => String(registro.usuario || registro.usuarioNome || registro.nomeUsuario || registro.usuarioID || "").toLocaleLowerCase("pt-BR").includes(termoBuscaOperacoes);
         const reservas = dados.reservas || [];
         const reservasVisiveis = reservas.filter((r) => {
             const usuarioID = String(r.usuarioID || "");
@@ -223,11 +225,11 @@ async function carregarOperacoesAdmin() {
             const reservaRenanDevolvida = nomeUsuario === "Renan Santos" &&
                 dataInicio.startsWith("26/09/2026 21:28:26") &&
                 dataFim.startsWith("27/09/2026 20:00:00") && status === "DEVOLVIDO";
-            return !(
-                (usuarioID === "USR-00001" && produtoID === "PRD-00002" &&
-                    dataInicio.startsWith("25/09/2026") && dataFim.startsWith("26/09/2026") && status === "PENDENTE") ||
-                (produtoID === "PRD-00002" && reservaRenanDevolvida)
-            );
+            const reservaTesteOculta = usuarioID === "USR-00001" && produtoID === "PRD-00002" &&
+                dataInicio.startsWith("25/09/2026") && dataFim.startsWith("26/09/2026") && status === "PENDENTE";
+            const reservaConcluidaOculta = usuarioID === "USR-00003" && produtoID === "PRD-00002" &&
+                dataInicio.startsWith("27/09/2026 11:00:00") && dataFim.startsWith("27/09/2026 20:00:00") && status === "CONCLUIDA";
+            return !reservaTesteOculta && !reservaConcluidaOculta && !reservaRenanDevolvida && correspondeUsuario(r);
         });
         tabelaReservas.innerHTML = reservasVisiveis.length ? reservasVisiveis.slice().reverse().map((r) => {
             const status = String(r.status || "—").toUpperCase();
@@ -253,7 +255,7 @@ async function carregarOperacoesAdmin() {
             return !(
                 (usuarioID === "USR-00001" && produtoID === "PRD-00002" && registrosOcultos.includes(dataRetirada)) ||
                 (usuarioID === "USR-00003" && produtoID === "PRD-00002" && retiradaConcluida)
-            );
+            ) && correspondeUsuario(e);
         });
         tabelaEmprestimos.innerHTML = emprestimosVisiveis.length ? emprestimosVisiveis.slice().reverse().map((e) =>
             "<tr><td>" + escaparAdmin(e.usuario || e.usuarioID) + "</td><td>" + escaparAdmin(e.produto || e.produtoID) + "</td><td>" + escaparAdmin(e.dataRetirada || "—") + "</td><td>" + escaparAdmin(e.dataPrevistaDevolucao || "—") + "</td><td>" + escaparAdmin(e.status || "—") + "</td></tr>"
@@ -594,6 +596,7 @@ function configurarMenuAdmin() {
 elAdmin("btnAtualizar").addEventListener("click", carregarPainelAdmin);
 elAdmin("buscarUsuario").addEventListener("input", renderizarUsuariosAdmin);
 elAdmin("filtroStatus").addEventListener("change", renderizarUsuariosAdmin);
+elAdmin("buscarOperacoesAdmin").addEventListener("input", carregarOperacoesAdmin);
 elAdmin("btnSair").addEventListener("click", sairPainelAdmin);
 configurarCadastroAdmin();
 configurarAbasEstoqueAdmin();
