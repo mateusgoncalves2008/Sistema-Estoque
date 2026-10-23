@@ -24,7 +24,8 @@
             <button class="nav-link nav-item" type="button" data-tela="usuarios"><i data-lucide="users"></i><span>Usuários e acessos</span></button>
             <button class="nav-link nav-item" type="button" data-tela="estoque"><i data-lucide="package"></i><span>Estoque e patrimônio</span></button>
             <button class="nav-link nav-item" type="button" data-tela="operacoes"><i data-lucide="clipboard-list"></i><span>Reservas e empréstimos</span></button>
-            <button class="nav-link nav-item" type="button" data-tela="auditoria"><i data-lucide="shield-check"></i><span>Auditoria</span></button>
+            <button class="nav-link nav-item" type="button" data-tela="denuncias"><i data-lucide="shield-check"></i><span>Denúncias</span></button>
+            <button class="nav-link nav-item" type="button" data-tela="bloqueios"><i data-lucide="ban"></i><span>Bloqueios por setor</span></button>
             <button class="nav-link nav-item" type="button" data-tela="atividades"><i data-lucide="activity"></i><span>Atividades</span></button>
             <button class="nav-link nav-item" type="button" data-tela="sistema"><i data-lucide="server-cog"></i><span>Saúde do sistema</span></button>
             <button class="nav-link nav-item" type="button" data-tela="cadastro"><i data-lucide="user-round-plus"></i><span>Cadastrar conta</span></button>
@@ -191,12 +192,14 @@
             <div id="listaAtividades" class="lista-atividades"><p class="vazio">Carregando atividade...</p></div>
         </section>
 
-        <section class="bloco tela-admin" data-pagina="auditoria" id="auditoria">
-            <div class="bloco-cabecalho"><div><p class="sobretitulo">RASTREABILIDADE</p><h2>Auditoria</h2><p>Consulte denúncias e bloqueios registrados no sistema.</p></div><span class="tag-auditoria"><i data-lucide="shield-check"></i>Auditoria</span></div>
-            <div class="bloco-cabecalho"><div><h2>Denúncias</h2><p>Consulte denúncias e registre a análise da administração.</p></div></div>
-            <div class="tabela-container"><table><thead><tr><th>Denunciante</th><th>Denunciado</th><th>Motivo</th><th>Status</th><th>Ação</th></tr></thead><tbody id="tabelaDenunciasAdmin"><tr><td colspan="6" class="vazio">Carregando denúncias...</td></tr></tbody></table></div>
-            <div class="bloco-cabecalho"><div><h2>Bloqueios por setor</h2><p>Histórico dos bloqueios registrados pelos responsáveis.</p></div></div>
-            <div class="tabela-container"><table><thead><tr><th>Usuário</th><th>Setor</th><th>Motivo</th><th>Status</th></tr></thead><tbody id="tabelaBloqueiosAdmin"><tr><td colspan="5" class="vazio">Carregando bloqueios...</td></tr></tbody></table></div>
+        <section class="bloco tela-admin" data-pagina="denuncias" id="denuncias">
+            <div class="bloco-cabecalho"><div><p class="sobretitulo">ACOMPANHAMENTO</p><h2>Denúncias</h2><p>Consulte denúncias e registre a análise da administração.</p></div><span class="tag-auditoria"><i data-lucide="shield-check"></i>Denúncias</span></div>
+            <div class="tabela-container"><table><thead><tr><th>Denunciante</th><th>Denunciado</th><th>Motivo</th><th>Status</th><th>Ação</th></tr></thead><tbody id="tabelaDenunciasAdmin"><tr><td colspan="5" class="vazio">Carregando denúncias...</td></tr></tbody></table></div>
+        </section>
+
+        <section class="bloco tela-admin" data-pagina="bloqueios" id="bloqueios">
+            <div class="bloco-cabecalho"><div><p class="sobretitulo">CONTROLE DE ACESSO</p><h2>Bloqueios por setor</h2><p>Histórico dos bloqueios registrados pelos responsáveis.</p></div><span class="tag-auditoria"><i data-lucide="ban"></i>Bloqueios</span></div>
+            <div class="tabela-container"><table><thead><tr><th>Usuário</th><th>Setor</th><th>Motivo</th><th>Status</th></tr></thead><tbody id="tabelaBloqueiosAdmin"><tr><td colspan="4" class="vazio">Carregando bloqueios...</td></tr></tbody></table></div>
         </section>
 
         <section class="bloco sistema-bloco tela-admin" data-pagina="sistema" id="sistema">
