@@ -138,12 +138,12 @@ tbody tr:hover { background: #fdfbf8; }
 .atividade-icone {
     display: grid;
     place-items: center;
-    width: 54px;
-    height: 54px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     color: #fff;
 }
-.atividade-icone svg { width: 23px; height: 23px; stroke-width: 2.5; }
+.atividade-icone svg { width: 19px; height: 19px; stroke-width: 2.5; }
 .atividade-azul { background: #3977b9; }
 .atividade-verde { background: #23845b; }
 .atividade-laranja { background: #c95730; }
@@ -156,9 +156,9 @@ tbody tr:hover { background: #fdfbf8; }
 .atividade small { display: block; color: #8a786b; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
 .atividade-hora { padding-left: 12px; color: #969696; font-size: 14px; white-space: nowrap; }
 @media (max-width: 600px) {
-    .atividade { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 12px; }
-    .atividade-icone { width: 44px; height: 44px; }
-    .atividade-icone svg { width: 20px; height: 20px; }
+    .atividade { grid-template-columns: 36px minmax(0, 1fr); gap: 12px; padding: 12px; }
+    .atividade-icone { width: 36px; height: 36px; }
+    .atividade-icone svg { width: 17px; height: 17px; }
     .atividade strong { font-size: 14px; }
     .atividade small { font-size: 12px; }
     .atividade-hora { grid-column: 2; padding-left: 0; margin-top: -6px; font-size: 12px; }
