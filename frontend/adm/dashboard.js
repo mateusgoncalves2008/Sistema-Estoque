@@ -221,12 +221,12 @@ async function carregarOperacoesAdmin() {
             } else if (status === "APROVADA") {
                 acoes = '<button class="btn-acao-usuario perigo" data-reserva-id="' + escaparAdmin(r.reservaID) + '" data-reserva-status="CANCELADA">Cancelar</button>';
             }
-            return "<tr><td>" + escaparAdmin(r.reservaID) + "</td><td>" + escaparAdmin(r.usuario || r.usuarioID) + "</td><td>" + escaparAdmin(r.produto || r.produtoID) + "</td><td>" + escaparAdmin(r.dataInicio || "—") + "</td><td>" + escaparAdmin(r.dataFim || "—") + "</td><td>" + escaparAdmin(status) + "</td><td class=\"acoes-usuario\">" + acoes + "</td></tr>";
-        }).join("") : '<tr><td colspan="7" class="vazio">Nenhuma reserva registrada.</td></tr>';
+            return "<tr><td>" + escaparAdmin(r.usuario || r.usuarioID) + "</td><td>" + escaparAdmin(r.produto || r.produtoID) + "</td><td>" + escaparAdmin(r.dataInicio || "—") + "</td><td>" + escaparAdmin(r.dataFim || "—") + "</td><td>" + escaparAdmin(status) + "</td><td class=\"acoes-usuario\">" + acoes + "</td></tr>";
+        }).join("") : '<tr><td colspan="6" class="vazio">Nenhuma reserva registrada.</td></tr>';
         const emprestimos = dados.emprestimos || [];
         tabelaEmprestimos.innerHTML = emprestimos.length ? emprestimos.slice().reverse().map((e) =>
-            "<tr><td>" + escaparAdmin(e.emprestimoID) + "</td><td>" + escaparAdmin(e.usuario || e.usuarioID) + "</td><td>" + escaparAdmin(e.produto || e.produtoID) + "</td><td>" + escaparAdmin(e.dataRetirada || "—") + "</td><td>" + escaparAdmin(e.dataPrevistaDevolucao || "—") + "</td><td>" + escaparAdmin(e.status || "—") + "</td></tr>"
-        ).join("") : '<tr><td colspan="6" class="vazio">Nenhum empréstimo registrado.</td></tr>';
+            "<tr><td>" + escaparAdmin(e.usuario || e.usuarioID) + "</td><td>" + escaparAdmin(e.produto || e.produtoID) + "</td><td>" + escaparAdmin(e.dataRetirada || "—") + "</td><td>" + escaparAdmin(e.dataPrevistaDevolucao || "—") + "</td><td>" + escaparAdmin(e.status || "—") + "</td></tr>"
+        ).join("") : '<tr><td colspan="5" class="vazio">Nenhum empréstimo registrado.</td></tr>';
         tabelaReservas.querySelectorAll("[data-reserva-status]").forEach((botao) => botao.addEventListener("click", async () => {
             const statusNovo = botao.dataset.reservaStatus;
             if (!confirm("Confirma " + statusNovo.toLowerCase() + " a reserva " + botao.dataset.reservaId + "?")) return;
@@ -247,7 +247,7 @@ async function carregarOperacoesAdmin() {
             }
         }));
     } catch (erro) {
-        tabelaReservas.innerHTML = '<tr><td colspan="7" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+        tabelaReservas.innerHTML = '<tr><td colspan="5" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
         tabelaEmprestimos.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
     }
 }
@@ -263,12 +263,12 @@ async function carregarRelatoriosAdmin() {
         if (!resp.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar denúncias e bloqueios.");
         const denuncias = dados.denuncias || [];
         tabelaD.innerHTML = denuncias.length ? denuncias.slice().reverse().map((d) =>
-            "<tr><td>" + escaparAdmin(d.denunciaID) + "</td><td>" + escaparAdmin(d.denuncianteNome || d.denuncianteID) + "</td><td>" + escaparAdmin(d.denunciadoNome || d.denunciadoID) + "</td><td>" + escaparAdmin(d.motivo) + "</td><td>" + escaparAdmin(d.status || "—") + "</td><td><button class=\"btn-acao-usuario\" type=\"button\" data-denuncia-id=\"" + escaparAdmin(d.denunciaID) + "\">Analisar / responder</button></td></tr>"
-        ).join("") : '<tr><td colspan="6" class="vazio">Nenhuma denúncia registrada.</td></tr>';
+            "<tr><td>" + escaparAdmin(d.denuncianteNome || d.denuncianteID) + "</td><td>" + escaparAdmin(d.denunciadoNome || d.denunciadoID) + "</td><td>" + escaparAdmin(d.motivo) + "</td><td>" + escaparAdmin(d.status || "—") + "</td><td><button class=\"btn-acao-usuario\" type=\"button\" data-denuncia-id=\"" + escaparAdmin(d.denunciaID) + "\">Analisar / responder</button></td></tr>"
+        ).join("") : '<tr><td colspan="5" class="vazio">Nenhuma denúncia registrada.</td></tr>';
         const bloqueios = dados.bloqueios || [];
         tabelaB.innerHTML = bloqueios.length ? bloqueios.slice().reverse().map((b) =>
-            "<tr><td>" + escaparAdmin(b.bloqueioID) + "</td><td>" + escaparAdmin(b.usuarioBloqueadoNome || b.usuarioBloqueadoID) + "</td><td>" + escaparAdmin(b.setorNome || b.setorID) + "</td><td>" + escaparAdmin(b.motivo) + "</td><td>" + escaparAdmin(b.status || "—") + "</td></tr>"
-        ).join("") : '<tr><td colspan="5" class="vazio">Nenhum bloqueio registrado.</td></tr>';
+            "<tr><td>" + escaparAdmin(b.usuarioBloqueadoNome || b.usuarioBloqueadoID) + "</td><td>" + escaparAdmin(b.setorNome || b.setorID) + "</td><td>" + escaparAdmin(b.motivo) + "</td><td>" + escaparAdmin(b.status || "—") + "</td></tr>"
+        ).join("") : '<tr><td colspan="4" class="vazio">Nenhum bloqueio registrado.</td></tr>';
         tabelaD.querySelectorAll("[data-denuncia-id]").forEach((botao) => botao.addEventListener("click", async () => {
             const d = denuncias.find((item) => String(item.denunciaID) === String(botao.dataset.denunciaId));
             const resposta = prompt("Denúncia " + d.denunciaID + "\n" + (d.descricao || d.motivo) + "\n\nResposta da administração:", d.resposta || "");
@@ -308,12 +308,12 @@ async function carregarEstoqueAdmin() {
         if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar o estoque.");
         const produtos = dados.produtos || [];
         tabelaP.innerHTML = produtos.length ? produtos.map((p) =>
-            "<tr><td>" + escaparAdmin(p.produtoID) + "</td><td>" + escaparAdmin(p.codigo) + "</td><td>" + escaparAdmin(p.nome) + "</td><td>" + escaparAdmin(p.categoria || p.categoriaID) + "</td><td>" + escaparAdmin(p.subcategoria || p.subcategoriaID) + "</td><td>" + escaparAdmin(p.status) + "</td></tr>"
-        ).join("") : '<tr><td colspan="6" class="vazio">Nenhum produto cadastrado.</td></tr>';
+            "<tr><td>" + escaparAdmin(p.nome) + "</td><td>" + escaparAdmin(p.categoria || p.categoriaID) + "</td><td>" + escaparAdmin(p.subcategoria || p.subcategoriaID) + "</td><td>" + escaparAdmin(p.status) + "</td></tr>"
+        ).join("") : '<tr><td colspan="4" class="vazio">Nenhum produto cadastrado.</td></tr>';
         const locais = dados.locais || [];
         tabelaL.innerHTML = locais.length ? locais.map((l) =>
-            "<tr><td>" + escaparAdmin(l.localID) + "</td><td>" + escaparAdmin(l.codigo) + "</td><td>" + escaparAdmin(l.nome) + "</td><td>" + escaparAdmin(l.tipo) + "</td><td>" + escaparAdmin(l.responsavelID) + "</td><td>" + escaparAdmin(l.status) + "</td></tr>"
-        ).join("") : '<tr><td colspan="6" class="vazio">Nenhum local cadastrado.</td></tr>';
+            "<tr><td>" + escaparAdmin(l.nome) + "</td><td>" + escaparAdmin(l.tipo) + "</td><td>" + escaparAdmin(l.responsavelID) + "</td><td>" + escaparAdmin(l.status) + "</td></tr>"
+        ).join("") : '<tr><td colspan="4" class="vazio">Nenhum local cadastrado.</td></tr>';
     } catch (erro) {
         tabelaP.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
         tabelaL.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
