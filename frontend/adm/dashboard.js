@@ -295,13 +295,17 @@ async function carregarRelatoriosAdmin() {
         const dados = await resp.json();
         if (!resp.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar denúncias e bloqueios.");
         const denuncias = dados.denuncias || [];
-        tabelaD.innerHTML = denuncias.length ? denuncias.slice().reverse().map((d) =>
+        const termoDenuncias = String(elAdmin("buscarDenunciasAdmin")?.value || "").trim().toLocaleLowerCase("pt-BR");
+        const denunciasFiltradas = denuncias.filter((d) => String([d.denuncianteNome, d.denuncianteID, d.denunciadoNome, d.denunciadoID].filter(Boolean).join(" ")).toLocaleLowerCase("pt-BR").includes(termoDenuncias));
+        tabelaD.innerHTML = denunciasFiltradas.length ? denunciasFiltradas.slice().reverse().map((d) =>
             "<tr><td>" + escaparAdmin(d.denuncianteNome || d.denuncianteID) + "</td><td>" + escaparAdmin(d.denunciadoNome || d.denunciadoID) + "</td><td>" + escaparAdmin(d.motivo) + "</td><td>" + escaparAdmin(d.status || "—") + "</td><td><button class=\"btn-acao-usuario\" type=\"button\" data-denuncia-id=\"" + escaparAdmin(d.denunciaID) + "\">Analisar / responder</button></td></tr>"
-        ).join("") : '<tr><td colspan="5" class="vazio">Nenhuma denúncia registrada.</td></tr>';
+        ).join("") : '<tr><td colspan="5" class="vazio">' + (termoDenuncias ? 'Nenhuma denúncia encontrada para esse usuário.' : 'Nenhuma denúncia registrada.') + '</td></tr>';
         const bloqueios = dados.bloqueios || [];
-        tabelaB.innerHTML = bloqueios.length ? bloqueios.slice().reverse().map((b) =>
+        const termoBloqueios = String(elAdmin("buscarBloqueiosAdmin")?.value || "").trim().toLocaleLowerCase("pt-BR");
+        const bloqueiosFiltrados = bloqueios.filter((b) => String([b.usuarioBloqueadoNome, b.usuarioBloqueadoID].filter(Boolean).join(" ")).toLocaleLowerCase("pt-BR").includes(termoBloqueios));
+        tabelaB.innerHTML = bloqueiosFiltrados.length ? bloqueiosFiltrados.slice().reverse().map((b) =>
             "<tr><td>" + escaparAdmin(b.usuarioBloqueadoNome || b.usuarioBloqueadoID) + "</td><td>" + escaparAdmin(b.setorNome || b.setorID) + "</td><td>" + escaparAdmin(b.motivo) + "</td><td>" + escaparAdmin(b.status || "—") + "</td></tr>"
-        ).join("") : '<tr><td colspan="4" class="vazio">Nenhum bloqueio registrado.</td></tr>';
+        ).join("") : '<tr><td colspan="4" class="vazio">' + (termoBloqueios ? 'Nenhum bloqueio encontrado para esse usuário.' : 'Nenhum bloqueio registrado.') + '</td></tr>';
         tabelaD.querySelectorAll("[data-denuncia-id]").forEach((botao) => botao.addEventListener("click", async () => {
             const d = denuncias.find((item) => String(item.denunciaID) === String(botao.dataset.denunciaId));
             const resposta = prompt("Denúncia " + d.denunciaID + "\n" + (d.descricao || d.motivo) + "\n\nResposta da administração:", d.resposta || "");
@@ -599,6 +603,8 @@ elAdmin("btnAtualizar").addEventListener("click", carregarPainelAdmin);
 elAdmin("buscarUsuario").addEventListener("input", renderizarUsuariosAdmin);
 elAdmin("filtroStatus").addEventListener("change", renderizarUsuariosAdmin);
 elAdmin("buscarOperacoesAdmin").addEventListener("input", carregarOperacoesAdmin);
+elAdmin("buscarDenunciasAdmin").addEventListener("input", carregarRelatoriosAdmin);
+elAdmin("buscarBloqueiosAdmin").addEventListener("input", carregarRelatoriosAdmin);
 elAdmin("btnSair").addEventListener("click", sairPainelAdmin);
 configurarCadastroAdmin();
 configurarAbasEstoqueAdmin();
