@@ -412,17 +412,37 @@ function viewInicio() {
 
     const proximo = proximosEventos[0];
 
-    const livrosLidos = movimentos.filter(
-        (movimento) =>
-            String(movimento.tipo || movimento[0] || "").toLowerCase() ===
-            "livro",
-    ).length;
+    // Conta somente reservas concluídas, conforme o Status da aba 08_RESERVAS.
+    const reservasConcluidas = reservas.filter(
+        (reserva) =>
+            String(reserva.status || "").trim().toUpperCase() === "CONCLUIDO",
+    );
 
-    const computadoresUsados = movimentos.filter(
-        (movimento) =>
-            String(movimento.tipo || movimento[0] || "").toLowerCase() ===
-            "computador",
-    ).length;
+    const livrosLidos = reservasConcluidas.filter((reserva) => {
+        const tipo = String(
+            reserva.categoriaNome ||
+            reserva.nomeCategoria ||
+            reserva.subcategoriaNome ||
+            reserva.tipo ||
+            reserva.itemTipo ||
+            "",
+        ).toLowerCase();
+
+        return tipo.includes("livro") || tipo.includes("biblioteca");
+    }).length;
+
+    const computadoresUsados = reservasConcluidas.filter((reserva) => {
+        const tipo = String(
+            reserva.categoriaNome ||
+            reserva.nomeCategoria ||
+            reserva.subcategoriaNome ||
+            reserva.tipo ||
+            reserva.itemTipo ||
+            "",
+        ).toLowerCase();
+
+        return tipo.includes("computador") || tipo.includes("informática");
+    }).length;
 
     return `
         
