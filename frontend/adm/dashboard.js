@@ -409,7 +409,8 @@ function mudarTelaAdmin(tela) {
         usuarios: "Usuários e acessos",
         estoque: "Estoque e patrimônio",
         operacoes: "Reservas e empréstimos",
-        auditoria: "Auditoria e atividade",
+        auditoria: "Auditoria",
+        atividades: "Atividades",
         sistema: "Saúde do sistema",
         cadastro: "Cadastrar conta",
     };
