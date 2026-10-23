@@ -418,3 +418,34 @@ tbody tr:hover { background: #fdfbf8; }
 .btn-sair svg { width: 24px; height: 24px; }
 .btn-sair:hover { background: #ffffff12; color: #fff; }
 .btn-sair:disabled { opacity: .6; cursor: wait; }
+
+
+/* Compactar os itens do menu lateral e o botão Sair */
+.sidebar {
+    padding: 20px 16px 14px;
+}
+.sidebar-top {
+    padding: 6px 4px 18px;
+}
+.sidebar-nav {
+    gap: 4px;
+    padding-top: 12px;
+}
+.nav-link {
+    min-height: 46px;
+    padding: 0 13px;
+    gap: 10px;
+    border-radius: 12px;
+}
+.nav-link svg { width: 19px; height: 19px; }
+.sidebar-rodape {
+    padding-top: 10px;
+}
+.btn-sair {
+    min-height: 40px;
+    padding: 6px 4px;
+    gap: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+}
+.btn-sair svg { width: 20px; height: 20px; }
