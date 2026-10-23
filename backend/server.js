@@ -100,23 +100,38 @@ app.use((req, res, next) => {
         const segmentos = caminho.replace("/api/", "").split("/").filter(Boolean);
         const rota = segmentos[0] || "sistema";
         let tabela = "";
-        if (caminho.includes("/login") || caminho.includes("/cadastro")) tabela = "01_USUARIOS";
+        if (caminho.endsWith("/login") || caminho.includes("/cadastro") || caminho.includes("/usuarios") || caminho.includes("/alunos") || caminho.includes("/professores") || caminho.includes("/perfil")) tabela = "01_USUARIOS";
+        else if (caminho.includes("autorizar-matricula")) tabela = "17_CADASTROS_AUTORIZADOS";
+        else if (caminho.includes("autorizar-responsavel")) tabela = "18_AUTORIZACOES_RESPONSAVEIS";
+        else if (caminho.includes("professor-turmas")) tabela = "21_PROFESSOR_TURMAS";
         else if (caminho.includes("reserva")) tabela = "08_RESERVAS";
-        else if (caminho.includes("emprestimo") || caminho.includes("devolu")) tabela = "09_EMPRESTIMOS";
-        else if (caminho.includes("produto") || caminho.includes("acervo") || caminho.includes("estoque")) tabela = "02_PRODUTOS";
+        else if (caminho.includes("devolu")) tabela = "10_DEVOLUCOES";
+        else if (caminho.includes("emprestimo")) tabela = "09_EMPRESTIMOS";
+        else if (caminho.includes("produto") || caminho.includes("acervo") || caminho.includes("estoque") || caminho.includes("/itens")) tabela = "02_PRODUTOS";
         else if (caminho.includes("bloqueio")) tabela = "22_BLOQUEIOS_SETOR";
         else if (caminho.includes("denuncia")) tabela = "23_DENUNCIAS_SECRETARIA";
         else if (caminho.includes("calendario") || caminho.includes("evento")) tabela = "18_CALENDARIO_ESCOLAR";
         else if (caminho.includes("turma")) tabela = "19_TURMAS";
         else if (caminho.includes("disciplina")) tabela = "20_DISCIPLINAS";
         else if (caminho.includes("setor")) tabela = "12_SETORES";
-        else if (caminho.includes("aviso") || caminho.includes("comunicacao")) tabela = "15_COMUNICACOES_ESTOQUE";
-        else if (caminho.includes("usuario") || caminho.includes("perfil")) tabela = "01_USUARIOS";
+        else if (caminho.includes("aviso") || caminho.includes("comunicacao")) tabela = "24_AVISOS_SISTEMA";
         else tabela = rota.toUpperCase();
 
-        const acao = caminho.endsWith("/login") ? "LOGIN"
-            : caminho.endsWith("/logout") ? "LOGOUT"
-            : (metodo === "POST" ? "CRIAR_" : metodo === "DELETE" ? "EXCLUIR_" : "ALTERAR_") + rota.replace(/[^a-z0-9]/gi, "_").toUpperCase();
+        let acao;
+        if (caminho.endsWith("/login")) acao = "LOGIN";
+        else if (caminho.endsWith("/logout")) acao = "LOGOUT";
+        else if (caminho.includes("reservas") && caminho.endsWith("/aprovar")) acao = "APROVAR_RESERVA";
+        else if (caminho.includes("reservas") && caminho.endsWith("/cancelar")) acao = "CANCELAR_RESERVA";
+        else if (caminho.includes("reservas") && caminho.endsWith("/recusar")) acao = "RECUSAR_RESERVA";
+        else if (caminho.includes("reservas") && metodo === "POST") acao = "CRIAR_RESERVA";
+        else if (caminho.includes("cadastro") || caminho.includes("usuarios") || caminho.includes("alunos") || caminho.includes("professores")) acao = "CRIAR_USUARIO";
+        else if (caminho.includes("status")) acao = "ALTERAR_STATUS";
+        else if (caminho.includes("bloqueio")) acao = caminho.includes("desbloquear") ? "DESBLOQUEAR_SETOR" : metodo === "POST" ? "CRIAR_BLOQUEIO" : "ALTERAR_BLOQUEIO";
+        else if (caminho.includes("denuncia")) acao = metodo === "POST" ? "CRIAR_DENUNCIA" : "RESPONDER_DENUNCIA";
+        else if (caminho.includes("calendario")) acao = metodo === "POST" ? "CRIAR_EVENTO_CALENDARIO" : "ALTERAR_EVENTO_CALENDARIO";
+        else if (caminho.includes("emprestimo")) acao = metodo === "POST" ? "CRIAR_EMPRESTIMO" : "ALTERAR_EMPRESTIMO";
+        else if (caminho.includes("devolu")) acao = metodo === "POST" ? "REGISTRAR_DEVOLUCAO" : "ALTERAR_DEVOLUCAO";
+        else acao = (metodo === "POST" ? "CRIAR_" : metodo === "DELETE" ? "EXCLUIR_" : "ALTERAR_") + rota.replace(/[^a-z0-9]/gi, "_").toUpperCase();
         const registroID = corpoResposta?.registroID || corpoResposta?.reservaID || corpoResposta?.emprestimoID || corpoResposta?.produtoID || corpoResposta?.usuarioID || corpoResposta?.id || req.params?.id || req.body?.registroID || req.body?.reservaID || req.body?.emprestimoID || req.body?.produtoID || req.body?.usuarioID || "";
         const descricao = metodo + " " + caminho + " — HTTP " + statusHTTP;
         void registrarAuditoria({ usuarioID: usuarioDepois?.id || usuarioAntes?.id || "", acao, tabela, registroID, descricao, resultado });
