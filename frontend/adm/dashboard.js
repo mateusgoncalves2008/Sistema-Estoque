@@ -488,6 +488,29 @@ function configurarCadastroAdmin() {
     atualizarTipo();
 }
 
+function configurarAbasEstoqueAdmin() {
+    const botoes = document.querySelectorAll("[data-aba-estoque]");
+    const paineis = {
+        catalogo: elAdmin("painelCatalogo"),
+        locais: elAdmin("painelLocais"),
+    };
+
+    botoes.forEach((botao) => {
+        botao.addEventListener("click", () => {
+            const abaSelecionada = botao.dataset.abaEstoque;
+            botoes.forEach((item) => {
+                const ativo = item === botao;
+                item.classList.toggle("ativa", ativo);
+                item.setAttribute("aria-selected", String(ativo));
+            });
+            Object.entries(paineis).forEach(([nome, painel]) => {
+                painel.hidden = nome !== abaSelecionada;
+            });
+            if (window.lucide) window.lucide.createIcons();
+        });
+    });
+}
+
 function configurarMenuAdmin() {
     const sidebar = elAdmin("sidebar");
     const overlay = elAdmin("overlayMenu");
@@ -519,5 +542,6 @@ elAdmin("buscarUsuario").addEventListener("input", renderizarUsuariosAdmin);
 elAdmin("filtroStatus").addEventListener("change", renderizarUsuariosAdmin);
 elAdmin("btnSair").addEventListener("click", sairPainelAdmin);
 configurarCadastroAdmin();
+configurarAbasEstoqueAdmin();
 configurarMenuAdmin();
 carregarPainelAdmin();
