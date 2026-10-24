@@ -108,53 +108,51 @@ async function verificarSaudeSistemaAdmin() {
     const botao = elAdmin("btnVerificarSaude");
     if (!botao) return;
 
-    const inicio = performance.now();
-    const servidor = elAdmin("statusServidor");
-    const planilha = elAdmin("statusPlanilha");
     botao.disabled = true;
     botao.setAttribute("aria-busy", "true");
+    const servidor = elAdmin("statusServidor");
+    const planilha = elAdmin("statusPlanilha");
     servidor.textContent = "Verificando...";
     servidor.className = "status-verificando";
     planilha.textContent = "Verificando...";
     planilha.className = "status-verificando";
-    elAdmin("detalheServidor").textContent = "Testando resposta da API...";
-    elAdmin("detalhePlanilha").textContent = "Consultando a planilha escolar...";
+    elAdmin("detalheServidor").textContent = "Testando disponibilidade da API...";
+    elAdmin("detalhePlanilha").textContent = "Testando conexão com o Google Sheets...";
 
-    let servidorTexto = "Indisponível";
-    let planilhaTexto = "Indisponível";
-    let ms = 0;
+    const medirRequisicao = async (url) => {
+        const inicio = performance.now();
+        try {
+            const resposta = await fetch(url, { credentials: "include", cache: "no-store" });
+            return { resposta, ms: Math.max(0, Math.round(performance.now() - inicio)) };
+        } catch (erro) {
+            return { erro, ms: Math.max(0, Math.round(performance.now() - inicio)) };
+        }
+    };
 
     try {
-        const resposta = await fetch(`${API_ADMIN}/teste-planilha`, {
-            credentials: "include",
-            cache: "no-store",
-        });
-        ms = Math.max(0, Math.round(performance.now() - inicio));
-        elAdmin("tempoRespostaSaude").textContent = `${ms} ms`;
+        const [testeApi, testePlanilha] = await Promise.all([
+            medirRequisicao(`${API_ADMIN}/teste`),
+            medirRequisicao(`${API_ADMIN}/teste-planilha`),
+        ]);
 
-        const apiOk = resposta.ok || resposta.status === 401 || resposta.status === 403;
-        servidorTexto = apiOk ? "Online" : "Com falha";
-        servidor.textContent = servidorTexto;
+        const apiOk = Boolean(testeApi.resposta && testeApi.resposta.ok);
+        servidor.textContent = apiOk ? "Online" : "Indisponível";
         servidor.className = apiOk ? "status-ok" : "status-falha";
-        elAdmin("detalheServidor").textContent = `API respondeu com HTTP ${resposta.status}`;
+        elAdmin("detalheServidor").textContent = apiOk
+            ? `API respondeu com HTTP ${testeApi.resposta.status}`
+            : (testeApi.resposta ? `API respondeu com HTTP ${testeApi.resposta.status}` : "Não foi possível alcançar a API.");
 
-        const dados = await resposta.json().catch(() => ({}));
-        const sheetsOk = resposta.ok && dados.sucesso === true;
-        planilhaTexto = sheetsOk ? "Conectada" : "Indisponível";
-        planilha.textContent = planilhaTexto;
-        planilha.className = sheetsOk ? "status-ok" : "status-falha";
-        elAdmin("detalhePlanilha").textContent = sheetsOk
+        const dadosPlanilha = testePlanilha.resposta
+            ? await testePlanilha.resposta.json().catch(() => ({}))
+            : {};
+        const planilhaOk = Boolean(testePlanilha.resposta && testePlanilha.resposta.ok && dadosPlanilha.sucesso === true);
+        planilha.textContent = planilhaOk ? "Conectada" : "Indisponível";
+        planilha.className = planilhaOk ? "status-ok" : "status-falha";
+        elAdmin("detalhePlanilha").textContent = planilhaOk
             ? "Consulta à planilha concluída com sucesso"
-            : (dados.mensagem || "A API respondeu, mas a consulta à planilha falhou.");
-    } catch (erro) {
-        ms = Math.max(0, Math.round(performance.now() - inicio));
-        elAdmin("tempoRespostaSaude").textContent = `${ms} ms`;
-        servidor.textContent = servidorTexto;
-        servidor.className = "status-falha";
-        planilha.textContent = planilhaTexto;
-        planilha.className = "status-falha";
-        elAdmin("detalheServidor").textContent = "Não foi possível alcançar a API.";
-        elAdmin("detalhePlanilha").textContent = "Verifique a conexão do serviço e as credenciais.";
+            : (dadosPlanilha.mensagem || (testePlanilha.resposta ? "A consulta à planilha falhou." : "Não foi possível alcançar o serviço."));
+
+        elAdmin("tempoRespostaSaude").textContent = `API ${testeApi.ms} ms · Planilha ${testePlanilha.ms} ms`;
     } finally {
         const hora = new Date().toLocaleString("pt-BR");
         elAdmin("ultimaVerificacaoSaude").textContent = hora;
