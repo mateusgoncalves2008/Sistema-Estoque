@@ -778,8 +778,24 @@ function configurarMenuAdmin() {
     };
 
     elAdmin("btnMenu").addEventListener("click", alternarMenu);
-    elAdmin("btnSidebarToggle").addEventListener("click", () => {
-        document.body.classList.toggle("menu-recolhido");
+    const sidebarToggle = elAdmin("btnSidebarToggle");
+    const atualizarIconeSidebar = () => {
+        const recolhido = document.body.classList.contains("menu-recolhido");
+        sidebarToggle.innerHTML = recolhido
+            ? '<i data-lucide="panel-left-open"></i>'
+            : '<i data-lucide="panel-left-close"></i>';
+        sidebarToggle.setAttribute("aria-label", recolhido ? "Expandir menu" : "Recolher menu");
+        sidebarToggle.title = recolhido ? "Expandir menu" : "Recolher menu";
+        if (window.lucide) window.lucide.createIcons();
+    };
+    if (localStorage.getItem("painelAdmSidebar") === "collapsed") {
+        document.body.classList.add("menu-recolhido");
+    }
+    atualizarIconeSidebar();
+    sidebarToggle.addEventListener("click", () => {
+        const recolhido = document.body.classList.toggle("menu-recolhido");
+        localStorage.setItem("painelAdmSidebar", recolhido ? "collapsed" : "expanded");
+        atualizarIconeSidebar();
     });
 
     overlay.addEventListener("click", () => {
