@@ -1415,6 +1415,7 @@ function iniciarEventos() {
     });
 
     el("blockedUserSearch")?.addEventListener("input", renderBloqueios);
+    el("reportSearch")?.addEventListener("input", renderDenuncias);
 
     el("blockRows")?.addEventListener("click", async (event) => {
         const button = event.target.closest("button[data-bloqueio-id]");
@@ -1590,21 +1591,28 @@ function renderDenuncias() {
     const tbody = el("reportRows");
     if (!tbody) return;
 
-    if (!state.denuncias.length) {
+    const busca = normalizeText(el("reportSearch")?.value || "");
+    const registros = state.denuncias.filter((item) =>
+        normalizeText(
+            [item[1], item[7], item[8], item[9], item[10]].join(" "),
+        ).includes(busca),
+    );
+
+    if (!registros.length) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="5" class="empty">
                     <div class="bd-empty">
                         <i class="fa-solid fa-flag"></i>
-                        <strong>Nenhuma denúncia registrada</strong>
-                        <span>As denúncias registradas aparecerão aqui.</span>
+                        <strong>${busca ? "Nenhuma denúncia encontrada" : "Nenhuma denúncia registrada"}</strong>
+                        <span>${busca ? "Tente buscar por outro termo." : "As denúncias registradas aparecerão aqui."}</span>
                     </div>
                 </td>
             </tr>`;
         return;
     }
 
-    tbody.innerHTML = state.denuncias
+    tbody.innerHTML = registros
         .map((item) => {
             const data = escapeHTML(formatDate(item[1]));
             const nome = escapeHTML(item[7] || "Não identificado");
