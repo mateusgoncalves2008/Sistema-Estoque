@@ -2572,3 +2572,28 @@ footer {
     .sidebar .menu button, .sidebar .navegacao button,
     .sidebar .nav-link, .sidebar .menu-item { min-height: 52px; }
 }
+
+
+/* Sino e botão de atualizar sempre visíveis no canto superior direito */
+#refreshButton.refresh {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    z-index: 2147483647;
+    display: grid;
+    place-items: center;
+}
+.botao-avisos-responsavel {
+    z-index: 2147483646;
+}
+.central-avisos-responsavel {
+    z-index: 2147483645;
+}
+@media (max-width: 600px) {
+    #refreshButton.refresh {
+        top: 64px;
+        right: 14px;
+        width: 42px;
+        height: 42px;
+    }
+}
