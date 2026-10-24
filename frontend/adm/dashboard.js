@@ -73,16 +73,16 @@ async function carregarPainelAdmin(silencioso = false) {
         if (!silencioso || usuariosAnteriores !== JSON.stringify(usuariosAdmin)) {
             renderizarUsuariosAdmin();
         }
-        await carregarEstoqueAdmin();
-        await carregarOperacoesAdmin();
-        await carregarRelatoriosAdmin();
+        const estoqueOk = await carregarEstoqueAdmin();
+        const operacoesOk = await carregarOperacoesAdmin();
+        const relatoriosOk = await carregarRelatoriosAdmin();
         renderizarAtividadesAdmin(dados.atividadesRecentes || []);
         if (!silencioso) mostrarEstadoPainel("Dados carregados com sucesso da planilha escolar.", "sucesso");
         const ultimaAtualizacao = elAdmin("ultimaAtualizacao");
         if (ultimaAtualizacao) ultimaAtualizacao.textContent = formatarData(dados.atualizadoEm);
         if (!silencioso) {
             verificarSaudeSistemaAdmin();
-        } else {
+        } else if (estoqueOk && operacoesOk && relatoriosOk) {
             const horario = new Date().toLocaleTimeString("pt-BR", { hour12: false });
             console.info(`[ATUALIZAÇÃO AUTOMÁTICA] Painel atualizado às ${horario}`);
         }
@@ -306,7 +306,7 @@ async function carregarOperacoesAdmin() {
         if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar as operações.");
         const termoBuscaOperacoes = String(elAdmin("buscarOperacoesAdmin")?.value || "").trim().toLocaleLowerCase("pt-BR");
         const assinatura = JSON.stringify({ dados, termoBuscaOperacoes });
-        if (assinatura === assinaturaOperacoesAdmin) return;
+        if (assinatura === assinaturaOperacoesAdmin) return true;
         assinaturaOperacoesAdmin = assinatura;
         const correspondeUsuario = (registro) => String(registro.usuario || registro.usuarioNome || registro.nomeUsuario || registro.usuarioID || "").toLocaleLowerCase("pt-BR").includes(termoBuscaOperacoes);
         const reservas = dados.reservas || [];
@@ -374,9 +374,11 @@ async function carregarOperacoesAdmin() {
                 botao.disabled = false;
             }
         }));
+        return true;
     } catch (erro) {
         tabelaReservas.innerHTML = '<tr><td colspan="6" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
         tabelaEmprestimos.innerHTML = '<tr><td colspan="5" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+        return false;
     }
 }
 
@@ -392,7 +394,7 @@ async function carregarRelatoriosAdmin() {
         const termoDenuncias = String(elAdmin("buscarDenunciasAdmin")?.value || "").trim().toLocaleLowerCase("pt-BR");
         const termoBloqueios = String(elAdmin("buscarBloqueiosAdmin")?.value || "").trim().toLocaleLowerCase("pt-BR");
         const assinatura = JSON.stringify({ dados, termoDenuncias, termoBloqueios });
-        if (assinatura === assinaturaRelatoriosAdmin) return;
+        if (assinatura === assinaturaRelatoriosAdmin) return true;
         assinaturaRelatoriosAdmin = assinatura;
         const denuncias = dados.denuncias || [];
         const denunciasFiltradas = denuncias.filter((d) => String([d.denuncianteNome, d.denuncianteID, d.denunciadoNome, d.denunciadoID].filter(Boolean).join(" ")).toLocaleLowerCase("pt-BR").includes(termoDenuncias));
@@ -426,9 +428,11 @@ async function carregarRelatoriosAdmin() {
                 botao.disabled = false;
             }
         }));
+        return true;
     } catch (erro) {
         tabelaD.innerHTML = '<tr><td colspan="5" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
         tabelaB.innerHTML = '<tr><td colspan="4" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+        return false;
     }
 }
 
@@ -442,7 +446,7 @@ async function carregarEstoqueAdmin() {
         const dados = await resposta.json();
         if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar o estoque.");
         const assinatura = JSON.stringify(dados);
-        if (assinatura === assinaturaEstoqueAdmin) return;
+        if (assinatura === assinaturaEstoqueAdmin) return true;
         assinaturaEstoqueAdmin = assinatura;
         const produtos = dados.produtos || [];
         tabelaP.innerHTML = produtos.length ? produtos.map((p) =>
@@ -452,9 +456,11 @@ async function carregarEstoqueAdmin() {
         tabelaL.innerHTML = locais.length ? locais.map((l) =>
             "<tr><td>" + escaparAdmin(l.nome) + "</td><td>" + escaparAdmin(l.tipo) + "</td><td>" + escaparAdmin(l.responsavelNome || l.responsavelID || "Não informado") + "</td><td>" + escaparAdmin(l.status) + "</td></tr>"
         ).join("") : '<tr><td colspan="4" class="vazio">Nenhum local cadastrado.</td></tr>';
+        return true;
     } catch (erro) {
         tabelaP.innerHTML = '<tr><td colspan="4" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
         tabelaL.innerHTML = '<tr><td colspan="4" class="vazio">' + escaparAdmin(erro.message) + '</td></tr>';
+        return false;
     }
 }
 
