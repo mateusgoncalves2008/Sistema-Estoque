@@ -70,7 +70,7 @@ async function carregarPainelAdmin() {
         renderizarAtividadesAdmin(dados.atividadesRecentes || []);
         mostrarEstadoPainel("Dados carregados com sucesso da planilha escolar.", "sucesso");
         elAdmin("ultimaAtualizacao").textContent = formatarData(dados.atualizadoEm);
-        verificarPlanilhaAdmin();
+        verificarSaudeSistemaAdmin();
         if (window.lucide) window.lucide.createIcons();
     } catch (erro) {
         console.error("Erro ao carregar Painel ADM:", erro);
@@ -100,6 +100,80 @@ function renderizarResumoAdmin(dados) {
 
     elAdmin("totalAvisos").textContent = formatarNumero(resumo.avisosPublicados);
     elAdmin("dataAtual").textContent = new Date().toLocaleDateString("pt-BR", { dateStyle: "medium" });
+}
+
+let historicoSaudeAdmin = [];
+
+async function verificarSaudeSistemaAdmin() {
+    const botao = elAdmin("btnVerificarSaude");
+    if (!botao) return;
+
+    const inicio = performance.now();
+    const servidor = elAdmin("statusServidor");
+    const planilha = elAdmin("statusPlanilha");
+    botao.disabled = true;
+    botao.setAttribute("aria-busy", "true");
+    servidor.textContent = "Verificando...";
+    servidor.className = "status-verificando";
+    planilha.textContent = "Verificando...";
+    planilha.className = "status-verificando";
+    elAdmin("detalheServidor").textContent = "Testando resposta da API...";
+    elAdmin("detalhePlanilha").textContent = "Consultando a planilha escolar...";
+
+    let servidorTexto = "Indisponível";
+    let planilhaTexto = "Indisponível";
+    let ms = 0;
+
+    try {
+        const resposta = await fetch(`${API_ADMIN}/teste-planilha`, {
+            credentials: "include",
+            cache: "no-store",
+        });
+        ms = Math.max(0, Math.round(performance.now() - inicio));
+        elAdmin("tempoRespostaSaude").textContent = `${ms} ms`;
+
+        const apiOk = resposta.ok || resposta.status === 401 || resposta.status === 403;
+        servidorTexto = apiOk ? "Online" : "Com falha";
+        servidor.textContent = servidorTexto;
+        servidor.className = apiOk ? "status-ok" : "status-falha";
+        elAdmin("detalheServidor").textContent = `API respondeu com HTTP ${resposta.status}`;
+
+        const dados = await resposta.json().catch(() => ({}));
+        const sheetsOk = resposta.ok && dados.sucesso === true;
+        planilhaTexto = sheetsOk ? "Conectada" : "Indisponível";
+        planilha.textContent = planilhaTexto;
+        planilha.className = sheetsOk ? "status-ok" : "status-falha";
+        elAdmin("detalhePlanilha").textContent = sheetsOk
+            ? "Consulta à planilha concluída com sucesso"
+            : (dados.mensagem || "A API respondeu, mas a consulta à planilha falhou.");
+    } catch (erro) {
+        ms = Math.max(0, Math.round(performance.now() - inicio));
+        elAdmin("tempoRespostaSaude").textContent = `${ms} ms`;
+        servidor.textContent = servidorTexto;
+        servidor.className = "status-falha";
+        planilha.textContent = planilhaTexto;
+        planilha.className = "status-falha";
+        elAdmin("detalheServidor").textContent = "Não foi possível alcançar a API.";
+        elAdmin("detalhePlanilha").textContent = "Verifique a conexão do serviço e as credenciais.";
+    } finally {
+        const hora = new Date().toLocaleString("pt-BR");
+        elAdmin("ultimaVerificacaoSaude").textContent = hora;
+        historicoSaudeAdmin.unshift({
+            hora,
+            servidor: servidor.textContent,
+            planilha: planilha.textContent,
+            ms: elAdmin("tempoRespostaSaude").textContent,
+        });
+        historicoSaudeAdmin = historicoSaudeAdmin.slice(0, 10);
+        elAdmin("historicoSaude").innerHTML = historicoSaudeAdmin.map((item) => {
+            const apiClass = item.servidor === "Online" ? "status-ok" : "status-falha";
+            const sheetsClass = item.planilha === "Conectada" ? "status-ok" : "status-falha";
+            return `<tr><td>${escaparAdmin(item.hora)}</td><td><strong class="${apiClass}">${escaparAdmin(item.servidor)}</strong></td><td><strong class="${sheetsClass}">${escaparAdmin(item.planilha)}</strong></td><td>${escaparAdmin(item.ms)}</td></tr>`;
+        }).join("");
+        botao.disabled = false;
+        botao.removeAttribute("aria-busy");
+        if (window.lucide) window.lucide.createIcons();
+    }
 }
 
 async function verificarPlanilhaAdmin() {
@@ -688,6 +762,7 @@ function configurarMenuAdmin() {
 }
 
 elAdmin("btnAtualizar").addEventListener("click", carregarPainelAdmin);
+elAdmin("btnVerificarSaude")?.addEventListener("click", verificarSaudeSistemaAdmin);
 elAdmin("btnVerTodosLogs").addEventListener("click", async () => { mudarTelaAdmin("logs"); if (!logsCompletosAdmin.length) await carregarLogsCompletosAdmin(); });
 elAdmin("btnVoltarAtividades").addEventListener("click", () => mudarTelaAdmin("atividades"));
 elAdmin("buscarLogsAdmin").addEventListener("input", () => { paginaLogsAtualAdmin = 1; renderizarLogsCompletosAdmin(); });
