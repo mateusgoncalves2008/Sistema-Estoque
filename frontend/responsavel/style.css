@@ -255,13 +255,16 @@ main {
     border: 1px solid var(--border);
     border-radius: 15px;
     background: var(--white);
-    color: var(--brown);
-    box-shadow: var(--shadow);
-    transition: background 0.2s;
+    color: var(--orange);
+    box-shadow: 0 8px 24px #3522191f;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .refresh:hover {
-    background: var(--beige);
+    background: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px #3522192b;
 }
 
 /* AVISOS */
@@ -324,7 +327,6 @@ main {
     font-weight: 800;
     letter-spacing: 1.4px;
     color: #fffdfa;
-    text-shadow: 0 2px 5px #24140ed9;
 }
 
 .hero h2 {
@@ -337,7 +339,6 @@ main {
     margin: 0 0 15px;
     color: #fffdfa;
     font-size: 14px;
-    text-shadow: 0 2px 5px #24140ed9;
 }
 
 .hero-tag {
