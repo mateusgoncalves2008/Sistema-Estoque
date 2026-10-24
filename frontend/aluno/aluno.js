@@ -602,10 +602,10 @@ async function carregarReservas() {
     } catch (erro) {
         console.error("Erro ao carregar reservas:", erro);
 
-        reservas = [];
-        reservasCarregadas = false;
-
-        showToast("Não foi possível carregar suas reservas.");
+        // Preserva os dados anteriores caso a atualização falhe temporariamente.
+        if (!atualizacaoAlunoEmAndamento) {
+            showToast("Não foi possível carregar suas reservas.");
+        }
 
         return false;
     }
@@ -639,7 +639,7 @@ async function carregarEmprestimos() {
         emprestimos = resultado.emprestimos || [];
     } catch (erro) {
         console.error("Erro ao carregar empréstimos:", erro);
-        emprestimos = [];
+        // Preserva os empréstimos já carregados se a API falhar temporariamente.
     }
 }
 
@@ -670,8 +670,7 @@ async function carregarEmprestimosHistorico() {
             : [];
     } catch (erro) {
         console.error("Erro ao carregar histórico:", erro);
-        emprestimosHistorico = [];
-        showToast("Não foi possível carregar os empréstimos do histórico.");
+        // Preserva o histórico já carregado se a API falhar temporariamente.
     }
 }
 
@@ -2723,9 +2722,10 @@ async function carregarItensPesquisa() {
     } catch (erro) {
         console.error("Erro ao carregar itens:", erro);
 
-        ITENS_PESQUISA = [];
-
-        showToast("Não foi possível carregar os itens do estoque.");
+        // Preserva os itens anteriores se a API falhar temporariamente.
+        if (!atualizacaoAlunoEmAndamento) {
+            showToast("Não foi possível carregar os itens do estoque.");
+        }
 
         return false;
     }
@@ -2740,6 +2740,7 @@ async function carregarItensPesquisa() {
 // ============================================================
 
 let atualizacaoAlunoEmAndamento = false;
+let intervaloAtualizacaoAluno = null;
 
 async function atualizarDadosAutomaticamenteAluno() {
     if (
@@ -2774,7 +2775,15 @@ async function atualizarDadosAutomaticamenteAluno() {
         const campoEmEdicao = document.activeElement?.matches("input, textarea, select");
 
         if (paginaPodeAtualizar && !modalAberto && !campoEmEdicao) {
+            const main = document.querySelector(".main-content");
+            const scrollMainAnterior = main?.scrollTop ?? 0;
+            const scrollPaginaAnterior = window.scrollY;
+
             draw();
+
+            const mainAtualizado = document.querySelector(".main-content");
+            if (mainAtualizado) mainAtualizado.scrollTop = scrollMainAnterior;
+            window.scrollTo({ top: scrollPaginaAnterior, behavior: "instant" });
         }
     } catch (erro) {
         console.error("Erro na atualizacao automatica do painel Aluno:", erro);
@@ -2784,7 +2793,12 @@ async function atualizarDadosAutomaticamenteAluno() {
 }
 
 function iniciarAtualizacaoAutomaticaAluno() {
-    window.setInterval(atualizarDadosAutomaticamenteAluno, 10000);
+    if (intervaloAtualizacaoAluno !== null) return;
+
+    intervaloAtualizacaoAluno = window.setInterval(
+        atualizarDadosAutomaticamenteAluno,
+        10000,
+    );
 }
 
 async function iniciarPainel() {
