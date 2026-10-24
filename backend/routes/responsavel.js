@@ -77,11 +77,19 @@ function exigirResponsavel(req, res, next) {
 }
 
 async function carregarVinculo(usuarioSessao) {
-    const [usuarios, setores, locais] = await Promise.all([
-        lerAba("01_USUARIOS!A:K"),
-        lerAba("12_SETORES!A:E"),
-        lerAba("05_LOCAIS!A:G"),
-    ]);
+    // Uma única chamada ao Google Sheets para carregar as três abas do vínculo.
+    const resposta = await sheets.spreadsheets.values.batchGet({
+        spreadsheetId: SPREADSHEET_ID,
+        ranges: [
+            "01_USUARIOS!A:K",
+            "12_SETORES!A:E",
+            "05_LOCAIS!A:G",
+        ],
+    });
+    const [usuariosRange, setoresRange, locaisRange] = resposta.data.valueRanges || [];
+    const usuarios = usuariosRange?.values || [];
+    const setores = setoresRange?.values || [];
+    const locais = locaisRange?.values || [];
 
     const usuario = usuarios
         .slice(1)
@@ -149,15 +157,26 @@ async function carregarVinculo(usuarioSessao) {
 }
 
 async function carregarDashboard(vinculo) {
-    const [estoques, produtos, categorias, movimentacoes, reservas, usuarios] =
-        await Promise.all([
-            lerAba("06_ESTOQUE_LOCAIS!A:I"),
-            lerAba("02_PRODUTOS!A:K"),
-            lerAba("03_CATEGORIAS!A:D"),
-            lerAba("07_MOVIMENTACOES!A:L"),
-            lerAba("08_RESERVAS!A:L"),
-            lerAba("01_USUARIOS!A:K"),
-        ]);
+    // Carrega os dados do painel em uma única chamada de leitura, reduzindo
+    // o consumo da cota da API sem alterar os dados exibidos.
+    const resposta = await sheets.spreadsheets.values.batchGet({
+        spreadsheetId: SPREADSHEET_ID,
+        ranges: [
+            "06_ESTOQUE_LOCAIS!A:I",
+            "02_PRODUTOS!A:K",
+            "03_CATEGORIAS!A:D",
+            "07_MOVIMENTACOES!A:L",
+            "08_RESERVAS!A:L",
+            "01_USUARIOS!A:K",
+        ],
+    });
+    const intervalos = resposta.data.valueRanges || [];
+    const estoques = intervalos[0]?.values || [];
+    const produtos = intervalos[1]?.values || [];
+    const categorias = intervalos[2]?.values || [];
+    const movimentacoes = intervalos[3]?.values || [];
+    const reservas = intervalos[4]?.values || [];
+    const usuarios = intervalos[5]?.values || [];
 
     const localID = texto(vinculo.local.id);
 
