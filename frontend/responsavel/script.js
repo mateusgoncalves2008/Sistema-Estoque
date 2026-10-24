@@ -206,6 +206,9 @@ function openPage(page) {
     setText("pageTitle", pageInfo[page][0]);
     setText("pageSubtitle", pageInfo[page][1]);
 
+    // Na tela inicial, oculta o cabeçalho textual; nas demais páginas, mantém os títulos.
+    el("pageHeading")?.classList.toggle("hidden", page === "inicio");
+
     document.body.classList.remove("mobile-menu-open");
 }
 
