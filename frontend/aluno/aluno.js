@@ -2735,6 +2735,58 @@ async function carregarItensPesquisa() {
 // INICIALIZAÇÃO
 // ============================================================
 
+// ============================================================
+// ATUALIZACAO AUTOMATICA DO PAINEL
+// ============================================================
+
+let atualizacaoAlunoEmAndamento = false;
+
+async function atualizarDadosAutomaticamenteAluno() {
+    if (
+        atualizacaoAlunoEmAndamento ||
+        document.visibilityState !== "visible" ||
+        !usuarioLogado?.id
+    ) {
+        return;
+    }
+
+    atualizacaoAlunoEmAndamento = true;
+
+    try {
+        await Promise.all([
+            carregarAvisosAluno(),
+            carregarItensPesquisa(),
+            carregarReservas(),
+            carregarEmprestimos(),
+            carregarEmprestimosHistorico(),
+        ]);
+
+        // Evita redesenhar telas com formularios ou controles em uso.
+        const paginaPodeAtualizar =
+            page === "inicio" ||
+            page === "reservas" ||
+            page === "emprestimos" ||
+            page === "historico";
+
+        const modalAberto = document.querySelector(
+            '[role="dialog"]:not([hidden]), .modal.show, .modal.aberto'
+        );
+        const campoEmEdicao = document.activeElement?.matches("input, textarea, select");
+
+        if (paginaPodeAtualizar && !modalAberto && !campoEmEdicao) {
+            draw();
+        }
+    } catch (erro) {
+        console.error("Erro na atualizacao automatica do painel Aluno:", erro);
+    } finally {
+        atualizacaoAlunoEmAndamento = false;
+    }
+}
+
+function iniciarAtualizacaoAutomaticaAluno() {
+    window.setInterval(atualizarDadosAutomaticamenteAluno, 10000);
+}
+
 async function iniciarPainel() {
     try {
         configurarSidebar();
@@ -2757,6 +2809,7 @@ async function iniciarPainel() {
         conectarEventosCalendario();
         draw();
         inicializarIcones();
+        iniciarAtualizacaoAutomaticaAluno();
     } catch (erro) {
         console.error("Erro ao carregar o painel:", erro);
     } finally {
