@@ -957,10 +957,50 @@ footer {
     width: 42px;
 }
 
-.sidebar-collapsed .icon-btn {
+.sidebar-collapsed .brand {
+    position: relative;
+    justify-content: flex-start;
+    padding: 0 7px 24px;
+    min-height: 67px;
+}
+
+.sidebar-collapsed .brand .icon-btn {
     position: absolute;
-    top: 75px;
-    right: 18px;
+    top: 0;
+    left: 7px;
+    right: auto;
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    padding: 0;
+    border-radius: 12px;
+    background: var(--brown);
+    color: #fffdfa;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease, background 0.16s ease;
+}
+
+.sidebar-collapsed .brand:hover .icon-btn,
+.sidebar-collapsed .brand:focus-within .icon-btn {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sidebar-collapsed .brand .icon-btn:hover {
+    background: var(--orange);
+}
+
+.sidebar-collapsed .brand img {
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.sidebar-collapsed .brand:has(.icon-btn:hover) img {
+    opacity: 0.18;
 }
 
 .sidebar-collapsed nav {
