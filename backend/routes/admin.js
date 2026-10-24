@@ -56,7 +56,7 @@ router.get("/admin/dashboard", async (req, res) => {
         "09_EMPRESTIMOS!A:L",
         "10_DEVOLUCOES!A:K",
         "12_SETORES!A:F",
-        "LOG!A:H",
+        "13_LOGS!A:H",
         "24_AVISOS_SISTEMA!A:H",
     ];
 
@@ -81,7 +81,7 @@ router.get("/admin/dashboard", async (req, res) => {
         const emprestimos = linhasDeDados(dados["09_EMPRESTIMOS"]);
         const devolucoes = linhasDeDados(dados["10_DEVOLUCOES"]);
         const setores = linhasDeDados(dados["12_SETORES"]);
-        const logs = linhasDeDados(dados["LOG"]);
+        const logs = linhasDeDados(dados["13_LOGS"]);
         const avisos = linhasDeDados(dados["24_AVISOS_SISTEMA"]);
 
         const estoqueNumerico = estoque.reduce((total, linha) => {
@@ -105,7 +105,7 @@ router.get("/admin/dashboard", async (req, res) => {
             ultimoLogin: String(linha[10] || ""),
         })).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
-        const cabecalhosLogs = Array.isArray(dados["LOG"][0]) ? dados["LOG"][0] : [];
+        const cabecalhosLogs = Array.isArray(dados["13_LOGS"][0]) ? dados["13_LOGS"][0] : [];
         const atividadesRecentes = logs.slice(-8).reverse().map((linha) => {
             const registro = {};
             cabecalhosLogs.forEach((cabecalho, indice) => {
@@ -151,7 +151,7 @@ router.get("/admin/logs", async (req, res) => {
     if (!exigirAdmin(req, res)) return;
     try {
         const [respostaLogs, respostaUsuarios] = await Promise.all([
-            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "LOG!A:H" }),
+            sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "13_LOGS!A:H" }),
             sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "01_USUARIOS!A:K" }),
         ]);
         const linhas = respostaLogs.data.values || [];
