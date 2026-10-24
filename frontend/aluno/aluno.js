@@ -615,8 +615,7 @@ async function carregarEmprestimos() {
     const usuarioID = usuarioLogado?.id;
 
     if (!usuarioID) {
-        emprestimos = [];
-        return;
+        return false;
     }
 
     try {
@@ -637,9 +636,11 @@ async function carregarEmprestimos() {
         }
 
         emprestimos = resultado.emprestimos || [];
+        return true;
     } catch (erro) {
         console.error("Erro ao carregar empréstimos:", erro);
         // Preserva os empréstimos já carregados se a API falhar temporariamente.
+        return false;
     }
 }
 
@@ -647,8 +648,7 @@ async function carregarEmprestimosHistorico() {
     const usuarioID = usuarioLogado?.id;
 
     if (!usuarioID) {
-        emprestimosHistorico = [];
-        return;
+        return false;
     }
 
     try {
@@ -668,9 +668,11 @@ async function carregarEmprestimosHistorico() {
         emprestimosHistorico = Array.isArray(resultado.emprestimos)
             ? resultado.emprestimos
             : [];
+        return true;
     } catch (erro) {
         console.error("Erro ao carregar histórico:", erro);
         // Preserva o histórico já carregado se a API falhar temporariamente.
+        return false;
     }
 }
 
@@ -2749,10 +2751,17 @@ let atualizacaoAlunoEmAndamento = false;
 let intervaloAtualizacaoAluno = null;
 
 async function atualizarDadosAutomaticamenteAluno() {
+    const modalAberto = document.querySelector(
+        '[role="dialog"]:not([hidden]), .modal.show, .modal.aberto'
+    );
+    const campoEmEdicao = document.activeElement?.matches("input, textarea, select");
+
     if (
         atualizacaoAlunoEmAndamento ||
         document.visibilityState !== "visible" ||
-        !usuarioLogado?.id
+        !usuarioLogado?.id ||
+        modalAberto ||
+        campoEmEdicao
     ) {
         return;
     }
@@ -2760,13 +2769,23 @@ async function atualizarDadosAutomaticamenteAluno() {
     atualizacaoAlunoEmAndamento = true;
 
     try {
-        await Promise.all([
+        const resultados = await Promise.all([
             carregarAvisosAluno(),
             carregarItensPesquisa(),
             carregarReservas(),
             carregarEmprestimos(),
             carregarEmprestimosHistorico(),
         ]);
+
+        const atualizacaoCompleta = resultados.every((resultado) => resultado === true);
+
+        if (atualizacaoCompleta) {
+            const agora = new Date();
+            const horario = [agora.getHours(), agora.getMinutes(), agora.getSeconds()]
+                .map((parte) => String(parte).padStart(2, "0"))
+                .join(":");
+            console.info(`[ATUALIZAÇÃO AUTOMÁTICA] Painel atualizado às ${horario}`);
+        }
 
         // Evita redesenhar telas com formularios ou controles em uso.
         // Na tela inicial, atualiza os contadores diretamente para evitar
@@ -2780,12 +2799,7 @@ async function atualizarDadosAutomaticamenteAluno() {
             page === "emprestimos" ||
             page === "historico";
 
-        const modalAberto = document.querySelector(
-            '[role="dialog"]:not([hidden]), .modal.show, .modal.aberto'
-        );
-        const campoEmEdicao = document.activeElement?.matches("input, textarea, select");
-
-        if (paginaPodeAtualizar && !modalAberto && !campoEmEdicao) {
+        if (paginaPodeAtualizar) {
             const main = document.querySelector(".main-content");
             const scrollMainAnterior = main?.scrollTop ?? 0;
             const scrollPaginaAnterior = window.scrollY;
@@ -2808,7 +2822,7 @@ function iniciarAtualizacaoAutomaticaAluno() {
 
     intervaloAtualizacaoAluno = window.setInterval(
         atualizarDadosAutomaticamenteAluno,
-        10000,
+        60000,
     );
 }
 
@@ -2949,9 +2963,11 @@ async function carregarAvisosAluno() {
         salvarAvisosLidos(Array.isArray(resultadoLeituras.avisosLidos) ? resultadoLeituras.avisosLidos : []);
         renderizarCentralAvisos();
         atualizarContadorAvisos();
+        return true;
     } catch (erro) {
         console.error("Erro ao carregar avisos e leituras:", erro);
         atualizarContadorAvisos();
+        return false;
     }
 }
 
