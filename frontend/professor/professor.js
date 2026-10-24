@@ -116,7 +116,7 @@ function carregarCalendarioProfessor(silencioso = false) {
         window.lucide.createIcons();
     }
 
-    fetch(`${API_URL}/professor/calendario`)
+    return fetch(`${API_URL}/professor/calendario`)
         .then((resposta) =>
             resposta.json().then((dados) => {
                 if (!resposta.ok || !dados.sucesso) {
@@ -509,7 +509,7 @@ async function atualizarDadosAutomaticamenteProfessor() {
             if (paginaAtiva === "inicio") atualizarTabelas();
         }
         if (paginaAtiva === "historico") await carregarHistoricoProfessor(true);
-        if (paginaAtiva === "calendario") carregarCalendarioProfessor(true);
+        if (paginaAtiva === "calendario") await carregarCalendarioProfessor(true);
     } catch (erro) {
         console.error("Erro na atualização automática do Professor:", erro);
     } finally {
