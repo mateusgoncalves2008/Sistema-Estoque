@@ -470,30 +470,18 @@
                             <span>Neste setor</span>
                         </div>
                     </article>
-
-                    <article class="stat-card">
-                        <span class="stat-icon orange">
-                            <i class="fa-solid fa-file-circle-exclamation"></i>
-                        </span>
-                        <div>
-                            <small>Denúncias enviadas</small>
-                            <strong id="totalDenuncias">0</strong>
-                            <span>Encaminhadas à Secretaria</span>
-                        </div>
-                    </article>
                 </div>
 
                 <article class="panel">
                     <div class="panel-title">
                         <div>
-                            <h3>Bloqueios e denúncias</h3>
-                            <p>Gerencie o acesso às reservas do seu setor.</p>
+                            <h3>Bloqueios por setor</h3>
+                            <p>Gerencie o acesso às reservas dos itens vinculados ao seu setor.</p>
                         </div>
                     </div>
 
                     <div class="notice">
-                        Os bloqueios afetam somente as reservas dos itens
-                        vinculados ao seu setor.
+                        Os bloqueios afetam somente as reservas dos itens vinculados ao seu setor.
                     </div>
 
                     <div class="stock-toolbar">
@@ -502,15 +490,9 @@
                             type="search"
                             placeholder="Buscar usuário por nome ou matrícula..."
                         />
-
                         <button id="newBlockButton" class="refresh">
                             <i class="fa-solid fa-user-lock"></i>
                             Bloquear usuário
-                        </button>
-
-                        <button id="newReportButton" class="refresh">
-                            <i class="fa-solid fa-file-circle-exclamation"></i>
-                            Registrar denúncia
                         </button>
                     </div>
 
@@ -528,21 +510,41 @@
                             </thead>
                             <tbody id="blockRows">
                                 <tr>
-                                    <td colspan="6" class="empty">
-                                        Nenhum bloqueio registrado.
-                                    </td>
+                                    <td colspan="6" class="empty">Nenhum bloqueio registrado.</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </article>
+            </section>
+
+            <section
+                id="page-denuncias"
+                class="page hidden bloqueios-denuncias"
+            >
+                <div class="stats">
+                    <article class="stat-card">
+                        <span class="stat-icon orange">
+                            <i class="fa-solid fa-file-circle-exclamation"></i>
+                        </span>
+                        <div>
+                            <small>Denúncias enviadas</small>
+                            <strong id="totalDenuncias">0</strong>
+                            <span>Encaminhadas à Secretaria</span>
+                        </div>
+                    </article>
+                </div>
 
                 <article class="panel">
                     <div class="panel-title">
                         <div>
                             <h3>Histórico de denúncias</h3>
-                            <p>Registros encaminhados à Secretaria.</p>
+                            <p>Consulte os registros encaminhados à Secretaria.</p>
                         </div>
+                        <button id="newReportButton" class="refresh">
+                            <i class="fa-solid fa-file-circle-exclamation"></i>
+                            Registrar denúncia
+                        </button>
                     </div>
 
                     <div class="table-wrap">
@@ -558,9 +560,7 @@
                             </thead>
                             <tbody id="reportRows">
                                 <tr>
-                                    <td colspan="5" class="empty">
-                                        Nenhuma denúncia registrada.
-                                    </td>
+                                    <td colspan="5" class="empty">Nenhuma denúncia registrada.</td>
                                 </tr>
                             </tbody>
                         </table>
