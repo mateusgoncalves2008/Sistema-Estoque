@@ -769,3 +769,55 @@ tbody tr:hover { background: #fdfbf8; }
     .saude-resumo { align-items: flex-start; flex-direction: column; }
     .saude-resumo strong { text-align: left; }
 }
+
+
+/* Menu recolhível no desktop com o mesmo padrão dos painéis Aluno e Responsável */
+@media (min-width: 821px) {
+    .sidebar { transition: width .25s ease, padding .25s ease; }
+    .conteudo { transition: margin-left .25s ease, padding .25s ease; }
+    body.menu-recolhido .sidebar {
+        width: 82px;
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    body.menu-recolhido .conteudo { margin-left: 82px; }
+    body.menu-recolhido .school-name,
+    body.menu-recolhido .perfil-admin .user-mini-info,
+    body.menu-recolhido .status-online,
+    body.menu-recolhido .nav-item span,
+    body.menu-recolhido .selo-seguranca,
+    body.menu-recolhido .link-voltar,
+    body.menu-recolhido .btn-sair { display: none; }
+    body.menu-recolhido .sidebar-top {
+        position: relative;
+        justify-content: center;
+        flex-direction: row;
+        min-height: 70px;
+        padding: 0 0 20px;
+    }
+    body.menu-recolhido .school-brand { justify-content: center; }
+    body.menu-recolhido .logo-box { transition: opacity .16s ease; }
+    body.menu-recolhido .sidebar-toggle {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 2;
+        width: 48px;
+        height: 48px;
+        background: #29251f;
+        opacity: 0;
+        pointer-events: none;
+    }
+    body.menu-recolhido .sidebar-top:hover .sidebar-toggle,
+    body.menu-recolhido .sidebar-top:focus-within .sidebar-toggle {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    body.menu-recolhido .sidebar-top:hover .logo-box,
+    body.menu-recolhido .sidebar-top:focus-within .logo-box {
+        opacity: 0;
+    }
+    body.menu-recolhido .nav-item { justify-content: center; padding-right: 8px; padding-left: 8px; }
+    body.menu-recolhido .perfil-admin { justify-content: center; padding-right: 0; padding-left: 0; }
+    body.menu-recolhido .sidebar-rodape { justify-items: center; }
+}
