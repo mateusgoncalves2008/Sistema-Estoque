@@ -120,7 +120,7 @@ async function api(url, opcoes = {}) {
    CARREGAR DADOS REAIS
 ========================================================= */
 
-async function carregarDados() {
+async function carregarDados(silencioso = false) {
     try {
         const [dados, dadosTurmas, dadosUsuarios, dadosAcervo, dadosMovimentacoes, dadosBloqueios, dadosDenuncias, dadosCalendario, dadosEmprestimos] = await Promise.all([
             api("/secretaria/dashboard"),
@@ -296,11 +296,11 @@ async function carregarDados() {
 
         cfg.limite = Number.isFinite(limite) ? limite : 3;
 
-        draw();
+        draw(!silencioso);
     } catch (erro) {
         console.error("Erro ao carregar Secretaria:", erro);
 
-        toast("Não foi possível carregar os dados da planilha.");
+        if (!silencioso) toast("Não foi possível carregar os dados da planilha.");
     }
 }
 
@@ -2038,12 +2038,12 @@ window.addAv = async function addAv() {
    NAVEGAÇÃO
 ========================================================= */
 
-function draw() {
+function draw(animarContadores = true) {
     if (!R[page]) return;
 
     R[page]();
 
-    countUp();
+    if (animarContadores) countUp();
 }
 
 function go(p) {
@@ -2473,6 +2473,19 @@ $("#form-mudar-turma")?.addEventListener("submit", async e => {
 });
 
 
+
+let atualizacaoSilenciosaSecretariaEmAndamento = false;
+
+window.setInterval(async () => {
+    if (atualizacaoSilenciosaSecretariaEmAndamento || document.visibilityState !== "visible") return;
+    const ativo = document.activeElement;
+    if (ativo?.matches("input, textarea, select, [contenteditable='true']")) return;
+    if (document.querySelector('dialog[open], [role="dialog"]:not([hidden]), .modal.show, .modal.aberto')) return;
+    if (document.querySelector("form [aria-busy='true'], form button:disabled")) return;
+    atualizacaoSilenciosaSecretariaEmAndamento = true;
+    try { await carregarDados(true); }
+    finally { atualizacaoSilenciosaSecretariaEmAndamento = false; }
+}, 30000);
 
 setInterval(() => {
     const c = $("#clk");
