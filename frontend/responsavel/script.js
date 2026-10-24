@@ -1345,13 +1345,6 @@ function iniciarEventos() {
     const sidebarToggle = el("sidebarToggle");
     sidebarToggle?.addEventListener("click", () => {
         const recolhido = document.body.classList.toggle("sidebar-collapsed");
-        const icone = sidebarToggle.querySelector("i");
-
-        if (icone) {
-            icone.classList.toggle("fa-angles-left", !recolhido);
-            icone.classList.toggle("fa-angles-right", recolhido);
-        }
-
         sidebarToggle.setAttribute(
             "aria-label",
             recolhido ? "Expandir menu" : "Recolher menu",
