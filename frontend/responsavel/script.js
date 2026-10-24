@@ -1208,29 +1208,49 @@ async function carregarPainel(silencioso = false) {
             );
         }
 
+        const estadoAnterior = silencioso
+            ? JSON.stringify({
+                  user: state.user,
+                  sector: state.sector,
+                  stock: state.stock,
+                  movements: state.movements,
+                  requests: state.requests,
+              })
+            : null;
+
         state.user = data.usuario || null;
         state.sector = data.setor || null;
-
-        atualizarTituloSetor(state.sector);
-
         state.stock = Array.isArray(data.estoque) ? data.estoque : [];
-
         state.movements = Array.isArray(data.movimentacoes)
             ? data.movimentacoes
             : [];
-
         state.requests = Array.isArray(data.solicitacoes)
             ? data.solicitacoes
             : [];
 
-        renderAll();
+        atualizarTituloSetor(state.sector);
+
+        const estadoAtual = JSON.stringify({
+            user: state.user,
+            sector: state.sector,
+            stock: state.stock,
+            movements: state.movements,
+            requests: state.requests,
+        });
+        const dadosMudaram = estadoAnterior !== estadoAtual;
+
+        // Evita reconstruir o painel se a consulta trouxe os mesmos dados.
+        if (!silencioso || dadosMudaram) renderAll();
 
         const updated = new Date().toLocaleTimeString("pt-BR", {
-            hour: "2-digit",
-            minute: "2-digit",
+            hour12: false,
         });
 
-        setText("lastUpdated", `Atualizado às ${updated}`);
+        if (silencioso) {
+            console.info(`[ATUALIZAÇÃO AUTOMÁTICA] Painel atualizado às ${updated}`);
+        } else {
+            setText("lastUpdated", `Atualizado às ${updated.slice(0, 5)}`);
+        }
     } catch (error) {
         console.error("Erro ao carregar painel:", error);
 
