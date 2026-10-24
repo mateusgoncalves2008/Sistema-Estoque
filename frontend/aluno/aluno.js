@@ -2679,6 +2679,12 @@ function draw() {
 
     content.innerHTML = views[page]();
 
+    // Preenche o relógio imediatamente após redesenhar a tela inicial.
+    // Isso evita que o horário volte a 00:00:00 durante a atualização automática.
+    if (page === "inicio") {
+        atualizarRelogioAluno();
+    }
+
     if (page === "pesquisar") {
         conectarEventosPesquisa();
         pesquisarItens();
