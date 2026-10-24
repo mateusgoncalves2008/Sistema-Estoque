@@ -1173,12 +1173,12 @@ function renderAll() {
    CARREGAR DADOS DA API
 ===================================================== */
 
-async function carregarPainel() {
-    hideNotice();
+async function carregarPainel(silencioso = false) {
+    if (!silencioso) hideNotice();
 
     const refreshButton = el("refreshButton");
 
-    if (refreshButton) {
+    if (!silencioso && refreshButton) {
         refreshButton.disabled = true;
         refreshButton.classList.add("loading");
     }
@@ -1234,12 +1234,12 @@ async function carregarPainel() {
     } catch (error) {
         console.error("Erro ao carregar painel:", error);
 
-        showNotice(
+        if (!silencioso) showNotice(
             `Não foi possível carregar os dados: ${error.message}`,
             true,
         );
     } finally {
-        if (refreshButton) {
+        if (!silencioso && refreshButton) {
             refreshButton.disabled = false;
             refreshButton.classList.remove("loading");
         }
@@ -1607,6 +1607,19 @@ document.addEventListener("DOMContentLoaded", () => {
     carregarPainel();
     criarBotaoAvisosResponsavel();
     carregarAvisosResponsavel();
+
+    // Atualiza em segundo plano somente quando a interface está livre.
+    let atualizacaoSilenciosaResponsavelEmAndamento = false;
+    window.setInterval(async () => {
+        if (atualizacaoSilenciosaResponsavelEmAndamento || document.visibilityState !== "visible") return;
+        const ativo = document.activeElement;
+        if (ativo?.matches("input, textarea, select, [contenteditable='true']")) return;
+        if (document.querySelector('dialog[open], [role="dialog"]:not([hidden]), .modal.show, .modal.aberto')) return;
+        if (document.querySelector("form [aria-busy='true'], form button:disabled")) return;
+        atualizacaoSilenciosaResponsavelEmAndamento = true;
+        try { await carregarPainel(true); }
+        finally { atualizacaoSilenciosaResponsavelEmAndamento = false; }
+    }, 30000);
 });
 
 /* =====================================================
