@@ -236,9 +236,19 @@ function renderIdentity() {
     }
 
     setText("userName", name);
-    const accountRole = String(state.user?.tipoUsuario || state.user?.tipo || state.user?.perfil || "Responsável");
+    const roleValue = String(state.user?.tipoUsuario || state.user?.tipo || state.user?.perfil || "Responsável").trim();
+    const roleKey = roleValue.toUpperCase();
+    const accountRole = roleKey === "LIDER" || roleKey === "RESPONSAVEL"
+        ? "Responsável"
+        : roleKey === "ADMIN" || roleKey === "ADM" || roleKey === "ADMINISTRADOR"
+            ? "Administrador"
+            : roleKey === "ALUNO"
+                ? "Aluno"
+                : roleKey === "PROFESSOR"
+                    ? "Professor"
+                    : roleValue.charAt(0).toLocaleUpperCase("pt-BR") + roleValue.slice(1).toLocaleLowerCase("pt-BR");
     setText("sidebarAccountName", name);
-    setText("sidebarAccountRole", accountRole.toUpperCase() === "LIDER" ? "Responsável" : accountRole);
+    setText("sidebarAccountRole", accountRole);
     setText("sidebarAccountAvatar", String(name).trim().charAt(0).toUpperCase() || "U");
     setText("welcomeName", String(name).split(" ")[0]);
     setText("sectorName", sector);
