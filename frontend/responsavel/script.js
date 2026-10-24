@@ -236,6 +236,10 @@ function renderIdentity() {
     }
 
     setText("userName", name);
+    const accountRole = String(state.user?.tipoUsuario || state.user?.tipo || state.user?.perfil || "Responsável");
+    setText("sidebarAccountName", name);
+    setText("sidebarAccountRole", accountRole.toUpperCase() === "LIDER" ? "Responsável" : accountRole);
+    setText("sidebarAccountAvatar", String(name).trim().charAt(0).toUpperCase() || "U");
     setText("welcomeName", String(name).split(" ")[0]);
     setText("sectorName", sector);
 }
