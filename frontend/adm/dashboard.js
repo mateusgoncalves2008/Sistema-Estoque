@@ -486,20 +486,7 @@ function renderizarLogsCompletosAdmin() {
     const tabela = elAdmin("tabelaLogsAdmin");
     if (!pagina.length) { tabela.innerHTML = '<tr><td colspan="5" class="vazio">Nenhum log corresponde à pesquisa.</td></tr>'; }
     else {
-        const estiloAcaoLog = (valor) => {
-            const acao = String(valor || "").toUpperCase();
-            if (/LOGIN|LOGOUT|SAIR/.test(acao)) return { icone: "log-in", classe: "atividade-azul" };
-            if (/CRIAR|CADASTR|CREATE|ADD/.test(acao)) return { icone: "plus", classe: "atividade-verde" };
-            if (/EDITAR|ATUALIZAR|UPDATE|ALTERAR/.test(acao)) return { icone: "file-pen-line", classe: "atividade-laranja" };
-            if (/EXCLUIR|DELETAR|DELETE|REMOVER/.test(acao)) return { icone: "trash-2", classe: "atividade-vermelha" };
-            if (/EXPORTAR|DOWNLOAD|PDF/.test(acao)) return { icone: "download", classe: "atividade-azul-escuro" };
-            return { icone: "file-clock", classe: "atividade-neutra" };
-        };
-        tabela.innerHTML = pagina.map(log => {
-            const estilo = estiloAcaoLog(log.acao);
-            return `<tr><td>${escaparAdmin(log.dataHora || "—")}</td><td><strong>${escaparAdmin(log.usuarioNome || "Sistema")}</strong></td><td><span class="atividade-icone ${estilo.classe} log-icone-acao"><i data-lucide="${estilo.icone}"></i></span><span>${escaparAdmin(log.acao || "—")}</span></td><td class="log-descricao">${escaparAdmin(log.descricao || "—")}</td><td>${escaparAdmin(log.resultado || "—")}</td></tr>`;
-        }).join("");
-        if (window.lucide) window.lucide.createIcons();
+        tabela.innerHTML = pagina.map(log => `<tr><td>${escaparAdmin(log.dataHora || "—")}</td><td><strong>${escaparAdmin(log.usuarioNome || "Sistema")}</strong></td><td>${escaparAdmin(log.acao || "—")}</td><td class="log-descricao">${escaparAdmin(log.descricao || "—")}</td><td>${escaparAdmin(log.resultado || "—")}</td></tr>`).join("");
     }
     elAdmin("resumoLogsAdmin").textContent = `${filtrados.length.toLocaleString("pt-BR")} registro(s) encontrado(s) • ${logsCompletosAdmin.length.toLocaleString("pt-BR")} no total`;
     elAdmin("paginaLogsAdmin").textContent = `Página ${paginaLogsAtualAdmin} de ${totalPaginas}`;
