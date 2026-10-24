@@ -128,13 +128,17 @@ function carregarCalendarioProfessor(silencioso = false) {
             }),
         )
         .then((dados) => {
+            const assinaturaAnterior = JSON.stringify(eventosCalendarioProfessor);
             eventosCalendarioProfessor = dados.eventos || [];
             calendarioProfessorCarregado = true;
-            renderizarCalendarioProfessor();
+            if (!silencioso || assinaturaAnterior !== JSON.stringify(eventosCalendarioProfessor)) {
+                renderizarCalendarioProfessor();
+            }
+            return true;
         })
         .catch((erro) => {
             console.error("Erro no calendário:", erro);
-            if (silencioso) return;
+            if (silencioso) return false;
 
             area.innerHTML = `
                 <div class="cal-prof-empty">
@@ -150,6 +154,7 @@ function carregarCalendarioProfessor(silencioso = false) {
                 "click",
                 carregarCalendarioProfessor,
             );
+            return false;
         });
 }
 
@@ -498,18 +503,37 @@ async function atualizarDadosAutomaticamenteProfessor() {
     if (atualizacaoSilenciosaProfessorEmAndamento || !podeAtualizarProfessorSilenciosamente()) return;
     const paginaAtiva = document.querySelector(".page.active")?.id?.replace("page-", "");
     if (!["inicio", "reservas", "emprestimos", "historico", "calendario"].includes(paginaAtiva)) return;
+
     atualizacaoSilenciosaProfessorEmAndamento = true;
+    let totalConsultas = 0;
+    let consultasSucesso = 0;
     try {
         if (paginaAtiva === "inicio" || paginaAtiva === "reservas") {
-            await carregarReservasProfessor(true);
-            atualizarTabelas();
+            totalConsultas++;
+            const reservasAnteriores = JSON.stringify(reservas);
+            const sucesso = await carregarReservasProfessor(true);
+            if (sucesso) {
+                consultasSucesso++;
+                if (reservasAnteriores !== JSON.stringify(reservas)) atualizarTabelas();
+            }
         }
         if (paginaAtiva === "inicio" || paginaAtiva === "emprestimos") {
-            await carregarEmprestimosProfessor(true);
-            if (paginaAtiva === "inicio") atualizarTabelas();
+            totalConsultas++;
+            if (await carregarEmprestimosProfessor(true)) consultasSucesso++;
         }
-        if (paginaAtiva === "historico") await carregarHistoricoProfessor(true);
-        if (paginaAtiva === "calendario") await carregarCalendarioProfessor(true);
+        if (paginaAtiva === "historico") {
+            totalConsultas++;
+            if (await carregarHistoricoProfessor(true)) consultasSucesso++;
+        }
+        if (paginaAtiva === "calendario") {
+            totalConsultas++;
+            if (await carregarCalendarioProfessor(true)) consultasSucesso++;
+        }
+
+        if (totalConsultas > 0 && consultasSucesso === totalConsultas) {
+            const horario = new Date().toLocaleTimeString("pt-BR", { hour12: false });
+            console.info(`[ATUALIZAÇÃO AUTOMÁTICA] Painel atualizado às ${horario}`);
+        }
     } catch (erro) {
         console.error("Erro na atualização automática do Professor:", erro);
     } finally {
@@ -716,10 +740,15 @@ async function carregarEmprestimosProfessor(silencioso = false) {
             );
         }
 
+        const assinaturaAnterior = JSON.stringify(emprestimos);
         emprestimos = resultado.emprestimos || [];
-        atualizarTabelaEmprestimos();
+        if (!silencioso || assinaturaAnterior !== JSON.stringify(emprestimos)) {
+            atualizarTabelaEmprestimos();
+        }
+        return true;
     } catch (erro) {
         console.error("Erro ao carregar empréstimos:", erro);
+        return false;
     }
 }
 
@@ -812,9 +841,14 @@ async function carregarHistoricoProfessor(silencioso = false) {
             );
         }
 
+        const assinaturaAnterior = JSON.stringify(historicoProfessor);
         historicoProfessor = Array.isArray(resultado.emprestimos)
             ? resultado.emprestimos
             : [];
+
+        if (silencioso && assinaturaAnterior === JSON.stringify(historicoProfessor)) {
+            return true;
+        }
 
         const escapar = (valor) =>
             String(valor ?? "").replace(
@@ -1058,6 +1092,7 @@ async function carregarHistoricoProfessor(silencioso = false) {
                 aplicarFiltros();
             });
         });
+        return true;
     } catch (erro) {
         console.error("Erro ao carregar histórico:", erro);
 
@@ -1067,6 +1102,7 @@ async function carregarHistoricoProfessor(silencioso = false) {
                 <p>${String(erro.message || erro)}</p>
             </div>
         `;
+        return false;
     }
 }
 
