@@ -967,8 +967,7 @@ footer {
 .sidebar-collapsed .brand .icon-btn {
     position: absolute;
     top: 0;
-    left: 7px;
-    right: auto;
+    right: 7px;
     z-index: 2;
     width: 42px;
     height: 42px;
@@ -989,6 +988,7 @@ footer {
 .sidebar-collapsed .brand:focus-within .icon-btn {
     opacity: 1;
     pointer-events: auto;
+    background: var(--brown);
 }
 
 .sidebar-collapsed .brand .icon-btn:hover {
@@ -996,10 +996,7 @@ footer {
 }
 
 .sidebar-collapsed .brand img {
-    position: relative;
-    z-index: 1;
     pointer-events: none;
-    transition: opacity 0.16s ease;
 }
 
 .sidebar-collapsed .brand:hover img,
