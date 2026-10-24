@@ -216,10 +216,21 @@
         </section>
 
         <section class="bloco sistema-bloco tela-admin" data-pagina="sistema" id="sistema">
-            <div class="bloco-cabecalho compacto"><div><p class="sobretitulo">INFRAESTRUTURA</p><h2>Saúde do sistema</h2></div><i data-lucide="activity"></i></div>
-            <div class="sistema-linha"><span><i data-lucide="file-spreadsheet"></i> Conexão com a planilha escolar</span><strong id="statusPlanilha" class="status-verificando">Verificando...</strong></div>
-            <div class="sistema-linha"><span><i data-lucide="bell"></i> Avisos publicados</span><strong id="totalAvisos">—</strong></div>
-            <div class="sistema-linha"><span><i data-lucide="clock-3"></i> Última atualização</span><strong id="ultimaAtualizacao">—</strong></div>
+            <div class="bloco-cabecalho saude-cabecalho">
+                <div><p class="sobretitulo">MONITORAMENTO</p><h2>Saúde do sistema</h2><p>Verifique o servidor, a planilha e o tempo de resposta dos serviços.</p></div>
+                <button type="button" class="btn-primario" id="btnVerificarSaude"><i data-lucide="refresh-cw"></i>Verificar agora</button>
+            </div>
+            <div class="saude-grade">
+                <article class="saude-card"><span class="saude-icone"><i data-lucide="server"></i></span><div><small>Servidor / API</small><strong id="statusServidor" class="status-verificando">Verificando...</strong><p id="detalheServidor">Aguardando teste</p></div></article>
+                <article class="saude-card"><span class="saude-icone"><i data-lucide="file-spreadsheet"></i></span><div><small>Google Sheets</small><strong id="statusPlanilha" class="status-verificando">Verificando...</strong><p id="detalhePlanilha">Conexão com a planilha escolar</p></div></article>
+                <article class="saude-card"><span class="saude-icone"><i data-lucide="gauge"></i></span><div><small>Tempo de resposta</small><strong id="tempoRespostaSaude">—</strong><p>Tempo medido nesta verificação</p></div></article>
+                <article class="saude-card"><span class="saude-icone"><i data-lucide="bell"></i></span><div><small>Avisos publicados</small><strong id="totalAvisos">—</strong><p>Quantidade informada pelo painel</p></div></article>
+            </div>
+            <div class="saude-resumo"><span><i data-lucide="clock-3"></i> Última verificação</span><strong id="ultimaVerificacaoSaude">Ainda não verificado</strong></div>
+            <div class="saude-historico">
+                <div class="bloco-cabecalho compacto"><div><h3>Histórico de verificações</h3><p>Resultados das verificações realizadas nesta sessão.</p></div></div>
+                <div class="tabela-container"><table><thead><tr><th>Data e hora</th><th>Servidor / API</th><th>Google Sheets</th><th>Resposta</th></tr></thead><tbody id="historicoSaude"><tr><td colspan="4" class="vazio">Nenhuma verificação realizada.</td></tr></tbody></table></div>
+            </div>
         </section>
 
         <footer class="rodape"><span>Sistema de Estoque Escolar · Painel Administrativo</span><span>O acesso e as operações devem respeitar as permissões do servidor.</span></footer>
