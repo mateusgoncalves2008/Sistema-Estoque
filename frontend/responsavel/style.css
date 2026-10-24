@@ -969,6 +969,7 @@ footer {
     top: 0;
     left: 7px;
     right: auto;
+    z-index: 2;
     width: 42px;
     height: 42px;
     display: grid;
@@ -978,6 +979,7 @@ footer {
     border-radius: 12px;
     background: var(--brown);
     color: #fffdfa;
+    font-size: 20px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.16s ease, background 0.16s ease;
@@ -997,10 +999,12 @@ footer {
     position: relative;
     z-index: 1;
     pointer-events: none;
+    transition: opacity 0.16s ease;
 }
 
-.sidebar-collapsed .brand:has(.icon-btn:hover) img {
-    opacity: 0.18;
+.sidebar-collapsed .brand:hover img,
+.sidebar-collapsed .brand:focus-within img {
+    opacity: 0;
 }
 
 .sidebar-collapsed nav {
