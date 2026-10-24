@@ -2476,3 +2476,27 @@ body.reserva-modal-open {
     padding-top: 18px;
     border-top: 1px solid #ffffff24;
 }
+
+/* Mantém os contadores estáveis enquanto o relógio atualiza os segundos. */
+.hero-direita {
+    flex-shrink: 0;
+}
+
+.stats {
+    flex-shrink: 0;
+}
+
+.stat {
+    flex-shrink: 0;
+}
+
+.hero-relogio {
+    display: block;
+    flex: 0 0 8ch;
+    width: 8ch;
+    min-width: 8ch;
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
