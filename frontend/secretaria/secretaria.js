@@ -3085,3 +3085,28 @@ if (document.readyState === "loading") {
         configurarSugestoesTipoEvento();
     }
 })();
+
+
+// Menu lateral recolhível seguindo o padrão do painel Responsável.
+(() => {
+    const toggle = document.getElementById("sidebarToggle");
+    if (!toggle) return;
+    const atualizarIcone = () => {
+        const recolhido = document.body.classList.contains("sidebar-collapsed");
+        toggle.innerHTML = recolhido
+            ? '<i data-lucide="panel-left-open"></i>'
+            : '<i data-lucide="panel-left-close"></i>';
+        toggle.setAttribute("aria-label", recolhido ? "Expandir menu" : "Recolher menu");
+        toggle.title = recolhido ? "Expandir menu" : "Recolher menu";
+        if (window.lucide) window.lucide.createIcons();
+    };
+    if (localStorage.getItem("painelSecretariaSidebar") === "collapsed") {
+        document.body.classList.add("sidebar-collapsed");
+    }
+    atualizarIcone();
+    toggle.addEventListener("click", () => {
+        const recolhido = document.body.classList.toggle("sidebar-collapsed");
+        localStorage.setItem("painelSecretariaSidebar", recolhido ? "collapsed" : "expanded");
+        atualizarIcone();
+    });
+})();
