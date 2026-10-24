@@ -27,8 +27,12 @@ const pageInfo = {
     ],
     solicitacoes: ["Solicitações", "Pedidos relacionados ao seu setor."],
     bloqueios: [
-        "Bloqueios e denúncias",
-        "Gerencie bloqueios e encaminhe ocorrências à Secretaria.",
+        "Bloqueios por setor",
+        "Gerencie o acesso às reservas dos itens vinculados ao seu setor.",
+    ],
+    denuncias: [
+        "Denúncias",
+        "Consulte as denúncias encaminhadas à Secretaria.",
     ],
     perfil: ["Meu Perfil", "Consulte e atualize seus dados pessoais."],
 };
@@ -182,7 +186,7 @@ function openPage(page) {
 
     state.page = page;
 
-    if (page === "bloqueios") {
+    if (page === "bloqueios" || page === "denuncias") {
         carregarBloqueiosDenuncias();
     }
     if (page === "perfil") {
