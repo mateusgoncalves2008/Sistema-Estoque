@@ -69,7 +69,8 @@ async function carregarPainelAdmin() {
         await carregarRelatoriosAdmin();
         renderizarAtividadesAdmin(dados.atividadesRecentes || []);
         mostrarEstadoPainel("Dados carregados com sucesso da planilha escolar.", "sucesso");
-        elAdmin("ultimaAtualizacao").textContent = formatarData(dados.atualizadoEm);
+        const ultimaAtualizacao = elAdmin("ultimaAtualizacao");
+        if (ultimaAtualizacao) ultimaAtualizacao.textContent = formatarData(dados.atualizadoEm);
         verificarSaudeSistemaAdmin();
         if (window.lucide) window.lucide.createIcons();
     } catch (erro) {
