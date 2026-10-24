@@ -1343,16 +1343,24 @@ function iniciarEventos() {
     });
 
     const sidebarToggle = el("sidebarToggle");
+    const atualizarIconeSidebarResponsavel = () => {
+        if (!sidebarToggle) return;
+        const recolhido = document.body.classList.contains("sidebar-collapsed");
+        sidebarToggle.innerHTML = recolhido
+            ? '<i data-lucide="panel-left-open" aria-hidden="true"></i>'
+            : '<i data-lucide="panel-left-close" aria-hidden="true"></i>';
+        sidebarToggle.setAttribute("aria-label", recolhido ? "Expandir menu" : "Recolher menu");
+        sidebarToggle.setAttribute("title", recolhido ? "Expandir menu" : "Recolher menu");
+        if (window.lucide) window.lucide.createIcons();
+    };
+    if (localStorage.getItem("painelResponsavelSidebar") === "collapsed") {
+        document.body.classList.add("sidebar-collapsed");
+    }
+    atualizarIconeSidebarResponsavel();
     sidebarToggle?.addEventListener("click", () => {
         const recolhido = document.body.classList.toggle("sidebar-collapsed");
-        sidebarToggle.setAttribute(
-            "aria-label",
-            recolhido ? "Expandir menu" : "Recolher menu",
-        );
-        sidebarToggle.setAttribute(
-            "title",
-            recolhido ? "Expandir menu" : "Recolher menu",
-        );
+        localStorage.setItem("painelResponsavelSidebar", recolhido ? "collapsed" : "expanded");
+        atualizarIconeSidebarResponsavel();
     });
 
     el("menuButton")?.addEventListener("click", () => {
