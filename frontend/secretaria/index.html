@@ -76,9 +76,13 @@
         </svg>
 
         <div class="app">
-            <aside>
+            <aside class="sidebar" id="sidebar">
                 <div class="brand">
-                    Secretaria<small>Painel de gestão escolar</small>
+                    <img class="brand-logo" src="../img/logo_cor.png" alt="Logo da escola" />
+                    <div class="brand-texto">Secretaria<small>Painel de gestão escolar</small></div>
+                    <button type="button" class="sidebar-toggle-secretaria" id="sidebarToggle" aria-label="Recolher menu" title="Recolher menu">
+                        <i data-lucide="panel-left-close"></i>
+                    </button>
                 </div>
 
                 <nav>
@@ -1079,6 +1083,7 @@
         </div>
         <div id="toast"></div>
 
+        <script src="/lucide/lucide.min.js"></script>
         <script src="./secretaria.js"></script>
     </body>
 </html>
