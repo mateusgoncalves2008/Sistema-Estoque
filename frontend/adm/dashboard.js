@@ -33,11 +33,13 @@ function mostrarEstadoPainel(texto, tipo = "") {
     elemento.className = `mensagem-estado ${tipo}`.trim();
 }
 
-async function carregarPainelAdmin() {
+async function carregarPainelAdmin(silencioso = false) {
     const atualizar = elAdmin("btnAtualizar");
-    atualizar.disabled = true;
-    atualizar.classList.add("girando");
-    mostrarEstadoPainel("Carregando dados administrativos da planilha...");
+    if (!silencioso) {
+        atualizar.disabled = true;
+        atualizar.classList.add("girando");
+        mostrarEstadoPainel("Carregando dados administrativos da planilha...");
+    }
 
     try {
         const resposta = await fetch(`${API_ADMIN}/admin/dashboard`, {
@@ -68,17 +70,19 @@ async function carregarPainelAdmin() {
         await carregarOperacoesAdmin();
         await carregarRelatoriosAdmin();
         renderizarAtividadesAdmin(dados.atividadesRecentes || []);
-        mostrarEstadoPainel("Dados carregados com sucesso da planilha escolar.", "sucesso");
+        if (!silencioso) mostrarEstadoPainel("Dados carregados com sucesso da planilha escolar.", "sucesso");
         const ultimaAtualizacao = elAdmin("ultimaAtualizacao");
         if (ultimaAtualizacao) ultimaAtualizacao.textContent = formatarData(dados.atualizadoEm);
-        verificarSaudeSistemaAdmin();
+        if (!silencioso) verificarSaudeSistemaAdmin();
         if (window.lucide) window.lucide.createIcons();
     } catch (erro) {
         console.error("Erro ao carregar Painel ADM:", erro);
-        mostrarEstadoPainel(`${erro.message} Use o botão de atualizar para tentar novamente.`, "erro");
+        if (!silencioso) mostrarEstadoPainel(`${erro.message} Use o botão de atualizar para tentar novamente.`, "erro");
     } finally {
-        atualizar.disabled = false;
-        atualizar.classList.remove("girando");
+        if (!silencioso) {
+            atualizar.disabled = false;
+            atualizar.classList.remove("girando");
+        }
     }
 }
 
@@ -761,6 +765,19 @@ function configurarMenuAdmin() {
 }
 
 elAdmin("btnAtualizar").addEventListener("click", carregarPainelAdmin);
+
+let atualizacaoSilenciosaAdminEmAndamento = false;
+window.setInterval(async () => {
+    if (atualizacaoSilenciosaAdminEmAndamento || document.visibilityState !== "visible") return;
+    const ativo = document.activeElement;
+    if (ativo?.matches("input, textarea, select, [contenteditable='true']")) return;
+    if (document.querySelector('dialog[open], [role="dialog"]:not([hidden]), .modal.show, .modal.aberto')) return;
+    if (document.querySelector("form [aria-busy='true'], form button:disabled")) return;
+    if (elAdmin("btnAtualizar")?.disabled) return;
+    atualizacaoSilenciosaAdminEmAndamento = true;
+    try { await carregarPainelAdmin(true); }
+    finally { atualizacaoSilenciosaAdminEmAndamento = false; }
+}, 30000);
 elAdmin("btnVerificarSaude")?.addEventListener("click", verificarSaudeSistemaAdmin);
 elAdmin("btnVerTodosLogs").addEventListener("click", async () => { mudarTelaAdmin("logs"); if (!logsCompletosAdmin.length) await carregarLogsCompletosAdmin(); });
 elAdmin("btnVoltarAtividades").addEventListener("click", () => mudarTelaAdmin("atividades"));
