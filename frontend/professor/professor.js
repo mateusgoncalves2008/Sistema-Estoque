@@ -1176,10 +1176,16 @@ async function carregarPerfilProfessor() {
         // Nome no rodapé do menu
         document.getElementById("nomeUsuario").textContent = nomeCompleto;
 
-        // Inicial do avatar
+        // Inicial do avatar e função exibida no rodapé do menu
         document.getElementById("avatar").textContent = nomeCompleto
             .charAt(0)
-            .toUpperCase();
+            .toLocaleUpperCase("pt-BR");
+        const papel = String(usuario.tipoUsuario || usuario.tipo || usuario.perfil || "Professor").trim();
+        const papelFormatado = papel.toUpperCase() === "PROFESSOR"
+            ? "Professor"
+            : papel.charAt(0).toLocaleUpperCase("pt-BR") + papel.slice(1).toLocaleLowerCase("pt-BR");
+        const papelEl = document.getElementById("papelUsuario");
+        if (papelEl) papelEl.textContent = papelFormatado;
 
         // Dados do perfil
         document.getElementById("perfilNome").textContent = nomeCompleto;
