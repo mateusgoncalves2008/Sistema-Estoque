@@ -85,6 +85,22 @@ window.addEventListener("pageshow", () => {
     }
 });
 
+function atualizarIdentidadeMenuSecretaria() {
+    const usuario = obterUsuarioLogado() || {};
+    const nome = String(usuario.nome || usuario.nomeCompleto || usuario.email || "Usuário").trim();
+    const tipo = String(usuario.tipoUsuario || usuario.tipo || usuario.perfil || "Secretaria").toUpperCase();
+    const papel = tipo === "ADMIN" || tipo === "ADM" ? "Administrador" :
+        tipo === "LIDER" || tipo === "RESPONSAVEL" ? "Responsável" :
+        tipo === "CONSULTA" ? "Secretaria" : tipo.charAt(0) + tipo.slice(1).toLowerCase();
+    const nomeEl = document.getElementById("sidebarAccountName");
+    const papelEl = document.getElementById("sidebarAccountRole");
+    const avatarEl = document.getElementById("sidebarAccountAvatar");
+    if (nomeEl) nomeEl.textContent = nome;
+    if (papelEl) papelEl.textContent = papel;
+    if (avatarEl) avatarEl.textContent = nome.charAt(0).toUpperCase() || "U";
+}
+atualizarIdentidadeMenuSecretaria();
+
 function headersAPI() {
     const usuario = obterUsuarioLogado();
 
