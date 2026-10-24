@@ -486,7 +486,7 @@ function renderizarLogsCompletosAdmin() {
     const tabela = elAdmin("tabelaLogsAdmin");
     if (!pagina.length) { tabela.innerHTML = '<tr><td colspan="7" class="vazio">Nenhum log corresponde à pesquisa.</td></tr>'; }
     else {
-        tabela.innerHTML = pagina.map(log => `<tr><td>${escaparAdmin(log.dataHora || "—")}</td><td><strong>${escaparAdmin(log.usuarioNome || "Sistema")}</strong>${log.usuarioID ? `<small class="log-id-usuario">${escaparAdmin(log.usuarioID)}</small>` : ""}</td><td>${escaparAdmin(log.acao || "—")}</td><td>${escaparAdmin(log.tabela || "—")}</td><td>${escaparAdmin(log.registroID || "—")}</td><td class="log-descricao">${escaparAdmin(log.descricao || "—")}</td><td>${escaparAdmin(log.resultado || "—")}</td></tr>`).join("");
+        tabela.innerHTML = pagina.map(log => `<tr><td>${escaparAdmin(log.dataHora || "—")}</td><td><strong>${escaparAdmin(log.usuarioNome || "Sistema")}</strong></td><td>${escaparAdmin(log.acao || "—")}</td><td class="log-descricao">${escaparAdmin(log.descricao || "—")}</td><td>${escaparAdmin(log.resultado || "—")}</td></tr>`).join("");
     }
     elAdmin("resumoLogsAdmin").textContent = `${filtrados.length.toLocaleString("pt-BR")} registro(s) encontrado(s) • ${logsCompletosAdmin.length.toLocaleString("pt-BR")} no total`;
     elAdmin("paginaLogsAdmin").textContent = `Página ${paginaLogsAtualAdmin} de ${totalPaginas}`;
