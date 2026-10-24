@@ -460,12 +460,12 @@ function viewInicio() {
     <div class="hero-direita">
         <div class="stats">
             <div class="stat">
-                <b>${livrosLidos}</b>
+                <b id="livrosLidosAluno">${livrosLidos}</b>
                 <span>Livros lidos</span>
             </div>
 
             <div class="stat">
-                <b>${computadoresUsados}</b>
+                <b id="computadoresUsadosAluno">${computadoresUsados}</b>
                 <span>Computadores</span>
             </div>
         </div>
@@ -2769,8 +2769,13 @@ async function atualizarDadosAutomaticamenteAluno() {
         ]);
 
         // Evita redesenhar telas com formularios ou controles em uso.
+        // Na tela inicial, atualiza os contadores diretamente para evitar
+        // redesenhar o hero e causar um breve piscar na imagem de fundo.
+        if (page === "inicio") {
+            atualizarContadoresInicioAluno();
+        }
+
         const paginaPodeAtualizar =
-            page === "inicio" ||
             page === "reservas" ||
             page === "emprestimos" ||
             page === "historico";
@@ -2835,6 +2840,45 @@ async function iniciarPainel() {
     } finally {
         esconderCarregamento();
     }
+}
+
+function atualizarContadoresInicioAluno() {
+    const reservasConcluidas = reservas.filter(
+        (reserva) =>
+            String(reserva.status || "").trim().toUpperCase() === "CONCLUIDO",
+    );
+
+    const livrosLidos = reservasConcluidas.filter((reserva) => {
+        const tipo = String(
+            reserva.categoriaNome ||
+                reserva.nomeCategoria ||
+                reserva.subcategoriaNome ||
+                reserva.tipo ||
+                reserva.itemTipo ||
+                "",
+        ).toLowerCase();
+
+        return tipo.includes("livro") || tipo.includes("biblioteca");
+    }).length;
+
+    const computadoresUsados = reservasConcluidas.filter((reserva) => {
+        const tipo = String(
+            reserva.categoriaNome ||
+                reserva.nomeCategoria ||
+                reserva.subcategoriaNome ||
+                reserva.tipo ||
+                reserva.itemTipo ||
+                "",
+        ).toLowerCase();
+
+        return tipo.includes("computador") || tipo.includes("informática");
+    }).length;
+
+    const livrosEl = document.getElementById("livrosLidosAluno");
+    const computadoresEl = document.getElementById("computadoresUsadosAluno");
+
+    if (livrosEl) livrosEl.textContent = livrosLidos;
+    if (computadoresEl) computadoresEl.textContent = computadoresUsados;
 }
 
 function atualizarRelogioAluno() {
