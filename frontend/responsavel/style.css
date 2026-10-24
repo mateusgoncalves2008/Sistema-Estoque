@@ -2676,3 +2676,46 @@ footer {
 .sidebar-account-info small { margin-top: 3px; color: #d7c9bd; font-size: 11px; }
 body.sidebar-collapsed .sidebar-account { justify-content: center; padding: 12px 0; }
 body.sidebar-collapsed .sidebar-account-info { display: none; }
+
+
+/* Barras de pesquisa maiores em Bloqueios e Denúncias */
+#page-bloqueios .stock-toolbar #blockedUserSearch,
+#page-denuncias .report-toolbar #reportSearch {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    flex: 1 1 560px;
+    min-height: 48px;
+    padding: 12px 15px;
+    border: 1px solid #dfcfc1;
+    border-radius: 12px;
+    background: #fffdfa;
+    color: var(--text);
+    font: inherit;
+}
+
+#page-bloqueios .stock-toolbar #blockedUserSearch:focus,
+#page-denuncias .report-toolbar #reportSearch:focus {
+    outline: none;
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px #c957301b;
+}
+
+#page-denuncias .report-toolbar {
+    justify-content: space-between;
+    width: 100%;
+    margin: 0 0 18px;
+}
+
+@media (max-width: 768px) {
+    #page-bloqueios .stock-toolbar #blockedUserSearch,
+    #page-denuncias .report-toolbar #reportSearch {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    #page-denuncias .report-toolbar #newReportButton {
+        width: 100%;
+    }
+}
