@@ -971,15 +971,36 @@ body.sidebar-collapsed .logo-box {
     min-width: 48px;
 }
 
+body.sidebar-collapsed .sidebar-top {
+    position: relative;
+    min-height: 70px;
+    padding-bottom: 18px;
+}
 body.sidebar-collapsed .sidebar-toggle {
     position: absolute;
-    top: 76px;
-    right: 10px;
-    width: 32px;
-    height: 32px;
-    background: var(--primary);
+    top: 0;
+    left: 0;
+    right: auto;
+    z-index: 2;
+    width: 48px;
+    height: 48px;
+    background: var(--sidebar-bg, var(--primary));
     color: #fff;
-    border-radius: 9px;
+    border-radius: 10px;
+    opacity: 0;
+    pointer-events: none;
+}
+body.sidebar-collapsed .sidebar-top:hover .sidebar-toggle,
+body.sidebar-collapsed .sidebar-top:focus-within .sidebar-toggle {
+    opacity: 1;
+    pointer-events: auto;
+}
+body.sidebar-collapsed .sidebar-top:hover .logo-box,
+body.sidebar-collapsed .sidebar-top:focus-within .logo-box {
+    opacity: 0;
+}
+body.sidebar-collapsed .logo-box {
+    transition: opacity .16s ease;
 }
 
 body.sidebar-collapsed .sidebar-nav {
