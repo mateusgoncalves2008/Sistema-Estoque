@@ -120,7 +120,17 @@ async function api(url, opcoes = {}) {
    CARREGAR DADOS REAIS
 ========================================================= */
 
+function assinaturaEstadoSecretaria() {
+    return JSON.stringify({
+        users, prods, reservas, emps, movs, registrosBloqueios, registrosDenuncias,
+        series, teachers, evs, audit, disciplinas, professorTurmas, locais,
+        categorias, acervoProdutos, acervoLocais, acervoCategorias,
+        emprestimosCalendario, turmasParaGraficos, indicadores, cfg,
+    });
+}
+
 async function carregarDados(silencioso = false) {
+    const estadoAnterior = silencioso ? assinaturaEstadoSecretaria() : null;
     try {
         const [dados, dadosTurmas, dadosUsuarios, dadosAcervo, dadosMovimentacoes, dadosBloqueios, dadosDenuncias, dadosCalendario, dadosEmprestimos] = await Promise.all([
             api("/secretaria/dashboard"),
@@ -296,7 +306,15 @@ async function carregarDados(silencioso = false) {
 
         cfg.limite = Number.isFinite(limite) ? limite : 3;
 
-        draw(!silencioso);
+        const dadosMudaram = estadoAnterior !== assinaturaEstadoSecretaria();
+
+        // Só redesenha a página quando for uma carga manual ou houver mudança real.
+        if (!silencioso || dadosMudaram) draw(!silencioso);
+
+        if (silencioso) {
+            const horario = new Date().toLocaleTimeString("pt-BR", { hour12: false });
+            console.info(`[ATUALIZAÇÃO AUTOMÁTICA] Painel atualizado às ${horario}`);
+        }
     } catch (erro) {
         console.error("Erro ao carregar Secretaria:", erro);
 
