@@ -250,21 +250,18 @@ main {
 }
 
 .refresh {
-    width: 42px;
-    height: 42px;
+    width: 48px;
+    height: 48px;
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 15px;
     background: var(--white);
     color: var(--brown);
     box-shadow: var(--shadow);
-    transition:
-        transform 0.4s,
-        background 0.2s;
+    transition: background 0.2s;
 }
 
 .refresh:hover {
     background: var(--beige);
-    transform: rotate(30deg);
 }
 
 /* AVISOS */
@@ -326,7 +323,8 @@ main {
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 1.4px;
-    color: #f0b18f;
+    color: #fffdfa;
+    text-shadow: 0 2px 5px #24140ed9;
 }
 
 .hero h2 {
@@ -337,8 +335,9 @@ main {
 
 .hero p {
     margin: 0 0 15px;
-    color: #ffe2cc;
+    color: #fffdfa;
     font-size: 14px;
+    text-shadow: 0 2px 5px #24140ed9;
 }
 
 .hero-tag {
@@ -2582,6 +2581,9 @@ footer {
     z-index: 2147483647;
     display: grid;
     place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 15px;
 }
 .botao-avisos-responsavel {
     z-index: 2147483646;
@@ -2593,7 +2595,7 @@ footer {
     #refreshButton.refresh {
         top: 64px;
         right: 14px;
-        width: 42px;
-        height: 42px;
+        width: 48px;
+        height: 48px;
     }
 }
