@@ -3,6 +3,10 @@ const API_ADMIN = "/api";
 let usuariosAdmin = [];
 let dadosPainelAdmin = null;
 let logsCompletosAdmin = [];
+let assinaturaEstoqueAdmin = null;
+let assinaturaOperacoesAdmin = null;
+let assinaturaRelatoriosAdmin = null;
+let assinaturaAtividadesAdmin = null;
 let paginaLogsAtualAdmin = 1;
 const TAMANHO_PAGINA_LOGS = 50;
 
@@ -62,10 +66,13 @@ async function carregarPainelAdmin(silencioso = false) {
             throw new Error(dados.mensagem || "Não foi possível carregar o painel.");
         }
 
+        const usuariosAnteriores = JSON.stringify(usuariosAdmin);
         dadosPainelAdmin = dados;
         usuariosAdmin = Array.isArray(dados.usuarios) ? dados.usuarios : [];
         renderizarResumoAdmin(dados);
-        renderizarUsuariosAdmin();
+        if (!silencioso || usuariosAnteriores !== JSON.stringify(usuariosAdmin)) {
+            renderizarUsuariosAdmin();
+        }
         await carregarEstoqueAdmin();
         await carregarOperacoesAdmin();
         await carregarRelatoriosAdmin();
@@ -73,7 +80,12 @@ async function carregarPainelAdmin(silencioso = false) {
         if (!silencioso) mostrarEstadoPainel("Dados carregados com sucesso da planilha escolar.", "sucesso");
         const ultimaAtualizacao = elAdmin("ultimaAtualizacao");
         if (ultimaAtualizacao) ultimaAtualizacao.textContent = formatarData(dados.atualizadoEm);
-        if (!silencioso) verificarSaudeSistemaAdmin();
+        if (!silencioso) {
+            verificarSaudeSistemaAdmin();
+        } else {
+            const horario = new Date().toLocaleTimeString("pt-BR", { hour12: false });
+            console.info(`[ATUALIZAÇÃO AUTOMÁTICA] Painel atualizado às ${horario}`);
+        }
         if (window.lucide) window.lucide.createIcons();
     } catch (erro) {
         console.error("Erro ao carregar Painel ADM:", erro);
@@ -293,6 +305,9 @@ async function carregarOperacoesAdmin() {
         const dados = await resposta.json();
         if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar as operações.");
         const termoBuscaOperacoes = String(elAdmin("buscarOperacoesAdmin")?.value || "").trim().toLocaleLowerCase("pt-BR");
+        const assinatura = JSON.stringify({ dados, termoBuscaOperacoes });
+        if (assinatura === assinaturaOperacoesAdmin) return;
+        assinaturaOperacoesAdmin = assinatura;
         const correspondeUsuario = (registro) => String(registro.usuario || registro.usuarioNome || registro.nomeUsuario || registro.usuarioID || "").toLocaleLowerCase("pt-BR").includes(termoBuscaOperacoes);
         const reservas = dados.reservas || [];
         const reservasVisiveis = reservas.filter((r) => {
@@ -374,14 +389,17 @@ async function carregarRelatoriosAdmin() {
         const resp = await fetch(API_ADMIN + "/admin/denuncias-bloqueios", { credentials: "include", headers: { Accept: "application/json" } });
         const dados = await resp.json();
         if (!resp.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar denúncias e bloqueios.");
-        const denuncias = dados.denuncias || [];
         const termoDenuncias = String(elAdmin("buscarDenunciasAdmin")?.value || "").trim().toLocaleLowerCase("pt-BR");
+        const termoBloqueios = String(elAdmin("buscarBloqueiosAdmin")?.value || "").trim().toLocaleLowerCase("pt-BR");
+        const assinatura = JSON.stringify({ dados, termoDenuncias, termoBloqueios });
+        if (assinatura === assinaturaRelatoriosAdmin) return;
+        assinaturaRelatoriosAdmin = assinatura;
+        const denuncias = dados.denuncias || [];
         const denunciasFiltradas = denuncias.filter((d) => String([d.denuncianteNome, d.denuncianteID, d.denunciadoNome, d.denunciadoID].filter(Boolean).join(" ")).toLocaleLowerCase("pt-BR").includes(termoDenuncias));
         tabelaD.innerHTML = denunciasFiltradas.length ? denunciasFiltradas.slice().reverse().map((d) =>
             "<tr><td>" + escaparAdmin(d.denuncianteNome || d.denuncianteID) + "</td><td>" + escaparAdmin(d.denunciadoNome || d.denunciadoID) + "</td><td>" + escaparAdmin(d.motivo) + "</td><td>" + escaparAdmin(d.status || "—") + "</td><td><button class=\"btn-acao-usuario\" type=\"button\" data-denuncia-id=\"" + escaparAdmin(d.denunciaID) + "\">Analisar / responder</button></td></tr>"
         ).join("") : '<tr><td colspan="5" class="vazio">' + (termoDenuncias ? 'Nenhuma denúncia encontrada para esse usuário.' : 'Nenhuma denúncia registrada.') + '</td></tr>';
         const bloqueios = dados.bloqueios || [];
-        const termoBloqueios = String(elAdmin("buscarBloqueiosAdmin")?.value || "").trim().toLocaleLowerCase("pt-BR");
         const bloqueiosFiltrados = bloqueios.filter((b) => String([b.usuarioBloqueadoNome, b.usuarioBloqueadoID].filter(Boolean).join(" ")).toLocaleLowerCase("pt-BR").includes(termoBloqueios));
         tabelaB.innerHTML = bloqueiosFiltrados.length ? bloqueiosFiltrados.slice().reverse().map((b) =>
             "<tr><td>" + escaparAdmin(b.usuarioBloqueadoNome || b.usuarioBloqueadoID) + "</td><td>" + escaparAdmin(b.setorNome || b.setorID) + "</td><td>" + escaparAdmin(b.motivo) + "</td><td>" + escaparAdmin(b.status || "—") + "</td></tr>"
@@ -423,6 +441,9 @@ async function carregarEstoqueAdmin() {
         const resposta = await fetch(API_ADMIN + "/admin/estoque", { credentials: "include", headers: { Accept: "application/json" } });
         const dados = await resposta.json();
         if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar o estoque.");
+        const assinatura = JSON.stringify(dados);
+        if (assinatura === assinaturaEstoqueAdmin) return;
+        assinaturaEstoqueAdmin = assinatura;
         const produtos = dados.produtos || [];
         tabelaP.innerHTML = produtos.length ? produtos.map((p) =>
             "<tr><td>" + escaparAdmin(p.nome) + "</td><td>" + escaparAdmin(p.categoria || p.categoriaID) + "</td><td>" + escaparAdmin(p.subcategoria || p.subcategoriaID) + "</td><td>" + escaparAdmin(p.status) + "</td></tr>"
@@ -438,6 +459,9 @@ async function carregarEstoqueAdmin() {
 }
 
 function renderizarAtividadesAdmin(atividades) {
+    const assinatura = JSON.stringify(atividades || []);
+    if (assinatura === assinaturaAtividadesAdmin) return;
+    assinaturaAtividadesAdmin = assinatura;
     const lista = elAdmin("listaAtividades");
     if (!atividades.length) {
         lista.innerHTML = '<p class="vazio">Nenhum registro encontrado na aba de auditoria.</p>';
