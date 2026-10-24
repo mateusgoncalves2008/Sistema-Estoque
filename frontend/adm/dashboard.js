@@ -68,6 +68,7 @@ async function carregarPainelAdmin(silencioso = false) {
 
         const usuariosAnteriores = JSON.stringify(usuariosAdmin);
         dadosPainelAdmin = dados;
+        atualizarIdentidadeContaAdmin(dados);
         usuariosAdmin = Array.isArray(dados.usuarios) ? dados.usuarios : [];
         renderizarResumoAdmin(dados);
         if (!silencioso || usuariosAnteriores !== JSON.stringify(usuariosAdmin)) {
@@ -96,6 +97,37 @@ async function carregarPainelAdmin(silencioso = false) {
             atualizar.classList.remove("girando");
         }
     }
+}
+
+function atualizarIdentidadeContaAdmin(dados = dadosPainelAdmin) {
+    let usuario = {};
+    try {
+        usuario = JSON.parse(sessionStorage.getItem("usuarioLogado") || "{}");
+    } catch {
+        usuario = {};
+    }
+
+    const administrador = dados?.administrador || {};
+    const nome = String(
+        administrador.nome || administrador.Nome ||
+        usuario.nome || usuario.nomeCompleto || usuario.email || "Administrador"
+    ).trim();
+    const tipo = String(
+        administrador.tipoUsuario || administrador.tipo || administrador.perfil ||
+        usuario.tipoUsuario || usuario.tipo || usuario.perfil || "ADMIN"
+    ).trim().toUpperCase();
+    const papel = ["ADMIN", "ADM", "ADMINISTRADOR"].includes(tipo)
+        ? "Administrador"
+        : tipo === "LIDER" || tipo === "RESPONSAVEL"
+            ? "Responsável"
+            : tipo.charAt(0) + tipo.slice(1).toLowerCase();
+
+    const nomeEl = elAdmin("nomeContaAdmin");
+    const papelEl = elAdmin("papelContaAdmin");
+    const avatarEl = elAdmin("avatarContaAdmin");
+    if (nomeEl) nomeEl.textContent = nome;
+    if (papelEl) papelEl.textContent = papel;
+    if (avatarEl) avatarEl.textContent = nome.charAt(0).toLocaleUpperCase("pt-BR") || "A";
 }
 
 function renderizarResumoAdmin(dados) {
