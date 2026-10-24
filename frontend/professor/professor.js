@@ -102,13 +102,15 @@ function eventosVisiveisCalProf() {
         .filter((e) => e.data);
 }
 
-function carregarCalendarioProfessor() {
+function carregarCalendarioProfessor(silencioso = false) {
     const area = document.getElementById("calendarioProfessor");
     if (!area) return;
 
-    area.innerHTML = `
-        <div class="cal-prof-loading">Carregando calendário escolar...</div>
-    `;
+    if (!silencioso) {
+        area.innerHTML = `
+            <div class="cal-prof-loading">Carregando calendário escolar...</div>
+        `;
+    }
 
     if (window.lucide) {
         window.lucide.createIcons();
@@ -132,6 +134,8 @@ function carregarCalendarioProfessor() {
         })
         .catch((erro) => {
             console.error("Erro no calendário:", erro);
+            if (silencioso) return;
+
             area.innerHTML = `
                 <div class="cal-prof-empty">
                     Não foi possível carregar os eventos da escola.
@@ -478,6 +482,43 @@ function atualizarRelogio() {
 atualizarRelogio();
 setInterval(atualizarRelogio, 1000);
 
+/* Atualização silenciosa: não troca a tela inteira nem interrompe campos em uso. */
+let atualizacaoSilenciosaProfessorEmAndamento = false;
+
+function podeAtualizarProfessorSilenciosamente() {
+    if (document.visibilityState !== "visible") return false;
+    const ativo = document.activeElement;
+    if (ativo?.matches("input, textarea, select, [contenteditable='true']")) return false;
+    if (document.querySelector('dialog[open], [role="dialog"]:not([hidden]), .modal.show, .modal.aberto')) return false;
+    if (document.querySelector("form [aria-busy='true'], form button:disabled")) return false;
+    return true;
+}
+
+async function atualizarDadosAutomaticamenteProfessor() {
+    if (atualizacaoSilenciosaProfessorEmAndamento || !podeAtualizarProfessorSilenciosamente()) return;
+    const paginaAtiva = document.querySelector(".page.active")?.id?.replace("page-", "");
+    if (!["inicio", "reservas", "emprestimos", "historico", "calendario"].includes(paginaAtiva)) return;
+    atualizacaoSilenciosaProfessorEmAndamento = true;
+    try {
+        if (paginaAtiva === "inicio" || paginaAtiva === "reservas") {
+            await carregarReservasProfessor(true);
+            atualizarTabelas();
+        }
+        if (paginaAtiva === "inicio" || paginaAtiva === "emprestimos") {
+            await carregarEmprestimosProfessor(true);
+            if (paginaAtiva === "inicio") atualizarTabelas();
+        }
+        if (paginaAtiva === "historico") await carregarHistoricoProfessor(true);
+        if (paginaAtiva === "calendario") carregarCalendarioProfessor(true);
+    } catch (erro) {
+        console.error("Erro na atualização automática do Professor:", erro);
+    } finally {
+        atualizacaoSilenciosaProfessorEmAndamento = false;
+    }
+}
+
+window.setInterval(atualizarDadosAutomaticamenteProfessor, 30000);
+
 function atualizarTabelas() {
     console.log("ITENS_PESQUISA:", typeof ITENS_PESQUISA, ITENS_PESQUISA);
     console.log("tabelaItens:", document.getElementById("tabelaItens"));
@@ -624,10 +665,10 @@ carregarAvisosProfessor();
 
 if (window.lucide) lucide.createIcons();
 
-async function carregarReservasProfessor() {
+async function carregarReservasProfessor(silencioso = false) {
     if (!usuarioLogado?.id) {
         reservas = [];
-        showToast("Não foi possível identificar o usuário logado.");
+        if (!silencioso) showToast("Não foi possível identificar o usuário logado.");
         return false;
     }
 
@@ -647,12 +688,12 @@ async function carregarReservasProfessor() {
         return true;
     } catch (erro) {
         console.error("Erro ao carregar reservas do professor:", erro);
-        showToast("Não foi possível carregar suas reservas.");
+        if (!silencioso) showToast("Não foi possível carregar suas reservas.");
         return false;
     }
 }
 
-async function carregarEmprestimosProfessor() {
+async function carregarEmprestimosProfessor(silencioso = false) {
     const usuario = JSON.parse(
         sessionStorage.getItem("usuarioLogado") || "null",
     );
@@ -740,7 +781,7 @@ function viewEmprestimos() {
     `;
 }
 
-async function carregarHistoricoProfessor() {
+async function carregarHistoricoProfessor(silencioso = false) {
     const area = document.getElementById("conteudoHistorico");
     const usuario = JSON.parse(
         sessionStorage.getItem("usuarioLogado") || "null",
@@ -754,7 +795,9 @@ async function carregarHistoricoProfessor() {
         return;
     }
 
-    area.innerHTML = '<p class="empty">Carregando histórico...</p>';
+    if (!silencioso) {
+        area.innerHTML = '<p class="empty">Carregando histórico...</p>';
+    }
 
     try {
         const resposta = await fetch(
