@@ -460,7 +460,7 @@ window.addEventListener("pageshow", (evento) => {
 
 async function carregarLogsCompletosAdmin() {
     const tabela = elAdmin("tabelaLogsAdmin");
-    tabela.innerHTML = '<tr><td colspan="7" class="vazio">Carregando logs...</td></tr>';
+    tabela.innerHTML = '<tr><td colspan="5" class="vazio">Carregando logs...</td></tr>';
     elAdmin("resumoLogsAdmin").textContent = "Carregando histórico completo...";
     try {
         const resposta = await fetch(`${API_ADMIN}/admin/logs`, { method: "GET", credentials: "include", headers: { Accept: "application/json" } });
@@ -471,7 +471,7 @@ async function carregarLogsCompletosAdmin() {
         paginaLogsAtualAdmin = 1;
         renderizarLogsCompletosAdmin();
     } catch (erro) {
-        tabela.innerHTML = `<tr><td colspan="7" class="vazio">${escaparAdmin(erro.message)}</td></tr>`;
+        tabela.innerHTML = `<tr><td colspan="5" class="vazio">${escaparAdmin(erro.message)}</td></tr>`;
         elAdmin("resumoLogsAdmin").textContent = "Falha ao carregar o histórico.";
     }
 }
@@ -484,7 +484,7 @@ function renderizarLogsCompletosAdmin() {
     const inicio = (paginaLogsAtualAdmin - 1) * TAMANHO_PAGINA_LOGS;
     const pagina = filtrados.slice(inicio, inicio + TAMANHO_PAGINA_LOGS);
     const tabela = elAdmin("tabelaLogsAdmin");
-    if (!pagina.length) { tabela.innerHTML = '<tr><td colspan="7" class="vazio">Nenhum log corresponde à pesquisa.</td></tr>'; }
+    if (!pagina.length) { tabela.innerHTML = '<tr><td colspan="5" class="vazio">Nenhum log corresponde à pesquisa.</td></tr>'; }
     else {
         tabela.innerHTML = pagina.map(log => `<tr><td>${escaparAdmin(log.dataHora || "—")}</td><td><strong>${escaparAdmin(log.usuarioNome || "Sistema")}</strong></td><td>${escaparAdmin(log.acao || "—")}</td><td class="log-descricao">${escaparAdmin(log.descricao || "—")}</td><td>${escaparAdmin(log.resultado || "—")}</td></tr>`).join("");
     }
