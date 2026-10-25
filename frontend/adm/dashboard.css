@@ -924,3 +924,9 @@ tbody tr:hover { background: #fdfbf8; }
         box-sizing: border-box !important;
     }
 }
+
+
+/* Dá espaço abaixo do botão Sair no menu administrativo */
+.sidebar-rodape .btn-sair {
+    margin-bottom: 18px;
+}
