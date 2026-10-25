@@ -801,7 +801,7 @@ function configurarAvisosAdmin() {
 
 function converterParaCSVAdmin(cabecalhos, linhas) {
     const escaparCSV = (valor) => '"' + String(valor ?? "").replace(/"/g, '""') + '"';
-    return "\\uFEFF" + [cabecalhos, ...linhas].map((linha) => linha.map(escaparCSV).join(";")).join("\\r\\n");
+    return String.fromCharCode(0xFEFF) + [cabecalhos, ...linhas].map((linha) => linha.map(escaparCSV).join(";")).join(String.fromCharCode(13, 10));
 }
 
 async function exportarRelatorioAdmin(tipo) {
