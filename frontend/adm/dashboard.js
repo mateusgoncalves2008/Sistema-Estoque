@@ -675,9 +675,92 @@ function renderizarLogsCompletosAdmin() {
     elAdmin("btnLogsProxima").disabled = paginaLogsAtualAdmin >= totalPaginas;
 }
 
+let avisosAdminCache = [];
+
+async function carregarAvisosAdmin() {
+    const lista = elAdmin("listaAvisosAdmin");
+    if (!lista) return;
+    lista.innerHTML = '<p class="vazio">Carregando avisos da planilha...</p>';
+    try {
+        const resposta = await fetch(API_ADMIN + "/secretaria/avisos", {
+            method: "GET",
+            credentials: "include",
+            headers: { Accept: "application/json" },
+            cache: "no-store",
+        });
+        const dados = await resposta.json();
+        if (resposta.status === 401) { window.location.replace("/index.html"); return; }
+        if (!resposta.ok || !dados.sucesso) throw new Error(dados.erro || "Não foi possível carregar os avisos.");
+        avisosAdminCache = Array.isArray(dados.avisos) ? dados.avisos : [];
+        if (!avisosAdminCache.length) {
+            lista.innerHTML = '<p class="vazio">Ainda não há avisos publicados.</p>';
+            return;
+        }
+        lista.innerHTML = avisosAdminCache.map((aviso) => {
+            const urgente = String(aviso.prioridade || "").toUpperCase() === "URGENTE";
+            return '<article class="aviso-admin-item' + (urgente ? ' urgente' : '') + '">' +
+                '<div class="aviso-admin-meta"><span class="aviso-admin-prioridade">' + escaparAdmin(aviso.prioridade || "NORMAL") + '</span><span>' + escaparAdmin(aviso.dataPublicacao || "Data não informada") + '</span></div>' +
+                '<h3>' + escaparAdmin(aviso.titulo || "Sem título") + '</h3>' +
+                '<p class="aviso-admin-mensagem">' + escaparAdmin(aviso.mensagem || "").replace(/\n/g, "<br>") + '</p>' +
+                '<p class="aviso-admin-destino">Destinatários: ' + escaparAdmin(String(aviso.destinatarios || "").split(",").join(", ")) + '</p>' +
+                '</article>';
+        }).join("");
+    } catch (erro) {
+        lista.innerHTML = '<p class="mensagem-estado erro">' + escaparAdmin(erro.message || "Erro ao carregar avisos.") + '</p>';
+    }
+}
+
+function configurarAvisosAdmin() {
+    const form = elAdmin("formAvisoAdmin");
+    const botao = elAdmin("btnPublicarAvisoAdmin");
+    const estado = elAdmin("mensagemEstadoAvisoAdmin");
+    if (!form || !botao || !estado) return;
+    form.addEventListener("submit", async (evento) => {
+        evento.preventDefault();
+        const titulo = elAdmin("tituloAvisoAdmin").value.trim();
+        const mensagem = elAdmin("mensagemAvisoAdmin").value.trim();
+        const prioridade = elAdmin("prioridadeAvisoAdmin").value;
+        const destinatarios = elAdmin("destinatariosAvisoAdmin").value;
+        if (!titulo || !mensagem) {
+            estado.textContent = "Preencha o título e a mensagem.";
+            estado.className = "mensagem-aviso-admin erro";
+            return;
+        }
+        botao.disabled = true;
+        botao.setAttribute("aria-busy", "true");
+        estado.textContent = "Publicando aviso na planilha escolar...";
+        estado.className = "mensagem-aviso-admin";
+        try {
+            const resposta = await fetch(API_ADMIN + "/secretaria/avisos", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json", Accept: "application/json" },
+                body: JSON.stringify({ titulo, mensagem, prioridade, destinatarios: [destinatarios] }),
+            });
+            const dados = await resposta.json();
+            if (resposta.status === 401) { window.location.replace("/index.html"); return; }
+            if (!resposta.ok || !dados.sucesso) throw new Error(dados.erro || "Não foi possível publicar o aviso.");
+            form.reset();
+            estado.textContent = dados.mensagem || "Aviso publicado com sucesso.";
+            estado.className = "mensagem-aviso-admin sucesso";
+            await carregarAvisosAdmin();
+            await carregarPainelAdmin(true);
+        } catch (erro) {
+            estado.textContent = erro.message || "Não foi possível publicar o aviso.";
+            estado.className = "mensagem-aviso-admin erro";
+        } finally {
+            botao.disabled = false;
+            botao.removeAttribute("aria-busy");
+            if (window.lucide) window.lucide.createIcons();
+        }
+    });
+    elAdmin("btnAtualizarAvisosAdmin")?.addEventListener("click", carregarAvisosAdmin);
+}
+
 function mudarTelaAdmin(tela) {
     const titulos = {
         inicio: "Início",
+        avisos: "Avisos",
         usuarios: "Usuários e acessos",
         estoque: "Estoque e patrimônio",
         operacoes: "Reservas e empréstimos",
@@ -704,6 +787,7 @@ function mudarTelaAdmin(tela) {
     document.title = `${titulos[tela] || "Painel ADM"} | Painel ADM`;
     elAdmin("sidebar").classList.remove("aberto");
     elAdmin("overlayMenu").classList.remove("visivel");
+    if (tela === "avisos") carregarAvisosAdmin();
 }
 
 
@@ -911,6 +995,7 @@ elAdmin("buscarDenunciasAdmin").addEventListener("input", carregarRelatoriosAdmi
 elAdmin("buscarBloqueiosAdmin").addEventListener("input", carregarRelatoriosAdmin);
 elAdmin("btnSair").addEventListener("click", sairPainelAdmin);
 configurarCadastroAdmin();
+configurarAvisosAdmin();
 configurarAbasEstoqueAdmin();
 configurarAbasOperacoesAdmin();
 configurarMenuAdmin();
