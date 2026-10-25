@@ -288,6 +288,29 @@ function textoAdmin(valor) {
     return String(valor ?? "").trim();
 }
 
+async function registrarLogAdmin(req, acao, tabela, registroID, descricao) {
+    try {
+        const resposta = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: "13_LOGS!A:H" });
+        const linhas = resposta.data.values || [];
+        let maior = 0;
+        for (const linha of linhas.slice(1)) {
+            const match = textoAdmin(linha[0]).match(/^LOG-(\\d+)$/);
+            if (match) maior = Math.max(maior, Number(match[1]));
+        }
+        const logID = "LOG-" + String(maior + 1).padStart(5, "0");
+        const dataHora = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "13_LOGS!A:H",
+            valueInputOption: "RAW",
+            insertDataOption: "INSERT_ROWS",
+            requestBody: { values: [[logID, dataHora, textoAdmin(req.session?.usuario?.id), textoAdmin(acao), textoAdmin(tabela), textoAdmin(registroID), textoAdmin(descricao), "SUCESSO"]] },
+        });
+    } catch (erro) {
+        console.error("Não foi possível registrar auditoria administrativa:", erro.message);
+    }
+}
+
 async function lerUsuariosAdmin() {
     const resposta = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
@@ -343,6 +366,7 @@ router.patch("/admin/usuarios/:usuarioID", async (req, res) => {
             },
         });
 
+        await registrarLogAdmin(req, "EDITAR_USUARIO", "01_USUARIOS", usuarioID, "Dados cadastrais e setor atualizados pelo ADM.");
         return res.json({ sucesso: true, mensagem: "Dados do usuário atualizados na planilha." });
     } catch (erro) {
         console.error("Erro ao editar usuário pelo ADM:", erro.message);
@@ -374,9 +398,10 @@ router.patch("/admin/usuarios/:usuarioID/status", async (req, res) => {
             valueInputOption: "RAW",
             requestBody: { values: [[status]] },
         });
+        await registrarLogAdmin(req, status === "ATIVO" ? "REATIVAR_USUARIO" : "DESATIVAR_USUARIO", "01_USUARIOS", usuarioID, "Status alterado para " + status + ".");
         return res.json({
             sucesso: true,
-            mensagem: status === "ATIVO" ? "Conta reativada." : "Conta desativada; o histórico foi preservado.",
+            mensagem: status === "ATIVO" ? "Conta reativada." : "Conta desativada; o histórico foi preservado",
         });
     } catch (erro) {
         console.error("Erro ao alterar status de usuário pelo ADM:", erro.message);
@@ -407,6 +432,7 @@ router.delete("/admin/usuarios/:usuarioID", async (req, res) => {
             valueInputOption: "RAW",
             requestBody: { values: [["INATIVO"]] },
         });
+        await registrarLogAdmin(req, "DESATIVAR_USUARIO", "01_USUARIOS", usuarioID, "Conta desativada pelo ADM.");
         return res.json({ sucesso: true, mensagem: "Conta desativada. O histórico foi preservado." });
     } catch (erro) {
         console.error("Erro ao desativar usuário pelo ADM:", erro.message);
@@ -482,6 +508,7 @@ router.patch("/admin/reservas/:reservaID/status", async (req, res) => {
             valueInputOption: "USER_ENTERED",
             requestBody: { values: [[statusNovo, textoAdmin(req.session.usuario.id)]] },
         });
+        await registrarLogAdmin(req, "ALTERAR_RESERVA", "08_RESERVAS", reservaID, "Status alterado de " + atual + " para " + statusNovo + ".");
         return res.json({ sucesso: true, mensagem: `Reserva ${statusNovo.toLowerCase()}.` });
     } catch (erro) {
         console.error("Erro ao alterar reserva pelo ADM:", erro.message);
@@ -543,6 +570,7 @@ router.patch("/admin/denuncias/:denunciaID/resposta", async (req, res) => {
                 ],
             },
         });
+        await registrarLogAdmin(req, "ANALISAR_DENUNCIA", "23_DENUNCIAS_SECRETARIA", denunciaID, "Denúncia analisada com status " + status + ".");
         return res.json({ sucesso: true, mensagem: "Análise da denúncia registrada." });
     } catch (erro) {
         console.error("Erro ao responder denúncia pelo ADM:", erro.message);
