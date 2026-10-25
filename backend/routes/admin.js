@@ -45,6 +45,18 @@ function dataPlanilhaParaDate(valor) {
     return Number.isNaN(data.getTime()) ? null : data;
 }
 
+function dataPlanilhaParaDate(valor) {
+    const texto = textoAdmin(valor);
+    if (!texto) return null;
+    const match = texto.match(/^(\\d{1,2})[/-](\\d{1,2})[/-](\\d{4})(?:\\s+(\\d{1,2}):(\\d{2})(?::(\\d{2}))?)?/);
+    if (match) {
+        const data = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]), Number(match[4] || 0), Number(match[5] || 0), Number(match[6] || 0));
+        return Number.isNaN(data.getTime()) ? null : data;
+    }
+    const data = new Date(texto);
+    return Number.isNaN(data.getTime()) ? null : data;
+}
+
 function montarSeriesAdmin(linhas, indiceData, tipo) {
     const hoje = new Date();
     if (tipo === "semanas") {
@@ -103,6 +115,8 @@ router.get("/admin/dashboard", async (req, res) => {
         "12_SETORES!A:F",
         "13_LOGS!A:H",
         "24_AVISOS_SISTEMA!A:H",
+        "22_BLOQUEIOS_SETOR!A:H",
+        "23_DENUNCIAS_SECRETARIA!A:J",
     ];
 
     try {
@@ -128,6 +142,8 @@ router.get("/admin/dashboard", async (req, res) => {
         const setores = linhasDeDados(dados["12_SETORES"]);
         const logs = linhasDeDados(dados["13_LOGS"]);
         const avisos = linhasDeDados(dados["24_AVISOS_SISTEMA"]);
+        const bloqueios = linhasDeDados(dados["22_BLOQUEIOS_SETOR"]);
+        const denuncias = linhasDeDados(dados["23_DENUNCIAS_SECRETARIA"]);
 
         const estoqueNumerico = estoque.reduce((total, linha) => {
             const quantidade = Number(String(linha[3] || "0").replace(",", "."));
@@ -186,6 +202,35 @@ router.get("/admin/dashboard", async (req, res) => {
                 movimentacoesPorSemana: montarSeriesAdmin(movimentacoes, 1, "semanas"),
                 emprestimosPorMes: montarSeriesAdmin(emprestimos, 1, "meses"),
             },
+            alertas: (() => {
+                const disponivelPorProduto = new Map();
+                for (const linha of estoque) {
+                    const produtoID = textoAdmin(linha[1]);
+                    const quantidade = Number(String(linha[5] || "0").replace(",", "."));
+                    if (!produtoID) continue;
+                    disponivelPorProduto.set(produtoID, (disponivelPorProduto.get(produtoID) || 0) + (Number.isFinite(quantidade) ? quantidade : 0));
+                }
+                const estoqueBaixo = produtos.filter((produto) => {
+                    const produtoID = textoAdmin(produto[0]);
+                    const status = textoAdmin(produto[8]).toUpperCase();
+                    const minimo = Number(String(produto[6] || "0").replace(",", "."));
+                    if (!produtoID || status !== "ATIVO" || !Number.isFinite(minimo) || minimo <= 0) return false;
+                    return (disponivelPorProduto.get(produtoID) || 0) <= minimo;
+                }).length;
+                const emprestimosAtrasados = emprestimos.filter((linha) => {
+                    const status = textoAdmin(linha[8]).toUpperCase();
+                    if (!status || ["DEVOLVIDO", "DEVOLVIDA", "CONCLUIDO", "CONCLUÍDO", "CANCELADO", "CANCELADA"].includes(status)) return false;
+                    const prevista = dataPlanilhaParaDate(linha[6]);
+                    if (!prevista) return false;
+                    return prevista.getTime() < Date.now() && !textoAdmin(linha[7]);
+                }).length;
+                return [
+                    { id: "reservas-pendentes", titulo: "Reservas pendentes", quantidade: reservas.filter((linha) => textoAdmin(linha[9]).toUpperCase() === "PENDENTE").length, destino: "operacoes", descricao: "Reservas aguardando decisão" },
+                    { id: "emprestimos-atrasados", titulo: "Empréstimos atrasados", quantidade: emprestimosAtrasados, destino: "operacoes", descricao: "Empréstimos fora da data prevista" },
+                    { id: "estoque-baixo", titulo: "Estoque no mínimo", quantidade: estoqueBaixo, destino: "estoque", descricao: "Produtos ativos no nível mínimo ou abaixo" },
+                    { id: "denuncias-pendentes", titulo: "Denúncias pendentes", quantidade: denuncias.filter((linha) => textoAdmin(linha[7]).toUpperCase() === "PENDENTE").length, destino: "denuncias", descricao: "Denúncias aguardando análise" },
+                ];
+            })(),
             atividadesRecentes,
         });
     } catch (erro) {
