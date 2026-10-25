@@ -71,6 +71,7 @@ async function carregarPainelAdmin(silencioso = false) {
         atualizarIdentidadeContaAdmin(dados);
         usuariosAdmin = Array.isArray(dados.usuarios) ? dados.usuarios : [];
         renderizarResumoAdmin(dados);
+        renderizarGraficosAdmin(dados.graficos || {});
         if (!silencioso || usuariosAnteriores !== JSON.stringify(usuariosAdmin)) {
             renderizarUsuariosAdmin();
         }
@@ -101,6 +102,41 @@ async function carregarPainelAdmin(silencioso = false) {
             atualizar.classList.remove("girando");
         }
     }
+}
+
+function renderizarGraficoLinhaAdmin(id, serie, cor, descricao) {
+    const container = elAdmin(id);
+    if (!container) return;
+    const dados = Array.isArray(serie) ? serie : [];
+    if (!dados.length) {
+        container.innerHTML = '<p class="vazio">Não há dados suficientes para montar este gráfico.</p>';
+        return;
+    }
+    const largura = 640, altura = 250, margemEsquerda = 42, margemDireita = 18, margemTopo = 20, margemBase = 42;
+    const areaLargura = largura - margemEsquerda - margemDireita;
+    const areaAltura = altura - margemTopo - margemBase;
+    const maximo = Math.max(1, ...dados.map((item) => Number(item.total) || 0));
+    const teto = maximo === 1 ? 1 : Math.ceil(maximo * 1.15);
+    const pontos = dados.map((item, indice) => ({
+        x: margemEsquerda + (dados.length === 1 ? areaLargura / 2 : indice * areaLargura / (dados.length - 1)),
+        y: margemTopo + areaAltura - ((Number(item.total) || 0) / teto) * areaAltura,
+        total: Number(item.total) || 0,
+        label: String(item.label || ""),
+    }));
+    const linhasGrade = Array.from({ length: 5 }, (_, indice) => {
+        const y = margemTopo + indice * areaAltura / 4;
+        const valor = Math.round(teto * (4 - indice) / 4);
+        return '<line x1="' + margemEsquerda + '" y1="' + y + '" x2="' + (largura - margemDireita) + '" y2="' + y + '" class="linha-grade-grafico"/><text x="' + (margemEsquerda - 9) + '" y="' + (y + 4) + '" text-anchor="end" class="rotulo-grafico">' + valor + '</text>';
+    }).join("");
+    const caminho = pontos.map((ponto, indice) => (indice ? "L" : "M") + ponto.x + " " + ponto.y).join(" ");
+    const circulos = pontos.map((ponto) => '<circle cx="' + ponto.x + '" cy="' + ponto.y + '" r="4" fill="' + cor + '" class="ponto-grafico"><title>' + escaparAdmin(ponto.label) + ': ' + ponto.total + '</title></circle>').join("");
+    const rotulos = pontos.map((ponto, indice) => '<text x="' + ponto.x + '" y="' + (altura - 15) + '" text-anchor="middle" class="rotulo-grafico">' + escaparAdmin(ponto.label) + '</text>').join("");
+    container.innerHTML = '<svg viewBox="0 0 ' + largura + ' ' + altura + '" class="grafico-svg" role="img" aria-label="' + escaparAdmin(descricao) + '">' + linhasGrade + '<path d="' + caminho + '" fill="none" stroke="' + cor + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' + circulos + rotulos + '</svg><div class="legenda-grafico"><span style="background:' + cor + '"></span>' + escaparAdmin(descricao) + '</div>';
+}
+
+function renderizarGraficosAdmin(graficos = {}) {
+    renderizarGraficoLinhaAdmin("graficoMovimentacoesAdmin", graficos.movimentacoesPorSemana, "#c95730", "Movimentações");
+    renderizarGraficoLinhaAdmin("graficoEmprestimosAdmin", graficos.emprestimosPorMes, "#3977b9", "Empréstimos");
 }
 
 function atualizarIdentidadeContaAdmin(dados = dadosPainelAdmin) {
@@ -144,6 +180,13 @@ function renderizarResumoAdmin(dados) {
     elAdmin("totalEstoque").textContent = formatarNumero(resumo.quantidadeTotalEstoque);
     elAdmin("estoqueDisponivel").textContent = formatarNumero(resumo.quantidadeDisponivel);
     elAdmin("totalLogs").textContent = formatarNumero(resumo.registrosDeAuditoria);
+    elAdmin("totalRegistrosEstoque").textContent = formatarNumero(resumo.registrosDeEstoque);
+    elAdmin("totalMovimentacoes").textContent = formatarNumero(resumo.movimentacoes);
+    elAdmin("totalReservas").textContent = formatarNumero(resumo.reservas);
+    elAdmin("totalEmprestimos").textContent = formatarNumero(resumo.emprestimos);
+    elAdmin("totalDevolucoes").textContent = formatarNumero(resumo.devolucoes);
+    elAdmin("totalSetores").textContent = formatarNumero(resumo.setores);
+    elAdmin("totalAvisosInicio").textContent = formatarNumero(resumo.avisosPublicados);
 
     elAdmin("qtdAlunos").textContent = formatarNumero(papeis.alunos);
     elAdmin("qtdProfessores").textContent = formatarNumero(papeis.professores);
