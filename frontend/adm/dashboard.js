@@ -780,10 +780,89 @@ function configurarAvisosAdmin() {
     elAdmin("btnAtualizarAvisosAdmin")?.addEventListener("click", carregarAvisosAdmin);
 }
 
+function converterParaCSVAdmin(cabecalhos, linhas) {
+    const escaparCSV = (valor) => '"' + String(valor ?? "").replace(/"/g, '""') + '"';
+    return "\\uFEFF" + [cabecalhos, ...linhas].map((linha) => linha.map(escaparCSV).join(";")).join("\\r\\n");
+}
+
+async function exportarRelatorioAdmin(tipo) {
+    const estado = elAdmin("estadoRelatoriosAdmin");
+    const botoes = [...document.querySelectorAll("[data-relatorio-admin]")];
+    botoes.forEach((botao) => botao.disabled = true);
+    if (estado) { estado.textContent = "Consultando dados atualizados da planilha..."; estado.className = "mensagem-estado"; }
+    const consultar = async (rota) => {
+        const resposta = await fetch(API_ADMIN + rota, { credentials: "include", headers: { Accept: "application/json" }, cache: "no-store" });
+        const dados = await resposta.json();
+        if (resposta.status === 401) { window.location.replace("/index.html"); throw new Error("Sua sessão expirou."); }
+        if (!resposta.ok || dados.sucesso === false) throw new Error(dados.mensagem || dados.erro || "Falha ao consultar dados da planilha.");
+        return dados;
+    };
+    try {
+        let nomeArquivo = "relatorio-adm";
+        let cabecalhos = [];
+        let linhas = [];
+        if (tipo === "resumo" || tipo === "usuarios") {
+            const dados = await consultar("/admin/dashboard");
+            if (tipo === "resumo") {
+                nomeArquivo = "resumo-administrativo";
+                cabecalhos = ["Indicador", "Quantidade"];
+                linhas = Object.entries(dados.resumo || {}).filter(([, valor]) => typeof valor !== "object").map(([chave, valor]) => [chave, valor]);
+            } else {
+                nomeArquivo = "usuarios";
+                cabecalhos = ["UsuarioID", "Nome", "Email", "TipoUsuario", "Perfil", "SetorID", "Status", "DataCadastro", "UltimoLogin"];
+                linhas = (dados.usuarios || []).map((u) => [u.usuarioID, u.nome, u.email, u.tipoUsuario, u.perfil, u.setorID, u.status, u.dataCadastro, u.ultimoLogin]);
+            }
+        } else if (tipo === "estoque") {
+            const dados = await consultar("/admin/estoque");
+            nomeArquivo = "estoque-e-patrimonio";
+            cabecalhos = ["TipoRegistro", "ID", "Codigo", "Nome", "Categoria", "Subcategoria", "Quantidade", "Reservado", "Disponivel", "Indisponivel", "Estado", "Status", "Local", "Responsavel", "UltimaAtualizacao"];
+            linhas = [
+                ...(dados.produtos || []).map((p) => ["PRODUTO", p.produtoID, p.codigo, p.nome, p.categoria, p.subcategoria, "", "", "", "", p.estado, p.status, "", "", p.dataCadastro]),
+                ...(dados.estoque || []).map((e) => ["ESTOQUE_LOCAL", e.estoqueID, "", e.produtoID, "", "", e.quantidade, e.reservado, e.disponivel, e.indisponivel, "", e.status, e.localID, "", e.ultimaAtualizacao]),
+                ...(dados.locais || []).map((l) => ["LOCAL", l.localID, l.codigo, l.nome, "", "", "", "", "", "", "", l.status, l.tipo, l.responsavelNome, ""]),
+            ];
+        } else if (tipo === "operacoes") {
+            const dados = await consultar("/admin/operacoes");
+            nomeArquivo = "reservas-e-emprestimos";
+            cabecalhos = ["Tipo", "ID", "DataSolicitacaoOuRetirada", "UsuarioID", "Usuario", "ProdutoID", "Produto", "LocalID", "Quantidade", "DataInicio", "DataFimOuPrevista", "DataDevolucao", "Status", "MotivoOuObservacao"];
+            linhas = [
+                ...(dados.reservas || []).map((r) => ["RESERVA", r.reservaID, r.dataSolicitacao, r.usuarioID, r.usuario, r.produtoID, r.produto, r.localID, r.quantidade, r.dataInicio, r.dataFim, "", r.status, r.motivo]),
+                ...(dados.emprestimos || []).map((e) => ["EMPRESTIMO", e.emprestimoID, e.dataRetirada, e.usuarioID, e.usuario, e.produtoID, e.produto, e.localID, e.quantidade, "", e.dataPrevistaDevolucao, e.dataDevolucao, e.status, e.observacao]),
+            ];
+        } else if (tipo === "logs") {
+            const dados = await consultar("/admin/logs");
+            nomeArquivo = "auditoria";
+            cabecalhos = ["LogID", "DataHora", "UsuarioID", "Usuario", "Acao", "Tabela", "RegistroID", "Descricao", "Resultado"];
+            linhas = (dados.logs || []).map((l) => [l.logID, l.dataHora, l.usuarioID, l.usuarioNome, l.acao, l.tabela, l.registroID, l.descricao, l.resultado]);
+        } else {
+            throw new Error("Tipo de relatório desconhecido.");
+        }
+        if (!linhas.length) {
+            if (estado) { estado.textContent = "A consulta foi concluída, mas não há registros para exportar."; estado.className = "mensagem-estado"; }
+            return;
+        }
+        const arquivo = new Blob([converterParaCSVAdmin(cabecalhos, linhas)], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(arquivo);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = nomeArquivo + "-" + new Date().toISOString().slice(0, 10) + ".csv";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        if (estado) { estado.textContent = "Relatório exportado com dados consultados agora."; estado.className = "mensagem-estado sucesso"; }
+    } catch (erro) {
+        if (estado) { estado.textContent = erro.message || "Não foi possível exportar o relatório."; estado.className = "mensagem-estado erro"; }
+    } finally {
+        botoes.forEach((botao) => botao.disabled = false);
+    }
+}
+
 function mudarTelaAdmin(tela) {
     const titulos = {
         inicio: "Início",
         avisos: "Avisos",
+        relatorios: "Relatórios",
         usuarios: "Usuários e acessos",
         estoque: "Estoque e patrimônio",
         operacoes: "Reservas e empréstimos",
@@ -1019,6 +1098,7 @@ elAdmin("buscarBloqueiosAdmin").addEventListener("input", carregarRelatoriosAdmi
 elAdmin("btnSair").addEventListener("click", sairPainelAdmin);
 configurarCadastroAdmin();
 configurarAvisosAdmin();
+document.querySelectorAll("[data-relatorio-admin]").forEach((botao) => botao.addEventListener("click", () => exportarRelatorioAdmin(botao.dataset.relatorioAdmin)));
 configurarAbasEstoqueAdmin();
 configurarAbasOperacoesAdmin();
 configurarMenuAdmin();
