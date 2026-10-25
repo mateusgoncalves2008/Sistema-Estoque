@@ -30,7 +30,7 @@ function abrirModalAdmin({ titulo, mensagem = "", campos = [], confirmar = "Conf
  camposEl.innerHTML=campos.map((c,i)=>{const id="campoModalAcaoAdmin"+i,l=escaparAdmin(c.rotulo),v=escaparAdmin(c.valor??""),n=escaparAdmin(c.nome);
  if(c.tipo==="select")return '<div class="campo-modal-admin"><label for="'+id+'">'+l+'</label><select id="'+id+'" name="'+n+'">'+c.opcoes.map(o=>'<option value="'+escaparAdmin(o.valor)+'"'+(String(o.valor)===String(c.valor)?" selected":"")+'>'+escaparAdmin(o.texto)+'</option>').join("")+'</select></div>';
  if(c.tipo==="textarea")return '<div class="campo-modal-admin"><label for="'+id+'">'+l+'</label><textarea id="'+id+'" name="'+n+'"'+(c.obrigatorio?" required":"")+'>'+v+'</textarea></div>';
- return '<div class="campo-modal-admin"><label for="'+id+'">'+l+'</label><input id="'+id+'" name="'+n+'" type="'+(c.tipo||"text")+'" value="'+v+'"'+(c.obrigatorio?" required":"")+(c.maxlength?' maxlength="'+Number(c.maxlength)+'"':"")+'></div>';
+ return '<div class="campo-modal-admin"><label for="'+id+'">'+l+'</label><input id="'+id+'" name="'+n+'" type="'+(c.tipo||"text")+'" value="'+v+'"'+(c.obrigatorio?" required":"")+(c.maxlength?' maxlength="'+Number(c.maxlength)+'"':"")+(c.minlength?' minlength="'+Number(c.minlength)+'"':"")+'></div>';
  }).join("");
  ok.textContent=confirmar;ok.classList.toggle("perigo",perigo);modal.hidden=false;modal.setAttribute("aria-hidden","false");document.body.classList.add("modal-admin-aberto");(camposEl.querySelector("input,textarea,select")||ok).focus();
  return new Promise(resolve=>{let done=false;const close=value=>{if(done)return;done=true;form.removeEventListener("submit",submit);cancelar.removeEventListener("click",cancel);modal.removeEventListener("click",backdrop);document.removeEventListener("keydown",keydown);modal.hidden=true;modal.setAttribute("aria-hidden","true");document.body.classList.remove("modal-admin-aberto");resolve(value);};
@@ -387,13 +387,13 @@ async function executarAcaoUsuarioAdmin(botao) {
         if (ehAlunoOuProfessor) {
             campos = [
                 { nome: "email", rotulo: "E-mail", tipo: "email", valor: usuario.email || "", obrigatorio: true, maxlength: 254 },
-                { nome: "senha", rotulo: "Nova senha (deixe em branco para manter)", tipo: "password", valor: "", maxlength: 128 },
+                { nome: "senha", rotulo: "Nova senha (máx. 6 caracteres; deixe em branco para manter)", tipo: "password", valor: "", maxlength: 6 },
             ];
         } else if (ehResponsavel) {
             campos = [
                 { nome: "nome", rotulo: "Nome completo", valor: usuario.nome || "", obrigatorio: true, maxlength: 150 },
                 { nome: "email", rotulo: "E-mail", tipo: "email", valor: usuario.email || "", obrigatorio: true, maxlength: 254 },
-                { nome: "senha", rotulo: "Nova senha (deixe em branco para manter)", tipo: "password", valor: "", maxlength: 128 },
+                { nome: "senha", rotulo: "Nova senha (mín. 12 caracteres; deixe em branco para manter)", tipo: "password", valor: "", minlength: 12, maxlength: 128 },
                 { nome: "setorID", rotulo: "ID do setor (opcional)", valor: usuario.setorID || "", maxlength: 100 },
             ];
         } else {
@@ -418,7 +418,15 @@ async function executarAcaoUsuarioAdmin(botao) {
             mostrarToastAdmin("Confira os campos obrigatórios.", "erro");
             return;
         }
-        if (dados.senha === "") delete dados.senha;
+        if (dados.senha === "") {
+            delete dados.senha;
+        } else if (ehAlunoOuProfessor && dados.senha.length > 6) {
+            mostrarToastAdmin("A senha de aluno e professor pode ter no máximo 6 caracteres.", "erro");
+            return;
+        } else if (ehResponsavel && (dados.senha.length < 12 || dados.senha.length > 128)) {
+            mostrarToastAdmin("A senha do responsável deve ter no mínimo 12 e no máximo 128 caracteres.", "erro");
+            return;
+        }
         await enviarAcaoUsuarioAdmin(usuarioID, "PATCH", "", dados);
         return;
     }
