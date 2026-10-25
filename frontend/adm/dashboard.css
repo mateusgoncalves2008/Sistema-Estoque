@@ -930,3 +930,53 @@ tbody tr:hover { background: #fdfbf8; }
 .sidebar-rodape .btn-sair {
     margin-bottom: 18px;
 }
+
+/* Cadastro ADM: centralização e tipografia mais legível */
+#cadastro {
+    width: min(100%, 1120px);
+    margin-left: auto;
+    margin-right: auto;
+}
+#cadastro .bloco-cabecalho {
+    justify-content: center;
+    text-align: center;
+}
+#cadastro .bloco-cabecalho > div {
+    width: 100%;
+}
+#cadastro .form-cadastro-admin {
+    width: 100%;
+    max-width: 850px;
+    margin-left: auto;
+    margin-right: auto;
+    gap: 12px 20px;
+}
+#cadastro .form-cadastro-admin label {
+    font-size: 14px;
+    line-height: 1.45;
+}
+#cadastro .form-cadastro-admin input,
+#cadastro .form-cadastro-admin select {
+    min-height: 48px;
+    padding: 12px 14px;
+    font-size: 15px;
+}
+#cadastro .form-cadastro-admin small {
+    font-size: 13px;
+    line-height: 1.5;
+}
+#cadastro .form-cadastro-admin button {
+    min-height: 48px;
+    font-size: 14px;
+}
+#cadastro .mensagem-cadastro-admin {
+    font-size: 13px;
+}
+@media (max-width: 700px) {
+    #cadastro {
+        width: 100%;
+    }
+    #cadastro .form-cadastro-admin {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
