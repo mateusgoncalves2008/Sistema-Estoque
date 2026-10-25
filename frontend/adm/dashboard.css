@@ -899,3 +899,8 @@ tbody tr:hover { background: #fdfbf8; }
     button:hover, a:hover { transform: none !important; }
     .sidebar .nav-item:hover, .sidebar .nav-link:hover { filter: none !important; }
 }
+
+@media (max-width: 700px) {
+    body.menu-recolhido .sidebar .nav-item span,
+    body.menu-recolhido .sidebar .nav-link span { display: block !important; }
+}
