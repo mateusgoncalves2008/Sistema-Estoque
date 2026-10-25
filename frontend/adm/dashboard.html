@@ -22,6 +22,7 @@
         <nav class="navegacao sidebar-nav" aria-label="Navegação administrativa">
             <button class="nav-link nav-item ativo" type="button" data-tela="inicio"><i data-lucide="house"></i><span>Início</span></button>
             <button class="nav-link nav-item" type="button" data-tela="avisos"><i data-lucide="bell-ring"></i><span>Avisos</span></button>
+            <button class="nav-link nav-item" type="button" data-tela="relatorios"><i data-lucide="file-chart-column"></i><span>Relatórios</span></button>
             <button class="nav-link nav-item" type="button" data-tela="usuarios"><i data-lucide="users"></i><span>Usuários e acessos</span></button>
             <button class="nav-link nav-item" type="button" data-tela="estoque"><i data-lucide="package"></i><span>Estoque e patrimônio</span></button>
             <button class="nav-link nav-item" type="button" data-tela="operacoes"><i data-lucide="clipboard-list"></i><span>Reservas e empréstimos</span></button>
@@ -126,6 +127,18 @@
             </form>
             <div class="bloco-cabecalho historico-avisos-cabecalho"><div><h2>Histórico de avisos</h2><p>Comunicados publicados na planilha escolar.</p></div><button class="btn-secundario" id="btnAtualizarAvisosAdmin" type="button"><i data-lucide="refresh-cw"></i>Atualizar</button></div>
             <div id="listaAvisosAdmin" class="lista-avisos-admin"><p class="vazio">Carregando avisos...</p></div>
+        </section>
+
+        <section class="bloco tela-admin" data-pagina="relatorios" id="relatoriosAdmin">
+            <div class="bloco-cabecalho"><div><p class="sobretitulo">DADOS DA ESCOLA</p><h2>Relatórios administrativos</h2><p>Exporte registros atualizados diretamente das rotas que consultam a planilha escolar.</p></div></div>
+            <div class="relatorios-admin-grid">
+                <article class="relatorio-admin-card"><i data-lucide="chart-no-axes-combined"></i><h3>Resumo geral</h3><p>Indicadores gerais, totais de usuários, produtos, estoque, operações e avisos.</p><button type="button" class="btn-primario" data-relatorio-admin="resumo">Exportar CSV</button></article>
+                <article class="relatorio-admin-card"><i data-lucide="users"></i><h3>Usuários</h3><p>Usuários, perfil, setor, status e datas disponíveis.</p><button type="button" class="btn-primario" data-relatorio-admin="usuarios">Exportar CSV</button></article>
+                <article class="relatorio-admin-card"><i data-lucide="package"></i><h3>Estoque e patrimônio</h3><p>Produtos e locais cadastrados, sem agrupar por categoria.</p><button type="button" class="btn-primario" data-relatorio-admin="estoque">Exportar CSV</button></article>
+                <article class="relatorio-admin-card"><i data-lucide="clipboard-list"></i><h3>Reservas e empréstimos</h3><p>Registros de operações, status e datas.</p><button type="button" class="btn-primario" data-relatorio-admin="operacoes">Exportar CSV</button></article>
+                <article class="relatorio-admin-card"><i data-lucide="scan-eye"></i><h3>Auditoria</h3><p>Histórico de ações e resultados registrados.</p><button type="button" class="btn-primario" data-relatorio-admin="logs">Exportar CSV</button></article>
+            </div>
+            <p id="estadoRelatoriosAdmin" class="mensagem-estado" role="status" aria-live="polite"></p>
         </section>
 
         <section class="bloco tela-admin" data-pagina="cadastro" id="cadastro">
