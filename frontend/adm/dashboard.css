@@ -1539,3 +1539,32 @@ body.modal-admin-aberto{overflow:hidden}
 .acoes-modal-acao-admin .btn-primario.perigo{background:#bd4a42;border-color:#bd4a42;color:#fff}
 @keyframes entrada-modal-acao-admin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:520px){.modal-acao-admin{padding:10px}.cartao-modal-acao-admin{width:100%;padding:18px;max-height:calc(100vh - 20px)}.cabecalho-modal-acao-admin h2{font-size:18px}.cabecalho-modal-acao-admin img{width:54px;height:46px}.acoes-modal-acao-admin{flex-direction:column-reverse}.acoes-modal-acao-admin button{width:100%}}
+
+
+/* Feedback visual de sucesso ao salvar no painel ADM */
+.mensagem-toast-admin.sucesso {
+    border-top-color: #23845b !important;
+}
+
+/* Menu lateral com rolagem quando os itens não cabem na altura da tela */
+.sidebar {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #8a786b #3b261c;
+}
+.sidebar::-webkit-scrollbar { width: 7px; }
+.sidebar::-webkit-scrollbar-track { background: #3b261c; }
+.sidebar::-webkit-scrollbar-thumb { background: #8a786b; border-radius: 10px; }
+.sidebar .sidebar-nav,
+.sidebar .navegacao {
+    min-height: 0;
+    flex: 0 0 auto;
+}
+@media (max-width: 820px) {
+    .sidebar.aberto { overflow-y: auto; }
+}
