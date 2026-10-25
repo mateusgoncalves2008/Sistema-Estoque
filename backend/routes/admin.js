@@ -33,6 +33,51 @@ function contarPorTipo(usuarios) {
     return contagem;
 }
 
+function dataPlanilhaParaDate(valor) {
+    const texto = String(valor || "").trim();
+    if (!texto) return null;
+    const brasileira = texto.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+    if (brasileira) {
+        const data = new Date(Number(brasileira[3]), Number(brasileira[2]) - 1, Number(brasileira[1]), Number(brasileira[4] || 0), Number(brasileira[5] || 0), Number(brasileira[6] || 0));
+        return Number.isNaN(data.getTime()) ? null : data;
+    }
+    const data = new Date(texto);
+    return Number.isNaN(data.getTime()) ? null : data;
+}
+
+function montarSeriesAdmin(linhas, indiceData, tipo) {
+    const hoje = new Date();
+    if (tipo === "semanas") {
+        const inicioSemanaAtual = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+        inicioSemanaAtual.setDate(inicioSemanaAtual.getDate() - ((inicioSemanaAtual.getDay() + 6) % 7));
+        const buckets = Array.from({ length: 8 }, (_, i) => {
+            const inicio = new Date(inicioSemanaAtual);
+            inicio.setDate(inicio.getDate() - (7 * (7 - i)));
+            return { inicio, total: 0, label: inicio.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) };
+        });
+        for (const linha of linhas) {
+            const data = dataPlanilhaParaDate(linha[indiceData]);
+            if (!data) continue;
+            const inicio = new Date(data.getFullYear(), data.getMonth(), data.getDate());
+            inicio.setDate(inicio.getDate() - ((inicio.getDay() + 6) % 7));
+            const bucket = buckets.find((item) => item.inicio.getTime() === inicio.getTime());
+            if (bucket) bucket.total++;
+        }
+        return buckets.map(({ label, total }) => ({ label, total }));
+    }
+    const buckets = Array.from({ length: 6 }, (_, i) => {
+        const data = new Date(hoje.getFullYear(), hoje.getMonth() - (5 - i), 1);
+        return { ano: data.getFullYear(), mes: data.getMonth(), total: 0, label: data.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "") };
+    });
+    for (const linha of linhas) {
+        const data = dataPlanilhaParaDate(linha[indiceData]);
+        if (!data) continue;
+        const bucket = buckets.find((item) => item.ano === data.getFullYear() && item.mes === data.getMonth());
+        if (bucket) bucket.total++;
+    }
+    return buckets.map(({ label, total }) => ({ label, total }));
+}
+
 router.get("/admin/dashboard", async (req, res) => {
     const usuarioSessao = req.session?.usuario;
 
@@ -137,6 +182,10 @@ router.get("/admin/dashboard", async (req, res) => {
                 avisosPublicados: avisos.filter((linha) => String(linha[7] || "").trim().toUpperCase() === "PUBLICADO").length,
             },
             usuarios: usuariosSeguros,
+            graficos: {
+                movimentacoesPorSemana: montarSeriesAdmin(movimentacoes, 1, "semanas"),
+                emprestimosPorMes: montarSeriesAdmin(emprestimos, 1, "meses"),
+            },
             atividadesRecentes,
         });
     } catch (erro) {
