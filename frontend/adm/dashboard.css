@@ -1162,3 +1162,114 @@ tbody tr:hover { background: #fdfbf8; }
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+/* Painel ADM: publicação e histórico de avisos */
+.form-aviso-admin {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 20px;
+    max-width: 1000px;
+    margin-bottom: 28px;
+}
+.campo-aviso-admin {
+    display: grid;
+    align-content: start;
+    gap: 7px;
+    min-width: 0;
+}
+.campo-aviso-admin label {
+    color: var(--texto);
+    font-size: 14px;
+    font-weight: 700;
+}
+.campo-aviso-admin input,
+.campo-aviso-admin select,
+.campo-aviso-admin textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    padding: 12px 14px;
+    border: 1px solid var(--linha);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--texto);
+    font: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.campo-aviso-admin textarea {
+    min-height: 140px;
+    resize: vertical;
+    line-height: 1.55;
+}
+.campo-aviso-mensagem,
+.form-aviso-admin > .mensagem-aviso-admin,
+.form-aviso-admin > button {
+    grid-column: 1 / -1;
+}
+.form-aviso-admin > button {
+    justify-self: start;
+    min-width: 190px;
+}
+.mensagem-aviso-admin {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+.mensagem-aviso-admin.erro { color: var(--vermelho, #bd4a42); }
+.mensagem-aviso-admin.sucesso { color: var(--verde, #23845b); }
+.historico-avisos-cabecalho {
+    margin-top: 26px;
+}
+.lista-avisos-admin {
+    display: grid;
+    gap: 14px;
+}
+.aviso-admin-item {
+    padding: 18px;
+    border: 1px solid var(--linha);
+    border-left: 4px solid var(--azul, #3977b9);
+    border-radius: 12px;
+    background: var(--cartao, #fffdfa);
+    min-width: 0;
+}
+.aviso-admin-item.urgente {
+    border-left-color: var(--vermelho, #bd4a42);
+}
+.aviso-admin-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--texto-secundario, #8a786b);
+    font-size: 12px;
+}
+.aviso-admin-prioridade {
+    font-weight: 800;
+    text-transform: uppercase;
+}
+.aviso-admin-item h3 {
+    margin: 10px 0;
+    font-size: 17px;
+    overflow-wrap: anywhere;
+}
+.aviso-admin-mensagem {
+    margin: 0;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+.aviso-admin-destino {
+    margin: 12px 0 0;
+    color: var(--texto-secundario, #8a786b);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+    .form-aviso-admin { grid-template-columns: minmax(0, 1fr); }
+    .campo-aviso-mensagem,
+    .form-aviso-admin > .mensagem-aviso-admin,
+    .form-aviso-admin > button { grid-column: 1; }
+    .form-aviso-admin > button { width: 100%; }
+}
