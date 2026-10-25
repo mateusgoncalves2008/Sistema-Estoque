@@ -72,6 +72,7 @@ async function carregarPainelAdmin(silencioso = false) {
         usuariosAdmin = Array.isArray(dados.usuarios) ? dados.usuarios : [];
         renderizarResumoAdmin(dados);
         renderizarGraficosAdmin(dados.graficos || {});
+        renderizarAlertasAdmin(dados.alertas || []);
         if (!silencioso || usuariosAnteriores !== JSON.stringify(usuariosAdmin)) {
             renderizarUsuariosAdmin();
         }
@@ -102,6 +103,28 @@ async function carregarPainelAdmin(silencioso = false) {
             atualizar.classList.remove("girando");
         }
     }
+}
+
+function renderizarAlertasAdmin(alertas = []) {
+    const lista = elAdmin("listaAlertasAdmin");
+    if (!lista) return;
+    if (!Array.isArray(alertas) || !alertas.length) {
+        lista.innerHTML = '<p class="vazio">Nenhum alerta disponível no momento.</p>';
+        return;
+    }
+    lista.innerHTML = alertas.map((alerta) => {
+        const quantidade = Number(alerta.quantidade) || 0;
+        return '<article class="alerta-admin-item' + (quantidade > 0 ? ' alerta-ativo' : '') + '">' +
+            '<div class="alerta-admin-icone"><i data-lucide="' + (quantidade > 0 ? 'circle-alert' : 'check-circle-2') + '"></i></div>' +
+            '<div class="alerta-admin-conteudo"><strong>' + escaparAdmin(alerta.titulo) + '</strong><p>' + escaparAdmin(alerta.descricao) + '</p></div>' +
+            '<strong class="alerta-admin-quantidade">' + formatarNumero(quantidade) + '</strong>' +
+            '<button type="button" class="btn-secundario" data-ir-alerta="' + escaparAdmin(alerta.destino) + '">Consultar</button>' +
+            '</article>';
+    }).join("");
+    lista.querySelectorAll("[data-ir-alerta]").forEach((botao) => {
+        botao.addEventListener("click", () => mudarTelaAdmin(botao.dataset.irAlerta));
+    });
+    if (window.lucide) window.lucide.createIcons();
 }
 
 function renderizarGraficoLinhaAdmin(id, serie, cor, descricao) {
