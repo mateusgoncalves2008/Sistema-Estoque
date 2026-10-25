@@ -88,44 +88,66 @@
         </section>
 
         <section class="bloco tela-admin" data-pagina="cadastro" id="cadastro">
-            <div class="bloco-cabecalho">
+            <div class="bloco-cabecalho cadastro-cabecalho">
                 <div><p class="sobretitulo">NOVO ACESSO</p><h2>Dados da conta</h2><p>Cadastre uma conta de responsável pelo setor ou da Secretaria.</p></div>
             </div>
             <form id="formCadastroAdmin" class="form-cadastro-admin">
-                <label for="tipoContaAdmin">Tipo de conta</label>
-                <select id="tipoContaAdmin" name="tipoConta" required>
-                    <option value="RESPONSAVEL">Responsável pelo setor</option>
-                    <option value="SECRETARIA">Secretaria</option>
-                </select>
+                <div class="coluna-cadastro-admin coluna-dados-pessoais">
+                    <h3>Dados pessoais</h3>
+                    <div class="campo-cadastro-admin">
+                        <label for="nomeAdminCadastro">Nome completo</label>
+                        <input id="nomeAdminCadastro" name="nome" type="text" autocomplete="name" maxlength="150" required>
+                    </div>
 
-                <label for="nomeAdminCadastro">Nome completo</label>
-                <input id="nomeAdminCadastro" name="nome" type="text" autocomplete="name" maxlength="150" required>
+                    <div class="campo-cadastro-admin">
+                        <label for="cpfAdminCadastro">CPF</label>
+                        <input id="cpfAdminCadastro" name="cpf" type="text" inputmode="numeric" autocomplete="off" maxlength="14" required>
+                    </div>
 
-                <label for="cpfAdminCadastro">CPF</label>
-                <input id="cpfAdminCadastro" name="cpf" type="text" inputmode="numeric" autocomplete="off" maxlength="14" required>
+                    <div class="campo-cadastro-admin">
+                        <label for="nascimentoAdminCadastro">Data de nascimento</label>
+                        <input id="nascimentoAdminCadastro" name="dataNascimento" type="date" required>
+                    </div>
 
-                <label for="nascimentoAdminCadastro">Data de nascimento</label>
-                <input id="nascimentoAdminCadastro" name="dataNascimento" type="date" required>
+                    <div class="campo-cadastro-admin">
+                        <label for="telefoneAdminCadastro">Telefone</label>
+                        <input id="telefoneAdminCadastro" name="telefone" type="tel" inputmode="tel" maxlength="15" required>
+                    </div>
 
-                <label for="telefoneAdminCadastro">Telefone</label>
-                <input id="telefoneAdminCadastro" name="telefone" type="tel" inputmode="tel" maxlength="15" required>
-
-                <label for="emailAdminCadastro">E-mail</label>
-                <input id="emailAdminCadastro" name="email" type="email" autocomplete="email" maxlength="254" required>
-
-                <div id="grupoSetorAdminCadastro">
-                    <label for="setorAdminCadastro">Setor sob responsabilidade</label>
-                    <select id="setorAdminCadastro" name="setorID" required>
-                        <option value="">Carregando setores...</option>
-                    </select>
+                    <div class="campo-cadastro-admin">
+                        <label for="emailAdminCadastro">E-mail</label>
+                        <input id="emailAdminCadastro" name="email" type="email" autocomplete="email" maxlength="254" required>
+                    </div>
                 </div>
 
-                <label for="senhaAdminCadastro">Senha</label>
-                <input id="senhaAdminCadastro" name="senha" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
-                <small>A senha deve ter entre 12 e 128 caracteres.</small>
+                <div class="coluna-cadastro-admin coluna-dados-acesso">
+                    <h3>Dados de acesso e setor</h3>
+                    <div class="campo-cadastro-admin">
+                        <label for="tipoContaAdmin">Tipo de conta</label>
+                        <select id="tipoContaAdmin" name="tipoConta" required>
+                            <option value="RESPONSAVEL">Responsável pelo setor</option>
+                            <option value="SECRETARIA">Secretaria</option>
+                        </select>
+                    </div>
 
-                <label for="confirmacaoAdminCadastro">Confirmar senha</label>
-                <input id="confirmacaoAdminCadastro" name="confirmacaoSenha" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                    <div id="grupoSetorAdminCadastro">
+                        <label for="setorAdminCadastro">Setor sob responsabilidade</label>
+                        <select id="setorAdminCadastro" name="setorID" required>
+                            <option value="">Carregando setores...</option>
+                        </select>
+                    </div>
+
+                    <div class="campo-cadastro-admin">
+                        <label for="senhaAdminCadastro">Senha</label>
+                        <input id="senhaAdminCadastro" name="senha" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                        <small>A senha deve ter entre 12 e 128 caracteres.</small>
+                    </div>
+
+                    <div class="campo-cadastro-admin">
+                        <label for="confirmacaoAdminCadastro">Confirmar senha</label>
+                        <input id="confirmacaoAdminCadastro" name="confirmacaoSenha" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                    </div>
+                </div>
 
                 <button id="btnCadastrarAdmin" type="submit"><i data-lucide="user-round-plus"></i>Cadastrar conta</button>
                 <p id="mensagemCadastroAdmin" class="mensagem-cadastro-admin" role="status" aria-live="polite"></p>
