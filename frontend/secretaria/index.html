@@ -319,15 +319,15 @@
                                     <span class="professores-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="9.5" cy="7" r="4"></circle><path d="M20 8v6M23 11h-6"></path></svg></span>
                                     <div><h2>Novo professor</h2><p>Cadastre o professor agora, com ajuda da Secretaria.</p></div>
                                 </div>
-                                <div class="form professores-form">
+                                <form id="form-novo-professor" class="form professores-form">
                                     <div><label for="np-masp">MASP</label><input id="np-masp" type="text" inputmode="numeric" maxlength="9" placeholder="Ex.: 1234567-8" autocomplete="off" /></div>
                                     <div><label for="np-nome">Nome completo</label><input id="np-nome" type="text" autocomplete="name" placeholder="Nome do professor" /></div>
                                     <div><label for="np-idade">Idade</label><input id="np-idade" type="number" min="18" max="100" placeholder="Idade" /></div>
                                     <div><label for="np-email">E-mail</label><input id="np-email" type="email" autocomplete="email" placeholder="professor@exemplo.com" /></div>
                                     <div><label for="np-senha">Senha inicial</label><input id="np-senha" type="password" autocomplete="new-password" minlength="6" maxlength="128" placeholder="Mínimo de 6 caracteres" /></div>
                                     <small class="professores-ajuda">A conta será criada imediatamente com esse e-mail e senha.</small>
-                                    <button class="btn professores-submit" id="btn-cadastrar-professor-agora" type="button">Cadastrar professor agora</button>
-                                </div>
+                                    <button class="btn professores-submit" id="btn-cadastrar-professor-agora" type="submit">Cadastrar professor agora</button>
+                                </form>
                             </div>
 
                             <div class="card professores-card">
