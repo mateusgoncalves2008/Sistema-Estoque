@@ -904,3 +904,23 @@ tbody tr:hover { background: #fdfbf8; }
     body.menu-recolhido .sidebar .nav-item span,
     body.menu-recolhido .sidebar .nav-link span { display: block !important; }
 }
+
+/* Correção da barra inferior: remove a altura mínima herdada da barra lateral */
+@media (max-width: 700px) {
+    aside.sidebar, .sidebar {
+        min-height: 0 !important;
+        flex: 0 0 auto !important;
+        box-sizing: border-box !important;
+    }
+    .sidebar .navegacao, .sidebar nav {
+        min-height: 0 !important;
+        flex: 0 0 auto !important;
+        align-items: center !important;
+    }
+    .sidebar .nav-item, .sidebar .nav-link, .sidebar nav button, .sidebar nav a {
+        flex-shrink: 0 !important;
+        width: 76px !important;
+        min-width: 76px !important;
+        box-sizing: border-box !important;
+    }
+}
