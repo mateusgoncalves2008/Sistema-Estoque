@@ -1273,3 +1273,41 @@ tbody tr:hover { background: #fdfbf8; }
     .form-aviso-admin > button { grid-column: 1; }
     .form-aviso-admin > button { width: 100%; }
 }
+
+/* Alertas de acompanhamento na página inicial do ADM */
+.lista-alertas-admin {
+    display: grid;
+    gap: 10px;
+}
+.alerta-admin-item {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--linha);
+    border-radius: 12px;
+    background: var(--cartao, #fffdfa);
+}
+.alerta-admin-icone {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--fundo, #f4eee7);
+    color: var(--verde, #23845b);
+}
+.alerta-admin-item.alerta-ativo .alerta-admin-icone {
+    background: #f8e9e5;
+    color: var(--vermelho, #bd4a42);
+}
+.alerta-admin-icone svg { width: 19px; height: 19px; }
+.alerta-admin-conteudo { min-width: 0; }
+.alerta-admin-conteudo strong { display: block; color: var(--texto); font-size: 14px; }
+.alerta-admin-conteudo p { margin: 4px 0 0; color: var(--texto-secundario, #8a786b); font-size: 12px; line-height: 1.45; }
+.alerta-admin-quantidade { min-width: 28px; text-align: center; font-size: 20px; color: var(--texto); }
+@media (max-width: 650px) {
+    .alerta-admin-item { grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; padding: 12px; }
+    .alerta-admin-item > button { grid-column: 2 / -1; justify-self: start; }
+}
