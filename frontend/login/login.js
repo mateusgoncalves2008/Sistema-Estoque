@@ -703,10 +703,10 @@ async function enviarCadastro() {
         return;
     }
 
-    if (senha.length < 6) {
+    if (senha.length > 6) {
         mostrarMensagem(
             "registerMessage",
-            "A senha deve ter pelo menos 6 caracteres.",
+            "A senha de aluno e professor deve ter no máximo 6 caracteres.",
         );
         return;
     }
