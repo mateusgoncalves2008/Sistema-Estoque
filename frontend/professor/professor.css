@@ -2378,3 +2378,74 @@ body.sidebar-collapsed .menu button svg {
         box-sizing: border-box !important;
     }
 }
+
+
+/* Notificações escolares: posição superior e identidade visual Hauy */
+.toast,
+#toast,
+#notice,
+.mensagem-toast-admin {
+    position: fixed !important;
+    top: max(16px, env(safe-area-inset-top, 0px)) !important;
+    right: max(16px, env(safe-area-inset-right, 0px)) !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: 10000 !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: min(390px, calc(100vw - 32px));
+    min-height: 76px;
+    box-sizing: border-box;
+    padding: 14px 16px 14px 88px !important;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    background-color: #fffdfa !important;
+    background-image: url("../img/logo_cor.png");
+    background-repeat: no-repeat;
+    background-position: 16px center;
+    background-size: 58px 48px;
+    color: #352219 !important;
+    border: 1px solid #e6d8cc !important;
+    border-top: 4px solid #c95730 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 12px 34px rgb(53 34 25 / 18%) !important;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+.toast.show,
+#toast.s,
+#notice:not(.hidden),
+.mensagem-toast-admin.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+.toast:not(.show),
+#toast:not(.s),
+#notice.hidden,
+.mensagem-toast-admin:not(.show) {
+    pointer-events: none;
+}
+#notice.error,
+.toast.error,
+#toast.error,
+.mensagem-toast-admin.error {
+    border-top-color: #bd4a42 !important;
+}
+@media (max-width: 480px) {
+    .toast,
+    #toast,
+    #notice,
+    .mensagem-toast-admin {
+        top: max(10px, env(safe-area-inset-top, 0px)) !important;
+        right: 10px !important;
+        width: calc(100vw - 20px);
+        min-height: 70px;
+        padding-left: 78px !important;
+        background-position: 12px center;
+        background-size: 54px 44px;
+    }
+}
