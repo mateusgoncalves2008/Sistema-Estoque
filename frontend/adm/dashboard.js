@@ -180,11 +180,6 @@ function renderizarResumoAdmin(dados) {
     elAdmin("totalEstoque").textContent = formatarNumero(resumo.quantidadeTotalEstoque);
     elAdmin("estoqueDisponivel").textContent = formatarNumero(resumo.quantidadeDisponivel);
     elAdmin("totalLogs").textContent = formatarNumero(resumo.registrosDeAuditoria);
-    elAdmin("totalRegistrosEstoque").textContent = formatarNumero(resumo.registrosDeEstoque);
-    elAdmin("totalMovimentacoes").textContent = formatarNumero(resumo.movimentacoes);
-    elAdmin("totalReservas").textContent = formatarNumero(resumo.reservas);
-    elAdmin("totalEmprestimos").textContent = formatarNumero(resumo.emprestimos);
-    elAdmin("totalDevolucoes").textContent = formatarNumero(resumo.devolucoes);
     elAdmin("totalSetores").textContent = formatarNumero(resumo.setores);
     elAdmin("totalAvisosInicio").textContent = formatarNumero(resumo.avisosPublicados);
 
