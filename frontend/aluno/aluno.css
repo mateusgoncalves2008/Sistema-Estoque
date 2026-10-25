@@ -2611,3 +2611,24 @@ body.reserva-modal-open {
 @media (max-width: 700px) {
     body.sidebar-collapsed .sidebar-nav .nav-item span { display: block !important; }
 }
+
+/* Correção da barra inferior: remove a altura mínima herdada da barra lateral */
+@media (max-width: 700px) {
+    .sidebar {
+        min-height: 0 !important;
+        flex: 0 0 auto !important;
+        box-sizing: border-box !important;
+    }
+    .sidebar-nav {
+        min-height: 0 !important;
+        flex: 0 0 auto !important;
+        align-items: center !important;
+    }
+    .sidebar-nav .nav-item {
+        flex-shrink: 0 !important;
+        width: 72px !important;
+        min-width: 72px !important;
+        box-sizing: border-box !important;
+    }
+    .main-content { min-height: 100vh; }
+}
