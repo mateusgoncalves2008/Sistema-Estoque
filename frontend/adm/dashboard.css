@@ -1568,3 +1568,81 @@ body.modal-admin-aberto{overflow:hidden}
 @media (max-width: 820px) {
     .sidebar.aberto { overflow-y: auto; }
 }
+
+
+/* Menu ADM: cabeçalho e conta fixos; somente a lista de menus rola */
+@media (min-width: 701px) {
+    .sidebar {
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-top {
+        flex: 0 0 auto;
+    }
+
+    .sidebar .sidebar-nav,
+    .sidebar .navegacao {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        scrollbar-width: thin;
+        scrollbar-color: #c95730 transparent;
+    }
+
+    .sidebar .sidebar-nav::-webkit-scrollbar,
+    .sidebar .navegacao::-webkit-scrollbar {
+        width: 3px;
+    }
+
+    .sidebar .sidebar-nav::-webkit-scrollbar-track,
+    .sidebar .navegacao::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .sidebar .sidebar-nav::-webkit-scrollbar-thumb,
+    .sidebar .navegacao::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: #c95730;
+    }
+
+    .sidebar .sidebar-nav::-webkit-scrollbar-thumb:hover,
+    .sidebar .navegacao::-webkit-scrollbar-thumb:hover {
+        background: #e06a3f;
+    }
+
+    .sidebar .sidebar-rodape {
+        flex: 0 0 auto;
+        margin-top: auto;
+        padding-bottom: 0;
+        background: #3b261c;
+    }
+
+    .sidebar .perfil-admin {
+        flex: 0 0 auto;
+        margin-bottom: 4px;
+    }
+
+    .sidebar .btn-sair {
+        flex: 0 0 auto;
+        margin-bottom: 0;
+    }
+}
+
+/* A barra de navegação móvel continua horizontal e sem scrollbar visível */
+@media (max-width: 700px) {
+    .sidebar .sidebar-nav,
+    .sidebar .navegacao {
+        scrollbar-width: none;
+    }
+    .sidebar .sidebar-nav::-webkit-scrollbar,
+    .sidebar .navegacao::-webkit-scrollbar {
+        display: none;
+    }
+}
