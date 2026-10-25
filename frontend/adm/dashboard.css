@@ -1345,3 +1345,36 @@ tbody tr:hover { background: #fdfbf8; }
     .relatorios-admin-grid { grid-template-columns: minmax(0, 1fr); }
     .relatorio-admin-card button { width: 100%; }
 }
+
+/* Filtros avançados da auditoria ADM */
+.filtros-logs-admin {
+    display: grid;
+    grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(140px, 1fr));
+    align-items: end;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.filtros-logs-admin .busca-logs { width: 100%; margin: 0; }
+.filtro-log-campo { display: grid; gap: 6px; min-width: 0; }
+.filtro-log-campo > span { color: var(--texto); font-size: 12px; font-weight: 700; }
+.filtro-log-campo input,
+.filtro-log-campo select {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    padding: 9px 10px;
+    border: 1px solid var(--linha);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--texto);
+    font: inherit;
+    font-size: 13px;
+}
+@media (max-width: 900px) {
+    .filtros-logs-admin { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .filtros-logs-admin .busca-logs { grid-column: 1 / -1; }
+}
+@media (max-width: 520px) {
+    .filtros-logs-admin { grid-template-columns: minmax(0, 1fr); }
+    .filtros-logs-admin .busca-logs { grid-column: 1; }
+}
