@@ -2524,16 +2524,31 @@ window.setInterval(async () => {
         console.info("[ATUALIZAÇÃO AUTOMÁTICA] Pausada: há um campo em edição.", ativo);
         return;
     }
+    const elementoEstaVisivel = (elemento) => {
+        if (!elemento || elemento.hidden || elemento.getAttribute("aria-hidden") === "true") return false;
+        if (elemento.closest('[hidden], [aria-hidden="true"]')) return false;
+        const estilo = window.getComputedStyle(elemento);
+        return estilo.display !== "none"
+            && estilo.visibility !== "hidden"
+            && Number(estilo.opacity) !== 0
+            && elemento.getClientRects().length > 0;
+    };
+
     const modalVisivel = Array.from(
-        document.querySelectorAll('dialog[open], [role="dialog"]:not([hidden]), .modal.show, .modal.aberto')
-    ).some((modal) => !modal.closest("[hidden]"));
+        document.querySelectorAll('dialog[open], [role="dialog"], .modal.show, .modal.aberto')
+    ).some(elementoEstaVisivel);
 
     if (modalVisivel) {
-        console.info("[ATUALIZAÇÃO AUTOMÁTICA] Pausada: há um modal aberto.");
+        console.info("[ATUALIZAÇÃO AUTOMÁTICA] Pausada: há um modal realmente visível.");
         return;
     }
-    if (document.querySelector("form [aria-busy='true'], form button:disabled")) {
-        console.info("[ATUALIZAÇÃO AUTOMÁTICA] Pausada: há um formulário ocupado ou botão desabilitado.");
+
+    const formularioOcupado = Array.from(
+        document.querySelectorAll("form [aria-busy='true'], form button:disabled")
+    ).some(elementoEstaVisivel);
+
+    if (formularioOcupado) {
+        console.info("[ATUALIZAÇÃO AUTOMÁTICA] Pausada: há um formulário visível ocupado ou botão desabilitado.");
         return;
     }
     atualizacaoSilenciosaSecretariaEmAndamento = true;
