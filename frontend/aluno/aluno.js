@@ -314,7 +314,7 @@ function configurarSidebar() {
         atualizarIconeSidebar();
     }
 
-    const toggle = $("#sidebarToggle");
+    const toggle = $("#btnSidebarToggle");
 
     if (toggle) {
         toggle.addEventListener("click", () => {
@@ -360,7 +360,7 @@ function configurarSidebar() {
 }
 
 function atualizarIconeSidebar() {
-    const button = $("#sidebarToggle");
+    const button = $("#btnSidebarToggle");
 
     if (!button) return;
 
