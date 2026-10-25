@@ -83,9 +83,14 @@ async function carregarPainelAdmin(silencioso = false) {
         if (ultimaAtualizacao) ultimaAtualizacao.textContent = formatarData(dados.atualizadoEm);
         if (!silencioso) {
             verificarSaudeSistemaAdmin();
-        } else if (estoqueOk && operacoesOk && relatoriosOk) {
-            const horario = new Date().toLocaleTimeString("pt-BR", { hour12: false });
-            console.info(`[ATUALIZAÇÃO AUTOMÁTICA] Painel atualizado às ${horario}`);
+        } else {
+            // Atualiza os tempos da API e do Google Sheets em cada ciclo automático,
+            // sem recarregar a página. A verificação também registra o resultado no histórico.
+            await verificarSaudeSistemaAdmin();
+            if (estoqueOk && operacoesOk && relatoriosOk) {
+                const horario = new Date().toLocaleTimeString("pt-BR", { hour12: false });
+                console.info(`[ATUALIZAÇÃO AUTOMÁTICA] Painel atualizado às ${horario}`);
+            }
         }
         if (window.lucide) window.lucide.createIcons();
     } catch (erro) {
