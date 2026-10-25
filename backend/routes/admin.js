@@ -357,8 +357,11 @@ router.patch("/admin/usuarios/:usuarioID", async (req, res) => {
         if (!ehAlunoOuProfessor && (!nome || nome.length > 150)) {
             return res.status(400).json({ sucesso: false, mensagem: "Informe um nome válido." });
         }
-        if (senha && (senha.length < 8 || senha.length > 128)) {
-            return res.status(400).json({ sucesso: false, mensagem: "A nova senha deve ter entre 8 e 128 caracteres." });
+        if (senha && ehAlunoOuProfessor && senha.length > 6) {
+            return res.status(400).json({ sucesso: false, mensagem: "A senha de aluno e professor pode ter no máximo 6 caracteres." });
+        }
+        if (senha && ehResponsavel && (senha.length < 12 || senha.length > 128)) {
+            return res.status(400).json({ sucesso: false, mensagem: "A senha do responsável deve ter no mínimo 12 e no máximo 128 caracteres." });
         }
         if (ehAlunoOuProfessor && (Object.hasOwn(corpo, "nome") || Object.hasOwn(corpo, "setorID"))) {
             return res.status(403).json({ sucesso: false, mensagem: "Para alunos e professores, só é permitido alterar e-mail e senha." });
