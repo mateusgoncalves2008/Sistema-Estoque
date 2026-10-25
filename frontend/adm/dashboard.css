@@ -1081,3 +1081,84 @@ tbody tr:hover { background: #fdfbf8; }
 #cadastro .coluna-cadastro-admin > h3 {
     margin-top: 12px;
 }
+
+/* Início ADM: indicadores ampliados e gráficos de tendência */
+.metricas[aria-label="Indicadores gerais"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+}
+.graficos-inicio {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 22px;
+    min-width: 0;
+}
+.grafico-inicio {
+    min-width: 0;
+    margin-bottom: 0;
+}
+.grafico-inicio .bloco-cabecalho {
+    margin-bottom: 10px;
+}
+.grafico-inicio .bloco-cabecalho h2 {
+    margin: 0 0 6px;
+}
+.grafico-inicio .bloco-cabecalho p {
+    margin: 0;
+}
+.grafico-linha {
+    width: 100%;
+    min-width: 0;
+}
+.grafico-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+.linha-grade-grafico {
+    stroke: var(--linha);
+    stroke-dasharray: 4 5;
+    stroke-width: 1;
+}
+.rotulo-grafico {
+    fill: var(--texto-secundario, #8a786b);
+    font-size: 11px;
+}
+.ponto-grafico {
+    stroke: var(--cartao, #fffdfa);
+    stroke-width: 2;
+}
+.legenda-grafico {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    color: var(--texto-secundario, #8a786b);
+    font-size: 12px;
+}
+.legenda-grafico span {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    border-radius: 50%;
+}
+@media (max-width: 1100px) {
+    .metricas[aria-label="Indicadores gerais"] {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+@media (max-width: 760px) {
+    .metricas[aria-label="Indicadores gerais"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .graficos-inicio {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+@media (max-width: 380px) {
+    .metricas[aria-label="Indicadores gerais"] {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
