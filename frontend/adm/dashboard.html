@@ -278,7 +278,12 @@
                 <div><p class="sobretitulo">AUDITORIA DO SISTEMA</p><h2>Histórico completo de logs</h2><p>Consulte todos os registros de auditoria, incluindo os mais antigos.</p></div>
                 <button type="button" class="btn-secundario" id="btnVoltarAtividades"><i data-lucide="arrow-left"></i>Voltar às atividades</button>
             </div>
-            <label class="busca busca-logs"><i data-lucide="search"></i><input id="buscarLogsAdmin" type="search" placeholder="Pesquisar por nome ou ID do usuário..." autocomplete="off" aria-label="Pesquisar logs por nome ou ID do usuário"></label>
+            <div class="filtros-logs-admin">
+                <label class="busca busca-logs"><i data-lucide="search"></i><input id="buscarLogsAdmin" type="search" placeholder="Pesquisar usuário, ID, ação ou descrição..." autocomplete="off" aria-label="Pesquisar nos logs"></label>
+                <label class="filtro-log-campo"><span>Data contém</span><input id="buscarDataLogsAdmin" type="search" placeholder="Ex.: 25/10/2026" autocomplete="off"></label>
+                <label class="filtro-log-campo"><span>Ação</span><select id="filtroAcaoLogsAdmin"><option value="">Todas as ações</option></select></label>
+                <label class="filtro-log-campo"><span>Resultado</span><select id="filtroResultadoLogsAdmin"><option value="">Todos os resultados</option></select></label>
+            </div>
             <p class="resumo-logs" id="resumoLogsAdmin">Carregando logs...</p>
             <div class="tabela-container"><table><thead><tr><th>Data e hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th><th>Resultado</th></tr></thead><tbody id="tabelaLogsAdmin"><tr><td colspan="5" class="vazio">Carregando logs...</td></tr></tbody></table></div>
             <div class="paginacao-logs"><button type="button" class="btn-secundario" id="btnLogsAnterior" disabled>Anterior</button><span id="paginaLogsAdmin">Página 1</span><button type="button" class="btn-secundario" id="btnLogsProxima" disabled>Próxima</button></div>
