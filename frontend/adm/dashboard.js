@@ -22,6 +22,24 @@ function mostrarToastAdmin(mensagem, tipo = "") {
     mostrarToastAdmin.timer = setTimeout(() => toast.classList.remove("show"), 4200);
 }
 
+
+function abrirModalAdmin({ titulo, mensagem = "", campos = [], confirmar = "Confirmar", perigo = false } = {}) {
+ const modal=elAdmin("modalAcaoAdmin"),form=elAdmin("formModalAcaoAdmin"),tituloEl=elAdmin("tituloModalAcaoAdmin"),mensagemEl=elAdmin("mensagemModalAcaoAdmin"),camposEl=elAdmin("camposModalAcaoAdmin"),ok=elAdmin("confirmarModalAcaoAdmin"),cancelar=elAdmin("cancelarModalAcaoAdmin");
+ if(!modal||!form)return Promise.resolve(null);
+ tituloEl.textContent=titulo;mensagemEl.textContent=mensagem;mensagemEl.hidden=!mensagem;
+ camposEl.innerHTML=campos.map((c,i)=>{const id="campoModalAcaoAdmin"+i,l=escaparAdmin(c.rotulo),v=escaparAdmin(c.valor??""),n=escaparAdmin(c.nome);
+ if(c.tipo==="select")return '<div class="campo-modal-admin"><label for="'+id+'">'+l+'</label><select id="'+id+'" name="'+n+'">'+c.opcoes.map(o=>'<option value="'+escaparAdmin(o.valor)+'"'+(String(o.valor)===String(c.valor)?" selected":"")+'>'+escaparAdmin(o.texto)+'</option>').join("")+'</select></div>';
+ if(c.tipo==="textarea")return '<div class="campo-modal-admin"><label for="'+id+'">'+l+'</label><textarea id="'+id+'" name="'+n+'"'+(c.obrigatorio?" required":"")+'>'+v+'</textarea></div>';
+ return '<div class="campo-modal-admin"><label for="'+id+'">'+l+'</label><input id="'+id+'" name="'+n+'" type="'+(c.tipo||"text")+'" value="'+v+'"'+(c.obrigatorio?" required":"")+(c.maxlength?' maxlength="'+Number(c.maxlength)+'"':"")+'></div>';
+ }).join("");
+ ok.textContent=confirmar;ok.classList.toggle("perigo",perigo);modal.hidden=false;modal.setAttribute("aria-hidden","false");document.body.classList.add("modal-admin-aberto");(camposEl.querySelector("input,textarea,select")||ok).focus();
+ return new Promise(resolve=>{let done=false;const close=value=>{if(done)return;done=true;form.removeEventListener("submit",submit);cancelar.removeEventListener("click",cancel);modal.removeEventListener("click",backdrop);document.removeEventListener("keydown",keydown);modal.hidden=true;modal.setAttribute("aria-hidden","true");document.body.classList.remove("modal-admin-aberto");resolve(value);};
+ const submit=e=>{e.preventDefault();const values={};campos.forEach((c,i)=>{const el=elAdmin("campoModalAcaoAdmin"+i);values[c.nome]=el?el.value.trim():"";});close(values);};
+ const cancel=()=>close(null),backdrop=e=>{if(e.target===modal)close(null);},keydown=e=>{if(e.key==="Escape"&&!modal.hidden)close(null);};
+ form.addEventListener("submit",submit);cancelar.addEventListener("click",cancel);modal.addEventListener("click",backdrop);document.addEventListener("keydown",keydown);
+ });
+}
+
 function escaparAdmin(valor) {
     return String(valor ?? "").replace(/[&<>"']/g, (caractere) => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -361,24 +379,19 @@ async function executarAcaoUsuarioAdmin(botao) {
     if (!usuario) return;
 
     if (botao.dataset.acaoUsuario === "editar") {
-        const nome = window.prompt("Nome completo:", usuario.nome || "");
-        if (nome === null) return;
-        const email = window.prompt("E-mail:", usuario.email || "");
-        if (email === null) return;
-        const setorID = window.prompt("ID do setor (deixe vazio se não houver):", usuario.setorID || "");
-        if (setorID === null) return;
-        if (!nome.trim() || !email.trim()) {
-            mostrarToastAdmin("Nome e e-mail são obrigatórios.", "erro");
-            return;
-        }
-        await enviarAcaoUsuarioAdmin(usuarioID, "PATCH", "", { nome: nome.trim(), email: email.trim(), setorID: setorID.trim() });
-        return;
+        const dados = await abrirModalAdmin({ titulo:"Editar usuário", mensagem:"Atualize os dados da conta selecionada.", campos:[
+            {nome:"nome",rotulo:"Nome completo",valor:usuario.nome||"",obrigatorio:true,maxlength:150},
+            {nome:"email",rotulo:"E-mail",tipo:"email",valor:usuario.email||"",obrigatorio:true,maxlength:254},
+            {nome:"setorID",rotulo:"ID do setor (opcional)",valor:usuario.setorID||"",maxlength:100}
+        ],confirmar:"Salvar alterações" });
+        if(!dados)return;
+        if(!dados.nome||!dados.email){mostrarToastAdmin("Nome e e-mail são obrigatórios.","erro");return;}
+        await enviarAcaoUsuarioAdmin(usuarioID,"PATCH","",dados);return;
     }
-
-    const status = botao.dataset.statusAlvo;
-    const acao = status === "ATIVO" ? "reativar" : "desativar";
-    if (!window.confirm(`Deseja ${acao} a conta de ${usuario.nome}?`)) return;
-    await enviarAcaoUsuarioAdmin(usuarioID, "PATCH", "/status", { status });
+    const status=botao.dataset.statusAlvo,acao=status==="ATIVO"?"reativar":"desativar";
+    const ok=await abrirModalAdmin({titulo:status==="ATIVO"?"Reativar usuário":"Desativar usuário",mensagem:"Deseja "+acao+" a conta de "+usuario.nome+"?",confirmar:status==="ATIVO"?"Reativar conta":"Desativar conta",perigo:status!=="ATIVO"});
+    if(!ok)return;
+    await enviarAcaoUsuarioAdmin(usuarioID,"PATCH","/status",{status});
 }
 
 async function enviarAcaoUsuarioAdmin(usuarioID, metodo, sufixo, corpo) {
@@ -464,7 +477,8 @@ async function carregarOperacoesAdmin() {
         ).join("") : '<tr><td colspan="5" class="vazio">Nenhum empréstimo registrado.</td></tr>';
         tabelaReservas.querySelectorAll("[data-reserva-status]").forEach((botao) => botao.addEventListener("click", async () => {
             const statusNovo = botao.dataset.reservaStatus;
-            if (!confirm("Confirma " + statusNovo.toLowerCase() + " a reserva " + botao.dataset.reservaId + "?")) return;
+            const ok = await abrirModalAdmin({titulo:"Atualizar reserva",mensagem:"Confirma "+statusNovo.toLowerCase()+" a reserva "+botao.dataset.reservaId+"?",confirmar:"Confirmar ação",perigo:statusNovo==="RECUSADA"||statusNovo==="CANCELADA"});
+            if(!ok)return;
             botao.disabled = true;
             try {
                 const resp = await fetch(API_ADMIN + "/admin/reservas/" + encodeURIComponent(botao.dataset.reservaId) + "/status", {
@@ -515,10 +529,15 @@ async function carregarRelatoriosAdmin() {
         ).join("") : '<tr><td colspan="4" class="vazio">' + (termoBloqueios ? 'Nenhum bloqueio encontrado para esse usuário.' : 'Nenhum bloqueio registrado.') + '</td></tr>';
         tabelaD.querySelectorAll("[data-denuncia-id]").forEach((botao) => botao.addEventListener("click", async () => {
             const d = denuncias.find((item) => String(item.denunciaID) === String(botao.dataset.denunciaId));
-            const resposta = prompt("Denúncia " + d.denunciaID + "\n" + (d.descricao || d.motivo) + "\n\nResposta da administração:", d.resposta || "");
-            if (resposta === null) return;
-            const status = prompt("Status: ANALISADA, RESOLVIDA ou ARQUIVADA", "ANALISADA");
-            if (status === null) return;
+            if(!d)return;
+            const analise=await abrirModalAdmin({titulo:"Analisar denúncia "+d.denunciaID,mensagem:d.descricao||d.motivo||"Sem descrição informada.",campos:[
+                {nome:"resposta",rotulo:"Resposta da administração",tipo:"textarea",valor:d.resposta||"",obrigatorio:true},
+                {nome:"status",rotulo:"Status da denúncia",tipo:"select",valor:d.status||"ANALISADA",opcoes:[
+                    {valor:"ANALISADA",texto:"Analisada"},{valor:"RESOLVIDA",texto:"Resolvida"},{valor:"ARQUIVADA",texto:"Arquivada"}
+                ]}
+            ],confirmar:"Salvar análise"});
+            if(!analise)return;
+            const resposta=analise.resposta,status=analise.status;
             botao.disabled = true;
             try {
                 const r = await fetch(API_ADMIN + "/admin/denuncias/" + encodeURIComponent(d.denunciaID) + "/resposta", {
