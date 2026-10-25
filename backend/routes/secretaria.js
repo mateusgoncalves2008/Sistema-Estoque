@@ -2443,6 +2443,26 @@ router.post("/secretaria/avisos", async (req, res) => {
             requestBody: { values: [aviso] },
         });
 
+        try {
+            const respostaLogs = await sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEET_ID,
+                range: "13_LOGS!A:H",
+            });
+            const linhasLogs = respostaLogs.data.values || [];
+            const logID = gerarID("LOG", linhasLogs, 0);
+            await sheets.spreadsheets.values.append({
+                spreadsheetId: SPREADSHEET_ID,
+                range: "13_LOGS!A:H",
+                valueInputOption: "RAW",
+                insertDataOption: "INSERT_ROWS",
+                requestBody: {
+                    values: [[logID, agora(), autorID, "PUBLICAR_AVISO", "24_AVISOS_SISTEMA", id, "Aviso publicado: " + titulo, "SUCESSO"]],
+                },
+            });
+        } catch (erroLog) {
+            console.error("Não foi possível registrar a publicação do aviso no log:", erroLog.message);
+        }
+
         limparCache();
 
         return res.status(201).json({
