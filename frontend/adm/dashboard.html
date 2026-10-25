@@ -21,6 +21,7 @@
         </div>
         <nav class="navegacao sidebar-nav" aria-label="Navegação administrativa">
             <button class="nav-link nav-item ativo" type="button" data-tela="inicio"><i data-lucide="house"></i><span>Início</span></button>
+            <button class="nav-link nav-item" type="button" data-tela="avisos"><i data-lucide="bell-ring"></i><span>Avisos</span></button>
             <button class="nav-link nav-item" type="button" data-tela="usuarios"><i data-lucide="users"></i><span>Usuários e acessos</span></button>
             <button class="nav-link nav-item" type="button" data-tela="estoque"><i data-lucide="package"></i><span>Estoque e patrimônio</span></button>
             <button class="nav-link nav-item" type="button" data-tela="operacoes"><i data-lucide="clipboard-list"></i><span>Reservas e empréstimos</span></button>
@@ -82,6 +83,44 @@
                 <div class="bloco-cabecalho"><div><h2>Empréstimos por mês</h2><p>Quantidade de registros nos últimos seis meses.</p></div></div>
                 <div id="graficoEmprestimosAdmin" class="grafico-linha" role="img" aria-label="Gráfico de linha de empréstimos por mês"><p class="vazio">Carregando gráfico...</p></div>
             </article>
+        </section>
+
+        <section class="bloco tela-admin" data-pagina="avisos" id="avisosAdmin">
+            <div class="bloco-cabecalho">
+                <div><p class="sobretitulo">COMUNICAÇÃO ESCOLAR</p><h2>Publicar aviso</h2><p>Crie um comunicado para os públicos da escola.</p></div>
+            </div>
+            <form id="formAvisoAdmin" class="form-aviso-admin">
+                <div class="campo-aviso-admin">
+                    <label for="tituloAvisoAdmin">Título</label>
+                    <input id="tituloAvisoAdmin" name="titulo" type="text" maxlength="150" required>
+                </div>
+                <div class="campo-aviso-admin">
+                    <label for="prioridadeAvisoAdmin">Prioridade</label>
+                    <select id="prioridadeAvisoAdmin" name="prioridade" required>
+                        <option value="NORMAL">Normal</option>
+                        <option value="URGENTE">Urgente</option>
+                    </select>
+                </div>
+                <div class="campo-aviso-admin">
+                    <label for="destinatariosAvisoAdmin">Destinatários</label>
+                    <select id="destinatariosAvisoAdmin" name="destinatarios" required>
+                        <option value="TODOS">Toda a escola</option>
+                        <option value="ALUNO">Alunos</option>
+                        <option value="PROFESSOR">Professores</option>
+                        <option value="RESPONSAVEL">Responsáveis</option>
+                        <option value="SECRETARIA">Secretaria</option>
+                        <option value="ADM">Administradores</option>
+                    </select>
+                </div>
+                <div class="campo-aviso-admin campo-aviso-mensagem">
+                    <label for="mensagemAvisoAdmin">Mensagem</label>
+                    <textarea id="mensagemAvisoAdmin" name="mensagem" rows="5" maxlength="10000" required></textarea>
+                </div>
+                <p id="mensagemEstadoAvisoAdmin" class="mensagem-aviso-admin" role="status" aria-live="polite"></p>
+                <button class="btn-primario" id="btnPublicarAvisoAdmin" type="submit"><i data-lucide="send"></i>Publicar aviso</button>
+            </form>
+            <div class="bloco-cabecalho historico-avisos-cabecalho"><div><h2>Histórico de avisos</h2><p>Comunicados publicados na planilha escolar.</p></div><button class="btn-secundario" id="btnAtualizarAvisosAdmin" type="button"><i data-lucide="refresh-cw"></i>Atualizar</button></div>
+            <div id="listaAvisosAdmin" class="lista-avisos-admin"><p class="vazio">Carregando avisos...</p></div>
         </section>
 
         <section class="bloco tela-admin" data-pagina="cadastro" id="cadastro">
