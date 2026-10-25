@@ -672,6 +672,16 @@ async function carregarLogsCompletosAdmin() {
         if (resposta.status === 401) { window.location.replace("/index.html"); return; }
         if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar os logs.");
         logsCompletosAdmin = Array.isArray(dados.logs) ? dados.logs : [];
+        const preencherFiltro = (id, chave, titulo) => {
+            const select = elAdmin(id);
+            if (!select) return;
+            const atual = select.value;
+            const valores = [...new Set(logsCompletosAdmin.map((log) => String(log[chave] || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+            select.innerHTML = '<option value="">' + titulo + '</option>' + valores.map((valor) => '<option value="' + escaparAdmin(valor) + '">' + escaparAdmin(valor) + '</option>').join("");
+            if (valores.includes(atual)) select.value = atual;
+        };
+        preencherFiltro("filtroAcaoLogsAdmin", "acao", "Todas as ações");
+        preencherFiltro("filtroResultadoLogsAdmin", "resultado", "Todos os resultados");
         paginaLogsAtualAdmin = 1;
         renderizarLogsCompletosAdmin();
     } catch (erro) {
@@ -681,8 +691,17 @@ async function carregarLogsCompletosAdmin() {
 }
 
 function renderizarLogsCompletosAdmin() {
-    const termo = String(elAdmin("buscarLogsAdmin").value || "").trim().toLocaleLowerCase("pt-BR");
-    const filtrados = logsCompletosAdmin.filter(log => [log.usuarioNome, log.usuarioID].some(valor => String(valor || "").toLocaleLowerCase("pt-BR").includes(termo)));
+    const termo = String(elAdmin("buscarLogsAdmin")?.value || "").trim().toLocaleLowerCase("pt-BR");
+    const dataTermo = String(elAdmin("buscarDataLogsAdmin")?.value || "").trim().toLocaleLowerCase("pt-BR");
+    const acaoFiltro = String(elAdmin("filtroAcaoLogsAdmin")?.value || "");
+    const resultadoFiltro = String(elAdmin("filtroResultadoLogsAdmin")?.value || "");
+    const filtrados = logsCompletosAdmin.filter((log) => {
+        const textoPesquisa = [log.usuarioNome, log.usuarioID, log.acao, log.tabela, log.registroID, log.descricao, log.resultado, log.dataHora].join(" ").toLocaleLowerCase("pt-BR");
+        return textoPesquisa.includes(termo) &&
+            String(log.dataHora || "").toLocaleLowerCase("pt-BR").includes(dataTermo) &&
+            (!acaoFiltro || String(log.acao || "") === acaoFiltro) &&
+            (!resultadoFiltro || String(log.resultado || "") === resultadoFiltro);
+    });
     const totalPaginas = Math.max(1, Math.ceil(filtrados.length / TAMANHO_PAGINA_LOGS));
     paginaLogsAtualAdmin = Math.min(Math.max(1, paginaLogsAtualAdmin), totalPaginas);
     const inicio = (paginaLogsAtualAdmin - 1) * TAMANHO_PAGINA_LOGS;
@@ -1088,6 +1107,9 @@ elAdmin("btnVerificarSaude")?.addEventListener("click", verificarSaudeSistemaAdm
 elAdmin("btnVerTodosLogs").addEventListener("click", async () => { mudarTelaAdmin("logs"); if (!logsCompletosAdmin.length) await carregarLogsCompletosAdmin(); });
 elAdmin("btnVoltarAtividades").addEventListener("click", () => mudarTelaAdmin("atividades"));
 elAdmin("buscarLogsAdmin").addEventListener("input", () => { paginaLogsAtualAdmin = 1; renderizarLogsCompletosAdmin(); });
+elAdmin("buscarDataLogsAdmin").addEventListener("input", () => { paginaLogsAtualAdmin = 1; renderizarLogsCompletosAdmin(); });
+elAdmin("filtroAcaoLogsAdmin").addEventListener("change", () => { paginaLogsAtualAdmin = 1; renderizarLogsCompletosAdmin(); });
+elAdmin("filtroResultadoLogsAdmin").addEventListener("change", () => { paginaLogsAtualAdmin = 1; renderizarLogsCompletosAdmin(); });
 elAdmin("btnLogsAnterior").addEventListener("click", () => { paginaLogsAtualAdmin--; renderizarLogsCompletosAdmin(); });
 elAdmin("btnLogsProxima").addEventListener("click", () => { paginaLogsAtualAdmin++; renderizarLogsCompletosAdmin(); });
 elAdmin("buscarUsuario").addEventListener("input", renderizarUsuariosAdmin);
