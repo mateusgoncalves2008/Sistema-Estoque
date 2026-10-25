@@ -1510,3 +1510,9 @@ tbody tr:hover { background: #fdfbf8; }
         background-size: 54px 44px;
     }
 }
+
+.mensagem-toast-admin {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity .22s ease, transform .22s ease;
+}
