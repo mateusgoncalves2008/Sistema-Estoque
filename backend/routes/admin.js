@@ -330,44 +330,66 @@ function ehPropriaContaAdmin(req, usuarioID) {
     return textoAdmin(req.session?.usuario?.id) === textoAdmin(usuarioID);
 }
 
-// Edita nome, e-mail e setor; tipo/perfil e credenciais não são alterados aqui.
+// Atualiza os campos permitidos conforme o tipo de conta; senha sempre é armazenada com hash e salt.
 router.patch("/admin/usuarios/:usuarioID", async (req, res) => {
     if (!exigirAdmin(req, res)) return;
     try {
         const usuarioID = textoAdmin(req.params.usuarioID);
-        const nome = textoAdmin(req.body?.nome);
-        const email = textoAdmin(req.body?.email).toLowerCase();
-        const setorID = textoAdmin(req.body?.setorID);
-
-        if (!usuarioID || !nome || !email) {
-            return res.status(400).json({ sucesso: false, mensagem: "ID, nome e e-mail são obrigatórios." });
-        }
-        if (nome.length > 150 || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return res.status(400).json({ sucesso: false, mensagem: "Confira o nome e o formato do e-mail." });
-        }
-
+        if (!usuarioID) return res.status(400).json({ sucesso: false, mensagem: "ID do usuário é obrigatório." });
         const linhas = await lerUsuariosAdmin();
         const indice = indiceUsuarioAdmin(linhas, usuarioID);
         if (indice < 0) return res.status(404).json({ sucesso: false, mensagem: "Usuário não encontrado." });
 
-        const emailEmUso = linhas.some((linha, i) =>
-            i > 0 && i !== indice && textoAdmin(linha[2]).toLowerCase() === email
-        );
+        const linha = linhas[indice];
+        const tipo = textoAdmin(linha[5]).toUpperCase();
+        const perfil = textoAdmin(linha[6]).toUpperCase();
+        const ehAlunoOuProfessor = ["ALUNO", "PROFESSOR"].includes(tipo) || ["ALUNO", "PROFESSOR"].includes(perfil);
+        const ehResponsavel = ["RESPONSAVEL", "RESPONSÁVEL", "LIDER"].includes(tipo) || ["RESPONSAVEL", "RESPONSÁVEL", "LIDER"].includes(perfil);
+        const corpo = req.body || {};
+        const email = textoAdmin(corpo.email).toLowerCase();
+        const senha = typeof corpo.senha === "string" ? corpo.senha : "";
+        const nome = textoAdmin(corpo.nome);
+        const setorID = textoAdmin(corpo.setorID);
+
+        if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ sucesso: false, mensagem: "Informe um e-mail válido." });
+        }
+        if (!ehAlunoOuProfessor && (!nome || nome.length > 150)) {
+            return res.status(400).json({ sucesso: false, mensagem: "Informe um nome válido." });
+        }
+        if (senha && (senha.length < 8 || senha.length > 128)) {
+            return res.status(400).json({ sucesso: false, mensagem: "A nova senha deve ter entre 8 e 128 caracteres." });
+        }
+        if (ehAlunoOuProfessor && (Object.hasOwn(corpo, "nome") || Object.hasOwn(corpo, "setorID"))) {
+            return res.status(403).json({ sucesso: false, mensagem: "Para alunos e professores, só é permitido alterar e-mail e senha." });
+        }
+        if (!ehResponsavel && !ehAlunoOuProfessor && Object.hasOwn(corpo, "senha")) {
+            return res.status(403).json({ sucesso: false, mensagem: "Alteração de senha não permitida para esse tipo de conta." });
+        }
+
+        const emailEmUso = linhas.some((item, i) => i !== indice && textoAdmin(item[2]).toLowerCase() === email);
         if (emailEmUso) return res.status(409).json({ sucesso: false, mensagem: "Este e-mail já está sendo usado por outra conta." });
 
         const linhaPlanilha = indice + 1;
+        const atualizacoes = [{ range: `01_USUARIOS!C${linhaPlanilha}`, values: [[email]] }];
+        if (!ehAlunoOuProfessor) {
+            atualizacoes.push({ range: `01_USUARIOS!B${linhaPlanilha}`, values: [[nome]] });
+            atualizacoes.push({ range: `01_USUARIOS!H${linhaPlanilha}`, values: [[setorID]] });
+        }
+        if (senha) {
+            const crypto = require("crypto");
+            const salt = crypto.randomBytes(16).toString("hex");
+            const senhaHash = "scrypt$16384$8$1$" + crypto.scryptSync(senha, salt, 64, {
+                N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024,
+            }).toString("hex");
+            atualizacoes.push({ range: `01_USUARIOS!D${linhaPlanilha}:E${linhaPlanilha}`, values: [[senhaHash, salt]] });
+        }
         await sheets.spreadsheets.values.batchUpdate({
             spreadsheetId: SPREADSHEET_ID,
-            requestBody: {
-                valueInputOption: "RAW",
-                data: [
-                    { range: `01_USUARIOS!B${linhaPlanilha}:C${linhaPlanilha}`, values: [[nome, email]] },
-                    { range: `01_USUARIOS!H${linhaPlanilha}`, values: [[setorID]] },
-                ],
-            },
+            requestBody: { valueInputOption: "RAW", data: atualizacoes },
         });
-
-        await registrarLogAdmin(req, "EDITAR_USUARIO", "01_USUARIOS", usuarioID, "Dados cadastrais e setor atualizados pelo ADM.");
+        const camposAlterados = ["e-mail", ...(!ehAlunoOuProfessor ? ["nome e setor"] : []), ...(senha ? ["senha"] : [])].join(", ");
+        await registrarLogAdmin(req, "EDITAR_USUARIO", "01_USUARIOS", usuarioID, "Campos atualizados pelo ADM: " + camposAlterados + ".");
         return res.json({ sucesso: true, mensagem: "Dados do usuário atualizados na planilha." });
     } catch (erro) {
         console.error("Erro ao editar usuário pelo ADM:", erro.message);
