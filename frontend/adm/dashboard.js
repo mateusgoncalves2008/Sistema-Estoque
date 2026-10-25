@@ -477,7 +477,7 @@ async function carregarOperacoesAdmin() {
                 mostrarEstadoPainel(resultado.mensagem, "sucesso");
                 await carregarOperacoesAdmin();
             } catch (erro) {
-                alert(erro.message);
+                mostrarToastAdmin(erro.message || "Ocorreu um erro.", "erro");
                 botao.disabled = false;
             }
         }));
@@ -531,7 +531,7 @@ async function carregarRelatoriosAdmin() {
                 mostrarEstadoPainel(resultado.mensagem, "sucesso");
                 await carregarRelatoriosAdmin();
             } catch (erro) {
-                alert(erro.message);
+                mostrarToastAdmin(erro.message || "Ocorreu um erro.", "erro");
                 botao.disabled = false;
             }
         }));
