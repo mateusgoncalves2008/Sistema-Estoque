@@ -103,8 +103,8 @@ router.get("/admin/dashboard", async (req, res) => {
         "12_SETORES!A:F",
         "13_LOGS!A:H",
         "24_AVISOS_SISTEMA!A:H",
-        "22_BLOQUEIOS_SETOR!A:H",
-        "23_DENUNCIAS_SECRETARIA!A:J",
+        "22_BLOQUEIOS_SETOR!A:J",
+        "23_DENUNCIAS_SECRETARIA!A:M",
     ];
 
     try {
@@ -216,7 +216,7 @@ router.get("/admin/dashboard", async (req, res) => {
                     { id: "reservas-pendentes", titulo: "Reservas pendentes", quantidade: reservas.filter((linha) => textoAdmin(linha[9]).toUpperCase() === "PENDENTE").length, destino: "operacoes", descricao: "Reservas aguardando decisão" },
                     { id: "emprestimos-atrasados", titulo: "Empréstimos atrasados", quantidade: emprestimosAtrasados, destino: "operacoes", descricao: "Empréstimos fora da data prevista" },
                     { id: "estoque-baixo", titulo: "Estoque no mínimo", quantidade: estoqueBaixo, destino: "estoque", descricao: "Produtos ativos no nível mínimo ou abaixo" },
-                    { id: "denuncias-pendentes", titulo: "Denúncias pendentes", quantidade: denuncias.filter((linha) => textoAdmin(linha[7]).toUpperCase() === "PENDENTE").length, destino: "denuncias", descricao: "Denúncias aguardando análise" },
+                    { id: "denuncias-pendentes", titulo: "Denúncias pendentes", quantidade: denuncias.filter((linha) => textoAdmin(linha[10]).toUpperCase() === "PENDENTE").length, destino: "denuncias", descricao: "Denúncias aguardando análise" },
                 ];
             })(),
             atividadesRecentes,
