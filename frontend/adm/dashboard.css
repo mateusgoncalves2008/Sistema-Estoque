@@ -1516,3 +1516,26 @@ tbody tr:hover { background: #fdfbf8; }
     transform: translateY(-8px);
     transition: opacity .22s ease, transform .22s ease;
 }
+
+
+/* Modal de ações do ADM com identidade visual da escola */
+.modal-acao-admin[hidden]{display:none!important}
+.modal-acao-admin{position:fixed;inset:0;z-index:11000;display:flex;justify-content:flex-end;align-items:flex-start;padding:max(18px,env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px));background:rgb(53 34 25 / 18%);backdrop-filter:blur(2px)}
+.cartao-modal-acao-admin{width:min(460px,calc(100vw - 28px));max-height:calc(100vh - 36px);overflow-y:auto;padding:22px;border:1px solid #e6d8cc;border-top:5px solid #c95730;border-radius:16px;background:#fffdfa;color:#352219;box-shadow:0 18px 55px rgb(53 34 25 / 24%);animation:entrada-modal-acao-admin .2s ease-out}
+body.modal-admin-aberto{overflow:hidden}
+.cabecalho-modal-acao-admin{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
+.cabecalho-modal-acao-admin .sobretitulo{margin:0 0 7px;color:#8a786b;font-size:10px;font-weight:800;letter-spacing:1.2px}
+.cabecalho-modal-acao-admin h2{margin:0;color:#352219;font-size:20px;line-height:1.25;overflow-wrap:anywhere}
+.cabecalho-modal-acao-admin img{flex:0 0 auto;width:64px;height:54px;object-fit:contain;object-position:top right}
+.mensagem-modal-acao-admin{margin:0 0 16px;color:#5e5047;font-size:13px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.campos-modal-acao-admin{display:grid;gap:13px}
+.campo-modal-admin{display:grid;gap:6px;min-width:0}
+.campo-modal-admin label{color:#3c291f;font-size:12px;font-weight:750}
+.campo-modal-admin input,.campo-modal-admin select,.campo-modal-admin textarea{width:100%;min-width:0;padding:11px 12px;border:1px solid #e6d8cc;border-radius:9px;background:#fff;color:#352219;font:inherit;font-size:13px}
+.campo-modal-admin textarea{min-height:110px;resize:vertical;line-height:1.5}
+.campo-modal-admin input:focus,.campo-modal-admin select:focus,.campo-modal-admin textarea:focus{outline:3px solid rgb(201 87 48 / 20%);border-color:#c95730}
+.acoes-modal-acao-admin{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:20px}
+.acoes-modal-acao-admin button{min-height:40px}
+.acoes-modal-acao-admin .btn-primario.perigo{background:#bd4a42;border-color:#bd4a42;color:#fff}
+@keyframes entrada-modal-acao-admin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:520px){.modal-acao-admin{padding:10px}.cartao-modal-acao-admin{width:100%;padding:18px;max-height:calc(100vh - 20px)}.cabecalho-modal-acao-admin h2{font-size:18px}.cabecalho-modal-acao-admin img{width:54px;height:46px}.acoes-modal-acao-admin{flex-direction:column-reverse}.acoes-modal-acao-admin button{width:100%}}
