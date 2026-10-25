@@ -78,7 +78,6 @@ async function carregarPainelAdmin(silencioso = false) {
         const operacoesOk = await carregarOperacoesAdmin();
         const relatoriosOk = await carregarRelatoriosAdmin();
         renderizarAtividadesAdmin(dados.atividadesRecentes || []);
-        if (!silencioso) mostrarEstadoPainel("Dados carregados com sucesso da planilha escolar.", "sucesso");
         const ultimaAtualizacao = elAdmin("ultimaAtualizacao");
         if (ultimaAtualizacao) ultimaAtualizacao.textContent = formatarData(dados.atualizadoEm);
         if (!silencioso) {
