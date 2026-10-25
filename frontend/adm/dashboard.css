@@ -1378,3 +1378,64 @@ tbody tr:hover { background: #fdfbf8; }
     .filtros-logs-admin { grid-template-columns: minmax(0, 1fr); }
     .filtros-logs-admin .busca-logs { grid-column: 1; }
 }
+
+
+/* Estilo padrão dos botões principais dos menus do ADM */
+.btn-primario {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 10px 16px;
+    border: 1px solid #a94b29;
+    border-radius: 10px;
+    background: #c95730;
+    color: #fffdfa;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 2px 5px rgb(53 34 25 / 10%);
+    transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.btn-primario:hover {
+    background: #a94728;
+    border-color: #913c22;
+    box-shadow: 0 4px 10px rgb(53 34 25 / 14%);
+}
+.btn-primario:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgb(53 34 25 / 12%);
+}
+.btn-primario:focus-visible {
+    outline: 3px solid #d9a184;
+    outline-offset: 3px;
+}
+.btn-primario:disabled,
+.btn-primario[aria-disabled="true"] {
+    opacity: .58;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+.btn-primario svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+}
+.relatorio-admin-card .btn-primario {
+    width: 100%;
+    margin-top: auto;
+}
+.form-aviso-admin > .btn-primario {
+    justify-self: start;
+    min-width: 190px;
+}
+@media (max-width: 700px) {
+    .form-aviso-admin > .btn-primario {
+        width: 100%;
+    }
+}
