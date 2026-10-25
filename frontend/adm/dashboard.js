@@ -17,6 +17,7 @@ function mostrarToastAdmin(mensagem, tipo = "") {
     if (!toast) return;
     toast.textContent = String(mensagem || "");
     toast.classList.toggle("error", tipo === "erro");
+    toast.classList.toggle("sucesso", tipo === "sucesso");
     toast.classList.add("show");
     clearTimeout(mostrarToastAdmin.timer);
     mostrarToastAdmin.timer = setTimeout(() => toast.classList.remove("show"), 4200);
@@ -448,7 +449,7 @@ async function enviarAcaoUsuarioAdmin(usuarioID, metodo, sufixo, corpo) {
         });
         const resultado = await resposta.json().catch(() => ({}));
         if (!resposta.ok || resultado.sucesso !== true) throw new Error(resultado.mensagem || "Não foi possível atualizar o usuário.");
-        mostrarEstadoPainel(resultado.mensagem || "Usuário atualizado.", "sucesso");
+        mostrarToastAdmin("Salvo com sucesso.", "sucesso");
         await carregarPainelAdmin();
     } catch (erro) {
         mostrarToastAdmin(erro.message || "Ocorreu um erro.", "erro");
@@ -530,7 +531,7 @@ async function carregarOperacoesAdmin() {
                 });
                 const resultado = await resp.json();
                 if (!resp.ok || !resultado.sucesso) throw new Error(resultado.mensagem || "Não foi possível atualizar a reserva.");
-                mostrarEstadoPainel(resultado.mensagem, "sucesso");
+                mostrarToastAdmin("Salvo com sucesso.", "sucesso");
                 await carregarOperacoesAdmin();
             } catch (erro) {
                 mostrarToastAdmin(erro.message || "Ocorreu um erro.", "erro");
@@ -589,7 +590,7 @@ async function carregarRelatoriosAdmin() {
                 });
                 const resultado = await r.json();
                 if (!r.ok || !resultado.sucesso) throw new Error(resultado.mensagem || "Não foi possível registrar a análise.");
-                mostrarEstadoPainel(resultado.mensagem, "sucesso");
+                mostrarToastAdmin("Salvo com sucesso.", "sucesso");
                 await carregarRelatoriosAdmin();
             } catch (erro) {
                 mostrarToastAdmin(erro.message || "Ocorreu um erro.", "erro");
