@@ -34,7 +34,7 @@ function abrirModalAdmin({ titulo, mensagem = "", campos = [], confirmar = "Conf
  }).join("");
  ok.textContent=confirmar;ok.classList.toggle("perigo",perigo);modal.hidden=false;modal.setAttribute("aria-hidden","false");document.body.classList.add("modal-admin-aberto");(camposEl.querySelector("input,textarea,select")||ok).focus();
  return new Promise(resolve=>{let done=false;const close=value=>{if(done)return;done=true;form.removeEventListener("submit",submit);cancelar.removeEventListener("click",cancel);modal.removeEventListener("click",backdrop);document.removeEventListener("keydown",keydown);modal.hidden=true;modal.setAttribute("aria-hidden","true");document.body.classList.remove("modal-admin-aberto");resolve(value);};
- const submit=e=>{e.preventDefault();const values={};campos.forEach((c,i)=>{const el=elAdmin("campoModalAcaoAdmin"+i);values[c.nome]=el?el.value.trim():"";});close(values);};
+ const submit=e=>{e.preventDefault();const values={};campos.forEach((c,i)=>{const el=elAdmin("campoModalAcaoAdmin"+i);values[c.nome]=el?(c.tipo==="password"?el.value:el.value.trim()):"";});close(values);};
  const cancel=()=>close(null),backdrop=e=>{if(e.target===modal)close(null);},keydown=e=>{if(e.key==="Escape"&&!modal.hidden)close(null);};
  form.addEventListener("submit",submit);cancelar.addEventListener("click",cancel);modal.addEventListener("click",backdrop);document.addEventListener("keydown",keydown);
  });
@@ -379,14 +379,48 @@ async function executarAcaoUsuarioAdmin(botao) {
     if (!usuario) return;
 
     if (botao.dataset.acaoUsuario === "editar") {
-        const dados = await abrirModalAdmin({ titulo:"Editar usuário", mensagem:"Atualize os dados da conta selecionada.", campos:[
-            {nome:"nome",rotulo:"Nome completo",valor:usuario.nome||"",obrigatorio:true,maxlength:150},
-            {nome:"email",rotulo:"E-mail",tipo:"email",valor:usuario.email||"",obrigatorio:true,maxlength:254},
-            {nome:"setorID",rotulo:"ID do setor (opcional)",valor:usuario.setorID||"",maxlength:100}
-        ],confirmar:"Salvar alterações" });
-        if(!dados)return;
-        if(!dados.nome||!dados.email){mostrarToastAdmin("Nome e e-mail são obrigatórios.","erro");return;}
-        await enviarAcaoUsuarioAdmin(usuarioID,"PATCH","",dados);return;
+        const tipo = String(usuario.tipoUsuario || "").trim().toUpperCase();
+        const perfil = String(usuario.perfil || "").trim().toUpperCase();
+        const ehAlunoOuProfessor = ["ALUNO", "PROFESSOR"].includes(tipo) || ["ALUNO", "PROFESSOR"].includes(perfil);
+        const ehResponsavel = ["RESPONSAVEL", "RESPONSÁVEL", "LIDER"].includes(tipo) || ["RESPONSAVEL", "RESPONSÁVEL", "LIDER"].includes(perfil);
+        let campos;
+        if (ehAlunoOuProfessor) {
+            campos = [
+                { nome: "email", rotulo: "E-mail", tipo: "email", valor: usuario.email || "", obrigatorio: true, maxlength: 254 },
+                { nome: "senha", rotulo: "Nova senha (deixe em branco para manter)", tipo: "password", valor: "", maxlength: 128 },
+            ];
+        } else if (ehResponsavel) {
+            campos = [
+                { nome: "nome", rotulo: "Nome completo", valor: usuario.nome || "", obrigatorio: true, maxlength: 150 },
+                { nome: "email", rotulo: "E-mail", tipo: "email", valor: usuario.email || "", obrigatorio: true, maxlength: 254 },
+                { nome: "senha", rotulo: "Nova senha (deixe em branco para manter)", tipo: "password", valor: "", maxlength: 128 },
+                { nome: "setorID", rotulo: "ID do setor (opcional)", valor: usuario.setorID || "", maxlength: 100 },
+            ];
+        } else {
+            campos = [
+                { nome: "nome", rotulo: "Nome completo", valor: usuario.nome || "", obrigatorio: true, maxlength: 150 },
+                { nome: "email", rotulo: "E-mail", tipo: "email", valor: usuario.email || "", obrigatorio: true, maxlength: 254 },
+                { nome: "setorID", rotulo: "ID do setor (opcional)", valor: usuario.setorID || "", maxlength: 100 },
+            ];
+        }
+        const dados = await abrirModalAdmin({
+            titulo: "Editar usuário",
+            mensagem: ehAlunoOuProfessor
+                ? "Para alunos e professores, é possível alterar somente o e-mail e a senha."
+                : ehResponsavel
+                    ? "Para responsáveis, é possível alterar nome, e-mail, senha e setor."
+                    : "Atualize os dados da conta selecionada.",
+            campos,
+            confirmar: "Salvar alterações",
+        });
+        if (!dados) return;
+        if (!dados.email || ((ehResponsavel || !ehAlunoOuProfessor) && !dados.nome)) {
+            mostrarToastAdmin("Confira os campos obrigatórios.", "erro");
+            return;
+        }
+        if (dados.senha === "") delete dados.senha;
+        await enviarAcaoUsuarioAdmin(usuarioID, "PATCH", "", dados);
+        return;
     }
     const status=botao.dataset.statusAlvo,acao=status==="ATIVO"?"reativar":"desativar";
     const ok=await abrirModalAdmin({titulo:status==="ATIVO"?"Reativar usuário":"Desativar usuário",mensagem:"Deseja "+acao+" a conta de "+usuario.nome+"?",confirmar:status==="ATIVO"?"Reativar conta":"Desativar conta",perigo:status!=="ATIVO"});
