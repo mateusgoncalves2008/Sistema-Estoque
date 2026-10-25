@@ -2517,9 +2517,13 @@ window.setInterval(async () => {
     if (document.querySelector('dialog[open], [role="dialog"]:not([hidden]), .modal.show, .modal.aberto')) return;
     if (document.querySelector("form [aria-busy='true'], form button:disabled")) return;
     atualizacaoSilenciosaSecretariaEmAndamento = true;
-    try { await carregarDados(true); }
-    finally { atualizacaoSilenciosaSecretariaEmAndamento = false; }
-}, 30000);
+    try {
+        await carregarDados(true);
+        await carregarDadosProfessores(true);
+    } finally {
+        atualizacaoSilenciosaSecretariaEmAndamento = false;
+    }
+}, 10000);
 
 setInterval(() => {
     const c = $("#clk");
@@ -2542,7 +2546,7 @@ setInterval(() => {
     }
 })();
 
-async function carregarDadosProfessores() {
+async function carregarDadosProfessores(silencioso = false) {
     try {
         const [respostaProfessores, respostaTurmas, respostaDisciplinas] =
             await Promise.all([
@@ -2567,10 +2571,12 @@ async function carregarDadosProfessores() {
     } catch (erro) {
         console.error("Erro ao carregar professores:", erro);
 
-        toast(
-            erro.message ||
-                "Erro ao carregar professores, turmas ou disciplinas.",
-        );
+        if (!silencioso) {
+            toast(
+                erro.message ||
+                    "Erro ao carregar professores, turmas ou disciplinas.",
+            );
+        }
     }
 }
 
@@ -2836,8 +2842,11 @@ async function assign() {
 
 function configurarEventosBotoesProfessores() {
     document
-        .querySelector("#btn-cadastrar-professor-agora")
-        ?.addEventListener("click", cadastrarProfessorAgora);
+        .querySelector("#form-novo-professor")
+        ?.addEventListener("submit", (evento) => {
+            evento.preventDefault();
+            cadastrarProfessorAgora();
+        });
     document
         .querySelector("#btn-autorizar-masp")
         ?.addEventListener("click", addProf);
