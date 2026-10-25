@@ -2524,7 +2524,11 @@ window.setInterval(async () => {
         console.info("[ATUALIZAÇÃO AUTOMÁTICA] Pausada: há um campo em edição.", ativo);
         return;
     }
-    if (document.querySelector('dialog[open], [role="dialog"]:not([hidden]), .modal.show, .modal.aberto')) {
+    const modalVisivel = Array.from(
+        document.querySelectorAll('dialog[open], [role="dialog"]:not([hidden]), .modal.show, .modal.aberto')
+    ).some((modal) => !modal.closest("[hidden]"));
+
+    if (modalVisivel) {
         console.info("[ATUALIZAÇÃO AUTOMÁTICA] Pausada: há um modal aberto.");
         return;
     }
