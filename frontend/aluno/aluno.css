@@ -2607,3 +2607,7 @@ body.reserva-modal-open {
     a:hover { transform: none !important; }
     .sidebar-nav .nav-item:hover { filter: none !important; }
 }
+
+@media (max-width: 700px) {
+    body.sidebar-collapsed .sidebar-nav .nav-item span { display: block !important; }
+}
