@@ -45,18 +45,6 @@ function dataPlanilhaParaDate(valor) {
     return Number.isNaN(data.getTime()) ? null : data;
 }
 
-function dataPlanilhaParaDate(valor) {
-    const texto = textoAdmin(valor);
-    if (!texto) return null;
-    const match = texto.match(/^(\\d{1,2})[/-](\\d{1,2})[/-](\\d{4})(?:\\s+(\\d{1,2}):(\\d{2})(?::(\\d{2}))?)?/);
-    if (match) {
-        const data = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]), Number(match[4] || 0), Number(match[5] || 0), Number(match[6] || 0));
-        return Number.isNaN(data.getTime()) ? null : data;
-    }
-    const data = new Date(texto);
-    return Number.isNaN(data.getTime()) ? null : data;
-}
-
 function montarSeriesAdmin(linhas, indiceData, tipo) {
     const hoje = new Date();
     if (tipo === "semanas") {
