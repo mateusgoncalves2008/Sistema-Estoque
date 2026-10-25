@@ -1360,7 +1360,7 @@ function iniciarEventos() {
         }
     });
 
-    const sidebarToggle = el("sidebarToggle");
+    const sidebarToggle = el("btnSidebarToggle");
     const atualizarIconeSidebarResponsavel = () => {
         if (!sidebarToggle) return;
         const recolhido = document.body.classList.contains("sidebar-collapsed");
