@@ -1311,3 +1311,37 @@ tbody tr:hover { background: #fdfbf8; }
     .alerta-admin-item { grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; padding: 12px; }
     .alerta-admin-item > button { grid-column: 2 / -1; justify-self: start; }
 }
+
+/* Relatórios administrativos exportáveis */
+.relatorios-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+.relatorio-admin-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid var(--linha);
+    border-radius: 13px;
+    background: var(--cartao, #fffdfa);
+}
+.relatorio-admin-card > svg {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 14px;
+    color: var(--laranja, #c95730);
+}
+.relatorio-admin-card h3 { margin: 0 0 8px; font-size: 16px; }
+.relatorio-admin-card p { flex: 1; margin: 0 0 18px; color: var(--texto-secundario, #8a786b); font-size: 13px; line-height: 1.55; }
+.relatorio-admin-card button { margin-top: auto; }
+#estadoRelatoriosAdmin { margin-top: 18px; }
+@media (max-width: 950px) {
+    .relatorios-admin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+    .relatorios-admin-grid { grid-template-columns: minmax(0, 1fr); }
+    .relatorio-admin-card button { width: 100%; }
+}
