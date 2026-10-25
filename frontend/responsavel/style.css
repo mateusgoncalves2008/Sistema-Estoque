@@ -1524,32 +1524,46 @@ footer {
     transform: none;
 }
 
-/* Aprovar */
+/* Aprovar: verde suave para indicar ação positiva */
 .request-actions .approve {
-    color: #fff;
-    background: #237a4b;
-    border-color: #237a4b;
+    color: #21683a;
+    background: #eaf6ed;
+    border-color: #b8d9c2;
 }
 
-/* Recusar */
+/* Recusar: vermelho suave para indicar recusa sem pesar visualmente */
 .request-actions .reject {
-    color: #fff;
-    background: #b8323e;
-    border-color: #b8323e;
+    color: #963b3b;
+    background: #fbeceb;
+    border-color: #e8b8b4;
 }
 
-/* Cancelar */
+/* Cancelar: neutro e discreto */
 .request-actions .cancel {
-    color: #694b0b;
-    background: #fff3d6;
-    border-color: #ead5a5;
+    color: #6f5140;
+    background: #f4eee7;
+    border-color: #e6d8cc;
 }
 
-/* Concluir devolução */
+/* Concluir devolução: azul suave para indicar finalização */
 .request-actions .finish {
-    color: #fff;
-    background: #2859a5;
-    border-color: #2859a5;
+    color: #315f91;
+    background: #eaf2fb;
+    border-color: #bfd3eb;
+}
+
+/* Realce suave ao passar o mouse */
+.request-actions .approve:hover {
+    background: #dcefe1;
+}
+.request-actions .reject:hover {
+    background: #f6ddda;
+}
+.request-actions .cancel:hover {
+    background: #eae0d6;
+}
+.request-actions .finish:hover {
+    background: #dce9f8;
 }
 
 /* Foco acessível */
