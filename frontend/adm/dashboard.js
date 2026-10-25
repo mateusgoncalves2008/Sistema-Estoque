@@ -12,6 +12,16 @@ const TAMANHO_PAGINA_LOGS = 50;
 
 const elAdmin = (id) => document.getElementById(id);
 
+function mostrarToastAdmin(mensagem, tipo = "") {
+    const toast = elAdmin("toastAdmin");
+    if (!toast) return;
+    toast.textContent = String(mensagem || "");
+    toast.classList.toggle("error", tipo === "erro");
+    toast.classList.add("show");
+    clearTimeout(mostrarToastAdmin.timer);
+    mostrarToastAdmin.timer = setTimeout(() => toast.classList.remove("show"), 4200);
+}
+
 function escaparAdmin(valor) {
     return String(valor ?? "").replace(/[&<>"']/g, (caractere) => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -358,7 +368,7 @@ async function executarAcaoUsuarioAdmin(botao) {
         const setorID = window.prompt("ID do setor (deixe vazio se não houver):", usuario.setorID || "");
         if (setorID === null) return;
         if (!nome.trim() || !email.trim()) {
-            alert("Nome e e-mail são obrigatórios.");
+            mostrarToastAdmin("Nome e e-mail são obrigatórios.", "erro");
             return;
         }
         await enviarAcaoUsuarioAdmin(usuarioID, "PATCH", "", { nome: nome.trim(), email: email.trim(), setorID: setorID.trim() });
@@ -386,7 +396,7 @@ async function enviarAcaoUsuarioAdmin(usuarioID, metodo, sufixo, corpo) {
         mostrarEstadoPainel(resultado.mensagem || "Usuário atualizado.", "sucesso");
         await carregarPainelAdmin();
     } catch (erro) {
-        alert(erro.message);
+        mostrarToastAdmin(erro.message || "Ocorreu um erro.", "erro");
     } finally {
         botoes.forEach((botao) => { botao.disabled = false; });
     }
@@ -651,7 +661,7 @@ async function sairPainelAdmin() {
         console.error("Erro ao encerrar sessão:", erro);
         botao.disabled = false;
         botao.querySelector("span").textContent = "Sair";
-        alert("Não foi possível confirmar a saída. Verifique sua conexão e tente novamente.");
+        mostrarToastAdmin("Não foi possível confirmar a saída. Verifique sua conexão e tente novamente.", "erro");
     }
 }
 
