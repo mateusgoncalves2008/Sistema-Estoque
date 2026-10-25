@@ -1404,7 +1404,7 @@ function renderizarAvisosProfessor() {
 
 // Menu lateral recolhível seguindo o comportamento do painel Responsável.
 (() => {
-    const toggle = document.getElementById("sidebarToggle");
+    const toggle = document.getElementById("btnSidebarToggle");
     if (!toggle) return;
     const atualizarIcone = () => {
         const recolhido = document.body.classList.contains("sidebar-collapsed");
