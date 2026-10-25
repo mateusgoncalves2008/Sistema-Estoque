@@ -3105,7 +3105,7 @@ if (document.readyState === "loading") {
 
 // Menu lateral recolhível seguindo o padrão do painel Responsável.
 (() => {
-    const toggle = document.getElementById("sidebarToggle");
+    const toggle = document.getElementById("btnSidebarToggle");
     if (!toggle) return;
     const atualizarIcone = () => {
         const recolhido = document.body.classList.contains("sidebar-collapsed");
