@@ -65,25 +65,27 @@
         <div id="mensagemEstado" class="mensagem-estado" role="status" aria-live="polite">Carregando dados reais da planilha...</div>
 
         <section class="metricas tela-admin" data-pagina="inicio" aria-label="Indicadores gerais">
-            <article class="metrica metrica-destaque">
-                <div class="metrica-topo"><span>Usuários cadastrados</span><i data-lucide="users"></i></div>
-                <strong id="totalUsuarios">—</strong>
-                <small><span id="usuariosAtivos">—</span> contas ativas</small>
+            <article class="metrica metrica-destaque"><div class="metrica-topo"><span>Usuários cadastrados</span><i data-lucide="users"></i></div><strong id="totalUsuarios">—</strong><small><span id="usuariosAtivos">—</span> contas ativas</small></article>
+            <article class="metrica"><div class="metrica-topo"><span>Produtos cadastrados</span><i data-lucide="package"></i></div><strong id="totalProdutos">—</strong><small>Itens no catálogo</small></article>
+            <article class="metrica"><div class="metrica-topo"><span>Quantidade em estoque</span><i data-lucide="boxes"></i></div><strong id="totalEstoque">—</strong><small><span id="estoqueDisponivel">—</span> disponíveis</small></article>
+            <article class="metrica"><div class="metrica-topo"><span>Locais de estoque</span><i data-lucide="warehouse"></i></div><strong id="totalRegistrosEstoque">—</strong><small>Registros por local</small></article>
+            <article class="metrica"><div class="metrica-topo"><span>Movimentações</span><i data-lucide="arrow-left-right"></i></div><strong id="totalMovimentacoes">—</strong><small>Registros de movimentação</small></article>
+            <article class="metrica"><div class="metrica-topo"><span>Reservas</span><i data-lucide="calendar-check"></i></div><strong id="totalReservas">—</strong><small>Reservas registradas</small></article>
+            <article class="metrica"><div class="metrica-topo"><span>Empréstimos</span><i data-lucide="handshake"></i></div><strong id="totalEmprestimos">—</strong><small>Empréstimos registrados</small></article>
+            <article class="metrica"><div class="metrica-topo"><span>Devoluções</span><i data-lucide="package-check"></i></div><strong id="totalDevolucoes">—</strong><small>Devoluções registradas</small></article>
+            <article class="metrica"><div class="metrica-topo"><span>Setores</span><i data-lucide="building-2"></i></div><strong id="totalSetores">—</strong><small>Setores cadastrados</small></article>
+            <article class="metrica"><div class="metrica-topo"><span>Avisos publicados</span><i data-lucide="bell"></i></div><strong id="totalAvisosInicio">—</strong><small>Avisos ativos no sistema</small></article>
+            <article class="metrica"><div class="metrica-topo"><span>Registros de auditoria</span><i data-lucide="scan-eye"></i></div><strong id="totalLogs">—</strong><small>Eventos registrados na planilha</small></article>
+        </section>
+
+        <section class="graficos-inicio tela-admin" data-pagina="inicio" aria-label="Tendências do sistema">
+            <article class="bloco grafico-inicio">
+                <div class="bloco-cabecalho"><div><h2>Movimentações por semana</h2><p>Quantidade de registros nas últimas oito semanas.</p></div></div>
+                <div id="graficoMovimentacoesAdmin" class="grafico-linha" role="img" aria-label="Gráfico de linha de movimentações por semana"><p class="vazio">Carregando gráfico...</p></div>
             </article>
-            <article class="metrica">
-                <div class="metrica-topo"><span>Produtos cadastrados</span><i data-lucide="package"></i></div>
-                <strong id="totalProdutos">—</strong>
-                <small>Itens no catálogo</small>
-            </article>
-            <article class="metrica">
-                <div class="metrica-topo"><span>Quantidade em estoque</span><i data-lucide="boxes"></i></div>
-                <strong id="totalEstoque">—</strong>
-                <small><span id="estoqueDisponivel">—</span> disponíveis</small>
-            </article>
-            <article class="metrica">
-                <div class="metrica-topo"><span>Registros de auditoria</span><i data-lucide="scan-eye"></i></div>
-                <strong id="totalLogs">—</strong>
-                <small>Eventos registrados na planilha</small>
+            <article class="bloco grafico-inicio">
+                <div class="bloco-cabecalho"><div><h2>Empréstimos por mês</h2><p>Quantidade de registros nos últimos seis meses.</p></div></div>
+                <div id="graficoEmprestimosAdmin" class="grafico-linha" role="img" aria-label="Gráfico de linha de empréstimos por mês"><p class="vazio">Carregando gráfico...</p></div>
             </article>
         </section>
 
