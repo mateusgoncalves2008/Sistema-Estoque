@@ -217,6 +217,7 @@ router.get("/admin/dashboard", async (req, res) => {
                     { id: "emprestimos-atrasados", titulo: "Empréstimos atrasados", quantidade: emprestimosAtrasados, destino: "operacoes", descricao: "Empréstimos fora da data prevista" },
                     { id: "estoque-baixo", titulo: "Estoque no mínimo", quantidade: estoqueBaixo, destino: "estoque", descricao: "Produtos ativos no nível mínimo ou abaixo" },
                     { id: "denuncias-pendentes", titulo: "Denúncias pendentes", quantidade: denuncias.filter((linha) => textoAdmin(linha[10]).toUpperCase() === "PENDENTE").length, destino: "denuncias", descricao: "Denúncias aguardando análise" },
+                    { id: "bloqueios-ativos", titulo: "Bloqueios ativos", quantidade: bloqueios.filter((linha) => textoAdmin(linha[9]).toUpperCase() === "ATIVO").length, destino: "bloqueios", descricao: "Bloqueios de acesso ainda ativos" },
                 ];
             })(),
             atividadesRecentes,
