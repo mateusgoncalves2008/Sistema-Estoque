@@ -294,7 +294,7 @@ async function registrarLogAdmin(req, acao, tabela, registroID, descricao) {
         const linhas = resposta.data.values || [];
         let maior = 0;
         for (const linha of linhas.slice(1)) {
-            const match = textoAdmin(linha[0]).match(/^LOG-(\\d+)$/);
+            const match = textoAdmin(linha[0]).match(/^LOG-(\d+)$/);
             if (match) maior = Math.max(maior, Number(match[1]));
         }
         const logID = "LOG-" + String(maior + 1).padStart(5, "0");
@@ -401,7 +401,7 @@ router.patch("/admin/usuarios/:usuarioID/status", async (req, res) => {
         await registrarLogAdmin(req, status === "ATIVO" ? "REATIVAR_USUARIO" : "DESATIVAR_USUARIO", "01_USUARIOS", usuarioID, "Status alterado para " + status + ".");
         return res.json({
             sucesso: true,
-            mensagem: status === "ATIVO" ? "Conta reativada." : "Conta desativada; o histórico foi preservado",
+            mensagem: status === "ATIVO" ? "Conta reativada." : "Conta desativada; o histórico foi preservado.",
         });
     } catch (erro) {
         console.error("Erro ao alterar status de usuário pelo ADM:", erro.message);
