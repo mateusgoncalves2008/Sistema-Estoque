@@ -2511,15 +2511,35 @@ $("#form-mudar-turma")?.addEventListener("submit", async e => {
 let atualizacaoSilenciosaSecretariaEmAndamento = false;
 
 window.setInterval(async () => {
-    if (atualizacaoSilenciosaSecretariaEmAndamento || document.visibilityState !== "visible") return;
+    if (atualizacaoSilenciosaSecretariaEmAndamento) {
+        console.info("[ATUALIZAÇÃO AUTOMÁTICA] Ciclo anterior ainda está em andamento.");
+        return;
+    }
+    if (document.visibilityState !== "visible") {
+        console.info("[ATUALIZAÇÃO AUTOMÁTICA] Pausada: a aba não está visível.");
+        return;
+    }
     const ativo = document.activeElement;
-    if (ativo?.matches("input, textarea, select, [contenteditable='true']")) return;
-    if (document.querySelector('dialog[open], [role="dialog"]:not([hidden]), .modal.show, .modal.aberto')) return;
-    if (document.querySelector("form [aria-busy='true'], form button:disabled")) return;
+    if (ativo?.matches("input, textarea, select, [contenteditable='true']")) {
+        console.info("[ATUALIZAÇÃO AUTOMÁTICA] Pausada: há um campo em edição.", ativo);
+        return;
+    }
+    if (document.querySelector('dialog[open], [role="dialog"]:not([hidden]), .modal.show, .modal.aberto')) {
+        console.info("[ATUALIZAÇÃO AUTOMÁTICA] Pausada: há um modal aberto.");
+        return;
+    }
+    if (document.querySelector("form [aria-busy='true'], form button:disabled")) {
+        console.info("[ATUALIZAÇÃO AUTOMÁTICA] Pausada: há um formulário ocupado ou botão desabilitado.");
+        return;
+    }
     atualizacaoSilenciosaSecretariaEmAndamento = true;
+    console.info("[ATUALIZAÇÃO AUTOMÁTICA] Iniciando atualização...");
     try {
         await carregarDados(true);
         await carregarDadosProfessores(true);
+        console.info("[ATUALIZAÇÃO AUTOMÁTICA] Ciclo concluído.");
+    } catch (erro) {
+        console.error("[ATUALIZAÇÃO AUTOMÁTICA] Falha no ciclo:", erro);
     } finally {
         atualizacaoSilenciosaSecretariaEmAndamento = false;
     }
