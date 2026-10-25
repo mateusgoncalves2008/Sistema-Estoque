@@ -1076,3 +1076,8 @@ tbody tr:hover { background: #fdfbf8; }
         width: 100%;
     }
 }
+
+/* Espaçamento superior dos títulos das duas colunas do cadastro ADM */
+#cadastro .coluna-cadastro-admin > h3 {
+    margin-top: 12px;
+}
