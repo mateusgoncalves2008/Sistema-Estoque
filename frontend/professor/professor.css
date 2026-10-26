@@ -106,10 +106,7 @@ button {
     font-size: 13px;
     font-weight: 600;
     transition: 0.2s;
-}
-
-.menu button:hover,
-.menu button.active {
+}.menu button.active {
     color: white;
     background: var(--laranja);
 }
@@ -246,11 +243,6 @@ button {
     color: var(--texto);
     text-align: left;
     transition: 0.2s;
-}
-
-.quick-btn:hover {
-    border-color: var(--laranja);
-    transform: translateY(-2px);
 }
 
 .quick-btn svg {
@@ -688,11 +680,6 @@ th {
         border-color 0.2s;
 }
 
-#page-pesquisar .search-filters .btn:hover {
-    background: #fbf0e9;
-    border-color: #df5129;
-}
-
 /* Título e contagem dos resultados */
 
 #page-pesquisar .search-results-head {
@@ -738,12 +725,6 @@ th {
 
 #page-pesquisar .item-result-card.reservable {
     cursor: pointer;
-}
-
-#page-pesquisar .item-result-card:hover {
-    transform: translateY(-2px);
-    border-color: #e3c8b7;
-    box-shadow: 0 9px 25px rgb(60 41 31 / 7%);
 }
 
 #page-pesquisar .item-result-card:focus-visible {
@@ -1152,11 +1133,6 @@ th {
     color: white;
 }
 
-.cal-prof-toolbar button:hover {
-    border-color: var(--cal-border);
-    background: var(--cal-bg);
-}
-
 .cal-prof-toolbar button:focus-visible,
 .cal-prof-toolbar select:focus-visible,
 .cal-prof-filters button:focus-visible,
@@ -1543,10 +1519,6 @@ th {
     transition: box-shadow 0.2s ease;
 }
 
-#page-historico .historico-card:hover {
-    box-shadow: 0 10px 24px rgba(57, 37, 27, 0.13);
-}
-
 #page-historico .historico-card-topo {
     display: flex;
     align-items: center;
@@ -1732,11 +1704,6 @@ th {
     transition: 0.2s ease;
 }
 
-#page-historico .historico-botoes button:hover {
-    border-color: #c65a32;
-    color: #a84727;
-}
-
 #page-historico .historico-botoes button.ativo {
     background: #c65a32;
     border-color: #c65a32;
@@ -1908,10 +1875,6 @@ th {
     box-shadow: 0 8px 24px rgb(45 33 27 / 16%);
     cursor: pointer;
     transition: transform .18s ease, box-shadow .18s ease;
-}
-.botao-avisos-professor:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgb(45 33 27 / 20%);
 }
 .botao-avisos-professor svg {
     width: 22px;
@@ -2134,7 +2097,6 @@ th {
     height: 21px;
     flex: 0 0 21px;
 }
-.menu button:hover { background: #ffffff12; }
 .menu button.active, .menu button.ativo, .menu button[aria-current="page"] {
     background: #bb542f;
     color: #fff;
@@ -2158,7 +2120,6 @@ th {
     font-weight: 600;
     text-align: left;
 }
-.sidebar-bottom .logout:hover { color: #fff; }
 @media (max-width: 700px) {
     .sidebar { padding: 20px 14px; }
     .menu button { min-height: 52px; }
@@ -2182,9 +2143,6 @@ th {
     color: #fff;
     background: transparent;
     transition: background .18s ease, color .18s ease;
-}
-.sidebar-toggle-professor:hover {
-    background: #ffffff14;
 }
 .sidebar-toggle-professor svg {
     width: 20px;
@@ -2223,14 +2181,10 @@ body.sidebar-collapsed .sidebar-toggle-professor {
     opacity: 0;
     pointer-events: none;
     background: var(--marrom);
-}
-body.sidebar-collapsed .logo:hover .sidebar-toggle-professor,
-body.sidebar-collapsed .logo:focus-within .sidebar-toggle-professor {
+}body.sidebar-collapsed .logo:focus-within .sidebar-toggle-professor {
     opacity: 1;
     pointer-events: auto;
-}
-body.sidebar-collapsed .logo:hover .logo-img,
-body.sidebar-collapsed .logo:focus-within .logo-img {
+}body.sidebar-collapsed .logo:focus-within .logo-img {
     opacity: 0;
 }
 body.sidebar-collapsed .menu button {
@@ -2268,9 +2222,7 @@ body.sidebar-collapsed .menu button svg {
         opacity: 1;
         pointer-events: auto;
         background: transparent;
-    }
-    body.sidebar-collapsed .logo:hover .logo-img,
-    body.sidebar-collapsed .logo:focus-within .logo-img {
+    }body.sidebar-collapsed .logo:focus-within .logo-img {
         opacity: 1;
     }
     body.sidebar-collapsed .menu button {
@@ -2354,9 +2306,6 @@ body.sidebar-collapsed .menu button svg {
     h1 { font-size: clamp(18px, 5vw, 24px); }
 }
 @media (hover: none) and (pointer: coarse) {
-    .sidebar .menu button:hover,
-    button:hover, a:hover { transform: none !important; }
-    .sidebar .menu button:hover { filter: none !important; }
 }
 
 /* Correção da barra inferior: remove a altura mínima herdada da barra lateral */
@@ -2468,8 +2417,4 @@ html::-webkit-scrollbar-thumb,
 body::-webkit-scrollbar-thumb {
     background: #c95730;
     border-radius: 999px;
-}
-html::-webkit-scrollbar-thumb:hover,
-body::-webkit-scrollbar-thumb:hover {
-    background: #e06a3f;
 }
