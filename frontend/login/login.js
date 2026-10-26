@@ -24,6 +24,28 @@ document.addEventListener("DOMContentLoaded", () => {
     inicializarLogin();
 });
 
+// Não deixa o navegador restaurar os campos de autenticação ao voltar no histórico.
+window.addEventListener("pagehide", () => {
+    limparCamposLoginSensíveis();
+});
+
+window.addEventListener("pageshow", (evento) => {
+    if (evento.persisted) {
+        localStorage.removeItem("emailLembrado");
+        limparCamposLoginSensíveis();
+    }
+});
+
+function limparCamposLoginSensíveis() {
+    const campoEmail = document.getElementById("email");
+    const campoSenha = document.getElementById("senha");
+    const lembrar = document.getElementById("lembrar");
+
+    if (campoEmail) campoEmail.value = "";
+    if (campoSenha) campoSenha.value = "";
+    if (lembrar) lembrar.checked = false;
+}
+
 function inicializarLogin() {
     // Após sair, não reutiliza dados de login da conta anterior.
     const saiuAgora = sessionStorage.getItem("hauyLogoutConcluido") === "1";
