@@ -150,6 +150,40 @@ function hideNotice() {
     el("notice")?.classList.add("hidden");
 }
 
+function confirmarAcaoEscolar(mensagem) {
+    const dialog = el("schoolConfirmDialog");
+    const texto = el("schoolConfirmMessage");
+    const aceitar = el("schoolConfirmAccept");
+    const cancelar = el("schoolConfirmCancel");
+
+    if (!dialog || !texto || !aceitar || !cancelar) {
+        return Promise.resolve(window.confirm(mensagem));
+    }
+
+    texto.textContent = mensagem;
+    dialog.showModal();
+
+    return new Promise((resolve) => {
+        const finalizar = (resultado) => {
+            dialog.close();
+            aceitar.removeEventListener("click", confirmar);
+            cancelar.removeEventListener("click", negar);
+            dialog.removeEventListener("cancel", cancelarDialogo);
+            resolve(resultado);
+        };
+        const confirmar = () => finalizar(true);
+        const negar = () => finalizar(false);
+        const cancelarDialogo = (evento) => {
+            evento.preventDefault();
+            finalizar(false);
+        };
+
+        aceitar.addEventListener("click", confirmar);
+        cancelar.addEventListener("click", negar);
+        dialog.addEventListener("cancel", cancelarDialogo);
+    });
+}
+
 
 /* =====================================================
    RELÓGIO
@@ -770,7 +804,7 @@ async function executarAcaoReserva(acao, reservaID) {
     };
 
     if (!confirmacoes[acao] || !reservaID) return;
-    if (!window.confirm(confirmacoes[acao])) return;
+    if (!(await confirmarAcaoEscolar(confirmacoes[acao]))) return;
 
     const linha = [...document.querySelectorAll("#requestRows tr")].find((tr) =>
         tr.querySelector(`button[data-id="${CSS.escape(reservaID)}"]`),
@@ -1428,7 +1462,7 @@ function iniciarEventos() {
             showNotice("Não foi possível identificar o bloqueio.", true);
             return;
         }
-        if (!window.confirm("Deseja desbloquear " + nome + " neste setor?"))
+        if (!(await confirmarAcaoEscolar("Deseja desbloquear " + nome + " neste setor?")))
             return;
 
         button.disabled = true;
