@@ -1646,3 +1646,46 @@ body.modal-admin-aberto{overflow:hidden}
         display: none;
     }
 }
+
+
+/* Barra lateral da página: linha laranja minimalista; menus sem barra visível */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #c95730 transparent;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #c95730;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+    background: #e06a3f;
+}
+
+/* Os menus continuam roláveis, mas sem exibir scrollbar dentro deles */
+@media (min-width: 701px) {
+    .sidebar .sidebar-nav,
+    .sidebar .navegacao {
+        scrollbar-width: none;
+    }
+
+    .sidebar .sidebar-nav::-webkit-scrollbar,
+    .sidebar .navegacao::-webkit-scrollbar {
+        display: none;
+        width: 0;
+    }
+}
