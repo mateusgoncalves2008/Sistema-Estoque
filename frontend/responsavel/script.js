@@ -134,13 +134,26 @@ function statusBadge(status) {
 }
 
 function showNotice(message, isError = false) {
-    const notice = el("notice");
+    if (!isError) {
+        const dialog = el("schoolStatusDialog");
+        const texto = el("schoolStatusMessage");
+        const titulo = el("schoolStatusTitle");
 
+        if (dialog && texto && titulo && typeof dialog.showModal === "function") {
+            const mensagem = String(message || "Ação concluída com sucesso.");
+            const pareceSolicitacao = /solicita|reserva|enviad|pedido/i.test(mensagem);
+            titulo.textContent = pareceSolicitacao ? "Solicitação enviada" : "Ação concluída";
+            texto.textContent = mensagem;
+            dialog.showModal();
+            return;
+        }
+    }
+
+    const notice = el("notice");
     if (!notice) {
         console[isError ? "error" : "log"](message);
         return;
     }
-
     notice.textContent = message;
     notice.classList.remove("hidden");
     notice.classList.toggle("error", isError);
@@ -1369,6 +1382,12 @@ function iniciarEventos() {
 
     el("moveSearch")?.addEventListener("input", (event) => {
         renderMovements(event.target.value);
+    });
+
+    el("schoolStatusClose")?.addEventListener("click", () => el("schoolStatusDialog")?.close());
+    el("schoolStatusDialog")?.addEventListener("click", (event) => {
+        const dialog = el("schoolStatusDialog");
+        if (event.target === dialog) dialog.close();
     });
 
     el("logoutButton")?.addEventListener("click", async () => {
