@@ -545,6 +545,43 @@ tr:last-child td {
     color: var(--primary-dark);
 }
 
+/* Status de reservas e empréstimos */
+.tag.pending {
+    background: #fff1d6;
+    color: #865b12;
+    border: 1px solid #ebd6a7;
+}
+
+.tag.approved {
+    background: #e7ede3;
+    color: #3f6036;
+    border: 1px solid #c8d5c0;
+}
+
+.tag.finished {
+    background: #dff3e7;
+    color: #176b42;
+    border: 1px solid #b9dfc8;
+}
+
+.tag.cancelled {
+    background: #f8e2de;
+    color: #963b2d;
+    border: 1px solid #e9bdb5;
+}
+
+.tag.overdue {
+    background: #8e3428;
+    color: #fff;
+    border: 1px solid #8e3428;
+}
+
+.tag.other {
+    background: #f0e8f8;
+    color: #69428a;
+    border: 1px solid #d9c6e8;
+}
+
 .form {
     display: grid;
     gap: 14px;
