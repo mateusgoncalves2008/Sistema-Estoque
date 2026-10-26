@@ -836,26 +836,19 @@ async function carregarHistoricoProfessor(silencioso = false) {
     }
 
     try {
-        const resposta = await fetch(
-            `${API_URL}/professor/historico/${encodeURIComponent(usuario.id)}`,
-        );
-
-        const resultado = await resposta.json();
-
-        if (!resposta.ok || !resultado.sucesso) {
-            throw new Error(
-                resultado.mensagem || "Erro ao carregar histórico.",
-            );
-        }
-
+        const urlBaseHistorico = API_URL + "/professor/historico/" + encodeURIComponent(usuario.id);
+        const urlReservasHistorico = API_URL + "/professor/reservas/" + encodeURIComponent(usuario.id);
+        const respostasHistorico = await Promise.all([fetch(urlBaseHistorico), fetch(urlReservasHistorico)]);
+        const dadosHistorico = await Promise.all(respostasHistorico.map((resposta) => resposta.json()));
+        const resultado = dadosHistorico[0];
+        const resultadoReservas = dadosHistorico[1];
+        if (!respostasHistorico[0].ok || !resultado.sucesso) throw new Error(resultado.mensagem || "Erro ao carregar empréstimos do histórico.");
+        if (!respostasHistorico[1].ok || !resultadoReservas.sucesso) throw new Error(resultadoReservas.mensagem || "Erro ao carregar reservas do histórico.");
         const assinaturaAnterior = JSON.stringify(historicoProfessor);
-        historicoProfessor = Array.isArray(resultado.emprestimos)
-            ? resultado.emprestimos
-            : [];
-
-        if (silencioso && assinaturaAnterior === JSON.stringify(historicoProfessor)) {
-            return true;
-        }
+        const listaEmprestimosHistorico = Array.isArray(resultado.emprestimos) ? resultado.emprestimos.map((registro) => ({ ...registro, registroTipo: "emprestimos" })) : [];
+        const listaReservasHistorico = Array.isArray(resultadoReservas.reservas) ? resultadoReservas.reservas.map((registro) => ({ ...registro, registroTipo: "reservas" })) : [];
+        historicoProfessor = [...listaReservasHistorico, ...listaEmprestimosHistorico];
+        if (silencioso && assinaturaAnterior === JSON.stringify(historicoProfessor)) return true;
 
         const escapar = (valor) =>
             String(valor ?? "").replace(
@@ -915,17 +908,21 @@ async function carregarHistoricoProfessor(silencioso = false) {
             return "historico-pendente";
         };
 
-        const registros = historicoProfessor.map((m) => ({
-            id: m.emprestimoID || m.id || "",
-            item: m.item || m.nome || m.produtoID || "Item não identificado",
-            tipo: m.tipo || "Não informado",
-            local: m.local || m.localID || "Não informado",
-            quantidade: m.quantidade ?? 1,
-            data: m.retirada || m.data || "",
-            devolucao: m.devolucao || "",
-            dataDevolucao: m.dataDevolucao || "",
-            status: normalizarStatus(m.status),
-        }));
+        const registros = historicoProfessor.map((m) => {
+            const ehReserva = m.registroTipo === "reservas";
+            return {
+                id: ehReserva ? (m.reservaID || m.id || "") : (m.emprestimoID || m.id || ""),
+                registroTipo: ehReserva ? "reservas" : "emprestimos",
+                item: m.item || m.nome || m.produtoID || "Item não identificado",
+                tipo: m.tipo || "Não informado",
+                local: m.local || m.localID || "Não informado",
+                quantidade: m.quantidade ?? 1,
+                data: ehReserva ? (m.dataInicio || m.dataSolicitacao || m.retirada || m.data || "") : (m.retirada || m.data || ""),
+                devolucao: ehReserva ? (m.dataFim || m.devolucao || "") : (m.devolucao || ""),
+                dataDevolucao: m.dataDevolucao || "",
+                status: normalizarStatus(m.status),
+            };
+        });
 
         registros.sort((a, b) => String(b.data).localeCompare(String(a.data)));
 
@@ -1059,10 +1056,9 @@ async function carregarHistoricoProfessor(silencioso = false) {
                             texto,
                         ));
 
-                // Atualmente, a API carrega somente empréstimos.
                 const correspondeTipo =
                     tipoSelecionado === "todos" ||
-                    tipoSelecionado === "emprestimos";
+                    m.registroTipo === tipoSelecionado;
 
                 return correspondeCategoria && correspondeTipo;
             });
