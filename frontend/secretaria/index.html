@@ -748,54 +748,48 @@
 
                     <!-- AVISOS -->
                     <section class="page" id="p-avisos">
-                        <div class="head">
+                        <div class="head avisos-secretaria-cabecalho">
                             <div>
+                                <p class="avisos-secretaria-sobretitulo">COMUNICAÇÃO ESCOLAR</p>
                                 <h1>Avisos e Comunicados</h1>
-                                <p class="sub">
-                                    Publique comunicados para alunos e
-                                    professores.
-                                </p>
+                                <p class="sub">Crie comunicados para os públicos da escola e consulte o histórico de publicações.</p>
                             </div>
                         </div>
-
-                        <div class="card">
-                            <h2>Novo aviso</h2>
-
-                            <div class="form">
-                                <div>
+                        <div class="card avisos-secretaria-form-card">
+                            <div class="avisos-secretaria-titulo-bloco">
+                                <h2>Novo aviso</h2>
+                                <p class="sub">Preencha os campos abaixo para publicar um comunicado.</p>
+                            </div>
+                            <div class="avisos-secretaria-form">
+                                <div class="avisos-secretaria-campo">
                                     <label for="at">Título</label>
-                                    <input id="at" />
+                                    <input id="at" type="text" maxlength="150" autocomplete="off" required />
                                 </div>
-
-                                <div>
-                                    <label for="ad">Destino</label>
-                                    <select id="ad">
-                                        <option>Todos</option>
-                                        <option>Alunos</option>
-                                        <option>Professores</option>
-                                    </select>
-                                </div>
-
-                                <div>
+                                <div class="avisos-secretaria-campo">
                                     <label for="au">Prioridade</label>
-                                    <select id="au">
-                                        <option>Normal</option>
-                                        <option>Urgente</option>
-                                    </select>
+                                    <select id="au" required><option>Normal</option><option>Urgente</option></select>
                                 </div>
-
-                                <div style="grid-column: 1/-1">
+                                <div class="avisos-secretaria-campo">
+                                    <label for="ad">Destinatários</label>
+                                    <select id="ad" required><option>Todos</option><option>Alunos</option><option>Professores</option></select>
+                                </div>
+                                <div class="avisos-secretaria-campo avisos-secretaria-mensagem">
                                     <label for="ax">Mensagem</label>
-                                    <textarea id="ax" rows="4" maxlength="10000" required></textarea>
+                                    <textarea id="ax" rows="5" maxlength="10000" required></textarea>
                                 </div>
-
-                                <button class="btn" id="btn-publicar-aviso" type="button">
-                                    Publicar
+                                <p id="estado-aviso-secretaria" class="avisos-secretaria-estado" role="status" aria-live="polite"></p>
+                                <button class="btn avisos-secretaria-publicar" id="btn-publicar-aviso" type="button">
+                                    <i data-lucide="send"></i><span>Publicar aviso</span>
                                 </button>
                             </div>
                         </div>
-
-                        <div id="avisos" style="margin-top: 20px"></div>
+                        <div class="avisos-secretaria-historico-cabecalho">
+                            <div><h2>Histórico de avisos</h2><p class="sub">Comunicados publicados na planilha escolar.</p></div>
+                            <button class="btn avisos-secretaria-atualizar" id="btn-atualizar-avisos" type="button">
+                                <i data-lucide="refresh-cw"></i><span>Atualizar</span>
+                            </button>
+                        </div>
+                        <div id="avisos" class="avisos-secretaria-lista"><p class="sub">Carregando avisos...</p></div>
                     </section>
 
                     <!-- CALENDÁRIO -->
