@@ -2936,3 +2936,32 @@ html::-webkit-scrollbar-thumb:hover,
 body::-webkit-scrollbar-thumb:hover {
     background: #e06a3f;
 }
+
+/* Ajuste de escala: menus e controles principais */
+@media (min-width: 701px) {
+    .sidebar nav button, .sidebar nav a, .sidebar .menu button, .sidebar .navegacao button, .sidebar .nav-link, .sidebar .menu-item { min-height: 44px; padding-top: 9px; padding-bottom: 9px; font-size: 13px; }
+    .sidebar nav button i, .sidebar nav button svg, .sidebar nav a i, .sidebar nav a svg { width: 17px; height: 17px; }
+}
+button, .primary-button, .secondary-button, .refresh, .text-btn { font-size: 13px; }
+.primary-button, .secondary-button, .refresh { padding: 10px 14px; }
+.page h1, .page-header h1 { font-size: clamp(22px, 2vw, 28px); }
+/* Cartões menores no menu Estoque */
+#page-estoque .stock-cards-list { gap: 11px; }
+#page-estoque .stock-item-card { padding: 16px 18px; gap: 15px; border-radius: 14px; }
+#page-estoque .stock-card-main { gap: 13px; }
+#page-estoque .stock-card-icon { width: 50px; height: 50px; flex-basis: 50px; border-radius: 12px; font-size: 20px; }
+#page-estoque .stock-card-info { gap: 7px; }
+#page-estoque .stock-card-title-row { gap: 9px; }
+#page-estoque .stock-card-title-row h3 { font-size: 17px; }
+#page-estoque .stock-card-metrics { gap: 12px; font-size: 12px; }
+#page-estoque .stock-card-metrics strong { font-size: 13px; }
+#page-estoque .stock-card-category { font-size: 11px; }
+#page-estoque .stock-card-actions { gap: 7px; }
+#page-estoque .stock-action { padding: 8px 10px; font-size: 12px; }
+@media (max-width: 700px) {
+    button, .primary-button, .secondary-button, .refresh, .text-btn { font-size: 12px; }
+    .primary-button, .secondary-button, .refresh { padding: 9px 12px; }
+    #page-estoque .stock-item-card { padding: 13px; gap: 12px; }
+    #page-estoque .stock-card-title-row h3 { font-size: 16px; }
+    #page-estoque .stock-card-metrics { gap: 9px; font-size: 12px; }
+}
