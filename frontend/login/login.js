@@ -25,11 +25,24 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function inicializarLogin() {
+    // Após sair, não reutiliza dados de login da conta anterior.
+    const saiuAgora = sessionStorage.getItem("hauyLogoutConcluido") === "1";
+    if (saiuAgora) {
+        sessionStorage.removeItem("hauyLogoutConcluido");
+        localStorage.removeItem("emailLembrado");
+        const campoEmail = document.getElementById("email");
+        const campoSenha = document.getElementById("senha");
+        const lembrar = document.getElementById("lembrar");
+        if (campoEmail) campoEmail.value = "";
+        if (campoSenha) campoSenha.value = "";
+        if (lembrar) lembrar.checked = false;
+    }
+
     // Inicializa os ícones Lucide, caso estejam disponíveis
     atualizarIcones();
 
     // Recupera o e-mail salvo, se "Lembrar de mim" estiver ativo
-    const emailSalvo = localStorage.getItem("emailLembrado");
+    const emailSalvo = saiuAgora ? "" : localStorage.getItem("emailLembrado");
 
     if (emailSalvo) {
         const campoEmail = document.getElementById("email");
