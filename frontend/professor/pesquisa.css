@@ -95,12 +95,6 @@
         box-shadow 0.2s ease;
 }
 
-.item-result-card:hover {
-    transform: translateY(-2px);
-    border-color: #d9b5a5;
-    box-shadow: 0 9px 24px rgba(70, 43, 29, 0.08);
-}
-
 .item-result-icon {
     width: 44px;
     height: 44px;
@@ -261,12 +255,6 @@
         border-color 0.18s ease;
 }
 
-.item-result-card.reservable:hover {
-    transform: translateY(-2px);
-    border-color: #c65a32;
-    box-shadow: 0 12px 30px rgba(57, 37, 27, 0.1);
-}
-
 /* Modal de reserva da pesquisa */
 .modal-overlay {
     position: fixed;
@@ -331,11 +319,6 @@
     transition: all 0.15s ease;
 }
 
-.filtro-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
 .filtro-btn.active {
     background: var(--primary);
     border-color: var(--primary);
@@ -388,11 +371,6 @@
     padding: 4px 8px;
     border-radius: 8px;
     line-height: 1;
-}
-
-.modal-fechar:hover {
-    background: var(--primary-pale);
-    color: var(--primary);
 }
 
 .modal-reserva-sub {
@@ -469,12 +447,6 @@
     cursor: pointer;
 }
 
-.btn-modal-cancelar:hover {
-    background: var(--primary-pale);
-    color: var(--primary);
-    border-color: var(--primary);
-}
-
 .btn-modal-confirmar {
     padding: 10px 24px;
     border-radius: 10px;
@@ -485,10 +457,6 @@
     font-weight: 800;
     cursor: pointer;
     transition: opacity 0.15s;
-}
-
-.btn-modal-confirmar:hover {
-    opacity: 0.88;
 }
 
 .btn-modal-confirmar:disabled {
@@ -538,11 +506,6 @@ body {
 .menu button {
     min-height: 45px;
     border: 1px solid transparent;
-}
-
-.menu button:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff8f1;
 }
 
 .menu button.active {
@@ -614,11 +577,6 @@ body {
     background: var(--terracota);
 }
 
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 13px 28px rgba(65, 43, 29, 0.08);
-}
-
 .card-label {
     color: #816b5d;
 }
@@ -647,11 +605,6 @@ body {
         background 0.18s;
 }
 
-.primary-btn:hover {
-    background: #a7482d;
-    transform: translateY(-1px);
-}
-
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
@@ -660,10 +613,6 @@ body {
 
 th {
     background: #f8f0e8;
-}
-
-tr:hover td {
-    background: #fffaf4;
 }
 
 @media (max-width: 1050px) {
@@ -740,12 +689,6 @@ tr:hover td {
     border-radius: 17px;
     background: #fffdf9;
     box-shadow: 0 6px 18px rgba(65, 43, 29, 0.045);
-}
-
-.item-result-card:hover,
-.item-result-card.reservable:hover {
-    border-color: #c8876e;
-    box-shadow: 0 12px 26px rgba(65, 43, 29, 0.09);
 }
 
 .item-result-icon {
@@ -1288,11 +1231,6 @@ tr:hover td {
 #pesquisaContainer .search-clear svg {
     width: 21px;
     height: 21px;
-}
-
-#pesquisaContainer .search-clear:hover {
-    border-color: #d9572b;
-    color: #b95435;
 }
 
 #pesquisaContainer .search-results-head {
