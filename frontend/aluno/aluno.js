@@ -761,7 +761,7 @@ function viewReservas() {
             (r) => `
                 <tr>
                     <td>
-                        ${escapeHtml(r.tipo || "Item")}
+                        ${escapeHtml(r.categoriaNome || r.nomeCategoria || r.tipo || "Item")}
                     </td>
 
                     <td>
