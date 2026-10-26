@@ -30,9 +30,13 @@ window.addEventListener("pagehide", () => {
 });
 
 window.addEventListener("pageshow", (evento) => {
+    // Ao voltar/avançar no histórico, alguns navegadores restauram os campos
+    // depois do primeiro evento; limpar novamente após a restauração.
     if (evento.persisted) {
         localStorage.removeItem("emailLembrado");
         limparCamposLoginSensíveis();
+        window.setTimeout(limparCamposLoginSensíveis, 100);
+        window.setTimeout(limparCamposLoginSensíveis, 500);
     }
 });
 
