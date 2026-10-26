@@ -1704,3 +1704,25 @@ body::-webkit-scrollbar-thumb:hover {
 .sidebar .sidebar-rodape .btn-sair:hover {
     background: #ffffff12 !important;
 }
+
+
+/* Barra da página: somente o traço laranja, sem setas nas extremidades */
+html::-webkit-scrollbar-button,
+body::-webkit-scrollbar-button,
+html::-webkit-scrollbar-button:single-button,
+body::-webkit-scrollbar-button:single-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+}
+
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* O status fica reservado apenas para avisos e erros, sem texto de carregamento */
+#mensagemEstado:empty {
+    display: none;
+}
