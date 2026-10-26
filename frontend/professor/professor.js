@@ -945,8 +945,8 @@ async function carregarHistoricoProfessor(silencioso = false) {
                     <div class="historico-card">
                         <div class="historico-card-topo">
                             <span class="historico-tipo tipo-emprestimo">
-                                ${icon("book-open")}
-                                Empréstimo
+                                ${icon(m.registroTipo === "reservas" ? "bookmark" : "book-open")}
+                                ${m.registroTipo === "reservas" ? "Reserva" : "Empréstimo"}
                             </span>
 
                             <span class="historico-status ${classeStatus(m.status)}">
