@@ -83,7 +83,7 @@ async function carregarPainelAdmin(silencioso = false) {
         const dados = await resposta.json();
 
         if (resposta.status === 401) {
-            window.location.replace("/index.html");
+            window.location.replace("/");
             return;
         }
         if (resposta.status === 403) {
@@ -720,7 +720,7 @@ async function sairPainelAdmin() {
         sessionStorage.removeItem("usuarioLogado");
         sessionStorage.setItem("hauyLogoutConcluido", "1");
         localStorage.removeItem("emailLembrado");
-        window.location.replace("/index.html");
+        window.location.replace("/");
     } catch (erro) {
         console.error("Erro ao encerrar sessão:", erro);
         botao.disabled = false;
@@ -732,7 +732,7 @@ async function sairPainelAdmin() {
 // Evita exibir a tela antiga ao voltar pelo histórico do navegador.
 window.addEventListener("pageshow", (evento) => {
     if (evento.persisted && !sessionStorage.getItem("usuarioLogado")) {
-        window.location.replace("/index.html");
+        window.location.replace("/");
     }
 });
 
@@ -743,7 +743,7 @@ async function carregarLogsCompletosAdmin() {
     try {
         const resposta = await fetch(`${API_ADMIN}/admin/logs`, { method: "GET", credentials: "include", headers: { Accept: "application/json" } });
         const dados = await resposta.json();
-        if (resposta.status === 401) { window.location.replace("/index.html"); return; }
+        if (resposta.status === 401) { window.location.replace("/"); return; }
         if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar os logs.");
         logsCompletosAdmin = Array.isArray(dados.logs) ? dados.logs : [];
         const preencherFiltro = (id, chave, titulo) => {
@@ -805,7 +805,7 @@ async function carregarAvisosAdmin() {
             cache: "no-store",
         });
         const dados = await resposta.json();
-        if (resposta.status === 401) { window.location.replace("/index.html"); return; }
+        if (resposta.status === 401) { window.location.replace("/"); return; }
         if (!resposta.ok || !dados.sucesso) throw new Error(dados.erro || "Não foi possível carregar os avisos.");
         avisosAdminCache = Array.isArray(dados.avisos) ? dados.avisos : [];
         if (!avisosAdminCache.length) {
@@ -854,7 +854,7 @@ function configurarAvisosAdmin() {
                 body: JSON.stringify({ titulo, mensagem, prioridade, destinatarios: [destinatarios] }),
             });
             const dados = await resposta.json();
-            if (resposta.status === 401) { window.location.replace("/index.html"); return; }
+            if (resposta.status === 401) { window.location.replace("/"); return; }
             if (!resposta.ok || !dados.sucesso) throw new Error(dados.erro || "Não foi possível publicar o aviso.");
             form.reset();
             estado.textContent = dados.mensagem || "Aviso publicado com sucesso.";
@@ -886,7 +886,7 @@ async function exportarRelatorioAdmin(tipo) {
     const consultar = async (rota) => {
         const resposta = await fetch(API_ADMIN + rota, { credentials: "include", headers: { Accept: "application/json" }, cache: "no-store" });
         const dados = await resposta.json();
-        if (resposta.status === 401) { window.location.replace("/index.html"); throw new Error("Sua sessão expirou."); }
+        if (resposta.status === 401) { window.location.replace("/"); throw new Error("Sua sessão expirou."); }
         if (!resposta.ok || dados.sucesso === false) throw new Error(dados.mensagem || dados.erro || "Falha ao consultar dados da planilha.");
         return dados;
     };
