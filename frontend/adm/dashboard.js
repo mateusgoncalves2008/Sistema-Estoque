@@ -718,6 +718,8 @@ async function sairPainelAdmin() {
             throw new Error(resultado.mensagem || "Não foi possível encerrar a sessão.");
         }
         sessionStorage.removeItem("usuarioLogado");
+        sessionStorage.setItem("hauyLogoutConcluido", "1");
+        localStorage.removeItem("emailLembrado");
         window.location.replace("/index.html");
     } catch (erro) {
         console.error("Erro ao encerrar sessão:", erro);
