@@ -41,13 +41,7 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
 app.disable("x-powered-by");
 
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            scriptSrc: ["'self'", "https://cdnjs.cloudflare.com"],
-        },
-    },
-}));
+app.use(helmet());
 
 const frontendOrigin = process.env.FRONTEND_ORIGIN || "http://localhost:3000";
 
