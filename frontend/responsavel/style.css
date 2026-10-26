@@ -2912,3 +2912,27 @@ body.sidebar-collapsed .sidebar-account-info { display: none; }
         background-size: 54px 44px;
     }
 }
+
+/* Barra de rolagem principal: identidade visual da escola */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #c95730 transparent;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+    background: transparent;
+}
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+    background: #c95730;
+    border-radius: 999px;
+}
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+    background: #e06a3f;
+}
