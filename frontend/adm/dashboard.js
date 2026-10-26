@@ -71,7 +71,7 @@ async function carregarPainelAdmin(silencioso = false) {
     if (!silencioso) {
         atualizar.disabled = true;
         atualizar.classList.add("girando");
-        mostrarEstadoPainel("Carregando dados administrativos da planilha...");
+        mostrarEstadoPainel("");
     }
 
     try {
