@@ -3041,3 +3041,12 @@ button, .primary-button, .secondary-button, .refresh, .text-btn { font-size: 13p
     .school-confirm-heading img { width: 56px; height: 56px; flex-basis: 56px; }
     .school-confirm-actions { padding: 14px 18px 18px; }
 }
+
+
+/* Janela de retorno após confirmar uma ação, com identidade visual da escola */
+.school-status-dialog .school-confirm-actions {
+    justify-content: flex-end;
+}
+.school-status-dialog #schoolStatusClose {
+    min-width: 100px;
+}
