@@ -2933,3 +2933,13 @@ html::-webkit-scrollbar-thumb:hover,
 body::-webkit-scrollbar-thumb:hover {
     background: #e06a3f;
 }
+
+/* Ajuste de escala: menus e botões principais */
+@media (min-width: 701px) {
+    .sidebar-nav .nav-item { min-height: 42px; padding: 9px 12px; font-size: 13px; gap: 9px; }
+    .sidebar-nav .nav-item i, .sidebar-nav .nav-item svg { width: 17px; height: 17px; }
+}
+button, .btn { font-size: 13px; }
+.btn { padding: 10px 14px; }
+.head h1 { font-size: clamp(22px, 2vw, 28px); }
+@media (max-width: 700px) { button, .btn { font-size: 12px; } .btn { padding: 9px 12px; } }
