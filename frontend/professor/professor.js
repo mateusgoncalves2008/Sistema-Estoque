@@ -623,16 +623,21 @@ function atualizarTabelas() {
         emprestimosAtivos.textContent = `${listaEmprestimosDados.length} ativos`;
     }
 
-    // LISTA DE RESERVAS
+    // LISTA DE RESERVAS PENDENTES
     if (listaReservas) {
-        listaReservas.innerHTML = listaReservasDados.length
-            ? listaReservasDados
+        const reservasPendentes = listaReservasDados.filter(
+            (reserva) => String(reserva.status || "").trim().toUpperCase() === "PENDENTE",
+        );
+
+        listaReservas.innerHTML = reservasPendentes.length
+            ? reservasPendentes
                   .map(
                       (reserva) => `
                         <tr>
-                            <td>${reserva.item || ""}</td>
-                            <td>${reserva.data || ""}</td>
-                            <td>${reserva.horario || ""}</td>
+                            <td>${reserva.tipo || "Item"}</td>
+                            <td>${reserva.nome || "Item não identificado"}</td>
+                            <td>${reserva.dataInicio || "—"}</td>
+                            <td>${reserva.dataFim || "—"}</td>
                             <td>
                                 <span class="status">
                                     ${reserva.status || ""}
@@ -644,8 +649,8 @@ function atualizarTabelas() {
                   .join("")
             : `
                 <tr>
-                    <td colspan="4">
-                        Nenhuma reserva cadastrada.
+                    <td colspan="5">
+                        Nenhuma reserva pendente.
                     </td>
                 </tr>
             `;
