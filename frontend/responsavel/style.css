@@ -2967,3 +2967,77 @@ button, .primary-button, .secondary-button, .refresh, .text-btn { font-size: 13p
 }
 
 
+
+
+/* Confirmações do painel do responsável: modal sólido, sem degradê, com a logo */
+.school-confirm-dialog {
+    width: min(460px, calc(100% - 32px));
+    padding: 0;
+    border: 1px solid #e6d8cc;
+    border-radius: 16px;
+    background: #fffdfa;
+    color: #3c291f;
+    box-shadow: 0 22px 60px rgb(53 34 25 / 24%);
+}
+.school-confirm-dialog::backdrop {
+    background: rgb(36 22 15 / 62%);
+}
+.school-confirm-heading {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 22px;
+}
+.school-confirm-heading img {
+    width: 68px;
+    height: 68px;
+    flex: 0 0 68px;
+    object-fit: contain;
+    padding: 5px;
+    border: 1px solid #e6d8cc;
+    border-radius: 12px;
+    background: #fffdfa;
+}
+.school-confirm-heading h2 {
+    margin: 0 0 7px;
+    color: #352219;
+    font-size: 19px;
+}
+.school-confirm-heading p {
+    margin: 0;
+    color: #8a786b;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+.school-confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 15px 22px 20px;
+    border-top: 1px solid #e6d8cc;
+    background: #f4eee7;
+}
+.school-confirm-actions button {
+    min-height: 40px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+.school-confirm-cancel {
+    border: 1px solid #d8c8ba;
+    background: #fffdfa;
+    color: #3c291f;
+}
+.school-confirm-accept {
+    border: 1px solid #a84425;
+    background: #c95730;
+    color: #fffdfa;
+}
+@media (max-width: 480px) {
+    .school-confirm-heading { gap: 12px; padding: 18px; }
+    .school-confirm-heading img { width: 56px; height: 56px; flex-basis: 56px; }
+    .school-confirm-actions { padding: 14px 18px 18px; }
+}
