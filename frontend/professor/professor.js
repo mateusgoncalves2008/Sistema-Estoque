@@ -709,6 +709,8 @@ async function carregarReservasProfessor(silencioso = false) {
 
         reservas = Array.isArray(resultado.reservas) ? resultado.reservas : [];
 
+        if (!silencioso) atualizarTabelas();
+
         return true;
     } catch (erro) {
         console.error("Erro ao carregar reservas do professor:", erro);
