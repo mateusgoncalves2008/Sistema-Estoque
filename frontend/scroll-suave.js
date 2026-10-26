@@ -4,7 +4,7 @@
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const GSAP_CDN = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/";
-    const stateByTarget = new WeakMap();
+    const scrollStates = new WeakMap();
     let ready = false;
 
     function loadScript(src) {
@@ -21,10 +21,11 @@
     function canScroll(element, delta) {
         if (!(element instanceof HTMLElement)) return false;
         const style = window.getComputedStyle(element);
-        const overflow = style.overflowY;
-        if (!/(auto|scroll|overlay)/.test(overflow) || element.scrollHeight <= element.clientHeight + 1) return false;
-        if (delta < 0) return element.scrollTop > 0;
-        return element.scrollTop + element.clientHeight < element.scrollHeight - 1;
+        if (!/(auto|scroll|overlay)/.test(style.overflowY)) return false;
+        if (element.scrollHeight <= element.clientHeight + 1) return false;
+        return delta < 0
+            ? element.scrollTop > 0
+            : element.scrollTop + element.clientHeight < element.scrollHeight - 1;
     }
 
     function findScrollTarget(event) {
@@ -37,15 +38,13 @@
     }
 
     function getCurrentY(target) {
-        if (target === window) return window.scrollY || window.pageYOffset || 0;
-        return target.scrollTop;
+        return target === window ? (window.scrollY || window.pageYOffset || 0) : target.scrollTop;
     }
 
     function getMaxY(target) {
-        if (target === window) {
-            return Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-        }
-        return Math.max(0, target.scrollHeight - target.clientHeight);
+        return target === window
+            ? Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+            : Math.max(0, target.scrollHeight - target.clientHeight);
     }
 
     function smoothWheel(event) {
@@ -54,34 +53,59 @@
 
         const target = findScrollTarget(event);
         const current = getCurrentY(target);
-        const previous = stateByTarget.get(target);
-        const start = previous ? previous.destination : current;
-        const destination = Math.max(0, Math.min(getMaxY(target), start + event.deltaY * 1.15));
+        const max = getMaxY(target);
+        const oldState = scrollStates.get(target);
+        const destinationBase = oldState ? oldState.destination : current;
 
-        if (Math.abs(destination - current) < 1) return;
+        // Respeita os limites da área rolável e não acumula movimento além do fim.
+        const delta = event.deltaMode === 1 ? event.deltaY * 16
+            : event.deltaMode === 2 ? event.deltaY * window.innerHeight
+            : event.deltaY;
+        const destination = Math.max(0, Math.min(max, destinationBase + delta));
+
+        // Deixa o comportamento nativo agir se já estamos no limite.
+        if ((event.deltaY > 0 && current >= max && (!oldState || oldState.destination >= max)) ||
+            (event.deltaY < 0 && current <= 0 && (!oldState || oldState.destination <= 0))) {
+            scrollStates.delete(target);
+            return;
+        }
 
         event.preventDefault();
-        stateByTarget.set(target, { destination });
 
-        window.gsap.to(target, {
-            duration: 0.85,
-            ease: "power3.out",
-            overwrite: "auto",
-            scrollTo: target === window
-                ? { y: destination, autoKill: false }
-                : { y: destination, autoKill: false },
+        let state = oldState;
+        if (!state) {
+            state = { destination: current, tween: null };
+            scrollStates.set(target, state);
+        }
+        state.destination = destination;
+
+        if (state.tween) state.tween.kill();
+
+        const scrollObject = target === window ? window : target;
+        state.tween = window.gsap.to(scrollObject, {
+            duration: 0.38,
+            ease: "power2.out",
+            overwrite: true,
+            scrollTo: { y: destination, autoKill: true },
             onComplete: () => {
-                const state = stateByTarget.get(target);
-                if (state && state.destination === destination) stateByTarget.delete(target);
+                if (scrollStates.get(target) === state) {
+                    state.tween = null;
+                    if (Math.abs(getCurrentY(target) - state.destination) < 2) {
+                        scrollStates.delete(target);
+                    }
+                }
+            },
+            onInterrupt: () => {
+                if (scrollStates.get(target) === state) state.tween = null;
             }
         });
     }
 
     function start() {
         ready = true;
-        window.addEventListener("wheel", smoothWheel, { passive: false });
         document.documentElement.style.overflowX = "hidden";
         document.body.style.overflowX = "hidden";
+        window.addEventListener("wheel", smoothWheel, { passive: false });
     }
 
     Promise.all([
