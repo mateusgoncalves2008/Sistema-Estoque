@@ -695,40 +695,37 @@ function formatarDataHoraReserva(valor) {
 function classeStatusReserva(status) {
     const valor = String(status || "")
         .trim()
-        .toUpperCase();
+        .toUpperCase()
+        .normalize("NFD")
+        .replace(/[\\u0300-\\u036f]/g, "");
 
-    if (valor === "PENDENTE") {
+    if (valor === "PENDENTE" || valor === "AGUARDANDO") {
         return "pending";
     }
 
     if (
-        valor === "APROVADA" ||
-        valor === "APROVADO" ||
-        valor === "CONFIRMADA" ||
-        valor === "CONFIRMADO"
+        ["APROVADA", "APROVADO", "CONFIRMADA", "CONFIRMADO", "ABERTO", "EM ANDAMENTO"].includes(valor)
     ) {
         return "approved";
     }
 
+    if (["ATRASADO", "VENCIDO"].includes(valor)) {
+        return "overdue";
+    }
+
     if (
-        valor === "CANCELADA" ||
-        valor === "CANCELADO" ||
-        valor === "REJEITADA" ||
-        valor === "REJEITADO"
+        ["CANCELADA", "CANCELADO", "REJEITADA", "REJEITADO", "RECUSADA", "RECUSADO"].includes(valor)
     ) {
         return "cancelled";
     }
 
     if (
-        valor === "CONCLUIDA" ||
-        valor === "CONCLUÍDA" ||
-        valor === "FINALIZADA" ||
-        valor === "FINALIZADO"
+        ["CONCLUIDA", "FINALIZADA", "FINALIZADO", "DEVOLVIDO", "DEVOLVIDA", "ENCERRADO", "ENCERRADA"].includes(valor)
     ) {
         return "finished";
     }
 
-    return "";
+    return "other";
 }
 
 function textoStatusReserva(status) {
