@@ -1937,36 +1937,29 @@ const R = {
     async avisos() {
         const container = $("#avisos");
         if (!container) return;
-
         container.innerHTML = '<p class="sub">Carregando avisos...</p>';
-
         try {
             const dados = await api("/secretaria/avisos");
             const avisos = dados.avisos || [];
-
             container.innerHTML = avisos.map((aviso) => {
                 const urgente = String(aviso.prioridade || "").toUpperCase() === "URGENTE";
                 const destino = String(aviso.destinatarios || "").split(",").join(", ");
-
                 return `
-                    <article class="card" style="margin-bottom:12px">
-                        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
-                            <h3>${escHtml(aviso.titulo)}</h3>
-                            <span class="dot" style="--c:${urgente ? "#B42318" : "#2F6FB5"}"></span>
+                    <article class="aviso-secretaria-historico-item${urgente ? " urgente" : ""}">
+                        <div class="aviso-secretaria-historico-meta">
+                            <span class="aviso-secretaria-historico-prioridade${urgente ? " urgente" : ""}">${urgente ? "URGENTE" : "NORMAL"}</span>
+                            <span>${escHtml(aviso.dataPublicacao || "Data não informada")}</span>
                         </div>
-                        <p>${escHtml(aviso.mensagem)}</p>
-                        <p class="sub">
-                            ${urgente ? "URGENTE" : "Normal"} ·
-                            Destino: ${escHtml(destino || "—")} ·
-                            ${escHtml(aviso.dataPublicacao || "")}
-                        </p>
-                    </article>
-                `;
+                        <h3>${escHtml(aviso.titulo || "Sem título")}</h3>
+                        <p class="aviso-secretaria-historico-mensagem">${escHtml(aviso.mensagem || "")}</p>
+                        <p class="aviso-secretaria-historico-destino">Destinatários: ${escHtml(destino || "—")}</p>
+                    </article>`;
             }).join("") || '<div class="card"><p class="sub">Nenhum aviso publicado ainda.</p></div>';
         } catch (erro) {
             console.error("Erro ao carregar avisos:", erro);
             container.innerHTML = `<div class="card"><p class="sub">${escHtml(erro.message || "Não foi possível carregar os avisos.")}</p></div>`;
         }
+        if (typeof lucide !== "undefined") lucide.createIcons();
     },
 
     relatorios() {
@@ -2014,57 +2007,31 @@ const R = {
    PUBLICAR AVISOS
 ========================================================= */
 window.addAv = async function addAv() {
-    const tituloCampo = $("#at");
-    const destinoCampo = $("#ad");
-    const prioridadeCampo = $("#au");
-    const mensagemCampo = $("#ax");
-
+    const tituloCampo = $("#at"), destinoCampo = $("#ad"), prioridadeCampo = $("#au"), mensagemCampo = $("#ax");
+    const estado = $("#estado-aviso-secretaria");
     const titulo = tituloCampo?.value.trim() || "";
     const mensagem = mensagemCampo?.value.trim() || "";
     const destino = destinoCampo?.value || "Todos";
     const prioridade = prioridadeCampo?.value || "Normal";
-
     if (!titulo || !mensagem) {
-        alert("Preencha o título e a mensagem do aviso.");
+        if (estado) { estado.textContent = "Preencha o título e a mensagem do aviso."; estado.className = "avisos-secretaria-estado erro"; }
         return;
     }
-
-    const destinoAPI = {
-        "Todos": "TODOS",
-        "Alunos": "ALUNO",
-        "Professores": "PROFESSOR",
-    };
-
+    const destinoAPI = { "Todos":"TODOS", "Alunos":"ALUNO", "Professores":"PROFESSOR" };
     const botao = $("#btn-publicar-aviso");
-    if (botao) {
-        botao.disabled = true;
-        botao.textContent = "Publicando...";
-    }
-
+    if (botao) { botao.disabled = true; const span = botao.querySelector("span"); if (span) span.textContent = "Publicando..."; }
+    if (estado) { estado.textContent = "Publicando aviso na planilha escolar..."; estado.className = "avisos-secretaria-estado"; }
     try {
-        await api("/secretaria/avisos", {
-            method: "POST",
-            body: JSON.stringify({
-                titulo,
-                mensagem,
-                prioridade,
-                destinatarios: [destinoAPI[destino] || "TODOS"],
-            }),
-        });
-
+        await api("/secretaria/avisos", { method:"POST", body:JSON.stringify({ titulo, mensagem, prioridade, destinatarios:[destinoAPI[destino] || "TODOS"] }) });
         if (tituloCampo) tituloCampo.value = "";
         if (mensagemCampo) mensagemCampo.value = "";
-
+        if (estado) { estado.textContent = "Aviso publicado com sucesso."; estado.className = "avisos-secretaria-estado sucesso"; }
         await R.avisos();
-        alert("Aviso publicado com sucesso.");
     } catch (erro) {
         console.error("Erro ao publicar aviso:", erro);
-        alert(erro.message || "Não foi possível publicar o aviso.");
+        if (estado) { estado.textContent = erro.message || "Não foi possível publicar o aviso."; estado.className = "avisos-secretaria-estado erro"; }
     } finally {
-        if (botao) {
-            botao.disabled = false;
-            botao.textContent = "Publicar";
-        }
+        if (botao) { botao.disabled = false; const span = botao.querySelector("span"); if (span) span.textContent = "Publicar aviso"; }
     }
 };
 
@@ -2905,6 +2872,12 @@ if (document.readyState === "loading") {
 // Liga o botão de publicação sem usar onclick inline (compatível com a CSP do Helmet).
 function configurarBotaoPublicarAviso() {
     $("#btn-publicar-aviso")?.addEventListener("click", addAv);
+    $("#btn-atualizar-avisos")?.addEventListener("click", async (evento) => {
+        const botao = evento.currentTarget;
+        if (botao.disabled) return;
+        botao.disabled = true;
+        try { await R.avisos(); } finally { botao.disabled = false; }
+    });
 }
 
 if (document.readyState === "loading") {
