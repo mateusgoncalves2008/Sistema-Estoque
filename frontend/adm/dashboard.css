@@ -1689,3 +1689,18 @@ body::-webkit-scrollbar-thumb:hover {
         width: 0;
     }
 }
+
+
+/* Rodapé ADM integrado ao fundo: remove o bloco marrom destacado */
+.sidebar .sidebar-rodape {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+.sidebar .sidebar-rodape .btn-sair {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+.sidebar .sidebar-rodape .btn-sair:hover {
+    background: #ffffff12 !important;
+}
