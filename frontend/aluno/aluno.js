@@ -765,10 +765,37 @@ function textoStatusReserva(status) {
     return mapa[valor] || status || "Não informado";
 }
 
+function dataFinalReserva(valor) {
+    const texto = String(valor || "").trim();
+    if (!texto) return null;
+    let match = texto.match(/^(\\d{4})-(\\d{1,2})-(\\d{1,2})(?:[ T](\\d{1,2}):(\\d{2}))?/);
+    if (match) {
+        const [, ano, mes, dia, hora = "23", minuto = "59"] = match;
+        const data = new Date(Number(ano), Number(mes) - 1, Number(dia), Number(hora), Number(minuto));
+        return Number.isNaN(data.getTime()) ? null : data;
+    }
+    match = texto.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})(?:\\s+(\\d{1,2}):(\\d{2}))?/);
+    if (match) {
+        const [, dia, mes, ano, hora = "23", minuto = "59"] = match;
+        const data = new Date(Number(ano), Number(mes) - 1, Number(dia), Number(hora), Number(minuto));
+        return Number.isNaN(data.getTime()) ? null : data;
+    }
+    return null;
+}
+
+function situacaoReservaAluno(reserva) {
+    const status = String(reserva.status || "").trim().toUpperCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
+    const dataFinal = dataFinalReserva(reserva.dataFim || reserva.dataInicio);
+    if (["PENDENTE", "AGUARDANDO"].includes(status) && dataFinal && dataFinal < new Date()) {
+        return { texto: "Expirada", classe: "overdue" };
+    }
+    return { texto: textoStatusReserva(reserva.status), classe: classeStatusReserva(reserva.status) };
+}
 function viewReservas() {
     const rows = reservas
-        .map(
-            (r) => `
+        .map((r) => {
+            const situacao = situacaoReservaAluno(r);
+            return `
                 <tr>
                     <td>
                         ${escapeHtml(r.categoriaNome || r.nomeCategoria || r.tipo || "Item")}
@@ -791,13 +818,13 @@ function viewReservas() {
                     </td>
 
                     <td>
-                        <span class="tag ${classeStatusReserva(r.status)}">
-                            ${escapeHtml(textoStatusReserva(r.status))}
+                        <span class="tag ${situacao.classe}">
+                            ${escapeHtml(situacao.texto)}
                         </span>
                     </td>
                 </tr>
-            `,
-        )
+            `;
+        })
         .join("");
 
     return `
