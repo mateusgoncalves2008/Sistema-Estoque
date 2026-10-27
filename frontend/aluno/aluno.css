@@ -3037,3 +3037,10 @@ button, .btn { font-size: 13px; }
         font-size: 12px;
     }
 }
+
+.tag.expired,
+.tag.expirada {
+    background: #8e3428;
+    color: #fff;
+    border: 1px solid #8e3428;
+}
