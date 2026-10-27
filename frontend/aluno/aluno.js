@@ -447,31 +447,18 @@ function viewInicio() {
     return `
         
 <div class="hero">
+    <img class="hero-photo" src="../img/fundo-login.png" alt="" />
     <div class="hero-shade"></div>
-    <div class="hero-info">
-        <h1>Olá, ${escapeHtml(primeiroNome)}</h1>
 
-        <p>
-            ${escapeHtml(ALUNO.ano || "Ano não informado")}
-            · Turma ${escapeHtml(ALUNO.turma || "Não informada")}
-            · ${escapeHtml(ALUNO.turno || "Turno não informado")}
-        </p>
+    <div class="hero-content">
+        <small>PAINEL DO ALUNO</small>
+        <h2>Olá, ${escapeHtml(primeiroNome)}.</h2>
+        <p>Veja o que está acontecendo no seu setor em um só lugar.</p>
     </div>
 
-    <div class="hero-direita">
-        <div class="stats">
-            <div class="stat">
-                <b id="livrosLidosAluno">${livrosLidos}</b>
-                <span>Livros lidos</span>
-            </div>
-
-            <div class="stat">
-                <b id="computadoresUsadosAluno">${computadoresUsados}</b>
-                <span>Computadores</span>
-            </div>
-        </div>
-
-        <div class="hero-relogio" id="relogioAluno">00:00:00</div>
+    <div class="hero-clock">
+        <strong id="clockTime">--:--:--</strong>
+        <small id="clockDate">Carregando data...</small>
     </div>
 </div>
 
@@ -2894,16 +2881,26 @@ function atualizarContadoresInicioAluno() {
 }
 
 function atualizarRelogioAluno() {
-    const relogio = document.getElementById("relogioAluno");
-    if (!relogio) return;
-
     const agora = new Date();
+    const relogio = document.getElementById("clockTime");
+    const data = document.getElementById("clockDate");
 
-    relogio.textContent = [
-        String(agora.getHours()).padStart(2, "0"),
-        String(agora.getMinutes()).padStart(2, "0"),
-        String(agora.getSeconds()).padStart(2, "0"),
-    ].join(":");
+    if (relogio) {
+        relogio.textContent = agora.toLocaleTimeString("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+        });
+    }
+
+    if (data) {
+        data.textContent = agora.toLocaleDateString("pt-BR", {
+            weekday: "long",
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+        });
+    }
 }
 
 atualizarRelogioAluno();
