@@ -334,6 +334,49 @@ function existeConflito(reservas, produtoID, localID, inicio, fim) {
     };
 }
 
+router.get("/aluno/calendario", async (req, res) => {
+    try {
+        const sessao = req.session?.usuario;
+        if (!sessao?.id) {
+            return res.status(401).json({
+                sucesso: false,
+                mensagem: "Faça login para consultar o calendário escolar.",
+            });
+        }
+
+        if (normalizar(sessao.tipoUsuario) !== "ALUNO") {
+            return res.status(403).json({
+                sucesso: false,
+                mensagem: "Esta rota é exclusiva para alunos.",
+            });
+        }
+
+        const resposta = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "18_CALENDARIO_ESCOLAR!A:G",
+        });
+
+        const linhas = resposta.data.values || [];
+        const eventos = linhas.slice(1).map((linha) => ({
+            id: linha[0] || "",
+            data: linha[1] || "",
+            dataFim: linha[2] || "",
+            tipo: linha[3] || "",
+            titulo: linha[4] || "",
+            descricao: linha[5] || "",
+            status: linha[6] || "",
+        }));
+
+        return res.json({ sucesso: true, eventos });
+    } catch (erro) {
+        console.error("Erro ao carregar calendário escolar do aluno:", erro);
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: "Não foi possível carregar o calendário escolar.",
+        });
+    }
+});
+
 router.get("/aluno/reservas/:usuarioID", async (req, res) => {
     try {
         const sessao = req.session?.usuario;
