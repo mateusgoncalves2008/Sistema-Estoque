@@ -1340,10 +1340,55 @@ async function confirmarReserva() {
     }
 }
 
+function dataPrevistaEmprestimo(valor) {
+    const texto = String(valor || "").trim();
+    if (!texto) return null;
+
+    let match = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (match) {
+        const [, dia, mes, ano] = match;
+        const data = new Date(Number(ano), Number(mes) - 1, Number(dia));
+        return Number.isNaN(data.getTime()) ? null : data;
+    }
+
+    match = texto.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (match) {
+        const [, ano, mes, dia] = match;
+        const data = new Date(Number(ano), Number(mes) - 1, Number(dia));
+        return Number.isNaN(data.getTime()) ? null : data;
+    }
+
+    return null;
+}
+
+function situacaoEmprestimoAluno(emprestimo) {
+    const status = String(emprestimo.status || "").trim().toUpperCase();
+
+    if (["ATRASADO", "ATRASO", "VENCIDO"].includes(status)) {
+        return { texto: "ATRASO", classe: "overdue" };
+    }
+
+    const dataPrevista = dataPrevistaEmprestimo(emprestimo.devolucao);
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    if (dataPrevista) {
+        dataPrevista.setHours(0, 0, 0, 0);
+
+        if (dataPrevista < hoje) {
+            return { texto: "ATRASO", classe: "overdue" };
+        }
+    }
+
+    return { texto: "Em andamento", classe: "approved" };
+}
+
 function viewEmprestimos() {
     const rows = emprestimos
-        .map(
-            (r) => `
+        .map((r) => {
+            const situacao = situacaoEmprestimoAluno(r);
+
+            return `
                 <tr>
                     <td>${escapeHtml(r.tipo)}</td>
 
@@ -1356,13 +1401,13 @@ function viewEmprestimos() {
                     <td>${escapeHtml(r.devolucao)}</td>
 
                     <td>
-                        <span class="tag">
-                            Em andamento
+                        <span class="tag ${situacao.classe}">
+                            ${escapeHtml(situacao.texto)}
                         </span>
                     </td>
                 </tr>
-            `,
-        )
+            `;
+        })
         .join("");
 
     return `
