@@ -649,7 +649,6 @@ function abrirDetalheAtividadeAdmin(atividade) {
     const acao = valor(atividade.Acao, atividade.acao, atividade.acaoRealizada);
     const descricao = valor(atividade.Descricao, atividade.descricao);
     const tabela = valor(atividade.Tabela, atividade.tabela);
-    const registroID = valor(atividade.RegistroID, atividade.registroID);
     const resultado = valor(atividade.Resultado, atividade.resultado);
     const tipo = valor(usuario.tipoUsuario, usuario.perfil, atividade.tipoUsuario);
     const titulo = nome + " — " + (acao.replace(/[_-]+/g, " ").toLocaleLowerCase("pt-BR") || "atividade");
@@ -659,19 +658,16 @@ function abrirDetalheAtividadeAdmin(atividade) {
             ${campo("Nome completo", nome)}
             ${campo("E-mail", valor(usuario.email, atividade.email))}
             ${campo("Tipo de usuário", tipo)}
-            ${campo("ID do usuário", valor(usuarioID))}
             ${campo("Ano", valor(usuario.ano))}
             ${campo("Turma", valor(usuario.turma))}
             ${campo("Turno", valor(usuario.turno))}
             ${campo("Idade", valor(usuario.idade))}
-            ${campo("Identificador / matrícula", valor(usuario.identificador))}
             ${campo("Situação da conta", valor(usuario.status))}
         </div></section>
         <section class="grupo-detalhe-atividade-admin"><h3><i data-lucide="history"></i> Detalhes da atividade</h3><div class="grade-detalhe-atividade-admin">
             ${campo("Data e hora", dataHora)}
             ${campo("Ação", acao.replace(/[_-]+/g, " "))}
             ${campo("Área / planilha", tabela.replace(/_/g, " "))}
-            ${campo("ID do registro", registroID)}
             ${campo("Resultado", resultado)}
             ${campo("Descrição registrada", descricao)}
         </div></section>
