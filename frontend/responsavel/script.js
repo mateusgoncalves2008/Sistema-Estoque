@@ -1204,7 +1204,7 @@ function renderAlerts() {
         } else if (product.minimum > 0 && available <= product.minimum) {
             alerts.push({
                 title: "Estoque baixo",
-                detail: `${product.name}: restam `${formatNumber(available)} unidade(s), mínimo configurado: `${formatNumber(product.minimum)}.`,
+                detail: `${product.name}: restam ${formatNumber(available)} unidade(s), mínimo configurado: ${formatNumber(product.minimum)}.`,
                 type: "",
             });
         }
