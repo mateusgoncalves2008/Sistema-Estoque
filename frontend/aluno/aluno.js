@@ -447,6 +447,7 @@ function viewInicio() {
     return `
         
 <div class="hero">
+    <div class="hero-shade"></div>
     <div class="hero-info">
         <h1>Olá, ${escapeHtml(primeiroNome)}</h1>
 
