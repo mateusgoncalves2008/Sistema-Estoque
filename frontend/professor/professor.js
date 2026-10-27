@@ -626,32 +626,25 @@ function atualizarTabelas() {
     // LISTA DE RESERVAS PENDENTES
     if (listaReservas) {
         const reservasPendentes = listaReservasDados.filter(
-            (reserva) => String(reserva.status || "").trim().toUpperCase() === "PENDENTE",
+            (reserva) => ["PENDENTE", "AGUARDANDO"].includes(String(reserva.status || "").trim().toUpperCase()),
         );
 
         listaReservas.innerHTML = reservasPendentes.length
-            ? reservasPendentes
-                  .map(
-                      (reserva) => `
-                        <tr>
-                            <td>${reserva.tipo || "Item"}</td>
-                            <td>${reserva.nome || "Item não identificado"}</td>
-                            <td>${reserva.dataInicio || "—"}</td>
-                            <td>${reserva.dataFim || "—"}</td>
-                            <td>
-                                <span class="status">
-                                    ${reserva.status || ""}
-                                </span>
-                            </td>
-                        </tr>
-                    `,
-                  )
-                  .join("")
+            ? reservasPendentes.map((reserva) => {
+                const situacao = situacaoReservaProfessor(reserva);
+                return `
+                    <tr>
+                        <td>${escapeHtml(reserva.tipo || "Item")}</td>
+                        <td>${escapeHtml(reserva.nome || "Item não identificado")}</td>
+                        <td>${escapeHtml(reserva.dataInicio || "—")}</td>
+                        <td>${escapeHtml(reserva.dataFim || "—")}</td>
+                        <td><span class="status ${situacao.classe}">${escapeHtml(situacao.texto)}</span></td>
+                    </tr>
+                `;
+            }).join("")
             : `
                 <tr>
-                    <td colspan="5">
-                        Nenhuma reserva pendente.
-                    </td>
+                    <td colspan="5">Nenhuma reserva pendente.</td>
                 </tr>
             `;
     }
