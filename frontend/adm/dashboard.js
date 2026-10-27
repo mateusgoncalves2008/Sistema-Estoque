@@ -3,6 +3,7 @@ const API_ADMIN = "/api";
 let usuariosAdmin = [];
 let dadosPainelAdmin = null;
 let logsCompletosAdmin = [];
+let atividadesRecentesAdmin = [];
 let assinaturaEstoqueAdmin = null;
 let assinaturaOperacoesAdmin = null;
 let assinaturaRelatoriosAdmin = null;
@@ -708,39 +709,23 @@ function renderizarAtividadesAdmin(atividades) {
     const assinatura = JSON.stringify(atividades || []);
     if (assinatura === assinaturaAtividadesAdmin) return;
     assinaturaAtividadesAdmin = assinatura;
+    atividadesRecentesAdmin = Array.isArray(atividades) ? atividades : [];
     const lista = elAdmin("listaAtividades");
-    if (!atividades.length) {
+    if (!atividadesRecentesAdmin.length) {
         lista.innerHTML = '<p class="vazio">Nenhum registro encontrado na aba de auditoria.</p>';
         return;
     }
-
     const formatarHoraAtividade = (valor) => {
         if (!valor) return "";
         const texto = String(valor).trim();
-        const hora = texto.match(/(?:^|\\s)(\\d{1,2}:\\d{2})(?::\\d{2})?/);
+        const hora = texto.match(/(?:^|\s)(\d{1,2}:\d{2})(?::\d{2})?/);
         return hora ? hora[1] : "";
     };
-
     const descreverAcao = (valor) => {
         const acao = String(valor || "").trim().toUpperCase();
-        const descricoes = {
-            LOGIN: "fez login",
-            LOGOUT: "saiu do sistema",
-            CRIAR_USUARIO: "criou uma nova conta",
-            CADASTRAR_USUARIO: "cadastrou um usuário",
-            CRIAR: "criou um novo registro",
-            CREATE: "criou um novo registro",
-            EDITAR: "editou um registro",
-            ATUALIZAR: "editou dados",
-            UPDATE: "editou dados",
-            EXCLUIR: "excluiu um registro",
-            DELETAR: "deletou um registro",
-            DELETE: "deletou um registro",
-            EXPORTAR: "exportou um relatório",
-        };
+        const descricoes = { LOGIN: "fez login", LOGOUT: "saiu do sistema", CRIAR_USUARIO: "criou uma nova conta", CADASTRAR_USUARIO: "cadastrou um usuário", CRIAR: "criou um novo registro", CREATE: "criou um novo registro", EDITAR: "editou um registro", ATUALIZAR: "editou dados", UPDATE: "editou dados", EXCLUIR: "excluiu um registro", DELETAR: "deletou um registro", DELETE: "deletou um registro", EXPORTAR: "exportou um relatório" };
         return descricoes[acao] || String(valor || "realizou uma atividade").replace(/[_-]+/g, " ").toLocaleLowerCase("pt-BR");
     };
-
     const estiloAcao = (valor) => {
         const acao = String(valor || "").toUpperCase();
         if (/LOGIN|LOGOUT|SAIR/.test(acao)) return { icone: "log-in", classe: "atividade-azul" };
@@ -750,12 +735,9 @@ function renderizarAtividadesAdmin(atividades) {
         if (/EXPORTAR|DOWNLOAD|PDF/.test(acao)) return { icone: "download", classe: "atividade-azul-escuro" };
         return { icone: "file-clock", classe: "atividade-neutra" };
     };
-
-    lista.innerHTML = atividades.map((atividade, indiceAtividade) => {
+    lista.innerHTML = atividadesRecentesAdmin.map((atividade, indiceAtividade) => {
         const usuarioID = atividade.usuarioID || atividade.UsuarioID || "";
-        const usuarioEncontrado = usuariosAdmin.find((usuario) =>
-            String(usuario.usuarioID || usuario.UsuarioID || usuario.id || usuario.ID || "").toLowerCase() === String(usuarioID).toLowerCase()
-        );
+        const usuarioEncontrado = usuariosAdmin.find((usuario) => String(usuario.usuarioID || usuario.UsuarioID || usuario.id || usuario.ID || "").toLowerCase() === String(usuarioID).toLowerCase());
         const nome = atividade.usuarioNome || atividade.nomeUsuario || atividade.nome || usuarioEncontrado?.nome || usuarioEncontrado?.Nome || atividade.usuario || (usuarioID && !usuarioID.startsWith("USR-") ? usuarioID : "Usuário");
         const acaoOriginal = atividade.acao || atividade.Acao || atividade.acaoRealizada || "";
         const descricao = atividade.descricao || atividade.Descricao || "";
@@ -763,25 +745,70 @@ function renderizarAtividadesAdmin(atividades) {
         const hora = formatarHoraAtividade(atividade.dataHora || atividade.DataHora || atividade.data || atividade.Data);
         const estilo = estiloAcao(acaoOriginal);
         const complemento = descricao || (tabela ? "em " + tabela.replace(/_/g, " ").toLocaleLowerCase("pt-BR") : "realizou uma atividade no sistema");
-        return `<article class="atividade atividade-clicavel" data-atividade-admin="${indiceAtividade}" role="button" tabindex="0" aria-label="Ver detalhes da atividade de ${escaparAdmin(nome)}">
-            <span class="atividade-icone ${estilo.classe}"><i data-lucide="${estilo.icone}"></i></span>
-            <div class="atividade-conteudo"><strong><span class="atividade-nome">${escaparAdmin(nome)}</span> ${escaparAdmin(descreverAcao(acaoOriginal))}</strong><small>${escaparAdmin(complemento)}</small></div>
-            <time class="atividade-hora">${escaparAdmin(hora)}</time>
-        </article>`;
+        return '<article class="atividade" data-detalhe-atividade="' + indiceAtividade + '" role="button" tabindex="0" aria-label="Ver detalhes de ' + escaparAdmin(nome) + '">' +
+            '<span class="atividade-icone ' + estilo.classe + '"><i data-lucide="' + estilo.icone + '"></i></span>' +
+            '<div class="atividade-conteudo"><strong><span class="atividade-nome">' + escaparAdmin(nome) + '</span> ' + escaparAdmin(descreverAcao(acaoOriginal)) + '</strong><small>' + escaparAdmin(complemento) + '</small></div>' +
+            '<time class="atividade-hora">' + escaparAdmin(hora) + '</time></article>';
     }).join("");
-
-    lista.querySelectorAll("[data-atividade-admin]").forEach((cartao) => {
-        const abrir = () => abrirDetalheAtividadeAdmin(atividades[Number(cartao.dataset.atividadeAdmin)]);
-        cartao.addEventListener("click", abrir);
-        cartao.addEventListener("keydown", (evento) => {
-            if (evento.key === "Enter" || evento.key === " ") {
-                evento.preventDefault();
-                abrir();
-            }
+    lista.querySelectorAll("[data-detalhe-atividade]").forEach((card) => {
+        const abrir = () => abrirDetalhesAtividadeAdmin(Number(card.dataset.detalheAtividade));
+        card.addEventListener("click", abrir);
+        card.addEventListener("keydown", (evento) => {
+            if (evento.key === "Enter" || evento.key === " ") { evento.preventDefault(); abrir(); }
         });
     });
-    configurarModalDetalheAtividadeAdmin();
     if (window.lucide) window.lucide.createIcons();
+}
+
+function abrirDetalhesAtividadeAdmin(indice) {
+    const atividade = atividadesRecentesAdmin[indice];
+    const modal = elAdmin("modalDetalheAtividadeAdmin");
+    const conteudo = elAdmin("conteudoDetalheAtividadeAdmin");
+    if (!atividade || !modal || !conteudo) return;
+    const usuarioID = atividade.usuarioID || atividade.UsuarioID || "";
+    const usuario = usuariosAdmin.find((item) => String(item.usuarioID || item.UsuarioID || item.id || item.ID || "").toLowerCase() === String(usuarioID).toLowerCase()) || {};
+    const pegar = (...valores) => valores.map((valor) => String(valor ?? "").trim()).find(Boolean) || "Não informado";
+    const campos = [
+        ["Nome completo", pegar(atividade.usuarioNome, atividade.nomeUsuario, atividade.nome, usuario.nome, usuario.Nome, atividade.usuario)],
+        ["Data e hora", pegar(atividade.dataHora, atividade.DataHora, atividade.data, atividade.Data)],
+        ["Ação", pegar(atividade.acao, atividade.Acao, atividade.acaoRealizada)],
+        ["Tipo de conta", pegar(usuario.tipoUsuario, usuario.perfil, atividade.tipoUsuario, atividade.perfil)],
+        ["E-mail", pegar(usuario.email, atividade.email)],
+        ["ID do usuário", pegar(usuarioID)],
+        ["Sala / setor", pegar(atividade.sala, atividade.setor, atividade.setorNome, usuario.setorNome, usuario.setorID)],
+        ["Ano", pegar(atividade.ano, usuario.ano)],
+        ["Turma", pegar(atividade.turma, usuario.turma)],
+        ["Turno", pegar(atividade.turno, usuario.turno)],
+        ["Registro relacionado", pegar(atividade.registroID, atividade.RegistroID)],
+        ["Área / planilha", pegar(atividade.tabela, atividade.Tabela)],
+        ["Descrição", pegar(atividade.descricao, atividade.Descricao)],
+        ["Resultado", pegar(atividade.resultado, atividade.Resultado)],
+        ["Cadastro da conta", pegar(usuario.dataCadastro, usuario.DataCadastro)],
+        ["Último login conhecido", pegar(usuario.ultimoLogin, usuario.UltimoLogin)]
+    ];
+    elAdmin("tituloDetalheAtividadeAdmin").textContent = "Detalhes da atividade";
+    conteudo.innerHTML = campos.map(([rotulo, valor]) => '<div class="detalhe-atividade-campo"><span>' + escaparAdmin(rotulo) + '</span><strong>' + escaparAdmin(valor) + '</strong></div>').join("");
+    modal.hidden = false;
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-admin-aberto");
+    elAdmin("fecharDetalheAtividadeAdmin")?.focus();
+}
+
+function fecharDetalhesAtividadeAdmin() {
+    const modal = elAdmin("modalDetalheAtividadeAdmin");
+    if (!modal) return;
+    modal.hidden = true;
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-admin-aberto");
+}
+
+function configurarModalDetalhesAtividadeAdmin() {
+    const modal = elAdmin("modalDetalheAtividadeAdmin");
+    const fechar = elAdmin("fecharDetalheAtividadeAdmin");
+    if (!modal || !fechar) return;
+    fechar.addEventListener("click", fecharDetalhesAtividadeAdmin);
+    modal.addEventListener("click", (evento) => { if (evento.target === modal) fecharDetalhesAtividadeAdmin(); });
+    document.addEventListener("keydown", (evento) => { if (evento.key === "Escape" && !modal.hidden) fecharDetalhesAtividadeAdmin(); });
 }
 
 async function sairPainelAdmin() {
@@ -1280,4 +1307,5 @@ document.querySelectorAll("[data-relatorio-admin]").forEach((botao) => botao.add
 configurarAbasEstoqueAdmin();
 configurarAbasOperacoesAdmin();
 configurarMenuAdmin();
+configurarModalDetalhesAtividadeAdmin();
 carregarPainelAdmin();
