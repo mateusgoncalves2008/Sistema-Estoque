@@ -761,29 +761,35 @@ function abrirDetalhesAtividadeAdmin(indice) {
     const modal = elAdmin("modalDetalheAtividadeAdmin");
     const conteudo = elAdmin("conteudoDetalheAtividadeAdmin");
     if (!atividade || !modal || !conteudo) return;
+
     const usuarioID = atividade.usuarioID || atividade.UsuarioID || "";
-    const usuario = usuariosAdmin.find((item) => String(item.usuarioID || item.UsuarioID || item.id || item.ID || "").toLowerCase() === String(usuarioID).toLowerCase()) || {};
+    const usuario = usuariosAdmin.find((item) =>
+        String(item.usuarioID || item.UsuarioID || item.id || item.ID || "").toLowerCase() === String(usuarioID).toLowerCase()
+    ) || {};
     const pegar = (...valores) => valores.map((valor) => String(valor ?? "").trim()).find(Boolean) || "Não informado";
+    const nomeNoLog = atividade.usuario && !/^USR-\d+$/i.test(String(atividade.usuario).trim()) ? atividade.usuario : "";
+    const ultimoLogin = String(usuario.ultimoLogin || usuario.UltimoLogin || "").trim();
+
     const campos = [
-        ["Nome completo", pegar(atividade.usuarioNome, atividade.nomeUsuario, atividade.nome, usuario.nome, usuario.Nome, atividade.usuario)],
-        ["Data e hora", pegar(atividade.dataHora, atividade.DataHora, atividade.data, atividade.Data)],
-        ["Ação", pegar(atividade.acao, atividade.Acao, atividade.acaoRealizada)],
+        ["Nome completo", pegar(atividade.usuarioNome, atividade.nomeUsuario, atividade.nome, usuario.nome, usuario.Nome, nomeNoLog)],
+        ["Data e hora da atividade", pegar(atividade.dataHora, atividade.DataHora, atividade.data, atividade.Data)],
+        ["Atividade", pegar(atividade.acao, atividade.Acao, atividade.acaoRealizada).replace(/[_-]+/g, " ")],
         ["Tipo de conta", pegar(usuario.tipoUsuario, usuario.perfil, atividade.tipoUsuario, atividade.perfil)],
         ["E-mail", pegar(usuario.email, atividade.email)],
-        ["ID do usuário", pegar(usuarioID)],
-        ["Sala / setor", pegar(atividade.sala, atividade.setor, atividade.setorNome, usuario.setorNome, usuario.setorID)],
+        ["Sala / setor", pegar(atividade.setorNome, atividade.sala, atividade.setor, usuario.setorNome)],
         ["Ano", pegar(atividade.ano, usuario.ano)],
         ["Turma", pegar(atividade.turma, usuario.turma)],
         ["Turno", pegar(atividade.turno, usuario.turno)],
-        ["Registro relacionado", pegar(atividade.registroID, atividade.RegistroID)],
-        ["Área / planilha", pegar(atividade.tabela, atividade.Tabela)],
         ["Descrição", pegar(atividade.descricao, atividade.Descricao)],
         ["Resultado", pegar(atividade.resultado, atividade.Resultado)],
         ["Cadastro da conta", pegar(usuario.dataCadastro, usuario.DataCadastro)],
-        ["Último login conhecido", pegar(usuario.ultimoLogin, usuario.UltimoLogin)]
+        ["Último login conhecido", ultimoLogin ? formatarData(ultimoLogin) : "Nenhum login registrado"]
     ];
+
     elAdmin("tituloDetalheAtividadeAdmin").textContent = "Detalhes da atividade";
-    conteudo.innerHTML = campos.map(([rotulo, valor]) => '<div class="detalhe-atividade-campo"><span>' + escaparAdmin(rotulo) + '</span><strong>' + escaparAdmin(valor) + '</strong></div>').join("");
+    conteudo.innerHTML = campos.map(([rotulo, valor]) =>
+        '<div class="detalhe-atividade-campo"><span>' + escaparAdmin(rotulo) + '</span><strong>' + escaparAdmin(valor) + '</strong></div>'
+    ).join("");
     modal.hidden = false;
     modal.setAttribute("aria-hidden", "false");
     document.body.classList.add("modal-admin-aberto");
