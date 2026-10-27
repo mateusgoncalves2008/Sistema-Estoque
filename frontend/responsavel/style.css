@@ -280,6 +280,16 @@ main {
 .notice.error {
     background: #fff0ed;
     color: #a52f26;
+    position: fixed;
+    top: 12px;
+    left: 16px;
+    right: 16px;
+    z-index: 2147483647;
+    width: auto;
+    max-width: 900px;
+    margin: 0 auto;
+    box-shadow: 0 12px 32px #35221933;
+    border: 1px solid #bd4a4240;
 }
 
 .hidden {
