@@ -939,6 +939,58 @@ function renderWeeklyChart() {
     const container = el("movementChart");
     if (!container) return;
 
+    // Converte datas brasileiras (dd/mm/aaaa) e datas ISO sem depender
+    // da interpretação variável de new Date() para formatos locais.
+    const parseMovementDate = (value) => {
+        const raw = String(value || "").trim();
+        if (!raw) return null;
+
+        const br = raw.match(
+            /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[, ]+([0-2]?\d):([0-5]?\d)(?::([0-5]?\d))?)?$/
+        );
+
+        if (br) {
+            const day = Number(br[1]);
+            const month = Number(br[2]);
+            const year = Number(br[3]);
+            const date = new Date(year, month - 1, day);
+
+            if (
+                date.getFullYear() !== year ||
+                date.getMonth() !== month - 1 ||
+                date.getDate() !== day
+            ) {
+                return null;
+            }
+
+            date.setHours(Number(br[4] || 0), Number(br[5] || 0), Number(br[6] || 0), 0);
+            return date;
+        }
+
+        // ISO com data completa; constrói a data local para evitar
+        // deslocamentos de dia causados por UTC.
+        const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/);
+        if (iso) {
+            const year = Number(iso[1]);
+            const month = Number(iso[2]);
+            const day = Number(iso[3]);
+            const date = new Date(year, month - 1, day);
+            if (
+                date.getFullYear() !== year ||
+                date.getMonth() !== month - 1 ||
+                date.getDate() !== day
+            ) {
+                return null;
+            }
+            date.setHours(Number(iso[4] || 0), Number(iso[5] || 0), Number(iso[6] || 0), 0);
+            return date;
+        }
+
+        // Compatibilidade com outros formatos de data já aceitos pelo navegador.
+        const fallback = new Date(raw);
+        return Number.isNaN(fallback.getTime()) ? null : fallback;
+    };
+
     const days = [];
 
     for (let offset = 6; offset >= 0; offset--) {
@@ -966,8 +1018,8 @@ function renderWeeklyChart() {
 
         if (!rawDate) return;
 
-        const date = new Date(rawDate);
-        if (Number.isNaN(date.getTime())) return;
+        const date = parseMovementDate(rawDate);
+        if (!date) return;
 
         date.setHours(0, 0, 0, 0);
 
