@@ -453,7 +453,6 @@ function viewInicio() {
     <div class="hero-content">
         <small>PAINEL DO ALUNO</small>
         <h2>Olá, ${escapeHtml(primeiroNome)}.</h2>
-        <p>Veja o que está acontecendo no seu setor em um só lugar.</p>
     </div>
 
     <div class="hero-clock">
