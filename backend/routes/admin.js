@@ -95,6 +95,7 @@ router.get("/admin/dashboard", async (req, res) => {
         "02_PRODUTOS!A:K",
         "05_LOCAIS!A:G",
             "01_USUARIOS!A:K",
+        "17_CADASTROS_AUTORIZADOS!A:J",
         "06_ESTOQUE_LOCAIS!A:I",
         "07_MOVIMENTACOES!A:L",
         "08_RESERVAS!A:L",
@@ -119,6 +120,18 @@ router.get("/admin/dashboard", async (req, res) => {
         });
 
         const usuarios = linhasDeDados(dados["01_USUARIOS"]);
+        const cadastrosAutorizados = linhasDeDados(dados["17_CADASTROS_AUTORIZADOS"]);
+        const dadosEscolaresPorUsuario = new Map(
+            cadastrosAutorizados
+                .filter((linha) => textoAdmin(linha[3]))
+                .map((linha) => [textoAdmin(linha[3]), {
+                    identificador: textoAdmin(linha[2]),
+                    ano: textoAdmin(linha[5]),
+                    turma: textoAdmin(linha[6]),
+                    turno: textoAdmin(linha[7]),
+                    idade: textoAdmin(linha[8]),
+                }])
+        );
         const usuariosAtivos = usuarios.filter((linha) => String(linha[8] || "").trim().toUpperCase() === "ATIVO");
         const produtos = linhasDeDados(dados["02_PRODUTOS"]);
         const locais = linhasDeDados(dados["05_LOCAIS"]);
@@ -152,6 +165,7 @@ router.get("/admin/dashboard", async (req, res) => {
             status: String(linha[8] || ""),
             dataCadastro: String(linha[9] || ""),
             ultimoLogin: String(linha[10] || ""),
+            ...(dadosEscolaresPorUsuario.get(String(linha[0] || "")) || {}),
         })).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
         const cabecalhosLogs = Array.isArray(dados["13_LOGS"][0]) ? dados["13_LOGS"][0] : [];
