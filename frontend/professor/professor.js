@@ -626,7 +626,7 @@ function atualizarTabelas() {
     // LISTA DE RESERVAS PENDENTES
     if (listaReservas) {
         const reservasPendentes = listaReservasDados.filter(
-            (reserva) => ["PENDENTE", "AGUARDANDO"].includes(String(reserva.status || "").trim().toUpperCase()),
+            (reserva) => String(reserva.status || "").trim().toUpperCase() === "PENDENTE",
         );
 
         listaReservas.innerHTML = reservasPendentes.length
