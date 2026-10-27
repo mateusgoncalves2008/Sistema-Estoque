@@ -186,6 +186,7 @@ async function carregarDashboard(vinculo) {
             {
                 nome: linha[2] || "Item sem nome",
                 categoriaID: texto(linha[4]),
+                estoqueMinimo: numero(linha[6]),
                 status: linha[8] || "",
             },
         ]),
@@ -218,6 +219,7 @@ async function carregarDashboard(vinculo) {
                 produto: produto?.nome || "Item não identificado",
                 categoria:
                     mapaCategorias.get(produto?.categoriaID) || "Sem categoria",
+                estoqueMinimo: produto?.estoqueMinimo ?? 0,
                 quantidade: numero(linha[3]),
                 reservado: numero(linha[4]),
                 disponivel: numero(linha[5]),
