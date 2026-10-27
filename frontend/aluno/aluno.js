@@ -83,7 +83,7 @@ function dataCalendarioAluno(valor) {
 
 async function carregarEventosPlanilhaAluno() {
     try {
-        const resposta = await fetch(`${API_URL}/secretaria/calendario`, {
+        const resposta = await fetch(`${API_URL}/aluno/calendario`, {
             credentials: "same-origin",
         });
         if (!resposta.ok) throw new Error("Não foi possível consultar o calendário escolar.");
