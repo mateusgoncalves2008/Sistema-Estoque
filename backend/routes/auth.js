@@ -145,6 +145,20 @@ router.post("/login", async (req, res) => {
             }
         }
 
+        // Registra a data e hora do último login válido na coluna K de 01_USUARIOS.
+        try {
+            const linhaPlanilha = usuarios.findIndex((linha) => linha === usuario) + 2;
+            const dataHoraLogin = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+            await sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range: `01_USUARIOS!K${linhaPlanilha}`,
+                valueInputOption: "RAW",
+                requestBody: { values: [[dataHoraLogin]] },
+            });
+        } catch (erroUltimoLogin) {
+            console.error("Não foi possível registrar o último login na planilha:", erroUltimoLogin.message);
+        }
+
         // Cria uma sessão nova após validar as credenciais.
         await new Promise((resolve, reject) => {
             req.session.regenerate((erro) => {
