@@ -1744,3 +1744,77 @@ body::-webkit-scrollbar-corner {
 .detalhe-atividade-campo strong { display: block; color: #352219; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; font-weight: 650; }
 .cartao-detalhe-atividade-admin footer { display: flex; justify-content: flex-end; margin-top: 20px; }
 @media (max-width: 520px) { .conteudo-detalhe-atividade-admin { grid-template-columns: 1fr; } .cartao-detalhe-atividade-admin { padding: 17px; } }
+
+
+.atividade-clicavel {
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.atividade-clicavel:hover, .atividade-clicavel:focus-visible {
+    border-color: #c95730;
+    box-shadow: 0 5px 18px rgba(53, 34, 25, .09);
+    outline: none;
+}
+.atividade-clicavel:hover { transform: translateY(-1px); }
+.modal-detalhe-atividade-admin {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    padding: 22px;
+    background: rgba(35, 25, 20, .58);
+    overflow-y: auto;
+}
+.modal-detalhe-atividade-admin[hidden] { display: none !important; }
+.cartao-detalhe-atividade-admin {
+    width: min(820px, 100%);
+    max-height: min(88vh, 900px);
+    overflow-y: auto;
+    border: 1px solid #e6d8cc;
+    border-radius: 18px;
+    padding: 24px;
+    background: #fffdfa;
+    color: #3c291f;
+    box-shadow: 0 24px 70px rgba(25, 18, 14, .25);
+}
+.cabecalho-detalhe-atividade-admin {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px 38px;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #e6d8cc;
+}
+.cabecalho-detalhe-atividade-admin h2 { margin: 3px 0 0; font-size: clamp(19px, 3vw, 25px); overflow-wrap: anywhere; }
+.cabecalho-detalhe-atividade-admin img { width: 44px; height: 44px; object-fit: contain; }
+.fechar-detalhe-atividade-admin {
+    width: 38px;
+    height: 38px;
+    border: 1px solid #e6d8cc;
+    border-radius: 10px;
+    background: #f4eee7;
+    color: #352219;
+    font-size: 26px;
+    cursor: pointer;
+}
+.grupo-detalhe-atividade-admin { padding-top: 20px; }
+.grupo-detalhe-atividade-admin h3 { display: flex; align-items: center; gap: 9px; margin: 0 0 13px; font-size: 16px; }
+.grupo-detalhe-atividade-admin h3 svg { width: 18px; height: 18px; color: #c95730; }
+.grade-detalhe-atividade-admin { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.detalhe-atividade-campo { min-width: 0; padding: 12px 13px; border: 1px solid #e6d8cc; border-radius: 10px; background: #f8f5f1; }
+.detalhe-atividade-campo span { display: block; margin-bottom: 5px; color: #8a786b; font-size: 12px; }
+.detalhe-atividade-campo strong { display: block; color: #3c291f; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; white-space: pre-wrap; }
+.acoes-detalhe-atividade-admin { display: flex; justify-content: flex-end; padding-top: 22px; }
+body.modal-detalhe-atividade-aberto { overflow: hidden; }
+@media (max-width: 560px) {
+    .modal-detalhe-atividade-admin { padding: 10px; align-items: start; }
+    .cartao-detalhe-atividade-admin { max-height: 94vh; padding: 16px; border-radius: 14px; }
+    .cabecalho-detalhe-atividade-admin { grid-template-columns: minmax(0, 1fr) 36px 34px; gap: 8px; }
+    .cabecalho-detalhe-atividade-admin img { width: 34px; height: 34px; }
+    .fechar-detalhe-atividade-admin { width: 34px; height: 34px; }
+    .grade-detalhe-atividade-admin { grid-template-columns: minmax(0, 1fr); }
+}
