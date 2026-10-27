@@ -28,7 +28,7 @@ const pageInfo = {
     solicitacoes: ["Solicitações", "Pedidos relacionados ao seu setor."],
     bloqueios: [
         "Bloqueios por setor",
-        "Gerencie o acesso às reservas dos itens vinculados ao seu setor.",
+        "Pedidos relacionados ao seu setor.",
     ],
     denuncias: [
         "Denúncias",
@@ -259,7 +259,7 @@ function openPage(page) {
     setText("pageSubtitle", pageInfo[page][1]);
 
     // Na tela inicial, oculta o cabeçalho textual; nas demais páginas, mantém os títulos.
-    el("pageHeading")?.classList.toggle("hidden", page === "inicio" || page === "bloqueios" || page === "denuncias");
+    el("pageHeading")?.classList.toggle("hidden", page === "inicio" || page === "denuncias");
 
     document.body.classList.remove("mobile-menu-open");
 }
