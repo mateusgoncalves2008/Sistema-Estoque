@@ -759,6 +759,37 @@ async function carregarEmprestimosProfessor(silencioso = false) {
     }
 }
 
+function dataFinalReservaProfessor(valor) {
+    const texto = String(valor || "").trim();
+    if (!texto) return null;
+    let match = texto.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/);
+    if (match) { const [, a, m, d, h = "23", min = "59"] = match; return new Date(Number(a), Number(m)-1, Number(d), Number(h), Number(min)); }
+    match = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
+    if (match) { const [, d, m, a, h = "23", min = "59"] = match; return new Date(Number(a), Number(m)-1, Number(d), Number(h), Number(min)); }
+    return null;
+}
+function situacaoReservaProfessor(reserva) {
+    const status = String(reserva.status || "").trim().toUpperCase();
+    const data = dataFinalReservaProfessor(reserva.dataFim || reserva.dataInicio);
+    if (["PENDENTE", "AGUARDANDO"].includes(status) && data && !Number.isNaN(data.getTime()) && data < new Date()) return { texto: "EXPIRADA", classe: "expirada" };
+    return { texto: String(reserva.status || "PENDENTE"), classe: "" };
+}
+function dataPrevistaEmprestimoProfessor(valor) {
+    const texto = String(valor || "").trim();
+    let m = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]));
+    m = texto.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+    return null;
+}
+function situacaoEmprestimoProfessor(emprestimo) {
+    const status = String(emprestimo.status || "").trim().toUpperCase();
+    if (["ATRASADO", "ATRASO", "VENCIDO"].includes(status)) return { texto: "ATRASO", classe: "overdue" };
+    const data = dataPrevistaEmprestimoProfessor(emprestimo.devolucao);
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    if (data && !Number.isNaN(data.getTime())) { data.setHours(0, 0, 0, 0); if (data < hoje) return { texto: "ATRASO", classe: "overdue" }; }
+    return { texto: emprestimo.status || "Em andamento", classe: "approved" };
+}
 function atualizarTabelaEmprestimos() {
     const tabela = document.querySelector("#tabelaEmprestimos");
 
@@ -769,17 +800,18 @@ function atualizarTabelaEmprestimos() {
 
 function viewEmprestimos() {
     const rows = emprestimos
-        .map(
-            (r) => `
+        .map((r) => {
+            const situacao = situacaoEmprestimoProfessor(r);
+            return `
         <tr>
             <td>${escapeHtml(r.tipo)}</td>
             <td><b>${escapeHtml(r.item)}</b></td>
             <td>${escapeHtml(r.retirada)}</td>
             <td>${escapeHtml(r.devolucao)}</td>
-            <td><span class="tag">${escapeHtml(r.status)}</span></td>
+            <td><span class="tag ${situacao.classe}">${escapeHtml(situacao.texto)}</span></td>
         </tr>
-    `,
-        )
+    `;
+        })
         .join("");
 
     return `
