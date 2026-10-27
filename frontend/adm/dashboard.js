@@ -633,6 +633,77 @@ async function carregarEstoqueAdmin() {
     }
 }
 
+function abrirDetalheAtividadeAdmin(atividade) {
+    if (!atividade) return;
+    const modal = elAdmin("modalDetalheAtividadeAdmin");
+    const conteudo = elAdmin("conteudoDetalheAtividadeAdmin");
+    const usuarioID = atividade.UsuarioID || atividade.usuarioID || "";
+    const usuario = usuariosAdmin.find((item) =>
+        String(item.usuarioID || item.id || "").toLowerCase() === String(usuarioID).toLowerCase()
+    ) || {};
+    const valor = (...valores) => valores.map((item) => String(item ?? "").trim()).find(Boolean) || "Não informado";
+    const campo = (rotulo, texto) => `<div class="detalhe-atividade-campo"><span>${escaparAdmin(rotulo)}</span><strong>${escaparAdmin(texto)}</strong></div>`;
+    const dataHora = valor(atividade.DataHora, atividade.dataHora, atividade.data, atividade.Data);
+    const nome = valor(atividade.usuarioNome, atividade.nomeUsuario, atividade.nome, usuario.nome, usuario.Nome, atividade.usuario, usuarioID ? "Usuário não encontrado" : "Sistema");
+    const acao = valor(atividade.Acao, atividade.acao, atividade.acaoRealizada);
+    const descricao = valor(atividade.Descricao, atividade.descricao);
+    const tabela = valor(atividade.Tabela, atividade.tabela);
+    const registroID = valor(atividade.RegistroID, atividade.registroID);
+    const resultado = valor(atividade.Resultado, atividade.resultado);
+    const tipo = valor(usuario.tipoUsuario, usuario.perfil, atividade.tipoUsuario);
+    const titulo = nome + " — " + (acao.replace(/[_-]+/g, " ").toLocaleLowerCase("pt-BR") || "atividade");
+    elAdmin("tituloDetalheAtividadeAdmin").textContent = titulo;
+    conteudo.innerHTML = `
+        <section class="grupo-detalhe-atividade-admin"><h3><i data-lucide="user-round"></i> Dados do usuário</h3><div class="grade-detalhe-atividade-admin">
+            ${campo("Nome completo", nome)}
+            ${campo("E-mail", valor(usuario.email, atividade.email))}
+            ${campo("Tipo de usuário", tipo)}
+            ${campo("ID do usuário", valor(usuarioID))}
+            ${campo("Ano", valor(usuario.ano))}
+            ${campo("Turma", valor(usuario.turma))}
+            ${campo("Turno", valor(usuario.turno))}
+            ${campo("Idade", valor(usuario.idade))}
+            ${campo("Identificador / matrícula", valor(usuario.identificador))}
+            ${campo("Situação da conta", valor(usuario.status))}
+        </div></section>
+        <section class="grupo-detalhe-atividade-admin"><h3><i data-lucide="history"></i> Detalhes da atividade</h3><div class="grade-detalhe-atividade-admin">
+            ${campo("Data e hora", dataHora)}
+            ${campo("Ação", acao.replace(/[_-]+/g, " "))}
+            ${campo("Área / planilha", tabela.replace(/_/g, " "))}
+            ${campo("ID do registro", registroID)}
+            ${campo("Resultado", resultado)}
+            ${campo("Descrição registrada", descricao)}
+        </div></section>
+    `;
+    modal.hidden = false;
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-detalhe-atividade-aberto");
+    if (window.lucide) window.lucide.createIcons();
+    elAdmin("fecharDetalheAtividadeAdmin").focus();
+}
+
+function fecharDetalheAtividadeAdmin() {
+    const modal = elAdmin("modalDetalheAtividadeAdmin");
+    if (!modal) return;
+    modal.hidden = true;
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-detalhe-atividade-aberto");
+}
+
+function configurarModalDetalheAtividadeAdmin() {
+    const modal = elAdmin("modalDetalheAtividadeAdmin");
+    if (!modal || modal.dataset.configurado === "true") return;
+    modal.dataset.configurado = "true";
+    elAdmin("fecharDetalheAtividadeAdmin").addEventListener("click", fecharDetalheAtividadeAdmin);
+    elAdmin("fecharDetalheAtividadeAdminRodape").addEventListener("click", fecharDetalheAtividadeAdmin);
+    modal.addEventListener("click", (evento) => {
+        if (evento.target === modal) fecharDetalheAtividadeAdmin();
+    });
+    document.addEventListener("keydown", (evento) => {
+        if (evento.key === "Escape" && !modal.hidden) fecharDetalheAtividadeAdmin();
+    });
+}
+
 function renderizarAtividadesAdmin(atividades) {
     const assinatura = JSON.stringify(atividades || []);
     if (assinatura === assinaturaAtividadesAdmin) return;
@@ -680,7 +751,7 @@ function renderizarAtividadesAdmin(atividades) {
         return { icone: "file-clock", classe: "atividade-neutra" };
     };
 
-    lista.innerHTML = atividades.map((atividade) => {
+    lista.innerHTML = atividades.map((atividade, indiceAtividade) => {
         const usuarioID = atividade.usuarioID || atividade.UsuarioID || "";
         const usuarioEncontrado = usuariosAdmin.find((usuario) =>
             String(usuario.usuarioID || usuario.UsuarioID || usuario.id || usuario.ID || "").toLowerCase() === String(usuarioID).toLowerCase()
@@ -692,13 +763,24 @@ function renderizarAtividadesAdmin(atividades) {
         const hora = formatarHoraAtividade(atividade.dataHora || atividade.DataHora || atividade.data || atividade.Data);
         const estilo = estiloAcao(acaoOriginal);
         const complemento = descricao || (tabela ? "em " + tabela.replace(/_/g, " ").toLocaleLowerCase("pt-BR") : "realizou uma atividade no sistema");
-        return `<article class="atividade">
+        return `<article class="atividade atividade-clicavel" data-atividade-admin="${indiceAtividade}" role="button" tabindex="0" aria-label="Ver detalhes da atividade de ${escaparAdmin(nome)}">
             <span class="atividade-icone ${estilo.classe}"><i data-lucide="${estilo.icone}"></i></span>
             <div class="atividade-conteudo"><strong><span class="atividade-nome">${escaparAdmin(nome)}</span> ${escaparAdmin(descreverAcao(acaoOriginal))}</strong><small>${escaparAdmin(complemento)}</small></div>
             <time class="atividade-hora">${escaparAdmin(hora)}</time>
         </article>`;
     }).join("");
 
+    lista.querySelectorAll("[data-atividade-admin]").forEach((cartao) => {
+        const abrir = () => abrirDetalheAtividadeAdmin(atividades[Number(cartao.dataset.atividadeAdmin)]);
+        cartao.addEventListener("click", abrir);
+        cartao.addEventListener("keydown", (evento) => {
+            if (evento.key === "Enter" || evento.key === " ") {
+                evento.preventDefault();
+                abrir();
+            }
+        });
+    });
+    configurarModalDetalheAtividadeAdmin();
     if (window.lucide) window.lucide.createIcons();
 }
 
