@@ -146,17 +146,51 @@ router.post("/login", async (req, res) => {
         }
 
         // Registra a data e hora do último login válido na coluna K de 01_USUARIOS.
+        const indiceUsuario = usuarios.findIndex(
+            (linha) => String(linha[0] || "").trim() === String(usuarioID || "").trim(),
+        );
+
+        if (indiceUsuario < 0) {
+            console.error("Não foi possível localizar a linha do usuário para registrar o último login.");
+            return res.status(500).json({
+                sucesso: false,
+                mensagem: "Não foi possível registrar o último login. Tente novamente.",
+            });
+        }
+
+        const linhaPlanilha = indiceUsuario + 2;
+        const agora = new Date();
+        const partesDataHora = new Intl.DateTimeFormat("pt-BR", {
+            timeZone: "America/Sao_Paulo",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hourCycle: "h23",
+        }).formatToParts(agora);
+        const dataHoraLogin = partesDataHora
+            .filter((parte) => parte.type !== "literal")
+            .reduce((dados, parte) => {
+                dados[parte.type] = parte.value;
+                return dados;
+            }, {});
+        const registroUltimoLogin = `${dataHoraLogin.day}/${dataHoraLogin.month}/${dataHoraLogin.year} ${dataHoraLogin.hour}:${dataHoraLogin.minute}:${dataHoraLogin.second}`;
+
         try {
-            const linhaPlanilha = usuarios.findIndex((linha) => linha === usuario) + 2;
-            const dataHoraLogin = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
             await sheets.spreadsheets.values.update({
                 spreadsheetId: SPREADSHEET_ID,
                 range: `01_USUARIOS!K${linhaPlanilha}`,
                 valueInputOption: "RAW",
-                requestBody: { values: [[dataHoraLogin]] },
+                requestBody: { values: [[registroUltimoLogin]] },
             });
         } catch (erroUltimoLogin) {
             console.error("Não foi possível registrar o último login na planilha:", erroUltimoLogin.message);
+            return res.status(500).json({
+                sucesso: false,
+                mensagem: "A senha está correta, mas não foi possível registrar o último login na planilha. Tente novamente ou avise a administração.",
+            });
         }
 
         // Cria uma sessão nova após validar as credenciais.
