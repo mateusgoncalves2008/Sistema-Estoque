@@ -62,26 +62,52 @@ const TIPOS = {
     escola: ["Evento da escola", "#e07b39"],
 };
 
-/*
-    Eventos provisórios.
+// Eventos usados no cartão "Próximo evento", carregados da planilha escolar.
+let eventosPlanilhaAluno = [];
 
-    Depois podemos trocar esta parte pela aba
-    18_CALENDARIO_ESCOLAR.
-*/
+function dataCalendarioAluno(valor) {
+    const textoData = String(valor || "").trim();
+    let ano, mes, dia;
+    let match = textoData.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (match) {
+        [, ano, mes, dia] = match;
+    } else {
+        match = textoData.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (!match) return null;
+        [, dia, mes, ano] = match;
+    }
 
-const EV = {
-    "2026-10-08": ["feriado", "Feriado"],
-    "2026-10-12": ["feriado", "Nossa Senhora Aparecida"],
-    "2026-10-15": ["evento", "Dia do Professor"],
-    "2026-10-01": ["reuniao", "Reunião de pais"],
-    "2026-10-24": ["escola", "Feira de Ciências"],
-    "2026-10-28": ["recesso", "Dia do Servidor Público"],
-    "2026-11-02": ["feriado", "Finados"],
-    "2026-11-05": ["prova", "Prova de História"],
-    "2026-11-20": ["evento", "Feira de Ciência"],
-    "2026-12-18": ["escola", "Formatura do 3º Ano"],
-    "2027-01-01": ["feriado", "Confraternização Universal"],
-};
+    const data = new Date(Number(ano), Number(mes) - 1, Number(dia));
+    return Number.isNaN(data.getTime()) ? null : data;
+}
+
+async function carregarEventosPlanilhaAluno() {
+    try {
+        const resposta = await fetch(`${API_URL}/secretaria/calendario`, {
+            credentials: "same-origin",
+        });
+        if (!resposta.ok) throw new Error("Não foi possível consultar o calendário escolar.");
+
+        const dados = await resposta.json();
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        eventosPlanilhaAluno = (dados.eventos || [])
+            .filter((evento) => String(evento.status || "").trim().toUpperCase() === "ATIVO")
+            .map((evento) => ({
+                ...evento,
+                dataConvertida: dataCalendarioAluno(evento.data),
+                dataFimConvertida: dataCalendarioAluno(evento.dataFim || evento.data),
+            }))
+            .filter((evento) => evento.dataConvertida && evento.dataFimConvertida >= hoje)
+            .sort((a, b) => a.dataConvertida - b.dataConvertida);
+        return true;
+    } catch (erro) {
+        console.error("Erro ao carregar eventos do calendário escolar:", erro);
+        eventosPlanilhaAluno = [];
+        return false;
+    }
+}
 
 // ============================================================
 // MENU
@@ -405,12 +431,7 @@ function viewInicio() {
 
     const w = hojeLetivo();
 
-    const proximosEventos = Object.keys(EV)
-        .map((data) => [new Date(`${data}T12:00:00`), EV[data]])
-        .filter((item) => item[0] >= new Date(today.toDateString()))
-        .sort((a, b) => a[0] - b[0]);
-
-    const proximo = proximosEventos[0];
+    const proximo = eventosPlanilhaAluno[0] || null;
 
     // Conta somente reservas concluídas, conforme o Status da aba 08_RESERVAS.
     const reservasConcluidas = reservas.filter(
@@ -509,16 +530,16 @@ function viewInicio() {
                 </div>
 
                 <div class="big">
-                    ${proximo ? escapeHtml(proximo[1][1]) : "Sem eventos"}
+                    ${proximo ? escapeHtml(proximo.titulo || "Evento escolar") : "Sem eventos"}
                 </div>
 
                 <p>
                     ${
                         proximo
-                            ? `${proximo[0].getDate()} de ${MESES[
-                                  proximo[0].getMonth()
+                            ? `${proximo.dataConvertida.getDate()} de ${MESES[
+                                  proximo.dataConvertida.getMonth()
                               ].toLowerCase()}`
-                            : "Nenhum evento cadastrado."
+                            : "Nenhum evento futuro cadastrado na planilha."
                     }
                 </p>
             </div>
@@ -2764,6 +2785,7 @@ async function atualizarDadosAutomaticamenteAluno() {
             carregarReservas(),
             carregarEmprestimos(),
             carregarEmprestimosHistorico(),
+            carregarEventosPlanilhaAluno(),
         ]);
 
         const atualizacaoCompleta = resultados.every((resultado) => resultado === true);
@@ -2830,6 +2852,7 @@ async function iniciarPainel() {
             carregarReservas(),
             carregarEmprestimos(),
             carregarEmprestimosHistorico(),
+            carregarEventosPlanilhaAluno(),
         ]);
 
         atualizarUsuarioLateral();
