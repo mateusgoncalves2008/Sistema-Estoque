@@ -543,9 +543,15 @@ tr:last-child td {
 }
 
 .tag.cancelled {
-    background: #f8e2de;
-    color: #963b2d;
-    border: 1px solid #e9bdb5;
+    background: #fff0d9;
+    color: #8a4b08;
+    border: 1px solid #f0c98e;
+}
+
+.tag.rejected {
+    background: #fbe5e2;
+    color: #a52f26;
+    border: 1px solid #e9b8b2;
 }
 
 .tag.overdue {
