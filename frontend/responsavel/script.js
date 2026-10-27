@@ -1135,6 +1135,9 @@ function renderAlerts() {
         if (!products.has(key)) {
             products.set(key, {
                 name,
+                minimum: numberValue(
+                    getValue(item, ["estoqueMinimo", "EstoqueMinimo"], 0),
+                ),
                 available: 0,
                 hasAvailable: false,
                 total: 0,
@@ -1198,10 +1201,10 @@ function renderAlerts() {
                 detail: `${product.name}: nenhuma unidade disponível.`,
                 type: "red",
             });
-        } else if (available <= 3) {
+        } else if (product.minimum > 0 && available <= product.minimum) {
             alerts.push({
                 title: "Estoque baixo",
-                detail: `${product.name}: restam ${formatNumber(available)} unidade(s).`,
+                detail: `${product.name}: restam `${formatNumber(available)} unidade(s), mínimo configurado: `${formatNumber(product.minimum)}.`,
                 type: "",
             });
         }
