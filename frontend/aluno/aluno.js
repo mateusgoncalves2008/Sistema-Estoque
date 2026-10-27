@@ -684,9 +684,9 @@ function classeStatusReserva(status) {
         .trim()
         .toUpperCase()
         .normalize("NFD")
-        .replace(/[\\u0300-\\u036f]/g, "");
+        .replace(/[\u0300-\u036f]/g, "");
 
-    if (valor === "PENDENTE" || valor === "AGUARDANDO") {
+    if (["PENDENTE", "AGUARDANDO"].includes(valor)) {
         return "pending";
     }
 
@@ -700,14 +700,19 @@ function classeStatusReserva(status) {
         return "overdue";
     }
 
-    if (
-        ["CANCELADA", "CANCELADO", "REJEITADA", "REJEITADO", "RECUSADA", "RECUSADO"].includes(valor)
-    ) {
+    if (["RECUSADA", "RECUSADO", "REJEITADA", "REJEITADO"].includes(valor)) {
+        return "rejected";
+    }
+
+    if (["CANCELADA", "CANCELADO"].includes(valor)) {
         return "cancelled";
     }
 
     if (
-        ["CONCLUIDA", "FINALIZADA", "FINALIZADO", "DEVOLVIDO", "DEVOLVIDA", "ENCERRADO", "ENCERRADA"].includes(valor)
+        [
+            "CONCLUIDO", "CONCLUIDA", "FINALIZADO", "FINALIZADA",
+            "DEVOLVIDO", "DEVOLVIDA", "ENCERRADO", "ENCERRADA",
+        ].includes(valor)
     ) {
         return "finished";
     }
