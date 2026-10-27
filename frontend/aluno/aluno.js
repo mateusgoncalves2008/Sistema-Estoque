@@ -792,7 +792,10 @@ function situacaoReservaAluno(reserva) {
     return { texto: textoStatusReserva(reserva.status), classe: classeStatusReserva(reserva.status) };
 }
 function viewReservas() {
-    const rows = reservas
+    const reservasPendentes = reservas.filter(
+        (reserva) => String(reserva.status || "").trim().toUpperCase() === "PENDENTE",
+    );
+    const rows = reservasPendentes
         .map((r) => {
             const situacao = situacaoReservaAluno(r);
             return `
