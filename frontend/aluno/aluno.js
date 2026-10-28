@@ -2249,10 +2249,28 @@ function viewPerfil() {
 // ============================================================
 
 function eventoDoDia(date) {
-    const evento = EV[key(date)];
+    const dataDia = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+    const evento = eventosPlanilhaAluno.find((item) => {
+        const inicio = item.dataConvertida;
+        const fim = item.dataFimConvertida || inicio;
+        if (!inicio || !fim) return false;
+
+        const dataInicio = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
+        const dataFim = new Date(fim.getFullYear(), fim.getMonth(), fim.getDate());
+        return dataDia >= dataInicio && dataDia <= dataFim;
+    });
 
     if (evento) {
-        return evento;
+        const tipoOriginal = String(evento.tipo || "evento")
+            .normalize("NFD")
+            .replace(/[\\u0300-\\u036f]/g, "")
+            .toLowerCase()
+            .trim();
+        const tiposValidos = Object.keys(TIPOS);
+        const tipo = tiposValidos.includes(tipoOriginal) ? tipoOriginal : "evento";
+        const titulo = String(evento.titulo || evento.nome || evento.descricao || nomeTipoEvento(tipo));
+        return [tipo, titulo];
     }
 
     const day = date.getDay();
