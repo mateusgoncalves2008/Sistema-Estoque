@@ -140,7 +140,6 @@ async function carregarDadosSecretaria() {
         "12_SETORES!A:F",
         "13_LOGS!A:H",
         "14_CONFIGURACOES!A:F",
-        "15_COMUNICACOES_ESTOQUE!A:H",
         "17_CADASTROS_AUTORIZADOS!A:J",
         "18_CALENDARIO_ESCOLAR!A:G",
         "19_TURMAS!A:G",
