@@ -145,7 +145,7 @@ router.post("/login", async (req, res) => {
             }
         }
 
-        // Registra a data e hora do último login válido na coluna K de 01_USUARIOS.
+        // Registra a data e hora do último login válido na coluna identificada pelo cabeçalho.
         const indiceUsuario = usuarios.findIndex(
             (linha) => String(linha[0] || "").trim() === String(usuarioID || "").trim(),
         );
@@ -158,33 +158,64 @@ router.post("/login", async (req, res) => {
             });
         }
 
-        const linhaPlanilha = indiceUsuario + 2;
-        const agora = new Date();
-        const partesDataHora = new Intl.DateTimeFormat("pt-BR", {
-            timeZone: "America/Sao_Paulo",
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hourCycle: "h23",
-        }).formatToParts(agora);
-        const dataHoraLogin = partesDataHora
-            .filter((parte) => parte.type !== "literal")
-            .reduce((dados, parte) => {
-                dados[parte.type] = parte.value;
-                return dados;
-            }, {});
-        const registroUltimoLogin = `${dataHoraLogin.day}/${dataHoraLogin.month}/${dataHoraLogin.year} ${dataHoraLogin.hour}:${dataHoraLogin.minute}:${dataHoraLogin.second}`;
-
         try {
-            await sheets.spreadsheets.values.update({
+            const respostaCabecalho = await sheets.spreadsheets.values.get({
                 spreadsheetId: SPREADSHEET_ID,
-                range: `01_USUARIOS!K${linhaPlanilha}`,
+                range: "01_USUARIOS!1:1",
+            });
+            const cabecalhos = respostaCabecalho.data.values?.[0] || [];
+            const indiceUltimoLogin = cabecalhos.findIndex(
+                (cabecalho) => String(cabecalho || "").trim().toLowerCase() === "ultimologin",
+            );
+
+            if (indiceUltimoLogin < 0) {
+                throw new Error('Cabeçalho "UltimoLogin" não encontrado na primeira linha de 01_USUARIOS.');
+            }
+
+            const colunaUltimoLogin = (() => {
+                let numero = indiceUltimoLogin + 1;
+                let coluna = "";
+                while (numero > 0) {
+                    const resto = (numero - 1) % 26;
+                    coluna = String.fromCharCode(65 + resto) + coluna;
+                    numero = Math.floor((numero - 1) / 26);
+                }
+                return coluna;
+            })();
+
+            const linhaPlanilha = indiceUsuario + 2;
+            const agora = new Date();
+            const partesDataHora = new Intl.DateTimeFormat("pt-BR", {
+                timeZone: "America/Sao_Paulo",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hourCycle: "h23",
+            }).formatToParts(agora);
+            const dataHoraLogin = partesDataHora
+                .filter((parte) => parte.type !== "literal")
+                .reduce((dados, parte) => {
+                    dados[parte.type] = parte.value;
+                    return dados;
+                }, {});
+            const registroUltimoLogin = `${dataHoraLogin.day}/${dataHoraLogin.month}/${dataHoraLogin.year} ${dataHoraLogin.hour}:${dataHoraLogin.minute}:${dataHoraLogin.second}`;
+            const intervaloUltimoLogin = `01_USUARIOS!${colunaUltimoLogin}${linhaPlanilha}`;
+
+            const gravacao = await sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range: intervaloUltimoLogin,
                 valueInputOption: "RAW",
                 requestBody: { values: [[registroUltimoLogin]] },
             });
+
+            if (!gravacao.data?.updatedCells) {
+                throw new Error(`A API não confirmou a gravação em ${intervaloUltimoLogin}.`);
+            }
+
+            console.log(`Último login registrado em ${intervaloUltimoLogin}.`);
         } catch (erroUltimoLogin) {
             console.error("Não foi possível registrar o último login na planilha:", erroUltimoLogin.message);
             return res.status(500).json({
