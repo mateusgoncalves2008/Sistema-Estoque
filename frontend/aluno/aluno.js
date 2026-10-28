@@ -130,7 +130,7 @@ const MENU = [
 const CARD = {
     1: ["Arroz", "Feijão", "Frango", "Salada", "Fruta"],
     2: ["Sopa de macarrão com carne e legumes (cenoura e batata)"],
-    3: ["Arroz", "Feijão", "Peixe", "Legumes", "Laranja"],
+    3: ["Mexido"],
     4: ["Arroz", "Feijão", "Carne moída", "Salada", "Melancia"],
     5: ["Arroz", "Feijão", "Frango assado", "Purê", "Maçã"],
 };
