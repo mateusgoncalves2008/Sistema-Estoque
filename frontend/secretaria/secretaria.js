@@ -1629,7 +1629,7 @@ function renderizarCalendarioSecretaria() {
                 <div class="cal-prof-grid">${diasHTML}</div>
                 <div class="cal-prof-note"><strong>Detalhes dos eventos</strong>Passe o mouse sobre uma data marcada para consultar seus detalhes.</div>
             </section>
-            <aside class="cal-prof-side"><h2>Próximos eventos</h2><div class="cal-prof-event-list">${listaHTML}</div><div class="cal-prof-legend">${legenda}</div></aside>
+            <div class="cal-prof-side"><h2>Próximos eventos</h2><div class="cal-prof-event-list">${listaHTML}</div><div class="cal-prof-legend">${legenda}</div></div>
         </div>`;
 
     area.querySelectorAll("[data-cal-sec-filter]").forEach((botao) => botao.addEventListener("click", () => {
