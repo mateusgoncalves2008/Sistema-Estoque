@@ -380,6 +380,12 @@ router.get("/aluno/itens", exigirAluno, async (req, res) => {
             // Se não houver registro de estoque,
             // ainda mostramos o item, porém indisponível.
             if (registrosEstoque.length === 0) {
+                // Computadores sem vínculo de estoque/local não podem ser
+                // confirmados como pertencentes ao Laboratório de Informática.
+                if (ehComputador) {
+                    continue;
+                }
+
                 itens.push({
                     produtoID,
                     codigo: texto(produto.Codigo),
@@ -467,6 +473,19 @@ router.get("/aluno/itens", exigirAluno, async (req, res) => {
                 const localNome = texto(local.nome) || "Não informado";
 
                 const localNormalizado = normalizar(localNome);
+
+                // O aluno só pode visualizar computadores do Laboratório
+                // de Informática e livros que estejam na Biblioteca.
+                if (
+                    ehComputador &&
+                    !localNormalizado.includes("LABORATORIO DE INFORMATICA")
+                ) {
+                    continue;
+                }
+
+                if (ehLivro && !localNormalizado.includes("BIBLIOTECA")) {
+                    continue;
+                }
 
                 // ------------------------------------------------
                 // PODE RESERVAR?
