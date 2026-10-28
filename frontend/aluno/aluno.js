@@ -2264,7 +2264,7 @@ function eventoDoDia(date) {
     if (evento) {
         const tipoOriginal = String(evento.tipo || "evento")
             .normalize("NFD")
-            .replace(/[\\u0300-\\u036f]/g, "")
+            .replace(/[\u0300-\u036f]/g, "")
             .toLowerCase()
             .trim();
         const tiposValidos = Object.keys(TIPOS);
