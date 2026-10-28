@@ -456,6 +456,15 @@ function gerarEmprestimoID(emprestimos) {
     return `EMP-${String(maior + 1).padStart(5, "0")}`;
 }
 
+function gerarDevolucaoID(devolucoes) {
+    const maior = devolucoes.slice(1).reduce((max, linha) => {
+        const numeroID = Number(texto(linha[0]).match(/(\d+)$/)?.[1] || 0);
+        return Math.max(max, numeroID);
+    }, 0);
+
+    return `DEV-${String(maior + 1).padStart(5, "0")}`;
+}
+
 async function atualizarReserva(reservaID, acao, usuario) {
     const resposta = await sheets.spreadsheets.values.batchGet({
         spreadsheetId: SPREADSHEET_ID,
@@ -464,6 +473,7 @@ async function atualizarReserva(reservaID, acao, usuario) {
             "06_ESTOQUE_LOCAIS!A:I",
             "05_LOCAIS!A:G",
             "09_EMPRESTIMOS!A:L",
+            "10_DEVOLUCOES!A:K",
         ],
     });
 
@@ -471,6 +481,7 @@ async function atualizarReserva(reservaID, acao, usuario) {
     const estoques = resposta.data.valueRanges[1].values || [];
     const locais = resposta.data.valueRanges[2].values || [];
     const emprestimos = resposta.data.valueRanges[3].values || [];
+    const devolucoes = resposta.data.valueRanges[4].values || [];
 
     const indice = reservas.findIndex(
         (linha, i) => i > 0 && texto(linha[0]) === texto(reservaID),
@@ -661,9 +672,42 @@ async function atualizarReserva(reservaID, acao, usuario) {
             throw erro;
         }
 
+        const devolucaoExistente = devolucoes
+            .slice(1)
+            .some((linha) => texto(linha[1]) === texto(emprestimo.linha[0]));
+
+        if (devolucaoExistente) {
+            const erro = new Error("Este empréstimo já possui uma devolução registrada.");
+            erro.status = 409;
+            throw erro;
+        }
+
         atualizacoes.push({
             range: `09_EMPRESTIMOS!H${emprestimo.numeroLinha}:I${emprestimo.numeroLinha}`,
             values: [[dataAtual(), "DEVOLVIDO"]],
+        });
+
+        const dataHoraDevolucao = new Date().toLocaleString("pt-BR", {
+            timeZone: "America/Sao_Paulo",
+        });
+        const devolucaoID = gerarDevolucaoID(devolucoes);
+        const linhaNovaDevolucao = devolucoes.length + 1;
+
+        atualizacoes.push({
+            range: `10_DEVOLUCOES!A${linhaNovaDevolucao}:K${linhaNovaDevolucao}`,
+            values: [[
+                devolucaoID,
+                texto(emprestimo.linha[0]),
+                texto(reserva[2]),
+                produtoID,
+                quantidade,
+                dataHoraDevolucao,
+                "BOM",
+                "",
+                "CONCLUIDA",
+                "",
+                "",
+            ]],
         });
 
         reservado -= quantidade;
