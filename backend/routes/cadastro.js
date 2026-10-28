@@ -373,16 +373,10 @@ router.post("/cadastro", async (req, res) => {
         // CRIAR LINHA DA 01_USUARIOS
         // ==================================================
 
-        const perfilNormalizado =
-            tipoNormalizado === "ADMIN"
-                ? "ADMIN"
-                : tipoNormalizado === "LIDER"
-                  ? "LIDER"
-                  : tipoNormalizado === "PROFESSOR"
-                    ? "PROFESSOR"
-                    : tipoNormalizado === "ALUNO"
-                      ? "ALUNO"
-                      : "CONSULTA";
+        // Aluno e Professor usam o perfil de acesso CONSULTA.
+        // O tipo real da conta continua salvo na coluna F (TipoUsuario),
+        // garantindo que o login encaminhe cada usuário ao painel correto.
+        const perfilNormalizado = "CONSULTA";
 
         const novaLinha = [
             usuarioID, // A - UsuarioID
