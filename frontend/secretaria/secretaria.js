@@ -1615,7 +1615,6 @@ function renderizarCalendarioSecretaria() {
         `<span><i class="cal-prof-dot" style="--event-color:${CORES_CAL_SECRETARIA[tipo]}"></i>${nome}</span>`).join("");
 
     area.innerHTML = `
-        <header class="cal-prof-header"><h2>Calendário escolar</h2><p>Confira os eventos e as datas importantes da escola.</p></header>
         <div class="cal-prof-toolbar">
             <div class="cal-prof-spacer"></div>
             <button type="button" data-cal-sec-month="-1">Anterior</button>
