@@ -14,8 +14,14 @@
         />
 
         <link href="./secretaria.css" rel="stylesheet" />
-    </head>
+        <link rel="stylesheet" href="../carregamento-global.css" />
+</head>
     <body>
+    <div id="tela-carregamento-global" role="status" aria-label="Carregando o sistema" aria-live="polite">
+        <img class="logo-carregamento-global" src="../img/emblema-escolar-educação-constrói.png" alt="Logo da escola" />
+        <p id="texto-carregamento-global" class="texto-carregamento-global">Carregando dados do usuário...</p>
+    </div>
+
         <svg aria-hidden="true" height="0" style="position: absolute" width="0">
             <defs>
                 <symbol id="ic-inicio" viewbox="0 0 24 24">
@@ -1070,6 +1076,7 @@
         </div>
         <div id="toast"></div>
 
+        <script src="../carregamento-global.js"></script>
         <script src="/lucide/lucide.min.js"></script>
         <script src="./secretaria.js"></script>
     </body>
