@@ -257,6 +257,56 @@ async function buscarEstoque(produtoID, localID) {
     return null;
 }
 
+
+function converterDataHoraPrazo(valor) {
+    const dataTexto = String(valor ?? "").trim();
+    if (!dataTexto) return null;
+
+    const brasileira = dataTexto.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?/);
+    if (brasileira) {
+        const data = new Date(
+            Number(brasileira[3]), Number(brasileira[2]) - 1, Number(brasileira[1]),
+            Number(brasileira[4] || 0), Number(brasileira[5] || 0), Number(brasileira[6] || 0)
+        );
+        return Number.isNaN(data.getTime()) ? null : data;
+    }
+
+    const iso = dataTexto.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+    if (iso) {
+        const data = new Date(
+            Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]),
+            Number(iso[4] || 0), Number(iso[5] || 0), Number(iso[6] || 0)
+        );
+        return Number.isNaN(data.getTime()) ? null : data;
+    }
+
+    return null;
+}
+
+async function expirarReservasPendentes() {
+    const resposta = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "08_RESERVAS!A:L",
+    });
+    const linhas = resposta.data.values || [];
+    const agora = new Date();
+
+    for (let i = 1; i < linhas.length; i++) {
+        const linha = linhas[i];
+        if (normalizar(linha[9]) !== "PENDENTE") continue;
+
+        const retirada = converterDataHoraPrazo(linha[6]);
+        if (!retirada || retirada >= agora) continue;
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `08_RESERVAS!J${i + 1}`,
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [["EXPIRADO"]] },
+        });
+    }
+}
+
 // ============================================================
 // RESERVAS EXISTENTES
 // ============================================================
@@ -379,6 +429,7 @@ router.get("/aluno/calendario", async (req, res) => {
 
 router.get("/aluno/reservas/:usuarioID", async (req, res) => {
     try {
+        await expirarReservasPendentes();
         const sessao = req.session?.usuario;
         if (!sessao?.id) {
             return res.status(401).json({
@@ -539,6 +590,7 @@ router.get("/aluno/reservas/:usuarioID", async (req, res) => {
 
 router.get("/professor/reservas/:usuarioID", async (req, res) => {
     try {
+        await expirarReservasPendentes();
         const sessao = req.session?.usuario;
         if (!sessao?.id) {
             return res.status(401).json({
