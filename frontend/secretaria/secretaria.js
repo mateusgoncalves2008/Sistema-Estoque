@@ -262,7 +262,6 @@ async function carregarDados(silencioso = false) {
         movs = (dadosMovimentacoes.movimentacoes || []).map((m) => {
             const data = m.data ? new Date(String(m.data).replace(" ", "T")) : null;
             return [
-                m.movimentacaoID || "-",
                 data && !Number.isNaN(data.getTime()) ? data.toLocaleString("pt-BR") : (m.data || "-"),
                 formatarTipoMovimentacao(m.tipo),
                 m.usuario || m.usuarioID || "—",
@@ -1928,10 +1927,10 @@ const R = {
 
     movs() {
         const filtro = $("#mf")?.value || "";
-        const dados = movs.filter((m) => !filtro || m[2] === filtro);
+        const dados = movs.filter((m) => !filtro || m[1] === filtro);
 
         $("#mt").innerHTML = T(
-            ["ID", "Data e hora", "Tipo", "Pessoa", "Item", "Quantidade", "Local de origem", "Local de destino", "Observação"],
+            ["Data e hora", "Tipo", "Pessoa", "Item", "Quantidade", "Local de origem", "Local de destino", "Observação"],
             dados.map((m) => m.map((valor) => escHtml(valor))),
         );
     },
