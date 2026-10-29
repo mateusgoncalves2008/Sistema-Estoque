@@ -2109,15 +2109,20 @@ function criarBotaoAvisosResponsavel() {
     central.hidden = true;
     central.setAttribute("aria-label", "Central de avisos");
     central.innerHTML = `
-        <div class="cabecalho-avisos-responsavel">
-            <div><h2>Avisos da escola</h2><p>Comunicados destinados aos responsáveis pelos setores</p></div>
-            <button type="button" id="fecharAvisosResponsavel" class="fechar-avisos-responsavel" aria-label="Fechar avisos">&times;</button>
+        <div class="painel-avisos-responsavel" role="dialog" aria-modal="true" aria-labelledby="tituloAvisosResponsavel">
+            <div class="cabecalho-avisos-responsavel">
+                <div><h2 id="tituloAvisosResponsavel">Avisos da escola</h2><p>Comunicados destinados aos responsáveis pelos setores</p></div>
+                <button type="button" id="fecharAvisosResponsavel" class="fechar-avisos-responsavel" aria-label="Fechar avisos">&times;</button>
+            </div>
+            <div class="acoes-avisos-responsavel"><button type="button" id="marcarAvisosLidosResponsavel">Marcar todos como lidos</button></div>
+            <div id="listaAvisosResponsavel" class="lista-avisos-responsavel"><p class="avisos-vazio-responsavel">Carregando avisos...</p></div>
         </div>
-        <div class="acoes-avisos-responsavel"><button type="button" id="marcarAvisosLidosResponsavel">Marcar todos como lidos</button></div>
-        <div id="listaAvisosResponsavel" class="lista-avisos-responsavel"><p class="avisos-vazio-responsavel">Carregando avisos...</p></div>
     `;
     document.body.append(botao, central);
     botao.addEventListener("click", alternarCentralAvisosResponsavel);
+    central.addEventListener("click", (evento) => {
+        if (evento.target === central) fecharCentralAvisosResponsavel();
+    });
     central.querySelector("#fecharAvisosResponsavel").addEventListener("click", fecharCentralAvisosResponsavel);
     central.querySelector("#marcarAvisosLidosResponsavel").addEventListener("click", marcarTodosAvisosResponsavelComoLidos);
 }
