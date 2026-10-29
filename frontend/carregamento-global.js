@@ -31,6 +31,13 @@
         barra.setAttribute("aria-valuemax", "100");
     }
 
+    function ocultarTelaCarregamento() {
+        const tela = document.getElementById("tela-carregamento-global");
+        if (!tela) return;
+        atualizarBarra(100);
+        tela.classList.add("oculta");
+    }
+
     function esconderCarregamentoGlobal() {
         const tela = document.getElementById("tela-carregamento-global");
         if (!tela || finalizacaoAgendada) return;
@@ -40,13 +47,23 @@
         const esperaMinima = Math.max(0, 1800 - (Date.now() - inicioCarregamento));
         const esperaConclusaoVisual = Math.max(300, esperaMinima);
 
-        window.setTimeout(() => {
-            tela.classList.add("oculta");
-            window.setTimeout(() => tela.remove(), 400);
-        }, esperaConclusaoVisual);
+        window.setTimeout(ocultarTelaCarregamento, esperaConclusaoVisual);
     }
 
-    window.finalizarCarregamentoGlobal = esconderCarregamentoGlobal;
+    window.mostrarCarregamentoGlobal = (mensagem) => {
+        const tela = document.getElementById("tela-carregamento-global");
+        if (!tela) return;
+
+        finalizacaoAgendada = true;
+        progresso = 0;
+        atualizarBarra(18);
+        const legenda = document.getElementById("texto-carregamento-global");
+        if (legenda) legenda.textContent = mensagem || mensagemDoPainel();
+        tela.classList.remove("oculta");
+        window.requestAnimationFrame(() => atualizarBarra(82));
+    };
+
+    window.finalizarCarregamentoGlobal = ocultarTelaCarregamento;
 
     if (typeof window.fetch === "function") {
         const fetchOriginal = window.fetch.bind(window);
