@@ -268,7 +268,6 @@ async function carregarDados(silencioso = false) {
                 m.produto || "Não identificado",
                 String(m.quantidade ?? 0),
                 m.localOrigem || "—",
-                m.localDestino || "—",
                 m.observacao || "—",
             ];
         });
@@ -1930,7 +1929,7 @@ const R = {
         const dados = movs.filter((m) => !filtro || m[1] === filtro);
 
         $("#mt").innerHTML = T(
-            ["Data e hora", "Tipo", "Pessoa", "Item", "Quantidade", "Local de origem", "Local de destino", "Observação"],
+            ["Data e hora", "Tipo", "Pessoa", "Item", "Quantidade", "Local de origem", "Observação"],
             dados.map((m) => m.map((valor) => escHtml(valor))),
         );
     },
