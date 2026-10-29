@@ -2125,7 +2125,11 @@ router.get("/secretaria/movimentacoes", async (req, res) => {
         const nomeLocal = (valor) => {
             const local = texto(valor);
             if (!local) return "";
-            return mapaLocais.get(local) || local;
+            const nome = mapaLocais.get(local);
+            if (nome) return nome;
+            return /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ]{2,10}-\d{3,}$/i.test(local)
+                ? "Local não identificado"
+                : local;
         };
 
         const lista = movimentacoes.slice(1).map((linha) => {
