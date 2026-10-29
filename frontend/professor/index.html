@@ -6,9 +6,15 @@
         <title>E.E. Hauy Petruceli Mayrink</title>
         <link rel="stylesheet" href="professor.css" />
         <link rel="stylesheet" href="pesquisa.css" />
-    </head>
+        <link rel="stylesheet" href="../carregamento-global.css" />
+</head>
 
     <body>
+    <div id="tela-carregamento-global" role="status" aria-label="Carregando o sistema" aria-live="polite">
+        <img class="logo-carregamento-global" src="../img/emblema-escolar-educação-constrói.png" alt="Logo da escola" />
+        <p id="texto-carregamento-global" class="texto-carregamento-global">Carregando dados do usuário...</p>
+    </div>
+
         <div class="app">
             <button
                 class="mobile-toggle"
@@ -245,6 +251,7 @@
         </div>
 
         <div class="toast" id="toast"></div>
+        <script src="../carregamento-global.js"></script>
         <script src="/lucide/lucide.min.js"></script>
         <script src="pesquisa.js"></script>
         <script src="professor.js"></script>
