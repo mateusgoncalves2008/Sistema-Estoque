@@ -2530,15 +2530,16 @@ footer {
     inset: 0;
     z-index: 2147483647;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background: #1b120ed1;
-    backdrop-filter: blur(3px);
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 82px 24px 24px;
+    background: transparent;
+    backdrop-filter: none;
 }
 .painel-avisos-responsavel {
-    width: min(520px, 100%);
+    width: min(520px, calc(100vw - 32px));
     max-height: min(78vh, 720px);
+    pointer-events: auto;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -2597,7 +2598,9 @@ footer {
 .aviso-responsavel-rodape { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 .aviso-responsavel-rodape small { color: var(--muted); font-size: 10px; }
 .estado-aviso-responsavel { color: #4b7650; font-size: 11px; font-weight: 700; }
-@media (max-width: 600px) {
+@media (max-width: 600px)
+    .central-avisos-responsavel { padding: 78px 12px 12px; }
+ {
     .botao-avisos-responsavel { top: 12px; right: 14px; width: 42px; height: 42px; border-radius: 12px; }
     .central-avisos-responsavel { padding: 12px; }
     .painel-avisos-responsavel { width: 100%; max-height: calc(100vh - 24px); }
