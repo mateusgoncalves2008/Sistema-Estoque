@@ -2845,7 +2845,35 @@ async function assign() {
 }
 
 
+function abrirModalProfessor(id) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    modal.hidden = false;
+    document.body.classList.add("modal-professor-aberto");
+    const primeiroCampo = modal.querySelector("input:not([type=hidden]), select");
+    window.requestAnimationFrame(() => primeiroCampo?.focus());
+}
+
+function fecharModalProfessor(modal) {
+    if (!modal) return;
+    modal.hidden = true;
+    if (!document.querySelector(".modal-professor-overlay:not([hidden])")) {
+        document.body.classList.remove("modal-professor-aberto");
+    }
+}
+
 function configurarEventosBotoesProfessores() {
+    document.querySelectorAll("[data-modal-professor-abrir]").forEach((botao) => {
+        botao.addEventListener("click", () => abrirModalProfessor(botao.dataset.modalProfessorAbrir));
+    });
+    document.querySelectorAll("[data-modal-professor-fechar]").forEach((botao) => {
+        botao.addEventListener("click", () => fecharModalProfessor(botao.closest(".modal-professor-overlay")));
+    });
+    document.querySelectorAll(".modal-professor-overlay").forEach((modal) => {
+        modal.addEventListener("click", (evento) => {
+            if (evento.target === modal) fecharModalProfessor(modal);
+        });
+    });
     document
         .querySelector("#form-novo-professor")
         ?.addEventListener("submit", (evento) => {
@@ -2858,6 +2886,11 @@ function configurarEventosBotoesProfessores() {
     document
         .querySelector("#btn-salvar-vinculo")
         ?.addEventListener("click", assign);
+
+    document.addEventListener("keydown", (evento) => {
+        if (evento.key !== "Escape") return;
+        document.querySelectorAll(".modal-professor-overlay:not([hidden])").forEach(fecharModalProfessor);
+    });
 }
 
 if (document.readyState === "loading") {
