@@ -362,64 +362,70 @@ router.get("/secretaria/dashboard", async (req, res) => {
 router.get("/secretaria/usuarios", async (req, res) => {
     try {
         const dados = await carregarDadosSecretaria();
-
         const usuarios = dados["01_USUARIOS"] || [];
         const autorizados = dados["17_CADASTROS_AUTORIZADOS"] || [];
+        const autorizadosPorUsuarioID = new Map();
 
-        const usuariosPorID = new Map();
-
-        for (const linha of usuarios.slice(1)) {
-            const usuarioID = texto(linha[0]);
-
-            if (usuarioID) {
-                usuariosPorID.set(usuarioID, {
-                    usuarioID,
-                    email: linha[2] || "",
-                    status: texto(linha[8]).toUpperCase(),
-                    tipoUsuario: linha[5] || "",
-                    perfil: linha[6] || "",
-                    dataCadastro: linha[9] || "",
-                    ultimoLogin: linha[10] || "",
-                });
-            }
+        for (const linha of autorizados.slice(1)) {
+            const usuarioID = texto(linha[3]);
+            if (usuarioID) autorizadosPorUsuarioID.set(usuarioID, linha);
         }
 
-        const lista = autorizados
-            .slice(1)
-            .filter((linha) => normalizar(linha[1]) === "aluno")
+        const lista = usuarios.slice(1)
             .map((linha) => {
-                const usuarioID = texto(linha[3]);
-                const usuario = usuariosPorID.get(usuarioID);
+                const usuarioID = texto(linha[0]);
+                const tipoUsuario = texto(linha[5]).toUpperCase();
+                const perfil = texto(linha[6]).toUpperCase();
+                const cadastro = autorizadosPorUsuarioID.get(usuarioID);
 
                 return {
                     usuarioID,
-                    nome: linha[4] || "",
-                    email: usuario?.email || "",
-                    tipoUsuario: "ALUNO",
-                    perfil: usuario?.perfil || "ALUNO",
-                    status: usuario?.status || "INATIVO",
-                    matricula: linha[2] || "",
-                    ano: linha[5] || "",
-                    turma: linha[6] || "",
-                    turno: linha[7] || "",
-                    idade: linha[8] || "",
-                    statusCadastro: linha[9] || "",
-                    dataCadastro: usuario?.dataCadastro || "",
-                    ultimoLogin: usuario?.ultimoLogin || "",
+                    nome: linha[1] || "",
+                    email: linha[2] || "",
+                    tipoUsuario,
+                    perfil,
+                    status: texto(linha[8]).toUpperCase(),
+                    dataCadastro: linha[9] || "",
+                    ultimoLogin: linha[10] || "",
+                    matricula: cadastro?.[2] || "",
+                    ano: cadastro?.[5] || "",
+                    turma: cadastro?.[6] || "",
+                    turno: cadastro?.[7] || "",
+                    idade: cadastro?.[8] || "",
+                    statusCadastro: cadastro?.[9] || "",
                 };
-            });
+            })
+            .filter((usuario) => ["aluno", "professor"].includes(normalizar(usuario.tipoUsuario)));
 
-        res.json({
-            sucesso: true,
-            usuarios: lista,
-        });
+        const idsIncluidos = new Set(lista.map((usuario) => usuario.usuarioID).filter(Boolean));
+        for (const linha of autorizados.slice(1)) {
+            if (normalizar(linha[1]) !== "aluno") continue;
+            const usuarioID = texto(linha[3]);
+            if (usuarioID && idsIncluidos.has(usuarioID)) continue;
+
+            lista.push({
+                usuarioID,
+                nome: linha[4] || "",
+                email: "",
+                tipoUsuario: "ALUNO",
+                perfil: "ALUNO",
+                status: "INATIVO",
+                matricula: linha[2] || "",
+                ano: linha[5] || "",
+                turma: linha[6] || "",
+                turno: linha[7] || "",
+                idade: linha[8] || "",
+                statusCadastro: linha[9] || "",
+                dataCadastro: "",
+                ultimoLogin: "",
+            });
+            if (usuarioID) idsIncluidos.add(usuarioID);
+        }
+
+        res.json({ sucesso: true, usuarios: lista });
     } catch (erro) {
         console.error("❌ Erro ao carregar usuários:", erro);
-
-        res.status(500).json({
-            sucesso: false,
-            erro: erro.message,
-        });
+        res.status(500).json({ sucesso: false, erro: erro.message });
     }
 });
 
