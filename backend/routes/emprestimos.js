@@ -15,7 +15,57 @@ function normalizar(valor) {
         .toUpperCase();
 }
 
+
+function converterDataPrazo(valor) {
+    const dataTexto = texto(valor);
+    if (!dataTexto) return null;
+
+    const brasileira = dataTexto.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+    if (brasileira) {
+        const data = new Date(Number(brasileira[3]), Number(brasileira[2]) - 1, Number(brasileira[1]));
+        return Number.isNaN(data.getTime()) ? null : data;
+    }
+
+    const iso = dataTexto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) {
+        const data = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+        return Number.isNaN(data.getTime()) ? null : data;
+    }
+
+    return null;
+}
+
+async function atualizarEmprestimosAtrasados() {
+    const resposta = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "09_EMPRESTIMOS!A:L",
+    });
+    const linhas = resposta.data.values || [];
+    const agora = new Date();
+    const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+
+    for (let i = 1; i < linhas.length; i++) {
+        const linha = linhas[i];
+        const status = normalizar(linha[8]);
+        if (texto(linha[7]) || ["DEVOLVIDO", "CONCLUIDO", "CANCELADO", "ENCERRADO"].includes(status)) continue;
+
+        const prazo = converterDataPrazo(linha[6]);
+        if (!prazo) continue;
+        prazo.setHours(0, 0, 0, 0);
+
+        if (prazo < hoje && !["ATRASO", "ATRASADO", "EM ATRASO"].includes(status)) {
+            await sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range: `09_EMPRESTIMOS!I${i + 1}`,
+                valueInputOption: "USER_ENTERED",
+                requestBody: { values: [["ATRASO"]] },
+            });
+        }
+    }
+}
+
 async function buscarDadosEmprestimos(usuarioID, incluirTodos = false) {
+    await atualizarEmprestimosAtrasados();
     const [empRes, prodRes, catRes, subRes] = await Promise.all([
         sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
