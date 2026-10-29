@@ -7,8 +7,14 @@
     <title>Painel ADM | Sistema de Estoque Escolar</title>
     <link rel="stylesheet" href="dashboard.css">
     <script src="dashboard.js" defer></script>
+    <link rel="stylesheet" href="../carregamento-global.css" />
 </head>
 <body>
+    <div id="tela-carregamento-global" role="status" aria-label="Carregando o sistema" aria-live="polite">
+        <img class="logo-carregamento-global" src="../img/emblema-escolar-educação-constrói.png" alt="Logo da escola" />
+        <p id="texto-carregamento-global" class="texto-carregamento-global">Carregando dados do usuário...</p>
+    </div>
+
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-top">
             <div class="school-brand">
@@ -356,7 +362,8 @@
         <footer class="rodape"><span>Sistema de Estoque Escolar · Painel Administrativo</span><span>O acesso e as operações devem respeitar as permissões do servidor.</span></footer>
     </main>
     <div class="overlay-menu" id="overlayMenu"></div>
-    <script src="/lucide/lucide.js"></script>
+    <script src="../carregamento-global.js"></script>
+        <script src="/lucide/lucide.js"></script>
 
 </body>
 </html>
