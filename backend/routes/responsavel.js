@@ -473,7 +473,7 @@ async function atualizarReserva(reservaID, acao, usuario) {
             "06_ESTOQUE_LOCAIS!A:I",
             "05_LOCAIS!A:G",
             "09_EMPRESTIMOS!A:L",
-            "10_DEVOLUCOES!A:K",
+            "10_DEVOLUCOES!A:H",
         ],
     });
 
@@ -694,19 +694,16 @@ async function atualizarReserva(reservaID, acao, usuario) {
         const linhaNovaDevolucao = devolucoes.length + 1;
 
         atualizacoes.push({
-            range: `10_DEVOLUCOES!A${linhaNovaDevolucao}:K${linhaNovaDevolucao}`,
+            range: `10_DEVOLUCOES!A${linhaNovaDevolucao}:H${linhaNovaDevolucao}`,
             values: [[
                 devolucaoID,
                 texto(emprestimo.linha[0]),
-                texto(reserva[2]),
-                produtoID,
-                quantidade,
                 dataHoraDevolucao,
+                quantidade,
                 "BOM",
-                "",
-                "CONCLUIDA",
-                "",
-                "",
+                texto(reserva[2]),
+                texto(usuario.id),
+                `Devolução da reserva ${texto(reservaID)}`,
             ]],
         });
 
