@@ -307,69 +307,92 @@
                         </div>
 
                         <div class="professores-grid">
-                            <div class="card professores-card">
+                            <article class="card professores-card professores-card-acao">
                                 <div class="professores-card__titulo">
                                     <span class="professores-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="9.5" cy="7" r="4"></circle><path d="M20 8v6M23 11h-6"></path></svg></span>
                                     <div><h2>Novo professor</h2><p>Cadastre o professor agora, com ajuda da Secretaria.</p></div>
                                 </div>
-                                <form id="form-novo-professor" class="form professores-form">
-                                    <div><label for="np-masp">MASP</label><input id="np-masp" type="text" inputmode="numeric" maxlength="9" placeholder="Ex.: 1234567-8" autocomplete="off" /></div>
-                                    <div><label for="np-nome">Nome completo</label><input id="np-nome" type="text" autocomplete="name" placeholder="Nome do professor" /></div>
-                                    <div><label for="np-idade">Idade</label><input id="np-idade" type="number" min="18" max="100" placeholder="Idade" /></div>
-                                    <div><label for="np-email">E-mail</label><input id="np-email" type="email" autocomplete="email" placeholder="professor@exemplo.com" /></div>
-                                    <div><label for="np-senha">Senha inicial</label><input id="np-senha" type="password" autocomplete="new-password" minlength="6" maxlength="128" placeholder="Mínimo de 6 caracteres" /></div>
-                                    <small class="professores-ajuda">A conta será criada imediatamente com esse e-mail e senha.</small>
-                                    <button class="btn professores-submit" id="btn-cadastrar-professor-agora" type="submit">Cadastrar professor agora</button>
-                                </form>
-                            </div>
+                                <button class="btn professores-submit professores-abrir-modal" type="button" data-modal-professor-abrir="modal-novo-professor">Abrir cadastro</button>
+                            </article>
 
-                            <div class="card professores-card">
+                            <article class="card professores-card professores-card-acao">
                                 <div class="professores-card__titulo">
                                     <span class="professores-icone professores-icone--azul" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M8 2v4M16 2v4M3 9h18M8 13h3M8 16h7"></path></svg></span>
-                                    <div><h2>Autorizar para cadastro próprio</h2><p>Se o professor preferir, ele cria a conta no site depois.</p></div>
+                                    <div><h2>Vincular professor</h2><p>Associe um professor a uma turma e disciplina.</p></div>
                                 </div>
-                                <div class="form professores-form">
-                                    <div><label for="pm">MASP do professor</label><input id="pm" type="text" inputmode="numeric" maxlength="9" autocomplete="off" placeholder="Ex.: 1234567-8" /><small class="professores-ajuda">O MASP ficará como PENDENTE. O professor usará “Criar minha conta” no site.</small></div>
-                                    <button class="btn professores-submit professores-submit--azul" id="btn-autorizar-masp" type="button">Autorizar MASP</button>
-                                </div>
-                            </div>
+                                <button class="btn professores-submit professores-submit--azul professores-abrir-modal" type="button" data-modal-professor-abrir="modal-vincular-professor">Vincular professor</button>
+                            </article>
 
-                            <div class="card professores-card">
+                            <article class="card professores-card professores-card-acao professores-card-acao--wide">
                                 <div class="professores-card__titulo">
-                                    <span class="professores-icone professores-icone--azul" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M8 2v4M16 2v4M3 9h18M8 13h3M8 16h7"></path></svg>
-                                    </span>
-                                    <div>
-                                        <h2>Vincular professor</h2>
-                                        <p>Associe um professor a uma turma e disciplina.</p>
-                                    </div>
+                                    <span class="professores-icone professores-icone--azul" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M8 2v4M16 2v4M3 9h18M8 13h3M8 16h7"></path></svg></span>
+                                    <div><h2>Autorizar para cadastro próprio</h2><p>O professor poderá criar a própria conta no site depois que a Secretaria autorizar o MASP.</p></div>
                                 </div>
+                                <button class="btn professores-submit professores-submit--azul professores-abrir-modal" type="button" data-modal-professor-abrir="modal-autorizar-professor">Autorizar cadastro próprio</button>
+                            </article>
+                        </div>
 
-                                <div class="form professores-form">
-                                    <div>
-                                        <label for="busca-masp">Pesquisar professor pelo MASP</label>
-                                        <div class="professor-masp-busca">
-                                            <input id="busca-masp" type="search" inputmode="numeric" maxlength="9" autocomplete="off" placeholder="Digite o MASP do professor" aria-describedby="masp-status" />
-                                            <div id="masp-resultados" class="professor-masp-resultados" role="listbox" aria-label="Professores encontrados"></div>
-                                        </div>
-                                        <small id="masp-status" class="professores-ajuda" aria-live="polite">Digite o MASP para localizar o professor.</small>
-                                        <select id="pp" class="professor-select-oculto" aria-hidden="true" tabindex="-1"><option value="">Selecione um professor</option></select>
+                        <div class="modal-professor-overlay" id="modal-novo-professor" hidden>
+                            <section class="modal-professor" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-novo-professor">
+                                <header class="modal-professor__cabecalho">
+                                    <img src="../img/logo_cor.png" alt="Logo da Escola Estadual Hauy Petruceli Mayrink" />
+                                    <div><small>SISTEMA DE CONTROLE ESCOLAR</small><h2 id="titulo-modal-novo-professor">Novo professor</h2><p>Preencha os dados para criar a conta do professor.</p></div>
+                                    <button class="modal-professor__fechar" type="button" data-modal-professor-fechar aria-label="Fechar janela">×</button>
+                                </header>
+                                <form id="form-novo-professor" class="modal-professor__form professores-form">
+                                    <div class="modal-professor__campos">
+                                        <div><label for="np-masp">MASP *</label><input id="np-masp" type="text" inputmode="numeric" maxlength="9" placeholder="Ex.: 1234567-8" autocomplete="off" required /></div>
+                                        <div><label for="np-nome">Nome completo *</label><input id="np-nome" type="text" autocomplete="name" placeholder="Nome do professor" required /></div>
+                                        <div><label for="np-idade">Idade *</label><input id="np-idade" type="number" min="18" max="100" placeholder="Idade" required /></div>
+                                        <div><label for="np-email">E-mail *</label><input id="np-email" type="email" autocomplete="email" placeholder="professor@exemplo.com" required /></div>
+                                        <div class="modal-professor__campo-largo"><label for="np-senha">Senha inicial *</label><input id="np-senha" type="password" autocomplete="new-password" minlength="6" maxlength="128" placeholder="Mínimo de 6 caracteres" required /><small>A senha precisa ter entre 6 e 128 caracteres.</small></div>
                                     </div>
-                                    <div>
-                                        <label for="pt">Turma</label>
-                                        <select id="pt"><option value="">Selecione uma turma</option></select>
+                                    <footer class="modal-professor__acoes"><button class="btn modal-professor__cancelar" type="button" data-modal-professor-fechar>Cancelar</button><button class="btn professores-submit" id="btn-cadastrar-professor-agora" type="submit">Cadastrar professor agora</button></footer>
+                                </form>
+                            </section>
+                        </div>
+
+                        <div class="modal-professor-overlay" id="modal-autorizar-professor" hidden>
+                            <section class="modal-professor" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-autorizar-professor">
+                                <header class="modal-professor__cabecalho">
+                                    <img src="../img/logo_cor.png" alt="Logo da Escola Estadual Hauy Petruceli Mayrink" />
+                                    <div><small>SISTEMA DE CONTROLE ESCOLAR</small><h2 id="titulo-modal-autorizar-professor">Autorizar para cadastro próprio</h2><p>Informe o MASP para liberar o cadastro da conta pelo próprio professor.</p></div>
+                                    <button class="modal-professor__fechar" type="button" data-modal-professor-fechar aria-label="Fechar janela">×</button>
+                                </header>
+                                <div class="modal-professor__form professores-form">
+                                    <div class="modal-professor__campos modal-professor__campos--unico">
+                                        <div><label for="pm">MASP do professor *</label><input id="pm" type="text" inputmode="numeric" maxlength="9" autocomplete="off" placeholder="Ex.: 1234567-8" required /><small class="professores-ajuda">O MASP ficará como PENDENTE. O professor usará “Criar minha conta” no site.</small></div>
                                     </div>
-                                    <div>
-                                        <label for="pdv">Disciplina</label>
-                                        <select id="pdv"><option value="">Selecione uma disciplina</option></select>
-                                    </div>
-                                    <div>
-                                        <label for="pa">Aulas semanais</label>
-                                        <input id="pa" type="number" min="1" max="40" value="4" />
-                                    </div>
-                                    <button class="btn professores-submit professores-submit--azul" id="btn-salvar-vinculo" type="button">Salvar vínculo</button>
+                                    <footer class="modal-professor__acoes"><button class="btn modal-professor__cancelar" type="button" data-modal-professor-fechar>Cancelar</button><button class="btn professores-submit professores-submit--azul" id="btn-autorizar-masp" type="button">Autorizar MASP</button></footer>
                                 </div>
-                            </div>
+                            </section>
+                        </div>
+
+                        <div class="modal-professor-overlay" id="modal-vincular-professor" hidden>
+                            <section class="modal-professor" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-vincular-professor">
+                                <header class="modal-professor__cabecalho">
+                                    <img src="../img/logo_cor.png" alt="Logo da Escola Estadual Hauy Petruceli Mayrink" />
+                                    <div><small>SISTEMA DE CONTROLE ESCOLAR</small><h2 id="titulo-modal-vincular-professor">Vincular professor</h2><p>Escolha o professor, a turma, a disciplina e a quantidade de aulas semanais.</p></div>
+                                    <button class="modal-professor__fechar" type="button" data-modal-professor-fechar aria-label="Fechar janela">×</button>
+                                </header>
+                                <div class="modal-professor__form professores-form">
+                                    <div class="modal-professor__campos">
+                                        <div class="modal-professor__campo-largo">
+                                            <label for="busca-masp">Pesquisar professor pelo MASP *</label>
+                                            <div class="professor-masp-busca">
+                                                <input id="busca-masp" type="search" inputmode="numeric" maxlength="9" autocomplete="off" placeholder="Digite o MASP do professor" aria-describedby="masp-status" />
+                                                <div id="masp-resultados" class="professor-masp-resultados" role="listbox" aria-label="Professores encontrados"></div>
+                                            </div>
+                                            <small id="masp-status" class="professores-ajuda" aria-live="polite">Digite o MASP para localizar o professor.</small>
+                                            <select id="pp" class="professor-select-oculto" aria-hidden="true" tabindex="-1"><option value="">Selecione um professor</option></select>
+                                        </div>
+                                        <div><label for="pt">Turma *</label><select id="pt" required><option value="">Selecione uma turma</option></select></div>
+                                        <div><label for="pdv">Disciplina *</label><select id="pdv" required><option value="">Selecione uma disciplina</option></select></div>
+                                        <div><label for="pa">Aulas semanais *</label><input id="pa" type="number" min="1" max="40" value="4" required /></div>
+                                    </div>
+                                    <footer class="modal-professor__acoes"><button class="btn modal-professor__cancelar" type="button" data-modal-professor-fechar>Cancelar</button><button class="btn professores-submit professores-submit--azul" id="btn-salvar-vinculo" type="button">Salvar vínculo</button></footer>
+                                </div>
+                            </section>
                         </div>
 
                         <div class="card professores-lista">
