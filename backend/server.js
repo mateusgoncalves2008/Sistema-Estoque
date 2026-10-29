@@ -77,6 +77,38 @@ app.use(
     }),
 );
 
+// Mede o tempo das consultas usadas pelo painel do Professor.
+// Os caminhos são normalizados para não registrar IDs de usuários nos logs.
+app.use((req, res, next) => {
+    const caminho = String(req.path || "").split("?")[0];
+    const metodo = String(req.method || "").toUpperCase();
+    const acompanhar =
+        metodo === "GET" &&
+        (
+            caminho.startsWith("/api/professor/") ||
+            caminho === "/api/avisos" ||
+            caminho === "/api/avisos/leituras"
+        );
+
+    if (!acompanhar) return next();
+
+    const inicio = process.hrtime.bigint();
+    const rota = caminho
+        .replace(/\/api\/professor\/reservas\/[^/]+/, "/api/professor/reservas/:usuarioID")
+        .replace(/\/api\/professor\/emprestimos\/[^/]+/, "/api/professor/emprestimos/:usuarioID")
+        .replace(/\/api\/professor\/historico(?:-emprestimos)?\/[^/]+/, "/api/professor/historico/:usuarioID")
+        .replace(/\/api\/professor\/perfil\/[^/]+/, "/api/professor/perfil/:usuarioID");
+
+    res.on("finish", () => {
+        const duracaoMs = Number(process.hrtime.bigint() - inicio) / 1e6;
+        console.info(
+            `[TEMPO PROFESSOR] ${metodo} ${rota} status=${res.statusCode} duracao=${duracaoMs.toFixed(0)}ms`,
+        );
+    });
+
+    next();
+});
+
 // ============================================================
 // AUDITORIA AUTOMÁTICA DAS OPERAÇÕES
 // ============================================================
