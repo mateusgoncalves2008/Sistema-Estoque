@@ -271,7 +271,7 @@ router.get("/secretaria/dashboard", async (req, res) => {
             const dataTexto = texto(valor);
             if (!dataTexto) return null;
 
-            const brasileira = dataTexto.match(/^(\\d{2})\\/(\\d{2})\\/(\\d{4})/);
+            const brasileira = dataTexto.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
             if (brasileira) {
                 const data = new Date(
                     Number(brasileira[3]),
@@ -282,7 +282,7 @@ router.get("/secretaria/dashboard", async (req, res) => {
                 return Number.isNaN(data.getTime()) ? null : data;
             }
 
-            const iso = dataTexto.match(/^(\\d{4})-(\\d{2})-(\\d{2})/);
+            const iso = dataTexto.match(/^(\d{4})-(\d{2})-(\d{2})/);
             if (iso) {
                 const data = new Date(
                     Number(iso[1]),
