@@ -268,6 +268,7 @@ function converterDataHoraPrazo(valor) {
             Number(brasileira[3]), Number(brasileira[2]) - 1, Number(brasileira[1]),
             Number(brasileira[4] || 0), Number(brasileira[5] || 0), Number(brasileira[6] || 0)
         );
+        if (!brasileira[4]) data.setHours(23, 59, 59, 999);
         return Number.isNaN(data.getTime()) ? null : data;
     }
 
@@ -277,6 +278,7 @@ function converterDataHoraPrazo(valor) {
             Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]),
             Number(iso[4] || 0), Number(iso[5] || 0), Number(iso[6] || 0)
         );
+        if (!iso[4]) data.setHours(23, 59, 59, 999);
         return Number.isNaN(data.getTime()) ? null : data;
     }
 
