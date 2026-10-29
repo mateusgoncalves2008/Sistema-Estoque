@@ -264,8 +264,8 @@ async function carregarDados(silencioso = false) {
             return [
                 data && !Number.isNaN(data.getTime()) ? data.toLocaleString("pt-BR") : (m.data || "-"),
                 formatarTipoMovimentacao(m.tipo),
-                m.usuario || m.usuarioID || "—",
-                m.produto || m.produtoID || "—",
+                m.usuario || "Não identificado",
+                m.produto || "Não identificado",
                 String(m.quantidade ?? 0),
                 m.localOrigem || "—",
                 m.localDestino || "—",
