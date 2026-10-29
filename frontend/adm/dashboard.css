@@ -611,6 +611,25 @@ tbody tr:hover { background: #fdfbf8; }
     margin-bottom: 16px;
 }
 
+/* Bloqueios: manter a tabela dentro do componente, sem rolagem horizontal. */
+#bloqueios .tabela-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+#bloqueios .tabela-container table {
+    display: table;
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    white-space: normal;
+}
+#bloqueios .tabela-container th,
+#bloqueios .tabela-container td {
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
 
 /* Histórico completo de auditoria */
 .acoes-historico-logs {
