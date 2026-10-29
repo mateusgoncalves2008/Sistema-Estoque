@@ -264,7 +264,40 @@ router.get("/secretaria/dashboard", async (req, res) => {
         const calendario = dados["18_CALENDARIO_ESCOLAR"] || [];
         const logs = dados["13_LOGS"] || [];
 
-        const hoje = new Date().toISOString().slice(0, 10);
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        function converterDataEmprestimo(valor) {
+            const dataTexto = texto(valor);
+            if (!dataTexto) return null;
+
+            const brasileira = dataTexto.match(/^(\\d{2})\\/(\\d{2})\\/(\\d{4})/);
+            if (brasileira) {
+                const data = new Date(
+                    Number(brasileira[3]),
+                    Number(brasileira[2]) - 1,
+                    Number(brasileira[1])
+                );
+                data.setHours(0, 0, 0, 0);
+                return Number.isNaN(data.getTime()) ? null : data;
+            }
+
+            const iso = dataTexto.match(/^(\\d{4})-(\\d{2})-(\\d{2})/);
+            if (iso) {
+                const data = new Date(
+                    Number(iso[1]),
+                    Number(iso[2]) - 1,
+                    Number(iso[3])
+                );
+                data.setHours(0, 0, 0, 0);
+                return Number.isNaN(data.getTime()) ? null : data;
+            }
+
+            const data = new Date(dataTexto);
+            if (Number.isNaN(data.getTime())) return null;
+            data.setHours(0, 0, 0, 0);
+            return data;
+        }
 
         const alunos = usuarios
             .slice(1)
@@ -278,14 +311,27 @@ router.get("/secretaria/dashboard", async (req, res) => {
             .slice(1)
             .filter((linha) => normalizar(linha[9]) === "pendente");
 
-        const emprestimosAtivos = emprestimos.slice(1).filter((linha) => {
-            const status = normalizar(linha[9] || linha[8]);
+        const emprestimosRegistrados = emprestimos.slice(1);
+
+        const emprestimosAtivos = emprestimosRegistrados.filter((linha) => {
+            const status = normalizar(linha[8]);
 
             return (
-                status === "ativo" ||
-                status === "em andamento" ||
-                status === "aberto"
+                !texto(linha[7]) &&
+                ["ativo", "em andamento", "aberto", "emprestado"].includes(status)
             );
+        });
+
+        const atrasos = emprestimosRegistrados.filter((linha) => {
+            const status = normalizar(linha[8]);
+            const dataPrevista = converterDataEmprestimo(linha[6]);
+            const dataDevolucao = texto(linha[7]);
+            const encerrado = ["devolvido", "concluido", "concluído", "cancelado", "encerrado"].includes(status);
+
+            if (dataDevolucao || encerrado) return false;
+            if (status === "atrasado" || status === "em atraso") return true;
+
+            return Boolean(dataPrevista && dataPrevista < hoje);
         });
 
         const devolucoesPendentes = devolucoes.slice(1).filter((linha) => {
@@ -319,6 +365,7 @@ router.get("/secretaria/dashboard", async (req, res) => {
                 professores: professores.length,
                 reservasPendentes: reservasPendentes.length,
                 emprestimosAtivos: emprestimosAtivos.length,
+                atrasos: atrasos.length,
                 devolucoesPendentes: devolucoesPendentes.length,
                 estoqueBaixo: estoqueBaixo.length,
             },
