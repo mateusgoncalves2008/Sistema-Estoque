@@ -57,15 +57,11 @@ body:has(#tela-carregamento-global:not(.oculta))::-webkit-scrollbar {
 .barra-carregamento-global::after {
     content: "";
     display: block;
-    width: 0;
+    width: var(--progresso-carregamento, 0%);
     height: 100%;
     border-radius: 999px;
     background: #c95730;
-    animation: progressoCarregamentoGlobal 1.8s ease-in-out infinite;
-}
-@keyframes progressoCarregamentoGlobal {
-    0% { width: 0; }
-    85%, 100% { width: 100%; }
+    transition: width 0.25s linear;
 }
 .texto-carregamento-global {
     margin: 16px 16px 0;
@@ -77,5 +73,5 @@ body:has(#tela-carregamento-global:not(.oculta))::-webkit-scrollbar {
 }
 @media (prefers-reduced-motion: reduce) {
     #tela-carregamento-global { transition: none; }
-    .barra-carregamento-global::after { animation: none; width: 100%; }
+    .barra-carregamento-global::after { transition: none; }
 }
