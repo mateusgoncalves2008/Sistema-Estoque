@@ -8,6 +8,7 @@
     function mensagemDoPainel() {
         const caminho = window.location.pathname.toLowerCase();
 
+        if (caminho.includes("/aluno")) return "Preparando o painel do aluno...";
         if (caminho.includes("/professor")) return "Preparando o painel do professor...";
         if (caminho.includes("/responsavel")) return "Preparando o painel do responsável...";
         if (caminho.includes("/secretaria")) return "Preparando o painel da secretaria...";
