@@ -3076,3 +3076,24 @@ button, .primary-button, .secondary-button, .refresh, .text-btn { font-size: 13p
 .school-status-dialog #schoolStatusClose {
     min-width: 100px;
 }
+
+
+/* Remover efeitos de hover dos cards em todos os menus do Responsável */
+.stat-card,
+.quick,
+.stock-item-card {
+    transition: none !important;
+}
+.stat-card:hover {
+    transform: none !important;
+    box-shadow: var(--shadow) !important;
+}
+.quick:hover {
+    transform: none !important;
+    border-color: var(--border) !important;
+}
+.stock-item-card:hover {
+    transform: none !important;
+    border-color: #e9ddd2 !important;
+    box-shadow: 0 5px 18px #3522190a !important;
+}
