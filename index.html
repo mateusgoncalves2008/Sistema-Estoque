@@ -7,8 +7,14 @@
 
         <link rel="stylesheet" href="./frontend/login/login.css" />
         <link rel="stylesheet" href="/icons/lucide.css" />
-    </head>
+        <link rel="stylesheet" href="./frontend/carregamento-global.css" />
+</head>
     <body>
+    <div id="tela-carregamento-global" role="status" aria-label="Carregando o sistema" aria-live="polite">
+        <img class="logo-carregamento-global" src="./frontend/img/emblema-escolar-educação-constrói.png" alt="Logo da escola" />
+        <p id="texto-carregamento-global" class="texto-carregamento-global">Carregando dados do usuário...</p>
+    </div>
+
         <!-- ==================================================
        FUNDO
        ================================================== -->
@@ -506,6 +512,7 @@
                 </div>
             </section>
         </main>
+        <script src="./frontend/carregamento-global.js"></script>
         <script src="./frontend/login/login.js"></script>
     </body>
 </html>
