@@ -3086,3 +3086,13 @@ button, .btn { font-size: 13px; }
         animation: none;
     }
 }
+
+
+.texto-carregamento-aluno {
+    margin-top: 14px;
+    color: #8a786b;
+    font-size: 11px;
+    line-height: 1.4;
+    font-weight: 500;
+    text-align: center;
+}
