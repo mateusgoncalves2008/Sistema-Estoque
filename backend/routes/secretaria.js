@@ -133,7 +133,7 @@ async function carregarDadosSecretaria() {
         "04_SUBCATEGORIAS!A:D",
         "05_LOCAIS!A:F",
         "06_ESTOQUE_LOCAIS!A:H",
-        "07_MOVIMENTACOES!A:L",
+        "07_MOVIMENTACOES!A:K",
         "08_RESERVAS!A:L",
         "09_EMPRESTIMOS!A:K",
         "10_DEVOLUCOES!A:K",
@@ -2135,7 +2135,7 @@ router.get("/secretaria/movimentacoes", async (req, res) => {
         const lista = movimentacoes.slice(1).map((linha) => {
             // 07_MOVIMENTACOES: A ID, B DataHora, C Tipo, D ProdutoID,
             // E Quantidade, F OrigemID, G DestinoID, H UsuarioID,
-            // I ResponsavelID, J Motivo, K Status, L Observacao.
+            // I ResponsavelID, J Motivo, K Status.
             const produtoID = texto(linha[3]);
             const usuarioID = texto(linha[7]);
 
@@ -2153,7 +2153,6 @@ router.get("/secretaria/movimentacoes", async (req, res) => {
                 responsavelID: texto(linha[8]),
                 motivo: linha[9] || "",
                 status: linha[10] || "",
-                observacao: linha[11] || "",
             };
         });
 
