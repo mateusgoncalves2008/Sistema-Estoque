@@ -13,8 +13,8 @@
             rgba(60, 28, 14, 0.7) 55%,
             rgba(46, 56, 20, 0.78)
         ),
-        url("/img/fundo-grande.png") center/cover no-repeat;
-    transition: opacity 0.35s ease, visibility 0.35s ease;
+        url("./img/fundo-grande.png") center/cover no-repeat,\n        #c95730;
+    background-color: #c95730;\n    transition: opacity 0.35s ease, visibility 0.35s ease;
 }
 #tela-carregamento-global.oculta {
     opacity: 0;
@@ -28,6 +28,29 @@
     max-height: 45vh;
     object-fit: contain;
     animation: logoCarregamentoGlobal 1.8s ease-in-out infinite;
+}
+.barra-carregamento-global {
+    position: relative;
+    width: min(62vw, 240px);
+    height: 5px;
+    margin-top: 20px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(244, 238, 231, 0.38);
+    box-shadow: 0 1px 4px rgba(53, 34, 25, 0.18);
+}
+.barra-carregamento-global::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 42%;
+    border-radius: inherit;
+    background: #fffdfa;
+    animation: progressoCarregamentoGlobal 1.2s ease-in-out infinite;
+}
+@keyframes progressoCarregamentoGlobal {
+    0% { transform: translateX(-110%); }
+    100% { transform: translateX(250%); }
 }
 .texto-carregamento-global {
     margin: 14px 16px 0;
@@ -43,5 +66,5 @@
 }
 @media (prefers-reduced-motion: reduce) {
     .logo-carregamento-global { animation: none; }
-    #tela-carregamento-global { transition: none; }
+    #tela-carregamento-global { transition: none; }\n    .barra-carregamento-global::after { animation: none; width: 60%; }
 }
