@@ -2931,6 +2931,8 @@ function iniciarAtualizacaoAutomaticaAluno() {
 }
 
 async function iniciarPainel() {
+    let painelPronto = false;
+
     try {
         configurarSidebar();
         criarBotaoAvisos();
@@ -2939,7 +2941,7 @@ async function iniciarPainel() {
 
         if (!perfilCarregado) return;
 
-        await Promise.all([
+        const resultados = await Promise.all([
             carregarAvisosAluno(),
             carregarItensPesquisa(),
             carregarReservas(),
@@ -2948,16 +2950,23 @@ async function iniciarPainel() {
             carregarEventosPlanilhaAluno(),
         ]);
 
+        if (!resultados.every((resultado) => resultado === true)) {
+            throw new Error("Uma ou mais consultas necessárias não foram carregadas.");
+        }
+
         atualizarUsuarioLateral();
         conectarEventosMenu();
         conectarEventosCalendario();
         draw();
         inicializarIcones();
         iniciarAtualizacaoAutomaticaAluno();
+        painelPronto = true;
     } catch (erro) {
         console.error("Erro ao carregar o painel:", erro);
     } finally {
-        esconderCarregamento();
+        if (painelPronto) {
+            esconderCarregamento();
+        }
     }
 }
 
