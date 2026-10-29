@@ -11,8 +11,14 @@
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
         />
-    </head>
+        <link rel="stylesheet" href="../carregamento-global.css" />
+</head>
     <body>
+    <div id="tela-carregamento-global" role="status" aria-label="Carregando o sistema" aria-live="polite">
+        <img class="logo-carregamento-global" src="../img/emblema-escolar-educação-constrói.png" alt="Logo da escola" />
+        <p id="texto-carregamento-global" class="texto-carregamento-global">Carregando dados do usuário...</p>
+    </div>
+
         <aside class="sidebar" id="sidebar">
             <div class="brand">
                 <img src="../img/logo_cor.png" alt="Logo da escola" />
@@ -690,6 +696,7 @@
             </div>
         </dialog>
 
+        <script src="../carregamento-global.js"></script>
         <script src="/lucide/lucide.min.js" defer></script>
         <script src="script.js"></script>
     </body>
