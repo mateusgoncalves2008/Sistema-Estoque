@@ -1,11 +1,23 @@
+html:has(#tela-carregamento-global:not(.oculta)),
+body:has(#tela-carregamento-global:not(.oculta)) {
+    overflow: hidden !important;
+    scrollbar-width: none !important;
+}
+html:has(#tela-carregamento-global:not(.oculta))::-webkit-scrollbar,
+body:has(#tela-carregamento-global:not(.oculta))::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
 #tela-carregamento-global {
-    position: fixed;
-    inset: 0;
+    position: fixed !important;
+    inset: 0 !important;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 99999;
+    z-index: 2147483647 !important;
+    isolation: isolate;
     background:
         linear-gradient(
             160deg,
