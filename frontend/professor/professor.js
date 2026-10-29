@@ -609,7 +609,7 @@ function atualizarTabelas() {
     }
 
     if (reservasAtivas) {
-        reservasAtivas.textContent = `${listaReservasDados.length} ativas`;
+        reservasAtivas.textContent = `${pendentes} ativas`;
     }
 
     // CONTADORES DE EMPRÉSTIMOS
