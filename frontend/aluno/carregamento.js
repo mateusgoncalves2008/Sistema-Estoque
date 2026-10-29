@@ -1,14 +1,11 @@
-const inicioCarregamento = Date.now();
-
 function esconderCarregamento() {
+    if (typeof window.finalizarCarregamentoGlobal === "function") {
+        window.finalizarCarregamentoGlobal();
+        return;
+    }
+
     const tela = document.getElementById("tela-carregamento");
     if (!tela) return;
-
-    const espera = Math.max(0, 1800 - (Date.now() - inicioCarregamento));
-
-    setTimeout(() => {
-        tela.classList.add("oculta");
-
-        setTimeout(() => tela.remove(), 700);
-    }, espera);
+    tela.classList.add("oculta");
+    window.setTimeout(() => tela.remove(), 400);
 }
