@@ -560,7 +560,7 @@ th {
    ========================================== */
 
 #page-pesquisar {
-    padding: 32px;
+    padding: 0;
     background: #f4eee7;
     color: #3c291f;
     min-height: 100%;
@@ -883,7 +883,7 @@ th {
 
 @media (max-width: 900px) {
     #page-pesquisar {
-        padding: 24px;
+        padding: 0;
     }
 
     #page-pesquisar .item-results {
@@ -893,7 +893,7 @@ th {
 
 @media (max-width: 600px) {
     #page-pesquisar {
-        padding: 18px 14px;
+        padding: 0;
     }
 
     #page-pesquisar .search-panel {
