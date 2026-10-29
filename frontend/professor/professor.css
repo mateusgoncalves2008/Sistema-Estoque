@@ -2431,3 +2431,24 @@ body::-webkit-scrollbar-thumb {
     color: #3f6036;
     border: 1px solid #c8d5c0;
 }
+
+/* Ajustes de espaçamento e leitura da tabela de empréstimos do Professor */
+#page-emprestimos .head {
+    margin-bottom: 26px;
+}
+
+#page-emprestimos .head h1 {
+    margin-bottom: 8px;
+}
+
+#page-emprestimos .head .sub {
+    line-height: 1.6;
+}
+
+#page-emprestimos table {
+    font-size: 13px;
+}
+
+#page-emprestimos table th {
+    font-size: 12px;
+}
