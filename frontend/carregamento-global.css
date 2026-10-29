@@ -13,8 +13,9 @@
             rgba(60, 28, 14, 0.7) 55%,
             rgba(46, 56, 20, 0.78)
         ),
-        url("./img/fundo-grande.png") center/cover no-repeat,\n        #c95730;
-    background-color: #c95730;\n    transition: opacity 0.35s ease, visibility 0.35s ease;
+        url("./img/fundo-grande.png") center/cover no-repeat;
+    background-color: #c95730;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
 }
 #tela-carregamento-global.oculta {
     opacity: 0;
@@ -66,5 +67,6 @@
 }
 @media (prefers-reduced-motion: reduce) {
     .logo-carregamento-global { animation: none; }
-    #tela-carregamento-global { transition: none; }\n    .barra-carregamento-global::after { animation: none; width: 60%; }
+    #tela-carregamento-global { transition: none; }
+    .barra-carregamento-global::after { animation: none; width: 60%; }
 }
