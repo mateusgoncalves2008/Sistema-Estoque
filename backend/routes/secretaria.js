@@ -2115,6 +2115,19 @@ router.get("/secretaria/movimentacoes", async (req, res) => {
             mapaProdutos.set(texto(linha[0]), linha[2] || "");
         }
 
+        const locais = dados["05_LOCAIS"] || [];
+        const mapaLocais = new Map();
+
+        for (const linha of locais.slice(1)) {
+            mapaLocais.set(texto(linha[0]), texto(linha[1]));
+        }
+
+        const nomeLocal = (valor) => {
+            const local = texto(valor);
+            if (!local) return "";
+            return mapaLocais.get(local) || local;
+        };
+
         const lista = movimentacoes.slice(1).map((linha) => {
             // 07_MOVIMENTACOES: A ID, B DataHora, C Tipo, D ProdutoID,
             // E Quantidade, F OrigemID, G DestinoID, H UsuarioID,
@@ -2129,8 +2142,8 @@ router.get("/secretaria/movimentacoes", async (req, res) => {
                 produtoID,
                 produto: mapaProdutos.get(produtoID) || "",
                 quantidade: numero(linha[4]),
-                localOrigem: linha[5] || "",
-                localDestino: linha[6] || "",
+                localOrigem: nomeLocal(linha[5]),
+                localDestino: nomeLocal(linha[6]),
                 usuarioID,
                 usuario: mapaUsuarios.get(usuarioID) || "",
                 responsavelID: texto(linha[8]),
