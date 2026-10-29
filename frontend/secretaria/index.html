@@ -307,29 +307,20 @@
                         </div>
 
                         <div class="professores-grid">
-                            <article class="card professores-card professores-card-acao">
-                                <div class="professores-card__titulo">
-                                    <span class="professores-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="9.5" cy="7" r="4"></circle><path d="M20 8v6M23 11h-6"></path></svg></span>
-                                    <div><h2>Novo professor</h2><p>Cadastre o professor agora, com ajuda da Secretaria.</p></div>
-                                </div>
-                                <button class="btn professores-submit professores-abrir-modal" type="button" data-modal-professor-abrir="modal-novo-professor">Abrir cadastro</button>
-                            </article>
+                            <button class="card professores-card professores-card-acao professores-opcao" type="button" data-modal-professor-abrir="modal-novo-professor">
+                                <span class="professores-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="9.5" cy="7" r="4"></circle><path d="M20 8v6M23 11h-6"></path></svg></span>
+                                <span class="professores-opcao__texto"><strong>Novo professor</strong><span>Cadastre o professor agora, com ajuda da Secretaria.</span></span>
+                            </button>
 
-                            <article class="card professores-card professores-card-acao">
-                                <div class="professores-card__titulo">
-                                    <span class="professores-icone professores-icone--azul" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M8 2v4M16 2v4M3 9h18M8 13h3M8 16h7"></path></svg></span>
-                                    <div><h2>Vincular professor</h2><p>Associe um professor a uma turma e disciplina.</p></div>
-                                </div>
-                                <button class="btn professores-submit professores-submit--azul professores-abrir-modal" type="button" data-modal-professor-abrir="modal-vincular-professor">Vincular professor</button>
-                            </article>
+                            <button class="card professores-card professores-card-acao professores-opcao" type="button" data-modal-professor-abrir="modal-vincular-professor">
+                                <span class="professores-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M8 2v4M16 2v4M3 9h18M8 13h3M8 16h7"></path></svg></span>
+                                <span class="professores-opcao__texto"><strong>Vincular professor</strong><span>Associe um professor a uma turma e disciplina.</span></span>
+                            </button>
 
-                            <article class="card professores-card professores-card-acao professores-card-acao--wide">
-                                <div class="professores-card__titulo">
-                                    <span class="professores-icone professores-icone--azul" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M8 2v4M16 2v4M3 9h18M8 13h3M8 16h7"></path></svg></span>
-                                    <div><h2>Autorizar para cadastro próprio</h2><p>O professor poderá criar a própria conta no site depois que a Secretaria autorizar o MASP.</p></div>
-                                </div>
-                                <button class="btn professores-submit professores-submit--azul professores-abrir-modal" type="button" data-modal-professor-abrir="modal-autorizar-professor">Autorizar cadastro próprio</button>
-                            </article>
+                            <button class="card professores-card professores-card-acao professores-opcao" type="button" data-modal-professor-abrir="modal-autorizar-professor">
+                                <span class="professores-icone" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M8 2v4M16 2v4M3 9h18M8 13h3M8 16h7"></path></svg></span>
+                                <span class="professores-opcao__texto"><strong>Autorizar para cadastro próprio</strong><span>O professor poderá criar a própria conta no site depois que a Secretaria autorizar o MASP.</span></span>
+                            </button>
                         </div>
 
                         <div class="modal-professor-overlay" id="modal-novo-professor" hidden>
