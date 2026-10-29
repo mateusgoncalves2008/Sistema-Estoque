@@ -446,6 +446,11 @@ function viewInicio() {
 
     const proximo = eventosPlanilhaAluno[0] || null;
 
+    // O cartão deve contar apenas reservas pendentes, como a lista "Minhas reservas".
+    const reservasAtivas = reservas.filter(
+        (reserva) => String(reserva.status || "").trim().toUpperCase() === "PENDENTE",
+    );
+
     // Conta somente reservas concluídas, conforme o Status da aba 08_RESERVAS.
     const reservasConcluidas = reservas.filter(
         (reserva) =>
@@ -505,8 +510,8 @@ function viewInicio() {
                 </div>
 
                 <div class="big">
-                    ${reservas.length}
-                    ${reservas.length === 1 ? "ativa" : "ativas"}
+                    ${reservasAtivas.length}
+                    ${reservasAtivas.length === 1 ? "ativa" : "ativas"}
                 </div>
 
                 <p>
