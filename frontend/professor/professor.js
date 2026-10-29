@@ -425,7 +425,9 @@ function aviso(texto) {
     setTimeout(() => toast.classList.remove("show"), 2500);
 }
 
-function abrirPagina(nome) {
+let carregamentoMenuProfessorId = 0;
+
+async function abrirPagina(nome) {
     document
         .querySelectorAll(".page")
         .forEach((p) => p.classList.remove("active"));
@@ -437,31 +439,39 @@ function abrirPagina(nome) {
     });
 
     document.getElementById("sidebar")?.classList.remove("open");
-
     window.scrollTo({ top: 0, behavior: "smooth" });
 
-    if (nome === "pesquisar") {
-        iniciarPesquisa();
-    }
+    const carregadores = {
+        pesquisar: () => iniciarPesquisa(),
+        reservas: () => carregarReservasProfessor(),
+        emprestimos: () => carregarEmprestimosProfessor(),
+        historico: () => carregarHistoricoProfessor(),
+        perfil: () => carregarPerfilProfessor(),
+        calendario: () => carregarCalendarioProfessor(),
+    };
+    const carregar = carregadores[nome];
+    if (!carregar) return;
 
-    if (nome === "reservas") {
-        carregarReservasProfessor();
-    }
+    const idCarregamento = ++carregamentoMenuProfessorId;
+    const mensagens = {
+        pesquisar: "Carregando itens para pesquisa...",
+        reservas: "Carregando suas reservas...",
+        emprestimos: "Carregando seus empréstimos...",
+        historico: "Carregando seu histórico...",
+        perfil: "Carregando seu perfil...",
+        calendario: "Carregando calendário escolar...",
+    };
 
-    if (nome === "emprestimos") {
-        carregarEmprestimosProfessor();
-    }
+    window.mostrarCarregamentoGlobal?.(mensagens[nome]);
 
-    if (nome === "historico") {
-        carregarHistoricoProfessor();
-    }
-
-    if (nome === "perfil") {
-        carregarPerfilProfessor();
-    }
-
-    if (nome === "calendario") {
-        carregarCalendarioProfessor();
+    try {
+        await Promise.resolve(carregar());
+    } catch (erro) {
+        console.error("Erro ao abrir o menu do professor:", erro);
+    } finally {
+        if (idCarregamento === carregamentoMenuProfessorId) {
+            window.finalizarCarregamentoGlobal?.();
+        }
     }
 }
 
