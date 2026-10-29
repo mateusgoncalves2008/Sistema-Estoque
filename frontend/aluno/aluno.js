@@ -200,6 +200,16 @@ function inicializarIcones() {
 // LOGIN
 // ============================================================
 
+function atualizarTextoCarregamentoAluno() {
+    const texto = document.getElementById("texto-carregamento-aluno");
+    if (!texto) return;
+
+    const nome = String(ALUNO.nome || usuarioLogado?.nome || "").trim();
+    texto.textContent = nome && nome !== "Aluno" && nome !== "Não informado"
+        ? `Carregando dados de ${nome} (usuário)...`
+        : "Carregando dados do usuário...";
+}
+
 function obterUsuarioLogado() {
     const salvo = sessionStorage.getItem("usuarioLogado");
 
@@ -224,6 +234,7 @@ function obterUsuarioLogado() {
 
 async function carregarPerfilAluno() {
     usuarioLogado = obterUsuarioLogado();
+    atualizarTextoCarregamentoAluno();
 
     if (!usuarioLogado) {
         window.location.href = "/";
@@ -266,6 +277,7 @@ async function carregarPerfilAluno() {
             ...resultado.aluno,
         };
 
+        atualizarTextoCarregamentoAluno();
         atualizarUsuarioLateral();
 
         return true;
@@ -278,6 +290,7 @@ async function carregarPerfilAluno() {
             email: usuarioLogado.email || "Não informado",
         };
 
+        atualizarTextoCarregamentoAluno();
         atualizarUsuarioLateral();
 
         showToast("Perfil carregado com os dados disponíveis.");
