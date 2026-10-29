@@ -176,7 +176,9 @@ async function carregarDados(silencioso = false) {
             id: u.usuarioID,
             n: u.nome,
             email: u.email,
-            p: "Aluno",
+            p: String(u.tipoUsuario || u.perfil || "").trim().toLocaleLowerCase("pt-BR") === "professor"
+                ? "Professor"
+                : "Aluno",
             t: u.turma || u.ano || "-",
             ano: u.ano || "",
             turma: u.turma || "",
@@ -729,12 +731,20 @@ async function alternarStatusTurma(){
 ========================================================= */
 
 function uList() {
-    const busca = ($("#uq")?.value || "").trim().toLocaleLowerCase("pt-BR");
+    const normalizarBusca = (valor) => String(valor || "")
+        .trim()
+        .toLocaleLowerCase("pt-BR")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+    const busca = normalizarBusca($("#uq")?.value || "");
     const filtro = $("#uf")?.value || "";
 
     const filtrados = users.filter((u) => {
-        const nome = String(u.n || "").toLocaleLowerCase("pt-BR");
-        return nome.startsWith(busca) && (!filtro || u.p === filtro);
+        const nome = normalizarBusca(u.n);
+        const email = normalizarBusca(u.email);
+        const correspondeBusca = !busca || nome.includes(busca) || email.includes(busca);
+        const correspondePerfil = !filtro || u.p === filtro;
+        return correspondeBusca && correspondePerfil;
     });
 
     const tabela = $("#ut2");
@@ -759,6 +769,14 @@ function uList() {
         ]),
     );
 }
+
+// Filtros da lista de usuários (sem eventos inline, compatível com a CSP).
+document.addEventListener("input", (evento) => {
+    if (evento.target.matches("#uq")) uList();
+});
+document.addEventListener("change", (evento) => {
+    if (evento.target.matches("#uf")) uList();
+});
 
 // Filtros das listas de bloqueios e denúncias.
 document.addEventListener("input", (evento) => {
