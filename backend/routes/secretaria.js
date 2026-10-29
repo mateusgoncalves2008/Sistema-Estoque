@@ -183,6 +183,102 @@ async function carregarDadosSecretaria() {
 ==========================================================
 */
 
+
+function converterDataPrazo(valor) {
+    const dataTexto = texto(valor);
+    if (!dataTexto) return null;
+
+    const brasileira = dataTexto.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?/);
+    if (brasileira) {
+        const data = new Date(
+            Number(brasileira[3]),
+            Number(brasileira[2]) - 1,
+            Number(brasileira[1]),
+            Number(brasileira[4] || 0),
+            Number(brasileira[5] || 0),
+            Number(brasileira[6] || 0)
+        );
+        return Number.isNaN(data.getTime()) ? null : data;
+    }
+
+    const iso = dataTexto.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+    if (iso) {
+        const data = new Date(
+            Number(iso[1]),
+            Number(iso[2]) - 1,
+            Number(iso[3]),
+            Number(iso[4] || 0),
+            Number(iso[5] || 0),
+            Number(iso[6] || 0)
+        );
+        return Number.isNaN(data.getTime()) ? null : data;
+    }
+
+    return null;
+}
+
+async function atualizarSituacoesAutomaticas() {
+    const [reservasResposta, emprestimosResposta] = await Promise.all([
+        sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "08_RESERVAS!A:L",
+        }),
+        sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "09_EMPRESTIMOS!A:L",
+        }),
+    ]);
+
+    const agora = new Date();
+    const reservas = reservasResposta.data.values || [];
+    const emprestimos = emprestimosResposta.data.values || [];
+    const atualizacoes = [];
+
+    for (let i = 1; i < reservas.length; i++) {
+        const linha = reservas[i];
+        if (normalizar(linha[9]) !== "pendente") continue;
+
+        const retirada = converterDataPrazo(linha[6]);
+        if (!retirada || retirada >= agora) continue;
+
+        atualizacoes.push({
+            range: `08_RESERVAS!J${i + 1}`,
+            values: [["EXPIRADO"]],
+        });
+    }
+
+    const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+
+    for (let i = 1; i < emprestimos.length; i++) {
+        const linha = emprestimos[i];
+        const status = normalizar(linha[8]);
+        const encerrados = ["devolvido", "concluido", "cancelado", "encerrado"];
+        if (texto(linha[7]) || encerrados.includes(status)) continue;
+
+        const prazo = converterDataPrazo(linha[6]);
+        if (!prazo) continue;
+        prazo.setHours(0, 0, 0, 0);
+
+        if (prazo < hoje && status !== "atraso" && status !== "atrasado" && status !== "em atraso") {
+            atualizacoes.push({
+                range: `09_EMPRESTIMOS!I${i + 1}`,
+                values: [["ATRASO"]],
+            });
+        }
+    }
+
+    for (const atualizacao of atualizacoes) {
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: atualizacao.range,
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: atualizacao.values },
+        });
+    }
+
+    if (atualizacoes.length) limparCache();
+}
+
 function limparCache() {
     cacheSecretaria = {
         dados: null,
@@ -249,6 +345,7 @@ router.use("/secretaria", exigirSecretaria);
 
 router.get("/secretaria/dashboard", async (req, res) => {
     try {
+        await atualizarSituacoesAutomaticas();
         const dados = await carregarDadosSecretaria();
 
         const usuarios = dados["01_USUARIOS"] || [];
@@ -1591,6 +1688,7 @@ router.get("/secretaria/acervo", async (req, res) => {
 
 router.get("/secretaria/reservas", async (req, res) => {
     try {
+        await atualizarSituacoesAutomaticas();
         const dados = await carregarDadosSecretaria();
 
         const reservas = dados["08_RESERVAS"] || [];
@@ -1817,6 +1915,7 @@ router.patch("/secretaria/reservas/:reservaID/recusar", async (req, res) => {
 
 router.get("/secretaria/emprestimos", async (req, res) => {
     try {
+        await atualizarSituacoesAutomaticas();
         const dados = await carregarDadosSecretaria();
 
         const emprestimos = dados["09_EMPRESTIMOS"] || [];
