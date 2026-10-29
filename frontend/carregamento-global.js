@@ -32,9 +32,10 @@
         const legenda = document.getElementById("texto-carregamento-global");
         if (!legenda) return;
         const nome = nomeUsuarioAtual();
-        legenda.textContent = nome
+        const texto = nome
             ? `Carregando dados de ${nome} (usuário)...`
             : "Carregando dados do usuário...";
+        if (legenda.textContent !== texto) legenda.textContent = texto;
     }
 
     function esconderCarregamentoGlobal() {
