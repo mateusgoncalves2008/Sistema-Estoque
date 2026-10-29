@@ -2413,13 +2413,25 @@ body.reserva-modal-open {
 .acoes-avisos-aluno { padding: 10px 16px; border-bottom: 1px solid var(--line, #e3d8ce); }
 .acoes-avisos-aluno button, .aviso-aluno-rodape button {
     padding: 7px 10px;
-    border: 1px solid #e3d8ce;
+    border: 1px solid #c95730;
     border-radius: 9px;
-    background: #f4efe8;
-    color: #8f4228;
+    background: #c95730;
+    color: #fffdfa;
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.acoes-avisos-aluno button:hover, .aviso-aluno-rodape button:hover {
+    background: #a84727;
+    border-color: #a84727;
+}
+.acoes-avisos-aluno button:focus-visible, .aviso-aluno-rodape button:focus-visible {
+    outline: 2px solid #c95730;
+    outline-offset: 3px;
+}
+.acoes-avisos-aluno button:active, .aviso-aluno-rodape button:active {
+    transform: translateY(1px);
 }
 .lista-avisos-aluno { overflow-y: auto; padding: 12px; }
 .aviso-aluno {
