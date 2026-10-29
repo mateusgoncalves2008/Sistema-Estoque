@@ -3044,3 +3044,45 @@ button, .btn { font-size: 13px; }
     color: #fff;
     border: 1px solid #8e3428;
 }
+
+
+/* Tela de carregamento simples do painel do aluno */
+#tela-carregamento {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: #fffdfa;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+#tela-carregamento.oculta {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.logo-carregamento-aluno {
+    display: block;
+    width: min(46vw, 260px);
+    max-width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+    animation: logoCarregamentoAluno 1.8s ease-in-out infinite;
+}
+
+@keyframes logoCarregamentoAluno {
+    0%, 100% { opacity: 0.88; transform: scale(0.985); }
+    50% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .logo-carregamento-aluno {
+        animation: none;
+    }
+}
