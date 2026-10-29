@@ -46,6 +46,8 @@
         }, esperaConclusaoVisual);
     }
 
+    window.finalizarCarregamentoGlobal = esconderCarregamentoGlobal;
+
     if (typeof window.fetch === "function") {
         const fetchOriginal = window.fetch.bind(window);
         window.fetch = (...args) => {
@@ -68,7 +70,8 @@
             requisicoesAtivas === 0 &&
             semRequisicoesRecentes;
 
-        if (carregamentoConcluido || tempoDecorrido >= 20000) {
+        const painelAluno = window.location.pathname.toLowerCase().includes("/aluno");
+        if ((!painelAluno && carregamentoConcluido) || tempoDecorrido >= 20000) {
             esconderCarregamentoGlobal();
             return;
         }
