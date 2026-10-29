@@ -374,11 +374,12 @@ async function carregarCatalogo() {
 }
 
 function iniciarPesquisa() {
-    if (!document.getElementById("pesquisaContainer")) return;
+    if (!document.getElementById("pesquisaContainer")) return Promise.resolve();
     if (!document.getElementById("pesquisaBusca")) {
         montarPesquisa();
-        carregarCatalogo();
+        return carregarCatalogo();
     }
+    return Promise.resolve();
 }
 
 // ------------------------------------------------------------
