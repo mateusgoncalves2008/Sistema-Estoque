@@ -1582,7 +1582,11 @@ function viewHistorico() {
 
     todos.sort((a, b) => String(b.data).localeCompare(String(a.data)));
 
+    const totalPaginasHistorico = Math.ceil(registrosFiltrados.length / 20);
+    paginaHistoricoAluno = Math.min(Math.max(paginaHistoricoAluno, 1), Math.max(totalPaginasHistorico, 1));
+    const inicioHistorico = (paginaHistoricoAluno - 1) * 20;
     const cards = registrosFiltrados
+        .slice(inicioHistorico, inicioHistorico + 20)
         .map((r) => {
             const status = String(r.status).trim().toUpperCase();
 
@@ -1777,7 +1781,19 @@ function viewHistorico() {
             `
             }
         </div>
+        ${renderizarPaginacaoHistoricoAluno(totalPaginasHistorico)}
     `;
+}
+
+function renderizarPaginacaoHistoricoAluno(total) {
+    if (total <= 1) return "";
+    const botoes = [];
+    const primeira = Math.floor((paginaHistoricoAluno - 1) / 10) * 10 + 1;
+    const ultima = Math.min(primeira + 9, total);
+    if (paginaHistoricoAluno > 1) botoes.push(`<button type="button" data-pagina-historico="${paginaHistoricoAluno - 1}">Anterior</button>`);
+    for (let n = primeira; n <= ultima; n++) botoes.push(`<button type="button" data-pagina-historico="${n}" class="${n === paginaHistoricoAluno ? "ativa" : ""}" ${n === paginaHistoricoAluno ? 'aria-current="page"' : ""}>${n}</button>`);
+    if (paginaHistoricoAluno < total) botoes.push(`<button type="button" data-pagina-historico="${paginaHistoricoAluno + 1}">Seguinte ›</button>`);
+    return `<div class="historico-paginacao">${botoes.join("")}</div>`;
 }
 
 function configurarEventosFiltroHistorico() {
@@ -1791,16 +1807,28 @@ function configurarEventosFiltroHistorico() {
 
     pagina.addEventListener("click", (evento) => {
         const botao = evento.target.closest(
-            "[data-filtro-tipo], [data-filtro-categoria]",
+            "[data-filtro-tipo], [data-filtro-categoria], [data-pagina-historico]",
         );
 
         if (!botao || !pagina.contains(botao)) return;
 
+        if (botao.dataset.paginaHistorico) {
+            paginaHistoricoAluno = Number(botao.dataset.paginaHistorico);
+            pagina.innerHTML = viewHistorico();
+            if (typeof inicializarIcones === "function") inicializarIcones();
+            const main = document.querySelector(".main-content");
+            if (main) main.scrollTo({ top: 0, behavior: "smooth" });
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+        }
+
         if (botao.dataset.filtroTipo) {
+            paginaHistoricoAluno = 1;
             filtroHistoricoTipo = botao.dataset.filtroTipo;
         }
 
         if (botao.dataset.filtroCategoria) {
+            paginaHistoricoAluno = 1;
             filtroHistoricoCategoria = botao.dataset.filtroCategoria;
         }
 
@@ -1808,6 +1836,7 @@ function configurarEventosFiltroHistorico() {
     });
 }
 
+let paginaHistoricoAluno = 1;
 let filtroHistoricoTipo = "todos";
 let filtroHistoricoCategoria = "todas";
 
