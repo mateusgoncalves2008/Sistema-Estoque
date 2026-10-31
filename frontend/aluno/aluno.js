@@ -440,8 +440,18 @@ function go(nextPage) {
 // INÍCIO
 // ============================================================
 
+function formatarAnoAluno(valor) {
+    const texto = String(valor || "").trim();
+    if (!texto || texto === "Não informado") return "Não informado";
+    const numero = texto.match(/\d+/);
+    return numero ? numero[0] + "° Ano" : texto;
+}
+
 function viewInicio() {
-    const primeiroNome = (ALUNO.nome || "Aluno").trim().split(/\s+/)[0];
+    const nomeCompleto = String(ALUNO.nome || usuarioLogado?.nome || "Aluno").trim();
+    const anoAluno = formatarAnoAluno(ALUNO.ano);
+    const turmaAluno = String(ALUNO.turma || "Não informado").trim();
+    const turnoAluno = String(ALUNO.turno || "Não informado").trim();
 
     const w = hojeLetivo();
 
@@ -492,7 +502,12 @@ function viewInicio() {
 
     <div class="hero-content">
         <small>PAINEL DO ALUNO</small>
-        <h2>Olá, ${escapeHtml(primeiroNome)}.</h2>
+        <h2>Olá, ${escapeHtml(nomeCompleto)}.</h2>
+        <p class="hero-student-info">
+            ${escapeHtml(anoAluno)} <span>•</span>
+            Turma ${escapeHtml(turmaAluno)} <span>•</span>
+            ${escapeHtml(turnoAluno)}
+        </p>
     </div>
 
     <div class="hero-clock">
