@@ -31,15 +31,15 @@ function criarInterface(){
 }
 function formatarData(v){if(!v)return "";const d=new Date(v);return Number.isNaN(d.getTime())?"":d.toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});}
 async function abrirChat(){
- try{state.carregando=true;render();const [cfg,cs,cv]=await Promise.all([api("/configuracao"),api("/conversas"),api("/contatos")]);state.config=cfg;state.conversas=cs.conversas||[];state.contatos=cv.contatos||[];state.aba="conversas";render();}
+ try{state.carregando=true;render();const [cfg,cs,cv]=await Promise.all([api("/configuracao"),api("/conversas"),api("/contatos")]);state.config=cfg;window.__hauyChatUsuarioID=cfg.usuarioID;state.conversas=cs.conversas||[];state.contatos=cv.contatos||[];state.aba="conversas";render();}
  catch(e){mostrarErro(e.message);}
 }
 function mostrarErro(msg){const c=document.querySelector(".hauy-chat-conversa");if(c){c.replaceChildren(el("p","hauy-chat-vazio",msg));}}
 function render(){
  const panel=document.querySelector(".hauy-chat-painel");if(!panel)return;const p=panel._parts;
- p.tabs.replaceChildren();const abas=[["conversas","Conversas"],["contatos","Contatos"]];if(state.config.podeAlterar)abas.push(["solicitacoes","Solicitações"],["bloqueios","Bloqueios"]);
+ p.tabs.replaceChildren();const abas=[["conversas","Conversas"],["contatos","Contatos"]];if(state.config.podeAlterar)abas.push(["solicitacoes","Solicitações"],["bloqueios","Bloqueios"],["config","Config."]);
  abas.forEach(([id,nome])=>{const b=el("button",state.aba===id?"ativo":"",nome);b.type="button";b.dataset.aba=id;p.tabs.append(b);});
- p.search.hidden=state.aba==="solicitacoes"||state.aba==="bloqueios";p.search.value="";
+ p.search.hidden=state.aba==="solicitacoes"||state.aba==="bloqueios"||state.aba==="config";p.search.value="";
  renderLista();renderConversa();
 }
 function renderLista(){
@@ -60,7 +60,7 @@ function renderLista(){
 function renderConversa(){
  const c=document.querySelector(".hauy-chat-painel")._parts.conversation;c.replaceChildren();
  if(state.aba==="solicitacoes"){c.append(el("p","hauy-chat-vazio","Analise as solicitações recebidas. Você pode aceitar ou recusar cada pedido."));return;}
- if(state.aba==="bloqueios"){c.append(el("p","hauy-chat-vazio","Os bloqueios são permanentes e impedem o contato com o ADM."));return;}
+ if(state.aba==="bloqueios"){c.append(el("p","hauy-chat-vazio","Os bloqueios são permanentes e impedem o contato com o ADM."));return;}\n if(state.aba==="config"){const wrap=el("div","hauy-chat-alerta",state.config.modoRestritoADM?"Modo restrito do ADM está ativado. Novos contatos precisam enviar uma solicitação.":"Modo restrito do ADM está desativado. Os usuários podem iniciar conversas normalmente.");const btn=el("button","hauy-chat-btn",state.config.modoRestritoADM?"Desativar modo restrito":"Ativar modo restrito");btn.type="button";btn.style.minHeight="42px";btn.addEventListener("click",alternarModoRestrito);c.append(wrap,btn);return;}
  if(!state.conversa){c.append(el("p","hauy-chat-vazio","Selecione uma conversa ou escolha um contato para começar."));return;}
  const top=el("div","hauy-chat-conversa-topo"),ident=el("div");ident.append(el("strong","",state.conversa.contato?.nome||"Conversa"),el("small","",state.conversa.status==="PENDING"?"Aguardando resposta do ADM":state.conversa.status==="REJECTED"?"Solicitação recusada":"Conversa ativa"));
  top.append(ident);
@@ -79,6 +79,6 @@ async function atualizarConversas(){const r=await api("/conversas");state.conver
 async function silenciar(){try{const valor=!state.conversa.silenciado;await api("/conversas/"+encodeURIComponent(state.conversa.id)+"/silenciar",{method:"PATCH",body:JSON.stringify({silenciado:valor})});state.conversa.silenciado=valor;render();}catch(e){mostrarErro(e.message);}}
 async function bloquear(){if(!state.config.podeAlterar||!state.conversa)return;const id=state.conversa.contato?.id;if(!id||!confirm("Bloquear este usuário no chat? Ele não poderá mais encontrar o ADM nem acessar conversas com o administrador."))return;try{await api("/bloqueios",{method:"POST",body:JSON.stringify({usuarioID:id})});state.conversa=null;await abrirChat();}catch(e){mostrarErro(e.message);}}
 async function responderSolicitacao(id,acao){if(!acao)return;try{await api("/solicitacoes/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify({acao})});await carregarSolicitacoes();await atualizarConversas();render();}catch(e){mostrarErro(e.message);}}
-async function carregarSolicitacoes(){const [s,b]=await Promise.all([api("/solicitacoes"),api("/bloqueios")]);state.solicitacoes=s.solicitacoes||[];state.bloqueios=b.bloqueios||[];}
-document.addEventListener("DOMContentLoaded",async()=>{try{const r=await api("/configuracao");state.config=r;criarInterface();if(r.podeAlterar){try{await carregarSolicitacoes();}catch{}}}catch(e){console.info("Chat indisponível nesta sessão:",e.message);}});
+async function alternarModoRestrito(){try{const ativo=!state.config.modoRestritoADM;const r=await api("/configuracao/modo-restrito",{method:"PATCH",body:JSON.stringify({ativo})});state.config.modoRestritoADM=r.modoRestritoADM;render();}catch(e){mostrarErro(e.message);}}\nasync function carregarSolicitacoes(){const [s,b]=await Promise.all([api("/solicitacoes"),api("/bloqueios")]);state.solicitacoes=s.solicitacoes||[];state.bloqueios=b.bloqueios||[];}
+document.addEventListener("DOMContentLoaded",async()=>{try{const r=await api("/configuracao");state.config=r;window.__hauyChatUsuarioID=r.usuarioID;criarInterface();if(r.podeAlterar){try{await carregarSolicitacoes();}catch{}}}catch(e){console.info("Chat indisponível nesta sessão:",e.message);}});
 })();
