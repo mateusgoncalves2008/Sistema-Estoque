@@ -5,7 +5,8 @@
     "main": "backend/server.js",
     "scripts": {
         "start": "node backend/server.js",
-        "test": "node --test tests/*.test.js"
+        "test": "node --test tests/*.test.js",
+        "db:migrate:chat": "node backend/scripts/migrate-chat.js"
     },
     "engines": {
         "node": ">=18"
