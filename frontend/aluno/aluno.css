@@ -3311,3 +3311,52 @@ button, .btn { font-size: 13px; }
 .sidebar-nav .nav-item:hover {
     transform: none !important;
 }
+
+
+/* Paginação dos resultados em Pesquisar item — painel do Aluno */
+#pageContent .pesquisa-paginacao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 30px 0 12px;
+}
+#pageContent .pesquisa-paginacao[hidden] { display: none; }
+#pageContent .pesquisa-paginacao button {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #6f625b;
+    font: inherit;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+#pageContent .pesquisa-paginacao button:hover {
+    border-color: #e5d7ca;
+    background: #fffdfa;
+    color: #352219;
+}
+#pageContent .pesquisa-paginacao button.ativa {
+    border: 2px solid #3977b9;
+    background: #fffdfa;
+    color: #352219;
+    font-weight: 700;
+}
+#pageContent .pesquisa-paginacao .pagina-seta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+}
+#pageContent #itemResults { scroll-margin-top: 28px; }
+@media (max-width: 600px) {
+    #pageContent .pesquisa-paginacao { gap: 4px; margin-top: 22px; }
+    #pageContent .pesquisa-paginacao button {
+        min-width: 34px; min-height: 36px; padding: 0 8px; font-size: 13px;
+    }
+}
