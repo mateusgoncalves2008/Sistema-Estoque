@@ -121,6 +121,7 @@ const MENU = [
     ["pesquisar", "Pesquisar item", "search"],
     ["perfil", "Meu Perfil", "user-round"],
     ["calendario", "Calendário", "calendar-days"],
+    ["cardapio", "Cardápio", "utensils"],
 ];
 
 // ============================================================
@@ -503,7 +504,7 @@ function viewInicio() {
 
         <div class="grid">
 
-            <div class="card">
+            <div class="card dashboard-card" role="button" tabindex="0" data-dashboard-page="reservas" aria-label="Abrir Minhas reservas">
                 <div class="lab">
                     ${icon("bookmark")}
                     Minhas reservas
@@ -519,7 +520,7 @@ function viewInicio() {
                 </p>
             </div>
 
-            <div class="card">
+            <div class="card dashboard-card" role="button" tabindex="0" data-dashboard-page="emprestimos" aria-label="Abrir Meus empréstimos">
                 <div class="lab">
                     ${icon("book-open")}
                     Meus empréstimos
@@ -541,7 +542,7 @@ function viewInicio() {
                 </p>
             </div>
 
-            <div class="card">
+            <div class="card dashboard-card" role="button" tabindex="0" data-dashboard-page="calendario" aria-label="Abrir Calendário escolar">
                 <div class="lab">
                     ${icon("calendar-days")}
                     Próximo evento
@@ -562,7 +563,7 @@ function viewInicio() {
                 </p>
             </div>
 
-            <div class="card">
+            <div class="card dashboard-card" role="button" tabindex="0" data-dashboard-page="cardapio" aria-label="Abrir Cardápio da semana">
                 <div class="lab">
                     ${icon("utensils")}
                     Cardápio ${w >= 1 && w <= 5 ? "de hoje" : "da semana"}
@@ -3275,6 +3276,24 @@ function conectarEventosMenu() {
 
         go(botao.dataset.page);
     });
+
+    const content = $("#pageContent");
+    if (content && !content.dataset.cardsInicioConectados) {
+        content.dataset.cardsInicioConectados = "true";
+
+        const abrirCard = (event) => {
+            const card = event.target.closest("[data-dashboard-page]");
+            if (!card || !content.contains(card)) return;
+
+            if (event.type === "keydown" && event.key !== "Enter" && event.key !== " ") return;
+            if (event.type === "keydown") event.preventDefault();
+
+            go(card.dataset.dashboardPage);
+        };
+
+        content.addEventListener("click", abrirCard);
+        content.addEventListener("keydown", abrirCard);
+    }
 }
 
 function conectarEventosCalendario() {
