@@ -2804,10 +2804,15 @@ function draw() {
     content.innerHTML = views[page]();
 
     if (page !== "inicio") {
-        content.insertAdjacentHTML("afterbegin",
-            '<div class="page-home-return"><button type="button" class="btn-home-return" data-return-home aria-label="Voltar ao início">' +
-            icon("arrow-left") + '<span>Voltar ao início</span></button></div>'
-        );
+        const tituloTela = content.querySelector(".head");
+        const areaBotao = tituloTela || content.firstElementChild;
+
+        if (areaBotao) {
+            areaBotao.insertAdjacentHTML("beforebegin",
+                '<div class="page-home-return"><button type="button" class="btn-home-return" data-return-home aria-label="Voltar ao início">' +
+                icon("arrow-left") + '<span>Voltar ao início</span></button></div>'
+            );
+        }
     }
 
     // Preenche o relógio imediatamente após redesenhar a tela inicial.
