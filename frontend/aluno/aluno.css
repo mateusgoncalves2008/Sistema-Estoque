@@ -1000,30 +1000,34 @@ body.sidebar-collapsed .sidebar-top {
 body.sidebar-collapsed .sidebar-toggle {
     position: absolute;
     top: 0;
-    left: 0;
+    left: 50%;
     right: auto;
     z-index: 2;
     width: 48px;
     height: 48px;
-    background: var(--sidebar-bg, var(--primary));
+    transform: translateX(-50%);
+    background: var(--primary);
     color: #fff;
     border-radius: 10px;
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
+    transition: opacity .16s ease, visibility .16s ease, background .2s ease;
 }
 body.sidebar-collapsed .sidebar-top:hover .sidebar-toggle,
 body.sidebar-collapsed .sidebar-top:focus-within .sidebar-toggle:focus-visible {
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
-}
-body.sidebar-collapsed .sidebar-top:hover .logo-box {
-    opacity: 0;
 }
 body.sidebar-collapsed .logo-box {
     opacity: 1;
+    visibility: visible;
+    transition: opacity .16s ease, visibility .16s ease;
 }
-body.sidebar-collapsed .logo-box {
-    transition: opacity .16s ease;
+body.sidebar-collapsed .sidebar-top:hover .logo-box {
+    opacity: 0;
+    visibility: hidden;
 }
 
 body.sidebar-collapsed .sidebar-nav {
