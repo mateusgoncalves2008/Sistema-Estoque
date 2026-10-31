@@ -2803,6 +2803,13 @@ function draw() {
 
     content.innerHTML = views[page]();
 
+    if (page !== "inicio") {
+        content.insertAdjacentHTML("afterbegin",
+            '<div class="page-home-return"><button type="button" class="btn-home-return" data-return-home aria-label="Voltar ao início">' +
+            icon("arrow-left") + '<span>Voltar ao início</span></button></div>'
+        );
+    }
+
     // Preenche o relógio imediatamente após redesenhar a tela inicial.
     // Isso evita que o horário volte a 00:00:00 durante a atualização automática.
     if (page === "inicio") {
@@ -3282,6 +3289,12 @@ function conectarEventosMenu() {
         content.dataset.cardsInicioConectados = "true";
 
         const abrirCard = (event) => {
+            const voltar = event.target.closest("[data-return-home]");
+            if (voltar && content.contains(voltar)) {
+                go("inicio");
+                return;
+            }
+
             const card = event.target.closest("[data-dashboard-page]");
             if (!card || !content.contains(card)) return;
 
