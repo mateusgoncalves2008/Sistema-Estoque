@@ -1012,13 +1012,15 @@ body.sidebar-collapsed .sidebar-toggle {
     pointer-events: none;
 }
 body.sidebar-collapsed .sidebar-top:hover .sidebar-toggle,
-body.sidebar-collapsed .sidebar-top:focus-within .sidebar-toggle {
+body.sidebar-collapsed .sidebar-top:focus-within .sidebar-toggle:focus-visible {
     opacity: 1;
     pointer-events: auto;
 }
-body.sidebar-collapsed .sidebar-top:hover .logo-box,
-body.sidebar-collapsed .sidebar-top:focus-within .logo-box {
+body.sidebar-collapsed .sidebar-top:hover .logo-box {
     opacity: 0;
+}
+body.sidebar-collapsed .logo-box {
+    opacity: 1;
 }
 body.sidebar-collapsed .logo-box {
     transition: opacity .16s ease;
