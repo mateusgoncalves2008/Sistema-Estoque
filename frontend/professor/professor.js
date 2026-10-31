@@ -1058,6 +1058,7 @@ async function carregarHistoricoProfessor(silencioso = false) {
 
         let tipoSelecionado = "todos";
         let categoriaSelecionada = "todas";
+        let paginaHistoricoProfessor = 1;
         const lista = area.querySelector(".historico-lista");
 
         function aplicarFiltros() {
@@ -1080,16 +1081,43 @@ async function carregarHistoricoProfessor(silencioso = false) {
                 return correspondeCategoria && correspondeTipo;
             });
 
-            lista.innerHTML = criarCards(filtrados);
-
-            if (window.lucide) {
-                window.lucide.createIcons();
+            const totalPaginas = Math.ceil(filtrados.length / 20);
+            paginaHistoricoProfessor = Math.min(Math.max(paginaHistoricoProfessor, 1), Math.max(totalPaginas, 1));
+            const inicio = (paginaHistoricoProfessor - 1) * 20;
+            lista.innerHTML = criarCards(filtrados.slice(inicio, inicio + 20));
+            let paginacao = area.querySelector(".historico-paginacao");
+            if (!paginacao) {
+                paginacao = document.createElement("div");
+                paginacao.className = "historico-paginacao";
+                lista.insertAdjacentElement("afterend", paginacao);
             }
+            paginacao.hidden = totalPaginas <= 1;
+            if (totalPaginas > 1) {
+                const botoes = [];
+                const primeira = Math.floor((paginaHistoricoProfessor - 1) / 10) * 10 + 1;
+                const ultima = Math.min(primeira + 9, totalPaginas);
+                if (paginaHistoricoProfessor > 1) botoes.push(`<button type="button" data-pagina-historico-prof="${paginaHistoricoProfessor - 1}">Anterior</button>`);
+                for (let n = primeira; n <= ultima; n++) botoes.push(`<button type="button" data-pagina-historico-prof="${n}" class="${n === paginaHistoricoProfessor ? "ativa" : ""}" ${n === paginaHistoricoProfessor ? 'aria-current="page"' : ""}>${n}</button>`);
+                if (paginaHistoricoProfessor < totalPaginas) botoes.push(`<button type="button" data-pagina-historico-prof="${paginaHistoricoProfessor + 1}">Seguinte ›</button>`);
+                paginacao.innerHTML = botoes.join("");
+            } else paginacao.innerHTML = "";
+            if (window.lucide) window.lucide.createIcons();
         }
+
+        area.addEventListener("click", (evento) => {
+            const botao = evento.target.closest("[data-pagina-historico-prof]");
+            if (!botao) return;
+            paginaHistoricoProfessor = Number(botao.dataset.paginaHistoricoProf);
+            aplicarFiltros();
+            const main = document.querySelector(".main-content");
+            if (main) main.scrollTo({ top: 0, behavior: "smooth" });
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
 
         area.querySelectorAll("[data-filtro-prof]").forEach((botao) => {
             botao.addEventListener("click", () => {
                 categoriaSelecionada = botao.dataset.filtroProf;
+                paginaHistoricoProfessor = 1;
 
                 area.querySelectorAll("[data-filtro-prof]").forEach((b) => {
                     b.classList.toggle("ativo", b === botao);
@@ -1102,6 +1130,7 @@ async function carregarHistoricoProfessor(silencioso = false) {
         area.querySelectorAll("[data-filtro-tipo-prof]").forEach((botao) => {
             botao.addEventListener("click", () => {
                 tipoSelecionado = botao.dataset.filtroTipoProf;
+                paginaHistoricoProfessor = 1;
 
                 area.querySelectorAll("[data-filtro-tipo-prof]").forEach(
                     (b) => {
