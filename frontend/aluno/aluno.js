@@ -19,6 +19,9 @@ let reservas = [];
 let movimentos = [];
 let emprestimos = [];
 let ITENS_PESQUISA = [];
+let ITENS_PESQUISA_FILTRADOS = [];
+let PAGINA_ITENS_ALUNO = 1;
+const ITENS_POR_PAGINA_ALUNO = 10;
 let emprestimosHistorico = [];
 let reservaItemSelecionado = null;
 let reservasCarregadas = false;
@@ -1880,153 +1883,121 @@ function pesquisarItens() {
     const status = $("#itemStatus");
     const resultados = $("#itemResults");
     const quantidade = $("#itemCount");
-
-    if (!input || !tipo || !status || !resultados) {
-        return;
-    }
+    if (!input || !tipo || !status || !resultados) return;
 
     const termo = input.value.trim().toLowerCase();
     const tipoSelecionado = tipo.value;
     const statusSelecionado = status.value;
 
-    const filtrados = ITENS_PESQUISA.filter((item) => {
+    ITENS_PESQUISA_FILTRADOS = ITENS_PESQUISA.filter((item) => {
         const textoBusca = [
-            item.nome,
-            item.codigo,
-            item.tipo,
-            item.local,
-            item.detalhe,
-            item.autor,
-            item.categoria,
-            item.subcategoria,
-        ]
-            .join(" ")
-            .toLowerCase();
-
-        // Pesquisa por nome/código/local
-        const bateTexto = !termo || textoBusca.includes(termo);
-
-        // Filtro por tipo
-        const bateTipo = !tipoSelecionado || item.tipo === tipoSelecionado;
-
-        // Filtro por situação
-        const bateStatus =
-            !statusSelecionado || item.situacaoTexto === statusSelecionado;
-
-        return bateTexto && bateTipo && bateStatus;
+            item.nome, item.codigo, item.tipo, item.local, item.detalhe,
+            item.autor, item.categoria, item.subcategoria,
+        ].join(" ").toLowerCase();
+        return (!termo || textoBusca.includes(termo)) &&
+            (!tipoSelecionado || item.tipo === tipoSelecionado) &&
+            (!statusSelecionado || item.situacaoTexto === statusSelecionado);
     });
 
     if (quantidade) {
-        quantidade.textContent = `${filtrados.length} ${
-            filtrados.length === 1 ? "item encontrado" : "itens encontrados"
-        }`;
+        quantidade.textContent = `${ITENS_PESQUISA_FILTRADOS.length} ${ITENS_PESQUISA_FILTRADOS.length === 1 ? "item encontrado" : "itens encontrados"}`;
     }
 
-    resultados.innerHTML = filtrados.length
-        ? filtrados
-              .map(
-                  (item) => `
-             <article
-    class="item-result-card ${item.podeReservar ? "reservable" : ""}"
-    ${
-        item.podeReservar
-            ? `data-produto-id="${escapeHtml(item.produtoID)}"
-           role="button" tabindex="0" title="Clique para reservar"`
-            : ""
+    PAGINA_ITENS_ALUNO = 1;
+    renderizarPesquisaAluno();
+
+    if (resultados.dataset.eventosConfigurados !== "sim") {
+        resultados.dataset.eventosConfigurados = "sim";
+        resultados.addEventListener("click", (event) => {
+            const card = event.target.closest("[data-produto-id]");
+            if (card && resultados.contains(card)) abrirReserva(card.dataset.produtoId);
+        });
+        resultados.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            const card = event.target.closest("[data-produto-id]");
+            if (card && resultados.contains(card)) {
+                event.preventDefault();
+                abrirReserva(card.dataset.produtoId);
+            }
+        });
     }
->
 
-                        <div class="item-result-icon">
-                            ${icon(
-                                item.tipo === "Livro" ? "book-open" : "monitor",
-                            )}
-                        </div>
-
-                        <div class="item-result-main">
-
-                            <div class="item-result-top">
-
-                                <div>
-                                    <span class="item-type">
-                                        ${escapeHtml(item.tipo)}
-                                    </span>
-
-                                    <h3>
-                                        ${escapeHtml(item.nome)}
-                                    </h3>
-                                </div>
-
-                                <span
-                                    class="item-status ${statusClasse(
-                                        item.situacaoTexto,
-                                    )}"
-                                >
-                                    ${escapeHtml(item.situacaoTexto)}
-                                </span>
-
-                            </div>
-
-                            <p>
-                                ${escapeHtml(
-                                    item.detalhe ||
-                                        "Sem informações adicionais.",
-                                )}
-                            </p>
-
-                            <div class="item-result-meta">
-
-                                <span>
-                                    ${icon("hash")}
-                                    ${escapeHtml(
-                                        item.codigo ||
-                                            item.produtoID ||
-                                            "Sem código",
-                                    )}
-                                </span>
-
-                                <span>
-                                    ${icon("map-pin")}
-                                    ${escapeHtml(item.local || "Não informado")}
-                                </span>
-
-                                <span>
-                                    ${icon("package")}
-                                    ${escapeHtml(String(item.disponivel ?? 0))}
-                                    disponível
-                                </span>
-
-                            </div>
-
-                        </div>
-
-                    </article>
-                `,
-              )
-              .join("")
-        : `
-            <div class="search-empty">
-
-                ${icon("search-x")}
-
-                <strong>
-                    Nenhum item encontrado
-                </strong>
-
-                <p>
-                    Não existem itens com essa situação.
-                </p>
-
-            </div>
-        `;
-    resultados.addEventListener("click", (event) => {
-        const card = event.target.closest("[data-produto-id]");
-
-        if (card && resultados.contains(card)) {
-            abrirReserva(card.dataset.produtoId);
-        }
-    });
-
+    const paginacao = document.getElementById("itemPagination");
+    if (paginacao && paginacao.dataset.eventosConfigurados !== "sim") {
+        paginacao.dataset.eventosConfigurados = "sim";
+        paginacao.addEventListener("click", (event) => {
+            const botao = event.target.closest("[data-pagina-item]");
+            if (!botao) return;
+            PAGINA_ITENS_ALUNO = Number(botao.dataset.paginaItem);
+            renderizarPesquisaAluno();
+            document.getElementById("itemResults")?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+            });
+        });
+    }
     inicializarIcones();
+}
+
+function renderizarPesquisaAluno() {
+    const resultados = $("#itemResults");
+    if (!resultados) return;
+    const totalPaginas = Math.ceil(ITENS_PESQUISA_FILTRADOS.length / ITENS_POR_PAGINA_ALUNO);
+    PAGINA_ITENS_ALUNO = Math.min(Math.max(PAGINA_ITENS_ALUNO, 1), Math.max(totalPaginas, 1));
+    const inicio = (PAGINA_ITENS_ALUNO - 1) * ITENS_POR_PAGINA_ALUNO;
+    const itensDaPagina = ITENS_PESQUISA_FILTRADOS.slice(inicio, inicio + ITENS_POR_PAGINA_ALUNO);
+
+    resultados.innerHTML = itensDaPagina.length
+        ? itensDaPagina.map((item) => `
+            <article class="item-result-card ${item.podeReservar ? "reservable" : ""}"
+                ${item.podeReservar ? `data-produto-id="${escapeHtml(item.produtoID)}" role="button" tabindex="0" title="Clique para reservar"` : ""}>
+                <div class="item-result-icon">
+                    ${icon(item.tipo === "Livro" ? "book-open" : "monitor")}
+                </div>
+                <div class="item-result-main">
+                    <div class="item-result-top">
+                        <div>
+                            <span class="item-type">${escapeHtml(item.tipo)}</span>
+                            <h3>${escapeHtml(item.nome)}</h3>
+                        </div>
+                        <span class="item-status ${statusClasse(item.situacaoTexto)}">${escapeHtml(item.situacaoTexto)}</span>
+                    </div>
+                    <p>${escapeHtml(item.detalhe || "Sem informações adicionais.")}</p>
+                    <div class="item-result-meta">
+                        <span>${icon("hash")} ${escapeHtml(item.codigo || item.produtoID || "Sem código")}</span>
+                        <span>${icon("map-pin")} ${escapeHtml(item.local || "Não informado")}</span>
+                        <span>${icon("package")} ${escapeHtml(String(item.disponivel ?? 0))} disponível</span>
+                    </div>
+                </div>
+            </article>
+        `).join("")
+        : `<div class="search-empty">${icon("search-x")}<strong>Nenhum item encontrado</strong><p>Não existem itens com essa situação.</p></div>`;
+
+    renderizarPaginacaoAluno(totalPaginas);
+}
+
+function renderizarPaginacaoAluno(totalPaginas) {
+    const paginacao = document.getElementById("itemPagination");
+    if (!paginacao) return;
+    if (totalPaginas <= 1) {
+        paginacao.innerHTML = "";
+        paginacao.hidden = true;
+        return;
+    }
+    paginacao.hidden = false;
+    const inicioJanela = Math.floor((PAGINA_ITENS_ALUNO - 1) / 10) * 10 + 1;
+    const fimJanela = Math.min(inicioJanela + 9, totalPaginas);
+    let botoes = "";
+    if (PAGINA_ITENS_ALUNO > 1) {
+        botoes += `<button type="button" class="pagina-seta" data-pagina-item="${PAGINA_ITENS_ALUNO - 1}">Anterior</button>`;
+    }
+    for (let pagina = inicioJanela; pagina <= fimJanela; pagina++) {
+        botoes += `<button type="button" class="pagina-numero ${pagina === PAGINA_ITENS_ALUNO ? "ativa" : ""}" data-pagina-item="${pagina}" ${pagina === PAGINA_ITENS_ALUNO ? 'aria-current="page"' : ""}>${pagina}</button>`;
+    }
+    if (PAGINA_ITENS_ALUNO < totalPaginas) {
+        botoes += `<button type="button" class="pagina-seta" data-pagina-item="${PAGINA_ITENS_ALUNO + 1}">Seguinte <span aria-hidden="true">›</span></button>`;
+    }
+    paginacao.innerHTML = botoes;
 }
 
 function limparPesquisaItens() {
@@ -2187,6 +2158,8 @@ function viewPesquisar() {
             id="itemResults"
             class="item-results"
         ></div>
+
+        <div id="itemPagination" class="pesquisa-paginacao" aria-label="Paginação dos itens" hidden></div>
 
         <div class="note search-note">
 
