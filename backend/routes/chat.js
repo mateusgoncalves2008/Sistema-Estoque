@@ -503,12 +503,30 @@ router.post("/chat/bloqueios", exigirUsuarioAtivo, exigirAdm, async (req, res) =
         if (!usuarioID || usuarioID === req.chatUser.id) throw erro(400, "Informe um usuário válido para bloquear.");
         const usuarios = await carregarUsuariosAtivos();
         if (!usuarios.some((item) => item.id === usuarioID)) throw erro(404, "Usuário não encontrado ou inativo.");
-        await postgres.pool.query(
-            `INSERT INTO chat_blocks (blocker_id, blocked_id)
-             VALUES ($1, $2)
-             ON CONFLICT (blocker_id, blocked_id) DO NOTHING`,
-            [req.chatUser.id, usuarioID],
-        );
+        await executarTransacao(async (db) => {
+            await db.query(
+                `INSERT INTO chat_blocks (blocker_id, blocked_id)
+                 VALUES ($1, $2)
+                 ON CONFLICT (blocker_id, blocked_id) DO NOTHING`,
+                [req.chatUser.id, usuarioID],
+            );
+            await db.query(
+                `UPDATE chat_requests
+                    SET status = 'REJECTED', responded_at = NOW()
+                  WHERE admin_id = $1
+                    AND sender_id = $2
+                    AND status = 'PENDING'`,
+                [req.chatUser.id, usuarioID],
+            );
+            await db.query(
+                `UPDATE chat_conversations
+                    SET status = 'REJECTED', rejected_at = NOW(), updated_at = NOW()
+                  WHERE participant_one_id = $1
+                    AND participant_two_id = $2
+                    AND status = 'PENDING'`,
+                [usuarioID, req.chatUser.id],
+            );
+        });
         return res.status(201).json({ sucesso: true, mensagem: "Usuário bloqueado no chat." });
     } catch (e) {
         return responderErro(res, e, "Não foi possível bloquear o usuário.");
