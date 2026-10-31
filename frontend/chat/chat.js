@@ -12,16 +12,26 @@ async function api(path, options={}) {
  return data;
 }
 function criarInterface(){
- const fab=el("button","hauy-chat-fab"); fab.type="button"; fab.setAttribute("aria-label","Abrir chat"); fab.title="Chat";
- fab.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg>';
+
  const panel=el("section","hauy-chat-painel"); panel.setAttribute("aria-label","Chat escolar");
  const header=el("header","hauy-chat-topo"); const heading=el("div"); heading.append(el("h2","","Mensagens"),el("p","","Comunicação da comunidade escolar"));
  const close=el("button","hauy-chat-fechar","×"); close.type="button"; close.setAttribute("aria-label","Fechar chat"); header.append(heading,close);
  const body=el("div","hauy-chat-corpo"), side=el("aside","hauy-chat-lateral"), tabs=el("div","hauy-chat-abas"), search=el("input","hauy-chat-pesquisa"), list=el("div","hauy-chat-lista");
  search.placeholder="Pesquisar"; search.type="search"; side.append(tabs,search,list);
- const conversation=el("section","hauy-chat-conversa"); body.append(side,conversation); panel.append(header,body); document.body.append(fab,panel);
- fab.addEventListener("click",()=>{panel.classList.add("aberto");fab.hidden=true;abrirChat();});
- close.addEventListener("click",()=>{panel.classList.remove("aberto");fab.hidden=false;});
+ const conversation=el("section","hauy-chat-conversa"); body.append(side,conversation); panel.append(header,body); document.body.append(panel);
+ const abrir=()=>{panel.classList.add("aberto");abrirChat();};
+ const inserirMenu=()=>{
+  const nav=document.querySelector(".sidebar-nav, #nav, #menu, .sidebar nav");
+  if(!nav||nav.querySelector("[data-hauy-chat-menu]"))return;
+  const item=el("button","hauy-chat-menu-item");
+  item.type="button";item.dataset.hauyChatMenu="true";
+  item.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg><span>Chat</span>';
+  item.addEventListener("click",abrir);nav.append(item);
+ };
+ inserirMenu();
+ const observer=new MutationObserver(inserirMenu);
+ observer.observe(document.body,{childList:true,subtree:true});
+ close.addEventListener("click",()=>panel.classList.remove("aberto"));
  tabs.addEventListener("click",e=>{const b=e.target.closest("button[data-aba]");if(!b)return;state.aba=b.dataset.aba;state.conversa=null;state.mensagens=[];render();});
  search.addEventListener("input",()=>renderLista());
  list.addEventListener("click",e=>{const b=e.target.closest("button[data-id]");if(!b)return;if(state.aba==="contatos")iniciarConversa(b.dataset.id);else if(state.aba==="solicitacoes")responderSolicitacao(b.dataset.id,e.target.dataset.acao);else if(state.aba==="bloqueios")return;else selecionarConversa(b.dataset.id);});
