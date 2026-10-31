@@ -1,10 +1,8 @@
 const dotenv = require("dotenv");
 const path = require("node:path");
+const fs = require("node:fs");
 
 dotenv.config({ path: path.join(__dirname, "../.env") });
-
-const fs = require("node:fs");
-const path = require("node:path");
 const postgres = require("../database/postgres");
 
 async function executarMigracao() {
