@@ -3140,7 +3140,7 @@ button, .btn { font-size: 13px; }
 /* Botão de retorno ao início nas telas internas do Aluno */
 .page-home-return {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     margin: 0 0 12px;
 }
 
@@ -3166,9 +3166,7 @@ button, .btn { font-size: 13px; }
 
 .btn-home-return:hover,
 .btn-home-return:focus-visible {
-    background: #f8eee8;
     border-color: #c95730;
-    transform: translateX(-2px);
     outline: none;
 }
 
