@@ -984,7 +984,6 @@ async function carregarHistoricoProfessor(silencioso = false) {
 
                         <div class="historico-dados">
                             <p>${icon("layers")}<span><b>Tipo</b>${escapar(m.tipo)}</span></p>
-                            <p>${icon("hash")}<span><b>ID do registro</b>${escapar(m.id || "Não informado")}</span></p>
                             <p>${icon("map-pin")}<span><b>Local</b>${escapar(m.local)}</span></p>
                             <p>${icon("package")}<span><b>Quantidade</b>${escapar(m.quantidade)}</span></p>
                             <p>${icon("calendar")}<span><b>Data</b>${escapar(m.data ? formatarDataHoraReserva(m.data) : "Não informada")}</span></p>
@@ -1081,14 +1080,14 @@ async function carregarHistoricoProfessor(silencioso = false) {
                 return correspondeCategoria && correspondeTipo;
             });
 
-            const totalPaginas = Math.ceil(filtrados.length / 20);
+            const totalPaginas = Math.ceil(filtrados.length / 10);
             paginaHistoricoProfessor = Math.min(
                 Math.max(paginaHistoricoProfessor, 1),
                 Math.max(totalPaginas, 1),
             );
 
-            const inicio = (paginaHistoricoProfessor - 1) * 20;
-            lista.innerHTML = criarCards(filtrados.slice(inicio, inicio + 20));
+            const inicio = (paginaHistoricoProfessor - 1) * 10;
+            lista.innerHTML = criarCards(filtrados.slice(inicio, inicio + 10));
 
             let paginacao = area.querySelector(".historico-paginacao");
             if (!paginacao) {
