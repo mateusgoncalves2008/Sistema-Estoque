@@ -150,7 +150,11 @@ async function buscarDadosEmprestimos(usuarioID, incluirTodos = false) {
                 subcategoria: "",
             };
 
-            const tipo = produto.subcategoria || "Não informado";
+            const tipo = normalizar(produto.categoria) === "BIBLIOTECA"
+                ? "Livro"
+                : /COMPUTADOR|\bPC\b/.test(normalizar(produto.nome))
+                    ? "Computador"
+                    : produto.subcategoria || "Não informado";
 
             return {
                 id: texto(l[0]),
