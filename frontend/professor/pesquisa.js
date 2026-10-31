@@ -9,6 +9,8 @@ const PESQUISA_API = "/api";
 
 var ITENS_CATALOGO = [];
 var GRUPOS_CATALOGO = [];
+var PAGINA_PESQUISA_ATUAL = 1;
+const ITENS_POR_PAGINA_PESQUISA = 20;
 
 // Usuário logado (mesmo dado salvo pelo login)
 var usuarioLogado =
@@ -120,6 +122,7 @@ function montarPesquisa() {
 </div>
 
 <div id="pesquisaResultados" class="item-results"></div>
+<div id="pesquisaPaginacao" class="pesquisa-paginacao" aria-label="Paginação dos itens" hidden></div>
 
 
         <div class="search-note">
@@ -158,6 +161,14 @@ function montarPesquisa() {
                     card.dataset.nome,
                 );
         });
+
+    document.getElementById("pesquisaContainer").addEventListener("click", (e) => {
+        const botao = e.target.closest("[data-pagina-pesquisa]");
+        if (!botao) return;
+        PAGINA_PESQUISA_ATUAL = Number(botao.dataset.paginaPesquisa);
+        renderizarPaginaPesquisa();
+        document.getElementById("pesquisaResultados")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
 
     document
         .getElementById("pesquisaResultados")
@@ -266,19 +277,48 @@ function aplicarFiltros() {
         }`;
     }
 
+    window.ITENS_PESQUISA_FILTRADOS = filtrados;
+    PAGINA_PESQUISA_ATUAL = 1;
+    renderizarPaginaPesquisa();
+}
+
+function renderizarPaginaPesquisa() {
     const resultados = document.getElementById("pesquisaResultados");
     if (!resultados) return;
-
+    const filtrados = window.ITENS_PESQUISA_FILTRADOS || [];
+    const totalPaginas = Math.ceil(filtrados.length / ITENS_POR_PAGINA_PESQUISA);
+    PAGINA_PESQUISA_ATUAL = Math.min(Math.max(PAGINA_PESQUISA_ATUAL, 1), Math.max(totalPaginas, 1));
+    const inicio = (PAGINA_PESQUISA_ATUAL - 1) * ITENS_POR_PAGINA_PESQUISA;
+    const itensDaPagina = filtrados.slice(inicio, inicio + ITENS_POR_PAGINA_PESQUISA);
     resultados.innerHTML = filtrados.length
-        ? filtrados.map(cardDoItem).join("")
-        : `
-            <div class="search-empty">
-                ${iconePesquisa("search-x")}
-                <strong>Nenhum item encontrado</strong>
-                <p>Ajuste a busca ou os filtros.</p>
-            </div>`;
-
+        ? itensDaPagina.map(cardDoItem).join("")
+        : `<div class="search-empty">${iconePesquisa("search-x")}<strong>Nenhum item encontrado</strong><p>Ajuste a busca ou os filtros.</p></div>`;
+    renderizarPaginacaoPesquisa(totalPaginas);
     iconesPesquisa();
+}
+
+function renderizarPaginacaoPesquisa(totalPaginas) {
+    const existente = document.getElementById("pesquisaPaginacao");
+    if (!existente) return;
+    if (totalPaginas <= 1) {
+        existente.innerHTML = "";
+        existente.hidden = true;
+        return;
+    }
+    existente.hidden = false;
+    const inicioJanela = Math.floor((PAGINA_PESQUISA_ATUAL - 1) / 10) * 10 + 1;
+    const fimJanela = Math.min(inicioJanela + 9, totalPaginas);
+    let botoes = "";
+    if (PAGINA_PESQUISA_ATUAL > 1) {
+        botoes += `<button type="button" class="pagina-seta" data-pagina-pesquisa="${PAGINA_PESQUISA_ATUAL - 1}">Anterior</button>`;
+    }
+    for (let pagina = inicioJanela; pagina <= fimJanela; pagina++) {
+        botoes += `<button type="button" class="pagina-numero ${pagina === PAGINA_PESQUISA_ATUAL ? "ativa" : ""}" data-pagina-pesquisa="${pagina}" ${pagina === PAGINA_PESQUISA_ATUAL ? 'aria-current="page"' : ""}>${pagina}</button>`;
+    }
+    if (PAGINA_PESQUISA_ATUAL < totalPaginas) {
+        botoes += `<button type="button" class="pagina-seta" data-pagina-pesquisa="${PAGINA_PESQUISA_ATUAL + 1}">Seguinte <span aria-hidden="true">›</span></button>`;
+    }
+    existente.innerHTML = botoes;
 }
 
 function cardDoItem(item) {
