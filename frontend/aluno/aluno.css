@@ -1044,15 +1044,13 @@ body.sidebar-collapsed .sidebar-toggle {
     transition: opacity .16s ease, visibility .16s ease, background .2s ease;
 }
 
-body.sidebar-collapsed .sidebar-top:hover .sidebar-toggle,
-body.sidebar-collapsed .sidebar-top:focus-within .sidebar-toggle {
+body.sidebar-collapsed .sidebar-top:hover .sidebar-toggle {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
 }
 
-body.sidebar-collapsed .sidebar-top:hover .logo-box,
-body.sidebar-collapsed .sidebar-top:focus-within .logo-box {
+body.sidebar-collapsed .sidebar-top:hover .logo-box {
     opacity: 0;
     visibility: hidden;
 }
