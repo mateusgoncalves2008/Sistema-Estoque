@@ -10,7 +10,7 @@ const PESQUISA_API = "/api";
 var ITENS_CATALOGO = [];
 var GRUPOS_CATALOGO = [];
 var PAGINA_PESQUISA_ATUAL = 1;
-const ITENS_POR_PAGINA_PESQUISA = 10;
+const ITENS_POR_PAGINA_PESQUISA = 20;
 
 // Usuário logado (mesmo dado salvo pelo login)
 var usuarioLogado =
@@ -167,7 +167,9 @@ function montarPesquisa() {
         if (!botao) return;
         PAGINA_PESQUISA_ATUAL = Number(botao.dataset.paginaPesquisa);
         renderizarPaginaPesquisa();
-        document.getElementById("pesquisaResultados")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        const main = document.querySelector(".main-content");
+        if (main) main.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
     document
