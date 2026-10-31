@@ -24,6 +24,7 @@ const responsavelRoutes = require("./routes/responsavel");
 const bloqueiosDenunciasRoutes = require("./routes/bloqueios-denuncias");
 const emprestimosRoutes = require("./routes/emprestimos");
 const professorItensRoutes = require("./routes/professorItens");
+const chatRoutes = require("./routes/chat");
 const { registrarAuditoria } = require("./services/auditoria");
 
 const app = express();
@@ -249,6 +250,7 @@ app.use("/api", emprestimosRoutes);
 app.use("/api", responsavelRoutes);
 app.use("/api", bloqueiosDenunciasRoutes);
 app.use("/api", professorItensRoutes);
+app.use("/api", chatRoutes);
 
 // ============================================================
 // TESTE DO GOOGLE SHEETS
