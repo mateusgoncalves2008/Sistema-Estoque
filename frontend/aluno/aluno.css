@@ -3303,3 +3303,38 @@ button, .btn { font-size: 13px; }
         line-height: 1.55;
     }
 }
+
+
+/* Ajustes finais: mais largura útil e menus sem efeito de brilho. */
+@media (min-width: 861px) {
+    body.sidebar-collapsed .page-wrap:has(.dashboard-card) {
+        width: 100%;
+        max-width: none;
+        padding-left: clamp(24px, 2.2vw, 42px);
+        padding-right: clamp(24px, 2.2vw, 42px);
+    }
+
+    body.sidebar-collapsed .page-wrap:has(.dashboard-card) .grid {
+        width: 100%;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(24px, 2.4vw, 34px);
+    }
+
+    body.sidebar-collapsed .page-wrap:has(.dashboard-card) .dashboard-card {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* Remove o brilho/sombra dos itens de navegação, inclusive do menu selecionado. */
+.sidebar-nav .nav-item,
+.sidebar-nav .nav-item:hover,
+.sidebar-nav .nav-item.active {
+    box-shadow: none !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+.sidebar-nav .nav-item:hover {
+    transform: none;
+}
