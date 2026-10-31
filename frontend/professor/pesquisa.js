@@ -10,7 +10,7 @@ const PESQUISA_API = "/api";
 var ITENS_CATALOGO = [];
 var GRUPOS_CATALOGO = [];
 var PAGINA_PESQUISA_ATUAL = 1;
-const ITENS_POR_PAGINA_PESQUISA = 20;
+const ITENS_POR_PAGINA_PESQUISA = 10;
 
 // Usuário logado (mesmo dado salvo pelo login)
 var usuarioLogado =
