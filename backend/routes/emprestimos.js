@@ -66,7 +66,7 @@ async function atualizarEmprestimosAtrasados() {
 
 async function buscarDadosEmprestimos(usuarioID, incluirTodos = false) {
     await atualizarEmprestimosAtrasados();
-    const [empRes, prodRes, catRes, subRes] = await Promise.all([
+    const [empRes, prodRes, catRes, subRes, locaisRes] = await Promise.all([
         sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
             range: "09_EMPRESTIMOS!A:L",
@@ -83,11 +83,25 @@ async function buscarDadosEmprestimos(usuarioID, incluirTodos = false) {
             spreadsheetId: SPREADSHEET_ID,
             range: "04_SUBCATEGORIAS!A:E",
         }),
+        sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "05_LOCAIS!A:G",
+        }),
     ]);
 
     const categorias = new Map();
     const subcategorias = new Map();
     const produtos = new Map();
+    const locais = new Map();
+
+    for (const l of (locaisRes.data.values || []).slice(1)) {
+        const localID = texto(l[0]);
+        const nomeLocal = texto(l[2]);
+
+        if (localID) {
+            locais.set(localID, nomeLocal || "Não informado");
+        }
+    }
 
     for (const l of (catRes.data.values || []).slice(1)) {
         if (l[0]) categorias.set(texto(l[0]), texto(l[1]));
@@ -129,6 +143,7 @@ async function buscarDadosEmprestimos(usuarioID, incluirTodos = false) {
         })
         .map((l) => {
             const produtoID = texto(l[3]);
+            const localID = texto(l[4]);
             const produto = produtos.get(produtoID) || {
                 nome: produtoID || "Item não identificado",
                 categoria: "",
@@ -164,6 +179,8 @@ async function buscarDadosEmprestimos(usuarioID, incluirTodos = false) {
                 produtoID,
                 item: produto.nome,
                 tipo,
+                localID,
+                local: locais.get(localID) || "Não informado",
                 retirada: texto(l[1]),
                 devolucao: texto(l[6]),
                 quantidade: texto(l[5]),
