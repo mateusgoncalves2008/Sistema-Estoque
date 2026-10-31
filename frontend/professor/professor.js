@@ -1141,6 +1141,8 @@ async function carregarHistoricoProfessor(silencioso = false) {
                 aplicarFiltros();
             });
         });
+
+        aplicarFiltros();
         return true;
     } catch (erro) {
         console.error("Erro ao carregar histórico:", erro);
