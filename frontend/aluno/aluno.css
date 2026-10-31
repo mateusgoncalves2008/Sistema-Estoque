@@ -3135,3 +3135,48 @@ button, .btn { font-size: 13px; }
         transition: none;
     }
 }
+
+
+/* Botão de retorno ao início nas telas internas do Aluno */
+.page-home-return {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 0 12px;
+}
+
+.btn-home-return {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 9px 14px;
+    color: #c95730;
+    background: #fffdfa;
+    border: 1px solid #e6d8cc;
+    border-radius: 11px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-home-return svg { width: 17px; height: 17px; }
+
+.btn-home-return:hover,
+.btn-home-return:focus-visible {
+    background: #f8eee8;
+    border-color: #c95730;
+    transform: translateX(-2px);
+    outline: none;
+}
+
+.btn-home-return:focus-visible {
+    outline: 2px solid #c95730;
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-home-return { transition: none; }
+}
