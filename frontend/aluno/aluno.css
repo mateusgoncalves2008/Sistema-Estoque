@@ -3369,3 +3369,14 @@ button, .btn { font-size: 13px; }
 .historico-paginacao button:hover { border-color:#e5d7ca; background:#fffdfa; color:#352219; }
 .historico-paginacao button.ativa { border:2px solid #3977b9; background:#fffdfa; color:#352219; font-weight:700; }
 @media (max-width:600px) { .historico-paginacao { gap:4px; margin-top:22px; } .historico-paginacao button { min-width:34px; min-height:36px; padding:0 8px; font-size:13px; } }
+
+
+/* Paginação do Histórico do Aluno centralizada no final dos registros */
+#pageContent .historico-paginacao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
