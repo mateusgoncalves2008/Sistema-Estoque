@@ -1582,11 +1582,11 @@ function viewHistorico() {
 
     todos.sort((a, b) => String(b.data).localeCompare(String(a.data)));
 
-    const totalPaginasHistorico = Math.ceil(registrosFiltrados.length / 20);
+    const totalPaginasHistorico = Math.ceil(registrosFiltrados.length / 10);
     paginaHistoricoAluno = Math.min(Math.max(paginaHistoricoAluno, 1), Math.max(totalPaginasHistorico, 1));
-    const inicioHistorico = (paginaHistoricoAluno - 1) * 20;
+    const inicioHistorico = (paginaHistoricoAluno - 1) * 10;
     const cards = registrosFiltrados
-        .slice(inicioHistorico, inicioHistorico + 20)
+        .slice(inicioHistorico, inicioHistorico + 10)
         .map((r) => {
             const status = String(r.status).trim().toUpperCase();
 
@@ -1656,11 +1656,6 @@ function viewHistorico() {
     <p>
         ${icon("layers")}
         <span><b>Tipo</b>${escapeHtml(r.tipo)}</span>
-    </p>
-
-    <p>
-        ${icon("hash")}
-        <span><b>ID do registro</b>${escapeHtml(r.id || "Não informado")}</span>
     </p>
 
     <p>
