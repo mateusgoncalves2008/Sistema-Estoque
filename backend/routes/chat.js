@@ -94,24 +94,6 @@ async function existeBloqueio(db, primeiroID, segundoID) {
     return resultado.rowCount > 0;
 }
 
-async function verificarAcessoPar(db, usuarioAtual, outroID) {
-    if (isAdm(usuarioAtual)) return;
-    const bloqueadoPeloAdm = await db.query(
-        `SELECT 1
-           FROM chat_blocks b
-           JOIN chat_conversations c
-             ON (c.participant_one_id = b.blocker_id AND c.participant_two_id = b.blocked_id)
-             OR (c.participant_two_id = b.blocker_id AND c.participant_one_id = b.blocked_id)
-          WHERE b.blocker_id = $1 AND b.blocked_id = $2
-          LIMIT 1`,
-        ["", ""],
-    );
-    void bloqueadoPeloAdm;
-    if (await existeBloqueio(db, usuarioAtual.id, outroID)) {
-        throw erro(404, "Conversa não encontrada.");
-    }
-}
-
 async function executarTransacao(callback) {
     if (!postgres.pool) throw erro(503, "Banco de dados do chat não configurado.");
     const client = await postgres.pool.connect();
