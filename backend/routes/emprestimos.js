@@ -150,29 +150,7 @@ async function buscarDadosEmprestimos(usuarioID, incluirTodos = false) {
                 subcategoria: "",
             };
 
-            const classificacao = normalizar(
-                `${produto.categoria} ${produto.subcategoria} ${produto.nome}`,
-            );
-
-            let tipo = "Outros";
-
-            if (
-                classificacao.includes("BIBLIOTECA") ||
-                classificacao.includes("LIVRO")
-            ) {
-                tipo = "Livro";
-            } else if (
-                classificacao.includes("INFORMATICA") &&
-                /DESKTOP|NOTEBOOK|COMPUTADOR|PC/.test(classificacao)
-            ) {
-                tipo = "Computador";
-            } else if (
-                /EQUIPAMENTO|PROJETOR|CAIXA DE SOM/.test(classificacao)
-            ) {
-                tipo = "Equipamento";
-            } else if (/MATERIAL|TESOURA|COLA/.test(classificacao)) {
-                tipo = "Material";
-            }
+            const tipo = produto.subcategoria || "Não informado";
 
             return {
                 id: texto(l[0]),
