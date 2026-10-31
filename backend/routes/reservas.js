@@ -486,7 +486,7 @@ router.get("/aluno/reservas/:usuarioID", async (req, res) => {
             });
         }
 
-        const [respostaReservas, respostaProdutos, respostaLocais, respostaCategorias] =
+        const [respostaReservas, respostaProdutos, respostaLocais, respostaCategorias, respostaSubcategorias] =
             await Promise.all([
                 sheets.spreadsheets.values.get({
                     spreadsheetId: SPREADSHEET_ID,
@@ -504,12 +504,17 @@ router.get("/aluno/reservas/:usuarioID", async (req, res) => {
                     spreadsheetId: SPREADSHEET_ID,
                     range: "03_CATEGORIAS!A:D",
                 }),
+                sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: "04_SUBCATEGORIAS!A:E",
+                }),
             ]);
 
         const linhasReservas = respostaReservas.data.values || [];
         const linhasProdutos = respostaProdutos.data.values || [];
         const linhasLocais = respostaLocais.data.values || [];
         const linhasCategorias = respostaCategorias.data.values || [];
+        const linhasSubcategorias = respostaSubcategorias.data.values || [];
 
         const categorias = new Map(
             linhasCategorias.slice(1).map((linha) => [
@@ -518,15 +523,24 @@ router.get("/aluno/reservas/:usuarioID", async (req, res) => {
             ]),
         );
 
+        const subcategorias = new Map(
+            linhasSubcategorias.slice(1).map((linha) => [
+                String(linha[0] || "").trim(),
+                linha[2] || "",
+            ]),
+        );
+
         const produtos = new Map(
             linhasProdutos.slice(1).map((linha) => {
                 const categoriaID = String(linha[4] || "").trim();
+                const subcategoriaID = String(linha[5] || "").trim();
                 return [
                     String(linha[0] || "").trim(),
                     {
                         nome: linha[2] || "Item não identificado",
                         categoriaID,
                         categoriaNome: categorias.get(categoriaID) || "Categoria não identificada",
+                        subcategoriaNome: subcategorias.get(subcategoriaID) || "",
                     },
                 ];
             }),
@@ -553,7 +567,7 @@ router.get("/aluno/reservas/:usuarioID", async (req, res) => {
                     usuarioID: linha[2] || "",
                     produtoID,
                     nome: produto?.nome || "Item não identificado",
-                    tipo: produto?.categoriaNome || "Item",
+                    tipo: produto?.subcategoriaNome || "Não informado",
                     categoriaID: produto?.categoriaID || "",
                     categoriaNome: produto?.categoriaNome || "Categoria não identificada",
                     localID: linha[4] || "",
@@ -645,7 +659,7 @@ router.get("/professor/reservas/:usuarioID", async (req, res) => {
             });
         }
 
-        const [respostaReservas, respostaProdutos, respostaLocais] =
+        const [respostaReservas, respostaProdutos, respostaLocais, respostaSubcategorias] =
             await Promise.all([
                 sheets.spreadsheets.values.get({
                     spreadsheetId: SPREADSHEET_ID,
@@ -659,18 +673,30 @@ router.get("/professor/reservas/:usuarioID", async (req, res) => {
                     spreadsheetId: SPREADSHEET_ID,
                     range: "05_LOCAIS!A:G",
                 }),
+                sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: "04_SUBCATEGORIAS!A:E",
+                }),
             ]);
 
         const linhasReservas = respostaReservas.data.values || [];
         const linhasProdutos = respostaProdutos.data.values || [];
         const linhasLocais = respostaLocais.data.values || [];
+        const linhasSubcategorias = respostaSubcategorias.data.values || [];
+
+        const subcategorias = new Map(
+            linhasSubcategorias.slice(1).map((linha) => [
+                String(linha[0] || "").trim(),
+                linha[2] || "",
+            ]),
+        );
 
         const produtos = new Map(
             linhasProdutos.slice(1).map((linha) => [
                 String(linha[0] || "").trim(),
                 {
                     nome: linha[2] || "Item não identificado",
-                    categoriaID: linha[4] || "",
+                    subcategoriaNome: subcategorias.get(String(linha[5] || "").trim()) || "",
                 },
             ]),
         );
@@ -697,7 +723,7 @@ router.get("/professor/reservas/:usuarioID", async (req, res) => {
                     usuarioID,
                     produtoID,
                     nome: produto?.nome || "Item não identificado",
-                    tipo: produto?.categoriaID || "Item",
+                    tipo: produto?.subcategoriaNome || "Não informado",
                     localID,
                     local: locais.get(localID) || "Local não identificado",
                     quantidade: numero(linha[5]),
