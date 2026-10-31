@@ -1786,7 +1786,7 @@ function viewHistorico() {
 }
 
 function renderizarPaginacaoHistoricoAluno(total) {
-    if (total <= 1) return "";
+    if (total <= 0) return "";
     const botoes = [];
     const primeira = Math.floor((paginaHistoricoAluno - 1) / 10) * 10 + 1;
     const ultima = Math.min(primeira + 9, total);
