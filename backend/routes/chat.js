@@ -2,10 +2,20 @@ const express = require("express");
 const router = express.Router();
 const sheets = require("../database/googleSheets");
 const postgres = require("../database/postgres");
+const rateLimit = require("express-rate-limit");
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const MAX_MENSAGEM = 2000;
 const TIPOS_ADM = new Set(["ADM", "ADMIN", "ADMINISTRADOR"]);
+
+// Polling do chat é permitido, mas limitado para evitar abuso do serviço gratuito.
+router.use(rateLimit({
+    windowMs: 60 * 1000,
+    limit: 90,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: { sucesso: false, mensagem: "Muitas solicitações ao chat. Aguarde um pouco e tente novamente." },
+}));
 
 function normalizar(valor) {
     return String(valor ?? "").trim().toUpperCase()
