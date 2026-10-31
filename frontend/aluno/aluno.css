@@ -3178,3 +3178,23 @@ button, .btn { font-size: 13px; }
 @media (prefers-reduced-motion: reduce) {
     .btn-home-return { transition: none; }
 }
+
+
+/* Informações acadêmicas do aluno no cabeçalho inicial */
+.hero .hero-student-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 9px;
+    color: #fffdfa;
+    font-size: 13px;
+    font-weight: 600;
+    text-shadow: 0 1px 5px #00000080;
+}
+
+.hero .hero-student-info span { opacity: 0.8; }
+
+@media (max-width: 650px) {
+    .hero .hero-student-info { font-size: 12px; gap: 5px; }
+}
