@@ -1,3 +1,8 @@
+const dotenv = require("dotenv");
+const path = require("node:path");
+
+dotenv.config({ path: path.join(__dirname, "../.env") });
+
 const fs = require("node:fs");
 const path = require("node:path");
 const postgres = require("../database/postgres");
