@@ -21,7 +21,7 @@ let emprestimos = [];
 let ITENS_PESQUISA = [];
 let ITENS_PESQUISA_FILTRADOS = [];
 let PAGINA_ITENS_ALUNO = 1;
-const ITENS_POR_PAGINA_ALUNO = 10;
+const ITENS_POR_PAGINA_ALUNO = 20;
 let emprestimosHistorico = [];
 let reservaItemSelecionado = null;
 let reservasCarregadas = false;
@@ -1930,10 +1930,9 @@ function pesquisarItens() {
             if (!botao) return;
             PAGINA_ITENS_ALUNO = Number(botao.dataset.paginaItem);
             renderizarPesquisaAluno();
-            document.getElementById("itemResults")?.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-            });
+            const main = document.querySelector(".main-content");
+            if (main) main.scrollTo({ top: 0, behavior: "smooth" });
+            window.scrollTo({ top: 0, behavior: "smooth" });
         });
     }
     inicializarIcones();
