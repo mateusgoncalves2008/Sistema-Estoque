@@ -1082,37 +1082,65 @@ async function carregarHistoricoProfessor(silencioso = false) {
             });
 
             const totalPaginas = Math.ceil(filtrados.length / 20);
-            paginaHistoricoProfessor = Math.min(Math.max(paginaHistoricoProfessor, 1), Math.max(totalPaginas, 1));
+            paginaHistoricoProfessor = Math.min(
+                Math.max(paginaHistoricoProfessor, 1),
+                Math.max(totalPaginas, 1),
+            );
+
             const inicio = (paginaHistoricoProfessor - 1) * 20;
             lista.innerHTML = criarCards(filtrados.slice(inicio, inicio + 20));
+
             let paginacao = area.querySelector(".historico-paginacao");
             if (!paginacao) {
-                paginacao = document.createElement("div");
+                paginacao = document.createElement("nav");
                 paginacao.className = "historico-paginacao";
+                paginacao.setAttribute("aria-label", "Paginação do histórico");
                 lista.insertAdjacentElement("afterend", paginacao);
             }
-            paginacao.hidden = totalPaginas <= 1;
-            if (totalPaginas > 1) {
-                const botoes = [];
-                const primeira = Math.floor((paginaHistoricoProfessor - 1) / 10) * 10 + 1;
-                const ultima = Math.min(primeira + 9, totalPaginas);
-                if (paginaHistoricoProfessor > 1) botoes.push(`<button type="button" data-pagina-historico-prof="${paginaHistoricoProfessor - 1}">Anterior</button>`);
-                for (let n = primeira; n <= ultima; n++) botoes.push(`<button type="button" data-pagina-historico-prof="${n}" class="${n === paginaHistoricoProfessor ? "ativa" : ""}" ${n === paginaHistoricoProfessor ? 'aria-current="page"' : ""}>${n}</button>`);
-                if (paginaHistoricoProfessor < totalPaginas) botoes.push(`<button type="button" data-pagina-historico-prof="${paginaHistoricoProfessor + 1}">Seguinte ›</button>`);
-                paginacao.innerHTML = botoes.join("");
-            } else paginacao.innerHTML = "";
+
+            // Mantém o controle visível mesmo quando existe apenas uma página.
+            paginacao.hidden = filtrados.length === 0;
+
+            const botoes = [];
+            const primeira = Math.floor((paginaHistoricoProfessor - 1) / 10) * 10 + 1;
+            const ultima = Math.max(
+                primeira,
+                Math.min(primeira + 9, Math.max(totalPaginas, 1)),
+            );
+
+            if (paginaHistoricoProfessor > 1) {
+                botoes.push(
+                    `<button type="button" data-pagina-historico-prof="${paginaHistoricoProfessor - 1}">Anterior</button>`,
+                );
+            }
+
+            for (let n = primeira; n <= ultima; n++) {
+                botoes.push(
+                    `<button type="button" data-pagina-historico-prof="${n}" class="${n === paginaHistoricoProfessor ? "ativa" : ""}" ${n === paginaHistoricoProfessor ? 'aria-current="page"' : ""}>${n}</button>`,
+                );
+            }
+
+            if (paginaHistoricoProfessor < totalPaginas) {
+                botoes.push(
+                    `<button type="button" data-pagina-historico-prof="${paginaHistoricoProfessor + 1}">Seguinte ›</button>`,
+                );
+            }
+
+            paginacao.innerHTML = botoes.join("");
             if (window.lucide) window.lucide.createIcons();
         }
 
-        area.addEventListener("click", (evento) => {
+        area.onclick = (evento) => {
             const botao = evento.target.closest("[data-pagina-historico-prof]");
             if (!botao) return;
+
             paginaHistoricoProfessor = Number(botao.dataset.paginaHistoricoProf);
             aplicarFiltros();
+
             const main = document.querySelector(".main-content");
             if (main) main.scrollTo({ top: 0, behavior: "smooth" });
             window.scrollTo({ top: 0, behavior: "smooth" });
-        });
+        };
 
         area.querySelectorAll("[data-filtro-prof]").forEach((botao) => {
             botao.addEventListener("click", () => {
