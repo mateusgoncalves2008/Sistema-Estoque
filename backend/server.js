@@ -14,6 +14,7 @@ const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const rateLimit = require("express-rate-limit");
 const sheets = require("./database/googleSheets");
+const postgres = require("./database/postgres");
 const cadastroRoutes = require("./routes/cadastro");
 const produtosRoutes = require("./routes/produtos");
 const reservasRoutes = require("./routes/reservas");
@@ -301,6 +302,58 @@ app.get("/api/teste-planilha", async (req, res) => {
 });
 
 // ============================================================
+// TESTE DO POSTGRESQL (NEON)
+// ============================================================
+
+app.get("/api/teste-banco", async (req, res) => {
+    const usuario = req.session?.usuario;
+    const tipo = String(usuario?.tipoUsuario || "").trim().toUpperCase();
+    const perfil = String(usuario?.perfil || "").trim().toUpperCase();
+    const administradores = ["ADM", "ADMIN", "ADMINISTRADOR"];
+
+    if (
+        !usuario ||
+        (!administradores.includes(tipo) && !administradores.includes(perfil))
+    ) {
+        return res.status(usuario ? 403 : 401).json({
+            sucesso: false,
+            mensagem: usuario
+                ? "Acesso permitido somente ao administrador."
+                : "Faça login para testar a conexão com o banco.",
+        });
+    }
+
+    try {
+        const conectado = await postgres.testarConexao();
+
+        if (!conectado) {
+            return res.status(500).json({
+                sucesso: false,
+                mensagem: "O banco respondeu, mas o teste não foi confirmado.",
+            });
+        }
+
+        return res.json({
+            sucesso: true,
+            mensagem: "Conexão com o PostgreSQL funcionando.",
+        });
+    } catch (erro) {
+        const semConfiguracao = erro.code === "DATABASE_URL_MISSING";
+        console.error(
+            "Erro ao testar PostgreSQL:",
+            semConfiguracao ? "DATABASE_URL ausente." : (erro.code || "falha de conexão"),
+        );
+
+        return res.status(semConfiguracao ? 503 : 500).json({
+            sucesso: false,
+            mensagem: semConfiguracao
+                ? "O banco de dados não está configurado no servidor."
+                : "Não foi possível conectar ao PostgreSQL.",
+        });
+    }
+});
+
+// ============================================================
 // TESTE DO SERVIDOR
 // ============================================================
 
@@ -325,6 +378,7 @@ if (require.main === module) {
         console.log("==========================================");
         console.log(`Servidor: http://localhost:${PORT}`);
         console.log(`Planilha configurada: ${SPREADSHEET_ID ? "SIM" : "NÃO"}`);
+        console.log(`PostgreSQL configurado: ${process.env.DATABASE_URL ? "SIM" : "NÃO"}`);
         console.log("Rotas de reservas: CONECTADAS");
         console.log("==========================================");
         console.log("");
