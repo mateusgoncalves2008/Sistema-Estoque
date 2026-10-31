@@ -175,7 +175,6 @@ router.get("/chat/contatos", exigirUsuarioAtivo, async (req, res) => {
             .filter((item) => item.id !== req.chatUser.id)
             .filter((item) => {
                 if (isAdm(req.chatUser)) return true;
-                if (!isAdm(item)) return true;
                 return !bloqueados.has(`${item.id}|${req.chatUser.id}`) &&
                     !bloqueados.has(`${req.chatUser.id}|${item.id}`);
             })
@@ -330,13 +329,9 @@ router.get("/chat/conversas", exigirUsuarioAtivo, async (req, res) => {
         const conversas = resultado.rows
             .filter((item) => {
                 const outroID = item.participant_one_id === req.chatUser.id ? item.participant_two_id : item.participant_one_id;
-                const outro = porID.get(outroID);
                 if (isAdm(req.chatUser)) return true;
-                if (outro && isAdm(outro)) {
-                    return !bloqueados.has(`${outroID}|${req.chatUser.id}`) &&
-                        !bloqueados.has(`${req.chatUser.id}|${outroID}`);
-                }
-                return true;
+                return !bloqueados.has(`${outroID}|${req.chatUser.id}`) &&
+                    !bloqueados.has(`${req.chatUser.id}|${outroID}`);
             })
             .map((item) => {
                 const outroID = item.participant_one_id === req.chatUser.id ? item.participant_two_id : item.participant_one_id;
