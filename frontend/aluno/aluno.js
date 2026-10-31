@@ -1974,6 +1974,7 @@ function renderizarPesquisaAluno() {
         : `<div class="search-empty">${icon("search-x")}<strong>Nenhum item encontrado</strong><p>Não existem itens com essa situação.</p></div>`;
 
     renderizarPaginacaoAluno(totalPaginas);
+    inicializarIcones();
 }
 
 function renderizarPaginacaoAluno(totalPaginas) {
