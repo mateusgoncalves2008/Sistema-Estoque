@@ -567,7 +567,11 @@ router.get("/aluno/reservas/:usuarioID", async (req, res) => {
                     usuarioID: linha[2] || "",
                     produtoID,
                     nome: produto?.nome || "Item não identificado",
-                    tipo: produto?.subcategoriaNome || "Não informado",
+                    tipo: produto?.categoriaNome && normalizar(produto.categoriaNome) === "BIBLIOTECA"
+                        ? "Livro"
+                        : /COMPUTADOR|\bPC\b/.test(normalizar(produto?.nome))
+                            ? "Computador"
+                            : produto?.subcategoriaNome || "Não informado",
                     categoriaID: produto?.categoriaID || "",
                     categoriaNome: produto?.categoriaNome || "Categoria não identificada",
                     localID: linha[4] || "",
@@ -659,7 +663,7 @@ router.get("/professor/reservas/:usuarioID", async (req, res) => {
             });
         }
 
-        const [respostaReservas, respostaProdutos, respostaLocais, respostaSubcategorias] =
+        const [respostaReservas, respostaProdutos, respostaLocais, respostaCategorias, respostaSubcategorias] =
             await Promise.all([
                 sheets.spreadsheets.values.get({
                     spreadsheetId: SPREADSHEET_ID,
@@ -675,6 +679,10 @@ router.get("/professor/reservas/:usuarioID", async (req, res) => {
                 }),
                 sheets.spreadsheets.values.get({
                     spreadsheetId: SPREADSHEET_ID,
+                    range: "03_CATEGORIAS!A:D",
+                }),
+                sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
                     range: "04_SUBCATEGORIAS!A:E",
                 }),
             ]);
@@ -682,7 +690,15 @@ router.get("/professor/reservas/:usuarioID", async (req, res) => {
         const linhasReservas = respostaReservas.data.values || [];
         const linhasProdutos = respostaProdutos.data.values || [];
         const linhasLocais = respostaLocais.data.values || [];
+        const linhasCategorias = respostaCategorias.data.values || [];
         const linhasSubcategorias = respostaSubcategorias.data.values || [];
+
+        const categorias = new Map(
+            linhasCategorias.slice(1).map((linha) => [
+                String(linha[0] || "").trim(),
+                linha[1] || "",
+            ]),
+        );
 
         const subcategorias = new Map(
             linhasSubcategorias.slice(1).map((linha) => [
@@ -696,6 +712,7 @@ router.get("/professor/reservas/:usuarioID", async (req, res) => {
                 String(linha[0] || "").trim(),
                 {
                     nome: linha[2] || "Item não identificado",
+                    categoriaNome: categorias.get(String(linha[4] || "").trim()) || "",
                     subcategoriaNome: subcategorias.get(String(linha[5] || "").trim()) || "",
                 },
             ]),
@@ -723,7 +740,11 @@ router.get("/professor/reservas/:usuarioID", async (req, res) => {
                     usuarioID,
                     produtoID,
                     nome: produto?.nome || "Item não identificado",
-                    tipo: produto?.subcategoriaNome || "Não informado",
+                    tipo: produto?.categoriaNome && normalizar(produto.categoriaNome) === "BIBLIOTECA"
+                        ? "Livro"
+                        : /COMPUTADOR|\bPC\b/.test(normalizar(produto?.nome))
+                            ? "Computador"
+                            : produto?.subcategoriaNome || "Não informado",
                     localID,
                     local: locais.get(localID) || "Local não identificado",
                     quantidade: numero(linha[5]),
