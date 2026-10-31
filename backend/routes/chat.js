@@ -313,7 +313,9 @@ router.get("/chat/conversas", exigirUsuarioAtivo, async (req, res) => {
                       ORDER BY m.id DESC LIMIT 1) AS ultima_mensagem,
                     (SELECT COUNT(*)::int FROM chat_messages m
                       WHERE m.conversation_id = c.id
-                        AND m.sender_id <> $1 AND m.read_at IS NULL) AS nao_lidas
+                        AND m.sender_id <> $1 AND m.read_at IS NULL) AS nao_lidas,
+                    (SELECT p.notifications_muted FROM chat_conversation_preferences p
+                      WHERE p.conversation_id = c.id AND p.user_id = $1) AS silenciado
                FROM chat_conversations c
               WHERE (c.participant_one_id = $1 OR c.participant_two_id = $1)
               ORDER BY c.last_message_at DESC NULLS LAST, c.updated_at DESC`,
@@ -348,6 +350,7 @@ router.get("/chat/conversas", exigirUsuarioAtivo, async (req, res) => {
                     ultimaMensagemEm: item.last_message_at,
                     ultimaMensagem: item.ultima_mensagem || "",
                     naoLidas: item.nao_lidas,
+                    silenciado: Boolean(item.silenciado),
                     contato: outro ? { id: outro.id, nome: outro.nome, tipoUsuario: outro.tipoUsuario, perfil: outro.perfil } : { id: outroID, nome: "Usuário" },
                 };
             });
@@ -378,14 +381,20 @@ router.get("/chat/conversas/:id/mensagens", exigirUsuarioAtivo, async (req, res)
                   LIMIT ${limite}`,
                 parametros,
             );
-            await db.query(
-                `UPDATE chat_messages
-                    SET read_at = NOW()
-                  WHERE conversation_id = $1
-                    AND sender_id <> $2
-                    AND read_at IS NULL`,
-                [conversa.id, req.chatUser.id],
-            );
+            const idsLidas = mensagens.rows
+                .filter((item) => item.sender_id !== req.chatUser.id && !item.read_at)
+                .map((item) => item.id);
+            if (idsLidas.length) {
+                await db.query(
+                    `UPDATE chat_messages
+                        SET read_at = NOW()
+                      WHERE conversation_id = $1
+                        AND sender_id <> $2
+                        AND id = ANY($3::bigint[])
+                        AND read_at IS NULL`,
+                    [conversa.id, req.chatUser.id, idsLidas],
+                );
+            }
             return mensagens.rows.reverse();
         });
         return res.json({ sucesso: true, mensagens: dados });
