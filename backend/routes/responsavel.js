@@ -864,13 +864,25 @@ router.post("/responsavel/itens", exigirResponsavel, async (req, res) => {
   if (!["ATIVO","INATIVO"].includes(statusProduto)) return res.status(400).json({sucesso:false,mensagem:"Selecione um status válido."});
   const [produtos,estoques,categorias,subcategorias,locais]=await Promise.all([lerAba("02_PRODUTOS!A:K"),lerAba("06_ESTOQUE_LOCAIS!A:I"),lerAba("03_CATEGORIAS!A:D"),lerAba("04_SUBCATEGORIAS!A:E"),lerAba("05_LOCAIS!A:G")]);
   const categoria=categorias.slice(1).find(l=>texto(l[0])===categoriaID && normalizar(l[3]||"ATIVO")==="ATIVO");
-  const subcategoria=subcategorias.slice(1).find(l=>texto(l[0])===subcategoriaID && texto(l[1])===categoriaID && normalizar(l[4]||"ATIVO")==="ATIVO");
   if(!categoria) return res.status(400).json({sucesso:false,mensagem:"A categoria selecionada não está ativa."});
-  if(!subcategoria) return res.status(400).json({sucesso:false,mensagem:"A subcategoria não pertence à categoria ou está inativa."});
+
+  // Padroniza automaticamente livros e computadores pela subcategoria correspondente.
+  const nomeNormalizado=normalizar(nome);
+  const tipoAutomatico=nomeNormalizado.includes("LIVRO") ? "LIVRO" : /COMPUTADOR|\bPC\b/.test(nomeNormalizado) ? "COMPUTADOR" : "";
+  let subcategoriaEscolhida=subcategorias.slice(1).find(l=>texto(l[0])===subcategoriaID && texto(l[1])===categoriaID && normalizar(l[4]||"ATIVO")==="ATIVO");
+
+  if(tipoAutomatico){
+   const subcategoriaAutomatica=subcategorias.slice(1).find(l=>texto(l[1])===categoriaID && normalizar(l[2])===tipoAutomatico && normalizar(l[4]||"ATIVO")==="ATIVO");
+   if(!subcategoriaAutomatica) return res.status(400).json({sucesso:false,mensagem:'Cadastre/ative a subcategoria "'+(tipoAutomatico==="LIVRO"?"Livro":"Computador")+'" para esta categoria antes de cadastrar o item.'});
+   subcategoriaEscolhida=subcategoriaAutomatica;
+  }
+
+  if(!subcategoriaEscolhida) return res.status(400).json({sucesso:false,mensagem:"A subcategoria não pertence à categoria ou está inativa."});
+  const subcategoriaIDFinal=texto(subcategoriaEscolhida[0]);
   const local=locais.slice(1).find(l=>texto(l[0])===texto(vinculo.local.id)&&normalizar(l[6]||"ATIVO")==="ATIVO");
   if(!local) return res.status(403).json({sucesso:false,mensagem:"O local do seu setor não está ativo."});
   const produtoID=gerarIDSequencial(produtos,"PRD-"), estoqueID=gerarIDSequencial(estoques,"EST-"), codigo=gerarCodigoProduto(produtos,local[1]);
-  const produto=[produtoID,codigo,nome,"",categoriaID,subcategoriaID,estoqueMinimo,estado,statusProduto,dataAtual(),observacao];
+  const produto=[produtoID,codigo,nome,"",categoriaID,subcategoriaIDFinal,estoqueMinimo,estado,statusProduto,dataAtual(),observacao];
   const statusLocal=statusProduto==="ATIVO"?"ATIVO":"INATIVO";
   const estoque=[estoqueID,produtoID,texto(vinculo.local.id),quantidade,0,statusLocal==="ATIVO"?quantidade:0,0,new Date().toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"}),statusLocal];
   await sheets.spreadsheets.values.batchUpdate({spreadsheetId:SPREADSHEET_ID,requestBody:{valueInputOption:"USER_ENTERED",data:[{range:"02_PRODUTOS!A"+(produtos.length+1)+":K"+(produtos.length+1),values:[produto]},{range:"06_ESTOQUE_LOCAIS!A"+(estoques.length+1)+":I"+(estoques.length+1),values:[estoque]}]}});
