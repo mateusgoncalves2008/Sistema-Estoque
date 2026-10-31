@@ -464,14 +464,15 @@ router.patch("/chat/solicitacoes/:id", exigirUsuarioAtivo, exigirAdm, async (req
                 "UPDATE chat_requests SET status = $1, responded_at = NOW() WHERE id = $2",
                 [novoStatus, item.id],
             );
+            const statusConversa = acao === "ACEITAR" ? "ACTIVE" : "REJECTED";
             await db.query(
                 `UPDATE chat_conversations
-                    SET status = $1,
-                        accepted_at = CASE WHEN $1 = 'ACTIVE' THEN NOW() ELSE accepted_at END,
-                        rejected_at = CASE WHEN $1 = 'REJECTED' THEN NOW() ELSE rejected_at END,
+                    SET status = $1::VARCHAR,
+                        accepted_at = CASE WHEN $1::VARCHAR = 'ACTIVE' THEN NOW() ELSE accepted_at END,
+                        rejected_at = CASE WHEN $1::VARCHAR = 'REJECTED' THEN NOW() ELSE rejected_at END,
                         updated_at = NOW()
-                  WHERE id = $2`,
-                [acao === "ACEITAR" ? "ACTIVE" : "REJECTED", item.conversation_id],
+                  WHERE id = $2::UUID`,
+                [statusConversa, item.conversation_id],
             );
             return { conversaID: item.conversation_id, status: novoStatus };
         });
