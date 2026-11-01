@@ -7,6 +7,7 @@ const rateLimit = require("express-rate-limit");
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const MAX_MENSAGEM = 2000;
 const TIPOS_ADM = new Set(["ADM", "ADMIN", "ADMINISTRADOR"]);
+const digitandoPorConversa = new Map();
 
 // Polling do chat é permitido, mas limitado para evitar abuso do serviço gratuito.
 router.use(rateLimit({
@@ -568,6 +569,39 @@ router.patch("/chat/conversas/:id/silenciar", exigirUsuarioAtivo, async (req, re
         return res.json({ sucesso: true, silenciado: req.body.silenciado });
     } catch (e) {
         return responderErro(res, e, "Não foi possível atualizar as notificações da conversa.");
+    }
+});
+
+// Estado temporário de digitação. Expira automaticamente após 5 segundos.
+router.post("/chat/conversas/:id/digitando", exigirUsuarioAtivo, async (req, res) => {
+    try {
+        const { conversa, outroID } = await buscarConversaDoUsuario(postgres.pool, req.params.id, req.chatUser);
+        if (conversa.status !== "ACTIVE" || await existeBloqueio(postgres.pool, req.chatUser.id, outroID)) {
+            throw erro(404, "Conversa não encontrada.");
+        }
+        const ativo = req.body?.ativo === true;
+        const agora = Date.now();
+        const atuais = (digitandoPorConversa.get(conversa.id) || []).filter((item) => item.expiraEm > agora && item.usuarioID !== req.chatUser.id);
+        if (ativo) atuais.push({ usuarioID: req.chatUser.id, nome: req.chatUser.nome, expiraEm: agora + 5000 });
+        if (atuais.length) digitandoPorConversa.set(conversa.id, atuais);
+        else digitandoPorConversa.delete(conversa.id);
+        return res.json({ sucesso: true });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível atualizar o indicador de digitação.");
+    }
+});
+
+router.get("/chat/conversas/:id/digitando", exigirUsuarioAtivo, async (req, res) => {
+    try {
+        const { conversa, outroID } = await buscarConversaDoUsuario(postgres.pool, req.params.id, req.chatUser);
+        if (await existeBloqueio(postgres.pool, req.chatUser.id, outroID)) throw erro(404, "Conversa não encontrada.");
+        const agora = Date.now();
+        const atuais = (digitandoPorConversa.get(conversa.id) || []).filter((item) => item.expiraEm > agora && item.usuarioID !== req.chatUser.id);
+        if (atuais.length) digitandoPorConversa.set(conversa.id, atuais);
+        else digitandoPorConversa.delete(conversa.id);
+        return res.json({ sucesso: true, digitando: atuais.length > 0, nome: atuais[0]?.nome || "" });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível consultar quem está digitando.");
     }
 });
 
