@@ -12,7 +12,7 @@ const digitandoPorConversa = new Map();
 // Polling do chat é permitido, mas limitado para evitar abuso do serviço gratuito.
 router.use(rateLimit({
     windowMs: 60 * 1000,
-    limit: 90,
+    limit: 180,
     standardHeaders: "draft-8",
     legacyHeaders: false,
     message: { sucesso: false, mensagem: "Muitas solicitações ao chat. Aguarde um pouco e tente novamente." },
