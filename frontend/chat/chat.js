@@ -13,7 +13,12 @@ async function api(path, options={}) {
 }
 function criarInterface(){
  const panel=el("section","hauy-chat-painel"); panel.setAttribute("aria-label","Chat escolar"); const area=document.querySelector("main")||document.querySelector(".app")||document.body; area.classList.add("hauy-chat-area");
- const header=el("header","hauy-chat-topo"); const heading=el("div"); heading.append(el("h2","","Mensagens"),el("p","","Comunicação da comunidade escolar")); header.append(heading);
+ const header=el("header","hauy-chat-topo"); const heading=el("div"); heading.append(el("h2","","Mensagens"),el("p","","Comunicação da comunidade escolar"));
+ const controls=el("div","hauy-chat-controles"); const expand=el("button","hauy-chat-expandir","⛶"); expand.type="button"; expand.title="Expandir chat"; expand.setAttribute("aria-label","Expandir chat");
+ const close=el("button","hauy-chat-fechar","×"); close.type="button"; close.title="Voltar ao tamanho normal"; close.setAttribute("aria-label","Voltar ao tamanho normal"); close.hidden=true;
+ controls.append(expand,close); header.append(heading,controls);
+ expand.addEventListener("click",()=>{panel.classList.add("expandido");expand.hidden=true;close.hidden=false;});
+ close.addEventListener("click",()=>{panel.classList.remove("expandido");expand.hidden=false;close.hidden=true;});
  const body=el("div","hauy-chat-corpo"), side=el("aside","hauy-chat-lateral"), tabs=el("div","hauy-chat-abas"), search=el("input","hauy-chat-pesquisa"), list=el("div","hauy-chat-lista");
  search.placeholder="Pesquisar"; search.type="search"; side.append(tabs,search,list);
  const conversation=el("section","hauy-chat-conversa"); body.append(side,conversation); panel.append(header,body); area.append(panel);
@@ -29,7 +34,7 @@ function criarInterface(){
  inserirMenu();
  const observer=new MutationObserver(inserirMenu);
  observer.observe(document.body,{childList:true,subtree:true});
- document.addEventListener("click",e=>{const menu=e.target.closest("nav button, nav a, .sidebar button[data-page], .sidebar button[data-p], .sidebar button[data-tela]");if(menu&&!menu.hasAttribute("data-hauy-chat-menu"))panel.classList.remove("aberto");},true);
+ document.addEventListener("click",e=>{const menu=e.target.closest("nav button, nav a, .sidebar button[data-page], .sidebar button[data-p], .sidebar button[data-tela]");if(menu&&!menu.hasAttribute("data-hauy-chat-menu")){panel.classList.remove("aberto","expandido");expand.hidden=false;close.hidden=true;}},true);
  tabs.addEventListener("click",e=>{const b=e.target.closest("button[data-aba]");if(!b)return;state.aba=b.dataset.aba;state.conversa=null;state.mensagens=[];render();});
  search.addEventListener("input",()=>renderLista());
  list.addEventListener("click",e=>{const b=e.target.closest("button[data-id]");if(!b)return;if(state.aba==="contatos")iniciarConversa(b.dataset.id);else if(state.aba==="solicitacoes")responderSolicitacao(b.dataset.id,e.target.dataset.acao);else if(state.aba==="bloqueios")return;else selecionarConversa(b.dataset.id);});
