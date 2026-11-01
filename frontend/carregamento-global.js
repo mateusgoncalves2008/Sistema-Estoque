@@ -68,6 +68,16 @@
     if (typeof window.fetch === "function") {
         const fetchOriginal = window.fetch.bind(window);
         window.fetch = (...args) => {
+            const entrada = args[0];
+            const url = typeof entrada === "string" ? entrada : entrada?.url || "";
+            if (
+                window.__hauySessaoAlterada &&
+                String(url).includes("/api/") &&
+                !String(url).includes("/api/logout")
+            ) {
+                return Promise.reject(new Error("A sessão foi alterada em outra aba."));
+            }
+
             requisicoesAtivas++;
             ultimaRequisicao = Date.now();
             return fetchOriginal(...args).finally(() => {
@@ -102,8 +112,107 @@
         window.setTimeout(verificarFimDoCarregamento, 200);
     }
 
+    function iniciarProtecaoDeSessao() {
+        let usuarioEsperado;
+
+        try {
+            usuarioEsperado = JSON.parse(sessionStorage.getItem("usuarioLogado") || "null");
+        } catch {
+            return;
+        }
+
+        const idEsperado = String(usuarioEsperado?.id || usuarioEsperado?.usuarioID || "").trim();
+        if (!idEsperado) return;
+
+        let verificacaoEmAndamento = false;
+
+        function bloquearPainel() {
+            if (window.__hauySessaoAlterada) return;
+            window.__hauySessaoAlterada = true;
+
+            const bloqueio = document.createElement("div");
+            bloqueio.id = "hauy-sessao-alterada";
+            bloqueio.setAttribute("role", "alertdialog");
+            bloqueio.setAttribute("aria-modal", "true");
+            bloqueio.innerHTML = `
+                <div class="hauy-sessao-cartao">
+                    <div class="hauy-sessao-marca">HAUY</div>
+                    <h2>Sessão alterada</h2>
+                    <p>Sua sessão foi alterada em outra aba. Entre novamente para continuar.</p>
+                    <button type="button" id="hauy-sessao-entrar">Ir para o login</button>
+                </div>
+            `;
+
+            const estilo = document.createElement("style");
+            estilo.textContent = `
+                #hauy-sessao-alterada {
+                    position: fixed; inset: 0; z-index: 2147483647;
+                    display: grid; place-items: center; padding: 24px;
+                    background: rgba(25, 17, 13, .72); backdrop-filter: blur(4px);
+                    font-family: inherit;
+                }
+                #hauy-sessao-alterada .hauy-sessao-cartao {
+                    width: min(100%, 430px); padding: 30px; text-align: center;
+                    background: #fffdfa; border: 1px solid #e6d8cc;
+                    border-radius: 18px; box-shadow: 0 18px 55px rgba(0,0,0,.22);
+                    color: #352219;
+                }
+                #hauy-sessao-alterada .hauy-sessao-marca {
+                    display: inline-block; margin-bottom: 14px; color: #c95730;
+                    font-weight: 800; letter-spacing: .16em;
+                }
+                #hauy-sessao-alterada h2 { margin: 0 0 10px; font-size: 1.35rem; }
+                #hauy-sessao-alterada p { margin: 0 0 22px; line-height: 1.55; color: #6d5b50; }
+                #hauy-sessao-alterada button {
+                    border: 0; border-radius: 9px; padding: 12px 20px;
+                    background: #c95730; color: #fff; font: inherit; font-weight: 700;
+                    cursor: pointer;
+                }
+            `;
+            document.head.appendChild(estilo);
+            document.body.appendChild(bloqueio);
+            document.getElementById("hauy-sessao-entrar")?.addEventListener("click", () => {
+                window.location.href = "/";
+            });
+        }
+
+        async function conferirSessao() {
+            if (verificacaoEmAndamento || window.__hauySessaoAlterada) return;
+            verificacaoEmAndamento = true;
+
+            try {
+                const resposta = await fetchOriginal("/api/sessao", {
+                    method: "GET",
+                    credentials: "include",
+                    cache: "no-store",
+                    headers: { "Accept": "application/json" },
+                });
+                if (!resposta.ok) {
+                    bloquearPainel();
+                    return;
+                }
+
+                const dados = await resposta.json();
+                const idAtual = String(dados?.usuario?.usuarioID || "").trim();
+                if (!dados?.sucesso || !idAtual || idAtual !== idEsperado) {
+                    bloquearPainel();
+                }
+            } catch {
+                // Falhas temporárias de rede não encerram a sessão do painel.
+            } finally {
+                verificacaoEmAndamento = false;
+            }
+        }
+
+        window.setTimeout(() => {
+            conferirSessao();
+            window.setInterval(conferirSessao, 5000);
+        }, 1200);
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
         atualizarLegenda();
         verificarFimDoCarregamento();
+        iniciarProtecaoDeSessao();
     }, { once: true });
 })();
