@@ -12,10 +12,8 @@ async function api(path, options={}) {
  return data;
 }
 function criarInterface(){
-
  const panel=el("section","hauy-chat-painel"); panel.setAttribute("aria-label","Chat escolar"); const area=document.querySelector("main")||document.querySelector(".app")||document.body; area.classList.add("hauy-chat-area");
- const header=el("header","hauy-chat-topo"); const heading=el("div"); heading.append(el("h2","","Mensagens"),el("p","","Comunicação da comunidade escolar"));
- const close=el("button","hauy-chat-fechar","×"); close.type="button"; close.setAttribute("aria-label","Fechar chat"); header.append(heading,close);
+ const header=el("header","hauy-chat-topo"); const heading=el("div"); heading.append(el("h2","","Mensagens"),el("p","","Comunicação da comunidade escolar")); header.append(heading);
  const body=el("div","hauy-chat-corpo"), side=el("aside","hauy-chat-lateral"), tabs=el("div","hauy-chat-abas"), search=el("input","hauy-chat-pesquisa"), list=el("div","hauy-chat-lista");
  search.placeholder="Pesquisar"; search.type="search"; side.append(tabs,search,list);
  const conversation=el("section","hauy-chat-conversa"); body.append(side,conversation); panel.append(header,body); area.append(panel);
@@ -31,7 +29,6 @@ function criarInterface(){
  inserirMenu();
  const observer=new MutationObserver(inserirMenu);
  observer.observe(document.body,{childList:true,subtree:true});
- close.addEventListener("click",()=>panel.classList.remove("aberto"));
  document.addEventListener("click",e=>{const menu=e.target.closest("nav button, nav a, .sidebar button[data-page], .sidebar button[data-p], .sidebar button[data-tela]");if(menu&&!menu.hasAttribute("data-hauy-chat-menu"))panel.classList.remove("aberto");},true);
  tabs.addEventListener("click",e=>{const b=e.target.closest("button[data-aba]");if(!b)return;state.aba=b.dataset.aba;state.conversa=null;state.mensagens=[];render();});
  search.addEventListener("input",()=>renderLista());
@@ -64,7 +61,7 @@ function renderLista(){
   const sub=state.aba==="solicitacoes"?"Solicitação de conversa":state.aba==="bloqueios"?"Bloqueado pelo ADM":state.aba==="contatos"?(item.tipoUsuario||"Usuário"):(item.ultimaMensagem||item.status||"Conversa");
   const b=el("button","hauy-chat-item"+(state.conversa?.id===id?" selecionado":""));b.type="button";b.dataset.id=id;
   b.append(el("span","hauy-chat-avatar",(nome||"U").trim().charAt(0).toUpperCase()));const t=el("span","hauy-chat-item-texto");t.append(el("strong","",nome||"Usuário"),el("small","",sub));b.append(t);
-  if(state.aba==="solicitacoes"){const actions=el("span");["ACEITAR","RECUSAR"].forEach(a=>{const x=el("button","hauy-chat-acao",a==="ACEITAR"?"Aceitar":"Recusar");x.type="button";x.dataset.acao=a; x.dataset.id=item.id;actions.append(x);});b.append(actions);}
+  if(state.aba==="solicitacoes"){const actions=el("span");["ACEITAR","RECUSAR"].forEach(a=>{const x=el("button","hauy-chat-acao",a==="ACEITAR"?"Aceitar":"Recusar");x.type="button";x.dataset.acao=a;x.dataset.id=item.id;actions.append(x);});b.append(actions);}
   p.list.append(b);
  });
 }
