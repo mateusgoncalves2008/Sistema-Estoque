@@ -37,7 +37,7 @@ function criarInterface(){
   if(!nav||nav.querySelector("[data-hauy-chat-menu]"))return;
   const item=el("button","hauy-chat-menu-item");
   item.type="button";item.dataset.hauyChatMenu="true";
-  item.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg><span>Chat</span>';
+  item.innerHTML='<span class="hauy-chat-menu-icone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg><span class="hauy-chat-menu-contador" hidden></span></span><span>Chat</span>';
   item.addEventListener("click",abrir);nav.append(item);
  };
  inserirMenu();
@@ -55,9 +55,17 @@ function criarInterface(){
  conversation.addEventListener("keydown",e=>{if(e.target.matches("textarea")&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();enviarMensagem();}});
  panel._parts={tabs,search,list,conversation,addContact};
 }
+function atualizarContadorMenu(){
+ const total=state.conversas.reduce((s,c)=>s+Math.max(0,Number(c.naoLidas)||0),0);
+ document.querySelectorAll("[data-hauy-chat-menu]").forEach(item=>{
+  const contador=item.querySelector(".hauy-chat-menu-contador");if(!contador)return;
+  contador.textContent=total>99?"99+":String(total);contador.hidden=total===0;
+  item.setAttribute("aria-label",total?`Chat, ${total} mensagens não lidas`:"Chat");
+ });
+}
 function formatarData(v){if(!v)return "";const d=new Date(v);return Number.isNaN(d.getTime())?"":d.toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});}
 async function abrirChat(){
- try{state.carregando=true;render();const [cfg,cs,cv]=await Promise.all([api("/configuracao"),api("/conversas"),api("/contatos")]);state.config=cfg;window.__hauyChatUsuarioID=cfg.usuarioID;state.conversas=cs.conversas||[];state.contatos=cv.contatos||[];state.aba="conversas";render();}
+ try{state.carregando=true;render();const [cfg,cs,cv]=await Promise.all([api("/configuracao"),api("/conversas"),api("/contatos")]);state.config=cfg;window.__hauyChatUsuarioID=cfg.usuarioID;state.conversas=cs.conversas||[];state.contatos=cv.contatos||[];atualizarContadorMenu();state.aba="conversas";render();}
  catch(e){mostrarErro(e.message);}
 }
 function mostrarErro(msg){const c=document.querySelector(".hauy-chat-conversa");if(c){c.replaceChildren(el("p","hauy-chat-vazio",msg));}}
@@ -143,7 +151,7 @@ async function atualizarChatEmSegundoPlano(){
 }
 async function consultarDigitando(){if(!document.querySelector(".hauy-chat-painel.aberto")||!state.conversa?.id||state.conversa.status!=="ACTIVE"||document.hidden)return;const id=state.conversa.id;try{const tr=await api("/conversas/"+encodeURIComponent(id)+"/digitando");if(state.conversa?.id!==id)return;const indicador=document.querySelector(".hauy-chat-painel")?._parts.conversation.querySelector(".hauy-chat-digitando");if(indicador){indicador.hidden=!tr.digitando;const texto=indicador.querySelector(".hauy-chat-digitando-texto");if(texto)texto.textContent=(tr.nome||"Alguém")+" está digitando";}}catch{}}
 async function atualizarPresenca(){try{const p=await api("/presenca");state.online=new Set((p.online||[]).map(String));if(document.querySelector(".hauy-chat-painel.aberto"))renderLista();}catch{}}
-async function atualizarConversas(){const r=await api("/conversas");state.conversas=r.conversas||[];if(state.conversa)state.conversa=state.conversas.find(x=>x.id===state.conversa.id)||state.conversa;if(document.querySelector(".hauy-chat-painel.aberto"))renderLista();}
+async function atualizarConversas(){const r=await api("/conversas");state.conversas=r.conversas||[];atualizarContadorMenu();if(state.conversa)state.conversa=state.conversas.find(x=>x.id===state.conversa.id)||state.conversa;if(document.querySelector(".hauy-chat-painel.aberto"))renderLista();}
 async function silenciar(){try{const valor=!state.conversa.silenciado;await api("/conversas/"+encodeURIComponent(state.conversa.id)+"/silenciar",{method:"PATCH",body:JSON.stringify({silenciado:valor})});state.conversa.silenciado=valor;render();}catch(e){mostrarErro(e.message);}}
 async function bloquear(){if(!state.config.podeAlterar||!state.conversa)return;const id=state.conversa.contato?.id;if(!id||!confirm("Bloquear este usuário no chat? Ele não poderá mais encontrar o ADM nem acessar conversas com o administrador."))return;try{await api("/bloqueios",{method:"POST",body:JSON.stringify({usuarioID:id})});state.conversa=null;await abrirChat();}catch(e){mostrarErro(e.message);}}
 async function responderSolicitacao(id,acao){if(!acao)return;try{await api("/solicitacoes/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify({acao})});await carregarSolicitacoes();await atualizarConversas();render();}catch(e){mostrarErro(e.message);}}

@@ -642,7 +642,7 @@ router.get("/chat/presenca", exigirUsuarioAtivo, async (req, res) => {
         await garantirTabelaPresenca();
         const resultado = await postgres.pool.query(
             `SELECT user_id FROM chat_presence
-              WHERE last_seen_at > NOW() - INTERVAL '45 seconds'
+              WHERE last_seen_at > NOW() - INTERVAL '3 seconds'
                 AND user_id <> $1`,
             [req.chatUser.id],
         );

@@ -41,3 +41,8 @@
 .hauy-chat-online{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border:2px solid #fffdfa;border-radius:50%;background:#22a447;box-shadow:0 0 0 1px rgba(34,164,71,.15)}
 .hauy-chat-item-texto small.hauy-chat-nao-lidas{color:#fff;font-weight:800;background:#c95730;display:table;padding:3px 7px;border-radius:6px;margin-top:4px}
 @media(max-width:620px){.hauy-chat-avatar-wrap{width:30px;height:30px}.hauy-chat-online{width:10px;height:10px}}
+
+.hauy-chat-menu-icone{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px}
+.hauy-chat-menu-icone svg{width:19px;height:19px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8}
+.hauy-chat-menu-contador{position:absolute;top:-8px;right:-10px;min-width:17px;height:17px;padding:0 4px;border:2px solid #fffdfa;border-radius:999px;background:#bd4a42;color:#fff;font-size:10px;font-weight:800;line-height:13px;text-align:center;box-sizing:border-box}
+.hauy-chat-menu-contador[hidden]{display:none}

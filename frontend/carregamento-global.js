@@ -126,7 +126,7 @@
         };
         window.setTimeout(() => {
             enviarPresenca();
-            window.setInterval(enviarPresenca, 15000);
+            window.setInterval(enviarPresenca, 3000);
             document.addEventListener("visibilitychange", enviarPresenca);
         }, 1200);
 
@@ -230,7 +230,7 @@
             conferirSessao();
             window.setInterval(conferirSessao, 5000);
             window.addEventListener("pagehide", () => {
-                // A presença expira no servidor após 45 segundos sem heartbeat.
+                // A presença expira no servidor após 3 segundos sem heartbeat.
             });
         }, 1200);
     }
