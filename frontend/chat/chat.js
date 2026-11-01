@@ -13,12 +13,12 @@ async function api(path, options={}) {
 }
 function criarInterface(){
 
- const panel=el("section","hauy-chat-painel"); panel.setAttribute("aria-label","Chat escolar");
+ const panel=el("section","hauy-chat-painel"); panel.setAttribute("aria-label","Chat escolar"); const area=document.querySelector("main")||document.querySelector(".app")||document.body; area.classList.add("hauy-chat-area");
  const header=el("header","hauy-chat-topo"); const heading=el("div"); heading.append(el("h2","","Mensagens"),el("p","","Comunicação da comunidade escolar"));
  const close=el("button","hauy-chat-fechar","×"); close.type="button"; close.setAttribute("aria-label","Fechar chat"); header.append(heading,close);
  const body=el("div","hauy-chat-corpo"), side=el("aside","hauy-chat-lateral"), tabs=el("div","hauy-chat-abas"), search=el("input","hauy-chat-pesquisa"), list=el("div","hauy-chat-lista");
  search.placeholder="Pesquisar"; search.type="search"; side.append(tabs,search,list);
- const conversation=el("section","hauy-chat-conversa"); body.append(side,conversation); panel.append(header,body); document.body.append(panel);
+ const conversation=el("section","hauy-chat-conversa"); body.append(side,conversation); panel.append(header,body); area.append(panel);
  const abrir=()=>{panel.classList.add("aberto");abrirChat();};
  const inserirMenu=()=>{
   const nav=document.querySelector(".sidebar-nav, #nav, #menu, .sidebar nav");
