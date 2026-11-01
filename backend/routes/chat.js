@@ -164,16 +164,21 @@ async function inserirMensagem(db, conversaID, remetenteID, corpo) {
     return inserida.rows[0];
 }
 
-// Lista de usuários ativos. A identidade e os nomes vêm da aba 01_USUARIOS.
+// Lista de contatos com solicitação pendente ou conversa ainda sem resposta.
 router.get("/chat/contatos", exigirUsuarioAtivo, async (req, res) => {
     try {
         const usuarios = await carregarUsuariosAtivos();
+        const vinculados = await postgres.pool.query(
+            "SELECT c.id, c.participant_one_id, c.participant_two_id, c.status, c.accepted_at, COUNT(DISTINCT m.sender_id)::int AS remetentes FROM chat_conversations c LEFT JOIN chat_messages m ON m.conversation_id = c.id WHERE (c.participant_one_id = $1 OR c.participant_two_id = $1) AND c.status IN ($2, $3) GROUP BY c.id HAVING c.status = $2 OR (c.accepted_at IS NULL AND COUNT(DISTINCT m.sender_id) < 2)",
+            [req.chatUser.id, "PENDING", "ACTIVE"],
+        );
+        const idsContatos = new Set(vinculados.rows.map((item) => item.participant_one_id === req.chatUser.id ? item.participant_two_id : item.participant_one_id));
         const bloqueios = await postgres.pool.query(
             "SELECT blocker_id, blocked_id FROM chat_blocks",
         );
         const bloqueados = new Set(bloqueios.rows.map((item) => `${item.blocker_id}|${item.blocked_id}`));
         const contatos = usuarios
-            .filter((item) => item.id !== req.chatUser.id)
+            .filter((item) => idsContatos.has(item.id))
             .filter((item) => {
                 if (isAdm(req.chatUser)) return true;
                 return !bloqueados.has(`${item.id}|${req.chatUser.id}`) &&
@@ -183,6 +188,25 @@ router.get("/chat/contatos", exigirUsuarioAtivo, async (req, res) => {
         return res.json({ sucesso: true, contatos });
     } catch (e) {
         return responderErro(res, e, "Não foi possível carregar os contatos.");
+    }
+});
+
+router.get("/chat/novos-contatos", exigirUsuarioAtivo, async (req, res) => {
+    try {
+        const usuarios = await carregarUsuariosAtivos();
+        const existentes = await postgres.pool.query(
+            "SELECT CASE WHEN participant_one_id = $1 THEN participant_two_id ELSE participant_one_id END AS outro_id FROM chat_conversations WHERE (participant_one_id = $1 OR participant_two_id = $1) AND status IN ($2, $3)",
+            [req.chatUser.id, "PENDING", "ACTIVE"],
+        );
+        const idsExistentes = new Set(existentes.rows.map((item) => item.outro_id));
+        const bloqueios = await postgres.pool.query("SELECT blocker_id, blocked_id FROM chat_blocks");
+        const bloqueados = new Set(bloqueios.rows.map((item) => `${item.blocker_id}|${item.blocked_id}`));
+        const contatos = usuarios.filter((item) => item.id !== req.chatUser.id && !idsExistentes.has(item.id))
+            .filter((item) => isAdm(req.chatUser) || (!bloqueados.has(`${item.id}|${req.chatUser.id}`) && !bloqueados.has(`${req.chatUser.id}|${item.id}`)))
+            .map(({ id, nome, tipoUsuario, perfil }) => ({ id, nome, tipoUsuario, perfil }));
+        return res.json({ sucesso: true, contatos });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível carregar novos contatos.");
     }
 });
 
@@ -309,7 +333,8 @@ router.get("/chat/conversas", exigirUsuarioAtivo, async (req, res) => {
         const resultado = await postgres.pool.query(
             `SELECT c.id, c.participant_one_id, c.participant_two_id,
                     c.conversation_type, c.status, c.created_at, c.updated_at,
-                    c.last_message_at,
+                    c.last_message_at, c.accepted_at,
+                    (SELECT COUNT(DISTINCT m.sender_id)::int FROM chat_messages m WHERE m.conversation_id = c.id) AS remetentes,
                     (SELECT m.body FROM chat_messages m
                       WHERE m.conversation_id = c.id
                       ORDER BY m.id DESC LIMIT 1) AS ultima_mensagem,
@@ -342,6 +367,7 @@ router.get("/chat/conversas", exigirUsuarioAtivo, async (req, res) => {
                 return {
                     id: item.id,
                     status: item.status,
+                    estabelecida: Boolean(item.accepted_at) || Number(item.remetentes) >= 2,
                     tipo: item.conversation_type,
                     criadoEm: item.created_at,
                     atualizadoEm: item.updated_at,
