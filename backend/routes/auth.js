@@ -265,6 +265,30 @@ router.post("/login", async (req, res) => {
 });
 
 // ======================================================
+// GET /api/sessao
+// ======================================================
+
+router.get("/sessao", (req, res) => {
+    const usuario = req.session?.usuario;
+
+    if (!usuario?.id) {
+        return res.status(401).json({
+            sucesso: false,
+            mensagem: "Sessão não autenticada.",
+        });
+    }
+
+    return res.set("Cache-Control", "no-store").json({
+        sucesso: true,
+        usuario: {
+            usuarioID: String(usuario.id),
+            tipoUsuario: String(usuario.tipoUsuario || ""),
+            perfil: String(usuario.perfil || ""),
+        },
+    });
+});
+
+// ======================================================
 // GET /api/aluno/perfil/:usuarioID
 // ======================================================
 
