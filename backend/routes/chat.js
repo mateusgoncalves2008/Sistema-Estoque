@@ -9,11 +9,13 @@ const MAX_MENSAGEM = 2000;
 const TIPOS_ADM = new Set(["ADM", "ADMIN", "ADMINISTRADOR"]);
 const digitandoPorConversa = new Map();
 const presencasUsuarios = new Map();
+let usuariosAtivosCache = { dados: null, atualizadoEm: 0 };
+const CACHE_USUARIOS_ATIVOS_MS = 30000;
 
 // Polling do chat é permitido, mas limitado para evitar abuso do serviço gratuito.
 router.use(rateLimit({
     windowMs: 60 * 1000,
-    limit: 180,
+    limit: 300,
     standardHeaders: "draft-8",
     legacyHeaders: false,
     message: { sucesso: false, mensagem: "Muitas solicitações ao chat. Aguarde um pouco e tente novamente." },
@@ -40,12 +42,15 @@ function erro(status, mensagem) {
 }
 
 async function carregarUsuariosAtivos() {
+    if (usuariosAtivosCache.dados && Date.now() - usuariosAtivosCache.atualizadoEm < CACHE_USUARIOS_ATIVOS_MS) {
+        return usuariosAtivosCache.dados;
+    }
     if (!SPREADSHEET_ID) throw erro(503, "Cadastro de usuários indisponível.");
     const resposta = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
         range: "01_USUARIOS!A2:K",
     });
-    return (resposta.data.values || [])
+    const usuarios = (resposta.data.values || [])
         .filter((linha) => normalizar(linha[8]) === "ATIVO" && texto(linha[0]))
         .map((linha) => ({
             id: texto(linha[0]),
@@ -56,6 +61,8 @@ async function carregarUsuariosAtivos() {
             setorID: texto(linha[7]),
             ativo: true,
         }));
+    usuariosAtivosCache = { dados: usuarios, atualizadoEm: Date.now() };
+    return usuarios;
 }
 
 async function exigirUsuarioAtivo(req, res, next) {
