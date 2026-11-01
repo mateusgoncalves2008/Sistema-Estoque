@@ -3,7 +3,7 @@
 if (window.__hauyChatInicializado) return;
 window.__hauyChatInicializado = true;
 const API = "/api/chat";
-const state = {config:{}, aba:"conversas", contatos:[], conversas:[], solicitacoes:[], bloqueios:[], conversa:null, mensagens:[], carregando:false};
+const state = {config:{}, aba:"conversas", contatos:[], novosContatos:[], conversas:[], solicitacoes:[], bloqueios:[], conversa:null, mensagens:[], carregando:false};
 let intervaloAtualizacaoChat=null, timeoutPararDigitando=null, ultimoAvisoDigitando=0;
 const el = (tag, cls, text) => { const node=document.createElement(tag); if(cls) node.className=cls; if(text!==undefined) node.textContent=text; return node; };
 async function api(path, options={}) {
@@ -20,7 +20,8 @@ function criarInterface(){
  controls.append(expand,close); header.append(heading,controls);
  expand.addEventListener("click",()=>{panel.classList.add("expandido");expand.hidden=true;close.hidden=false;});
  close.addEventListener("click",()=>{panel.classList.remove("expandido");expand.hidden=false;close.hidden=true;});
- const body=el("div","hauy-chat-corpo"), side=el("aside","hauy-chat-lateral"), tabs=el("div","hauy-chat-abas"), search=el("input","hauy-chat-pesquisa"), list=el("div","hauy-chat-lista");
+ const body=el("div","hauy-chat-corpo"), side=el("aside","hauy-chat-lateral"), tabs=el("div","hauy-chat-abas"), search=el("input","hauy-chat-pesquisa"), list=el("div","hauy-chat-lista"), addContact=el("button","hauy-chat-adicionar","＋");
+ addContact.type="button";addContact.title="Adicionar aos contatos";addContact.setAttribute("aria-label","Adicionar aos contatos");addContact.addEventListener("click",()=>{if(state.aba==="novos"){state.aba="contatos";render();}else abrirNovosContatos();});
  search.placeholder="Pesquisar"; search.type="search"; side.append(tabs,search,list);
  const conversation=el("section","hauy-chat-conversa"); body.append(side,conversation); panel.append(header,body); area.append(panel);
  const seletoresSino='button:has(.fa-bell),button:has(.fas.fa-bell),button:has([data-lucide="bell"]),button[aria-label*="aviso" i],button[title*="aviso" i],[role="button"]:has(.fa-bell),[role="button"]:has([data-lucide="bell"])';
@@ -48,11 +49,11 @@ function criarInterface(){
  document.addEventListener("click",e=>{const menu=e.target.closest("nav button, nav a, .sidebar button[data-page], .sidebar button[data-p], .sidebar button[data-tela]");if(menu&&!menu.hasAttribute("data-hauy-chat-menu")){panel.classList.remove("aberto","expandido");expand.hidden=false;close.hidden=true;}},true);
  tabs.addEventListener("click",e=>{const b=e.target.closest("button[data-aba]");if(!b)return;state.aba=b.dataset.aba;state.conversa=null;state.mensagens=[];render();});
  search.addEventListener("input",()=>renderLista());
- list.addEventListener("click",e=>{const b=e.target.closest("button[data-id]");if(!b)return;if(state.aba==="contatos")iniciarConversa(b.dataset.id);else if(state.aba==="solicitacoes")responderSolicitacao(b.dataset.id,e.target.dataset.acao);else if(state.aba==="bloqueios")return;else selecionarConversa(b.dataset.id);});
+ list.addEventListener("click",e=>{const b=e.target.closest("button[data-id]");if(!b)return;if(state.aba==="novos")iniciarConversa(b.dataset.id);else if(state.aba==="contatos")selecionarConversaPorContato(b.dataset.id);else if(state.aba==="solicitacoes")responderSolicitacao(b.dataset.id,e.target.dataset.acao);else if(state.aba==="bloqueios")return;else selecionarConversa(b.dataset.id);});
  conversation.addEventListener("click",e=>{const b=e.target.closest("[data-acao]");if(!b)return;if(b.dataset.acao==="enviar")enviarMensagem();if(b.dataset.acao==="silenciar")silenciar();if(b.dataset.acao==="bloquear")bloquear();});
  conversation.addEventListener("input",e=>{if(e.target.matches("textarea")&&state.conversa?.status==="ACTIVE")avisarDigitando(true);});
  conversation.addEventListener("keydown",e=>{if(e.target.matches("textarea")&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();enviarMensagem();}});
- panel._parts={tabs,search,list,conversation};
+ panel._parts={tabs,search,list,conversation,addContact};
 }
 function formatarData(v){if(!v)return "";const d=new Date(v);return Number.isNaN(d.getTime())?"":d.toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});}
 async function abrirChat(){
@@ -63,19 +64,19 @@ function mostrarErro(msg){const c=document.querySelector(".hauy-chat-conversa");
 function render(){
  const panel=document.querySelector(".hauy-chat-painel");if(!panel)return;const p=panel._parts;
  p.tabs.replaceChildren();const abas=[["conversas","Conversas"],["contatos","Contatos"]];if(state.config.podeAlterar)abas.push(["solicitacoes","Solicitações"],["bloqueios","Bloqueios"],["config","Config."]);
- abas.forEach(([id,nome])=>{const b=el("button",state.aba===id?"ativo":"",nome);b.type="button";b.dataset.aba=id;p.tabs.append(b);});
+ abas.forEach(([id,nome])=>{const b=el("button",state.aba===id||(id==="contatos"&&state.aba==="novos")?"ativo":"",nome);b.type="button";b.dataset.aba=id;p.tabs.append(b);if(id==="contatos"){p.addContact.textContent=state.aba==="novos"?"←":"＋";p.addContact.title=state.aba==="novos"?"Voltar para contatos":"Adicionar aos contatos";p.tabs.append(p.addContact);}});
  p.search.hidden=state.aba==="solicitacoes"||state.aba==="bloqueios"||state.aba==="config";p.search.value="";
  renderLista();renderConversa();
 }
 function renderLista(){
  const p=document.querySelector(".hauy-chat-painel")?document.querySelector(".hauy-chat-painel")._parts:null;if(!p)return;p.list.replaceChildren();
- let dados=state.aba==="contatos"?state.contatos:state.aba==="solicitacoes"?state.solicitacoes:state.aba==="bloqueios"?state.bloqueios:state.conversas;
+ let dados=state.aba==="contatos"?state.contatos:state.aba==="novos"?state.novosContatos:state.aba==="solicitacoes"?state.solicitacoes:state.aba==="bloqueios"?state.bloqueios:state.conversas.filter(x=>x.estabelecida);
  const q=p.search.value.trim().toLocaleLowerCase("pt-BR");if(q)dados=dados.filter(x=>(x.nome||x.solicitante?.nome||x.contato?.nome||"").toLocaleLowerCase("pt-BR").includes(q));
- if(!dados.length){p.list.append(el("p","hauy-chat-vazio",state.aba==="conversas"?"Nenhuma conversa por enquanto.":state.aba==="contatos"?"Nenhum contato encontrado.":state.aba==="solicitacoes"?"Nenhuma solicitação pendente.":"Nenhum usuário bloqueado."));return;}
+ if(!dados.length){p.list.append(el("p","hauy-chat-vazio",state.aba==="conversas"?"Nenhuma conversa por enquanto.":state.aba==="contatos"?"Nenhum contato aguardando resposta.":state.aba==="novos"?"Nenhum usuário disponível para adicionar.":state.aba==="solicitacoes"?"Nenhuma solicitação pendente.":"Nenhum usuário bloqueado."));return;}
  dados.forEach(item=>{
-  const id=state.aba==="solicitacoes"?item.id:state.aba==="bloqueios"?item.usuarioID:state.aba==="contatos"?item.id:item.id;
-  const nome=state.aba==="solicitacoes"?item.solicitante?.nome:state.aba==="bloqueios"?item.nome:state.aba==="contatos"?item.nome:item.contato?.nome;
-  const sub=state.aba==="solicitacoes"?"Solicitação de conversa":state.aba==="bloqueios"?"Bloqueado pelo ADM":state.aba==="contatos"?(item.tipoUsuario||"Usuário"):(item.ultimaMensagem||item.status||"Conversa");
+  const id=state.aba==="solicitacoes"?item.id:state.aba==="bloqueios"?item.usuarioID:item.id;
+  const nome=state.aba==="solicitacoes"?item.solicitante?.nome:state.aba==="bloqueios"?item.nome:state.aba==="conversas"?item.contato?.nome:item.nome;
+  const sub=state.aba==="solicitacoes"?"Solicitação de conversa":state.aba==="bloqueios"?"Bloqueado pelo ADM":(state.aba==="contatos"||state.aba==="novos")?(item.tipoUsuario||"Usuário"):(item.ultimaMensagem||item.status||"Conversa");
   const b=el("button","hauy-chat-item"+(state.conversa?.id===id?" selecionado":""));b.type="button";b.dataset.id=id;
   b.append(el("span","hauy-chat-avatar",(nome||"U").trim().charAt(0).toUpperCase()));const t=el("span","hauy-chat-item-texto");t.append(el("strong","",nome||"Usuário"),el("small","",sub));b.append(t);
   if(state.aba==="solicitacoes"){const actions=el("span");["ACEITAR","RECUSAR"].forEach(a=>{const x=el("button","hauy-chat-acao",a==="ACEITAR"?"Aceitar":"Recusar");x.type="button";x.dataset.acao=a;x.dataset.id=item.id;actions.append(x);});b.append(actions);}
@@ -84,6 +85,7 @@ function renderLista(){
 }
 function renderConversa(){
  const c=document.querySelector(".hauy-chat-painel")._parts.conversation;c.replaceChildren();
+ if(state.aba==="novos"){c.append(el("p","hauy-chat-vazio","Escolha uma pessoa na lista para adicionar aos seus contatos."));return;}
  if(state.aba==="solicitacoes"){c.append(el("p","hauy-chat-vazio","Analise as solicitações recebidas. Você pode aceitar ou recusar cada pedido."));return;}
  if(state.aba==="bloqueios"){c.append(el("p","hauy-chat-vazio","Os bloqueios são permanentes e impedem o contato com o ADM."));return;}
  if(state.aba==="config"){const wrap=el("div","hauy-chat-alerta",state.config.modoRestritoADM?"Modo restrito do ADM está ativado. Novos contatos precisam enviar uma solicitação.":"Modo restrito do ADM está desativado. Os usuários podem iniciar conversas normalmente.");const btn=el("button","hauy-chat-btn",state.config.modoRestritoADM?"Desativar modo restrito":"Ativar modo restrito");btn.type="button";btn.style.minHeight="42px";btn.addEventListener("click",alternarModoRestrito);c.append(wrap,btn);return;}
@@ -99,8 +101,10 @@ function renderConversa(){
  if(state.conversa.status==="ACTIVE"){const form=el("form","hauy-chat-compositor"),area=el("textarea");area.maxLength=2000;area.rows=1;area.placeholder="Escreva uma mensagem...";const send=el("button","hauy-chat-btn","Enviar");send.type="button";send.dataset.acao="enviar";form.append(area,send);c.append(form);messages.scrollTop=messages.scrollHeight;}
  else c.append(el("div","hauy-chat-alerta",state.conversa.status==="PENDING"?"Sua solicitação foi enviada. Aguarde o ADM aceitar.":"Esta solicitação foi recusada. Você pode iniciar uma nova solicitação pelo contato do ADM."));
 }
+async function selecionarConversaPorContato(id){const item=state.conversas.find(x=>x.contato?.id===id);if(item)await selecionarConversa(item.id);}
+async function abrirNovosContatos(){try{const r=await api("/novos-contatos");state.novosContatos=r.contatos||[];state.aba="novos";state.conversa=null;state.mensagens=[];render();}catch(e){mostrarErro(e.message);}}
 async function selecionarConversa(id){try{const item=state.conversas.find(x=>x.id===id);if(!item)return;state.conversa=item;const r=await api("/conversas/"+encodeURIComponent(id)+"/mensagens");state.mensagens=r.mensagens||[];render();}catch(e){mostrarErro(e.message);}}
-async function iniciarConversa(id){const contato=state.contatos.find(x=>x.id===id);if(!contato)return;const mensagem=window.prompt("Escreva a primeira mensagem para "+contato.nome+":");if(!mensagem||!mensagem.trim())return;try{const r=await api("/conversas",{method:"POST",body:JSON.stringify({destinatarioID:id,mensagem:mensagem.trim()})});await abrirChat();const item=state.conversas.find(x=>x.id===r.conversaID);if(item)selecionarConversa(item.id);else mostrarErro(r.mensagem);}catch(e){mostrarErro(e.message);}}
+async function iniciarConversa(id){const contato=state.novosContatos.find(x=>x.id===id);if(!contato)return;const mensagem=window.prompt("Escreva a primeira mensagem para "+contato.nome+":");if(!mensagem||!mensagem.trim())return;try{const r=await api("/conversas",{method:"POST",body:JSON.stringify({destinatarioID:id,mensagem:mensagem.trim()})});await abrirChat();const item=state.conversas.find(x=>x.id===r.conversaID);if(item)selecionarConversa(item.id);else mostrarErro(r.mensagem);}catch(e){mostrarErro(e.message);}}
 async function enviarMensagem(){const c=document.querySelector(".hauy-chat-painel")._parts.conversation;const area=c.querySelector("textarea");const mensagem=area?.value.trim();if(!mensagem||!state.conversa)return;const btn=c.querySelector('[data-acao="enviar"]');btn.disabled=true;try{await api("/conversas/"+encodeURIComponent(state.conversa.id)+"/mensagens",{method:"POST",body:JSON.stringify({mensagem})});const r=await api("/conversas/"+encodeURIComponent(state.conversa.id)+"/mensagens");state.mensagens=r.mensagens||[];await atualizarConversas();render();}catch(e){mostrarErro(e.message);}finally{btn.disabled=false;}}
 async function avisarDigitando(ativo){
  if(!state.conversa?.id)return;
