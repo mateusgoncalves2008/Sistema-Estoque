@@ -8,7 +8,7 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const MAX_MENSAGEM = 2000;
 const TIPOS_ADM = new Set(["ADM", "ADMIN", "ADMINISTRADOR"]);
 const digitandoPorConversa = new Map();
-const presencasUsuarios = new Map();
+let presencaTabelaPronta = null;
 let usuariosAtivosCache = { dados: null, atualizadoEm: 0 };
 const CACHE_USUARIOS_ATIVOS_MS = 30000;
 
@@ -92,6 +92,21 @@ function exigirAdm(req, res, next) {
         return res.status(403).json({ sucesso: false, mensagem: "Acesso permitido somente ao administrador." });
     }
     next();
+}
+
+async function garantirTabelaPresenca() {
+    if (!presencaTabelaPronta) {
+        presencaTabelaPronta = postgres.pool.query(`
+            CREATE TABLE IF NOT EXISTS chat_presence (
+                user_id VARCHAR(100) PRIMARY KEY,
+                last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        `).catch((e) => {
+            presencaTabelaPronta = null;
+            throw e;
+        });
+    }
+    return presencaTabelaPronta;
 }
 
 async function obterConfiguracao(db = postgres.pool) {
@@ -606,18 +621,35 @@ router.patch("/chat/conversas/:id/silenciar", exigirUsuarioAtivo, async (req, re
     }
 });
 
-// Presença dos usuários: heartbeat periódico e expiração automática.
-router.post("/chat/presenca", exigirUsuarioAtivo, (req, res) => {
-    const usuarioID = req.chatUser.id;
-    presencasUsuarios.set(usuarioID, Date.now());
-    return res.json({ sucesso: true });
-});
-router.get("/chat/presenca", exigirUsuarioAtivo, (req, res) => {
-    const agora = Date.now();
-    for (const [id, ultimaAtividade] of presencasUsuarios) {
-        if (agora - ultimaAtividade > 45000) presencasUsuarios.delete(id);
+// Presença persistida no PostgreSQL para funcionar mesmo com reinícios ou mais de um processo.
+router.post("/chat/presenca", exigirUsuarioAtivo, async (req, res) => {
+    try {
+        await garantirTabelaPresenca();
+        await postgres.pool.query(
+            `INSERT INTO chat_presence (user_id, last_seen_at)
+             VALUES ($1, NOW())
+             ON CONFLICT (user_id)
+             DO UPDATE SET last_seen_at = NOW()`,
+            [req.chatUser.id],
+        );
+        return res.json({ sucesso: true });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível atualizar sua presença.");
     }
-    return res.json({ sucesso: true, online: [...presencasUsuarios.keys()].filter(id => id !== req.chatUser.id) });
+});
+router.get("/chat/presenca", exigirUsuarioAtivo, async (req, res) => {
+    try {
+        await garantirTabelaPresenca();
+        const resultado = await postgres.pool.query(
+            `SELECT user_id FROM chat_presence
+              WHERE last_seen_at > NOW() - INTERVAL '45 seconds'
+                AND user_id <> $1`,
+            [req.chatUser.id],
+        );
+        return res.json({ sucesso: true, online: resultado.rows.map((item) => item.user_id) });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível consultar a presença dos usuários.");
+    }
 });
 
 // Estado temporário de digitação. Expira automaticamente após 5 segundos.
