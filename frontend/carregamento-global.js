@@ -119,6 +119,17 @@
             .some((trecho) => caminho.includes(trecho));
         if (!paginaDePainel) return;
 
+        const enviarPresenca = () => {
+            if (document.visibilityState === "visible" && !window.__hauySessaoAlterada) {
+                fetchOriginal("/api/chat/presenca", { method: "POST", credentials: "include", cache: "no-store", headers: { "Content-Type": "application/json" }, body: "{}" }).catch(() => {});
+            }
+        };
+        window.setTimeout(() => {
+            enviarPresenca();
+            window.setInterval(enviarPresenca, 15000);
+            document.addEventListener("visibilitychange", enviarPresenca);
+        }, 1200);
+
         let usuarioEsperado;
 
         try {
@@ -218,14 +229,6 @@
         window.setTimeout(() => {
             conferirSessao();
             window.setInterval(conferirSessao, 5000);
-            const enviarPresenca = () => {
-                if (document.visibilityState === "visible" && !window.__hauySessaoAlterada) {
-                    fetchOriginal("/api/chat/presenca", { method: "POST", credentials: "include", cache: "no-store", headers: { "Content-Type": "application/json" }, body: "{}" }).catch(() => {});
-                }
-            };
-            enviarPresenca();
-            window.setInterval(enviarPresenca, 15000);
-            document.addEventListener("visibilitychange", enviarPresenca);
             window.addEventListener("pagehide", () => {
                 // A presença expira no servidor após 45 segundos sem heartbeat.
             });
