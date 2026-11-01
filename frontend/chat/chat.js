@@ -74,7 +74,7 @@ function renderLista(){
  const q=p.search.value.trim().toLocaleLowerCase("pt-BR");if(q)dados=dados.filter(x=>(x.nome||x.solicitante?.nome||x.contato?.nome||"").toLocaleLowerCase("pt-BR").includes(q));
  if(!dados.length){p.list.append(el("p","hauy-chat-vazio",state.aba==="conversas"?"Nenhuma conversa por enquanto.":state.aba==="contatos"?"Nenhum contato aguardando resposta.":state.aba==="novos"?"Nenhum usuário disponível para adicionar.":state.aba==="solicitacoes"?"Nenhuma solicitação pendente.":"Nenhum usuário bloqueado."));return;}
  dados.forEach(item=>{
-  const id=state.aba==="solicitacoes"?item.id:state.aba==="bloqueios"?item.usuarioID:item.id;
+  const id=state.aba==="solicitacoes"?item.id:state.aba==="bloqueios"?item.usuarioID:state.aba==="conversas"?item.contato?.id:item.id;
   const nome=state.aba==="solicitacoes"?item.solicitante?.nome:state.aba==="bloqueios"?item.nome:state.aba==="conversas"?item.contato?.nome:item.nome;
   const conversa=state.aba==="conversas"?item:state.conversas.find(x=>String(x.contato?.id)===String(id));
   const naoLidas=Number(conversa?.naoLidas||0);
