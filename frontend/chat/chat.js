@@ -79,7 +79,7 @@ function renderLista(){
   const conversa=state.aba==="conversas"?item:state.conversas.find(x=>String(x.contato?.id)===String(id));
   const naoLidas=Number(conversa?.naoLidas||0);
   const sub=state.aba==="solicitacoes"?"Solicitação de conversa":state.aba==="bloqueios"?"Bloqueado pelo ADM":naoLidas>0?(`${naoLidas} nova${naoLidas===1?"":"s"} mensagem${naoLidas===1?"":"s"}`):state.aba==="conversas"?(item.ultimaMensagem||"Conversa"):"";
-  const b=el("button","hauy-chat-item"+(state.conversa?.id===id?" selecionado":""));b.type="button";b.dataset.id=id;
+  const idSelecionado=state.aba==="conversas"?item.id:id;const b=el("button","hauy-chat-item"+(state.conversa?.id===idSelecionado?" selecionado":""));b.type="button";b.dataset.id=idSelecionado;
   const avatar=el("span","hauy-chat-avatar-wrap");avatar.append(el("span","hauy-chat-avatar",(nome||"U").trim().charAt(0).toUpperCase()));
   if(state.online.has(String(id)))avatar.append(el("span","hauy-chat-online"));
   const t=el("span","hauy-chat-item-texto");t.append(el("strong","",nome||"Usuário"));
