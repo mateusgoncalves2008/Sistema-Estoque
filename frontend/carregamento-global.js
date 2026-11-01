@@ -114,6 +114,11 @@
     }
 
     function iniciarProtecaoDeSessao() {
+        const caminho = window.location.pathname.toLowerCase();
+        const paginaDePainel = ["/aluno/", "/professor/", "/responsavel/", "/secretaria/", "/adm/"]
+            .some((trecho) => caminho.includes(trecho));
+        if (!paginaDePainel) return;
+
         let usuarioEsperado;
 
         try {
@@ -126,6 +131,7 @@
         if (!idEsperado) return;
 
         let verificacaoEmAndamento = false;
+        let sessaoConfirmada = false;
 
         function bloquearPainel() {
             if (window.__hauySessaoAlterada) return;
@@ -188,16 +194,20 @@
                     cache: "no-store",
                     headers: { "Accept": "application/json" },
                 });
-                if (!resposta.ok) {
-                    bloquearPainel();
+                if (resposta.status === 401) {
+                    if (sessaoConfirmada) bloquearPainel();
                     return;
                 }
+                if (!resposta.ok) return;
 
                 const dados = await resposta.json();
                 const idAtual = String(dados?.usuario?.usuarioID || "").trim();
-                if (!dados?.sucesso || !idAtual || idAtual !== idEsperado) {
+                if (!dados?.sucesso || !idAtual) return;
+                if (idAtual !== idEsperado) {
                     bloquearPainel();
+                    return;
                 }
+                sessaoConfirmada = true;
             } catch {
                 // Falhas temporárias de rede não encerram a sessão do painel.
             } finally {
