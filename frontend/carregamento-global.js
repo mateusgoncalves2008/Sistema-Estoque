@@ -65,8 +65,9 @@
 
     window.finalizarCarregamentoGlobal = ocultarTelaCarregamento;
 
+    let fetchOriginal = null;
     if (typeof window.fetch === "function") {
-        const fetchOriginal = window.fetch.bind(window);
+        fetchOriginal = window.fetch.bind(window);
         window.fetch = (...args) => {
             const entrada = args[0];
             const url = typeof entrada === "string" ? entrada : entrada?.url || "";
