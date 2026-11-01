@@ -8,6 +8,7 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const MAX_MENSAGEM = 2000;
 const TIPOS_ADM = new Set(["ADM", "ADMIN", "ADMINISTRADOR"]);
 const digitandoPorConversa = new Map();
+const presencasUsuarios = new Map();
 
 // Polling do chat é permitido, mas limitado para evitar abuso do serviço gratuito.
 router.use(rateLimit({
@@ -596,6 +597,20 @@ router.patch("/chat/conversas/:id/silenciar", exigirUsuarioAtivo, async (req, re
     } catch (e) {
         return responderErro(res, e, "Não foi possível atualizar as notificações da conversa.");
     }
+});
+
+// Presença dos usuários: heartbeat periódico e expiração automática.
+router.post("/chat/presenca", exigirUsuarioAtivo, (req, res) => {
+    const usuarioID = req.chatUser.id;
+    presencasUsuarios.set(usuarioID, Date.now());
+    return res.json({ sucesso: true });
+});
+router.get("/chat/presenca", exigirUsuarioAtivo, (req, res) => {
+    const agora = Date.now();
+    for (const [id, ultimaAtividade] of presencasUsuarios) {
+        if (agora - ultimaAtividade > 45000) presencasUsuarios.delete(id);
+    }
+    return res.json({ sucesso: true, online: [...presencasUsuarios.keys()].filter(id => id !== req.chatUser.id) });
 });
 
 // Estado temporário de digitação. Expira automaticamente após 5 segundos.
