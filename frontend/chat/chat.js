@@ -22,7 +22,14 @@ function criarInterface(){
  const body=el("div","hauy-chat-corpo"), side=el("aside","hauy-chat-lateral"), tabs=el("div","hauy-chat-abas"), search=el("input","hauy-chat-pesquisa"), list=el("div","hauy-chat-lista");
  search.placeholder="Pesquisar"; search.type="search"; side.append(tabs,search,list);
  const conversation=el("section","hauy-chat-conversa"); body.append(side,conversation); panel.append(header,body); area.append(panel);
- const abrir=()=>{panel.classList.add("aberto");abrirChat();};
+ const seletoresSino='button:has(.fa-bell),button:has(.fas.fa-bell),button:has([data-lucide="bell"]),button[aria-label*="aviso" i],button[title*="aviso" i],[role="button"]:has(.fa-bell),[role="button"]:has([data-lucide="bell"])';
+ const atualizarSino=()=>{
+  document.querySelectorAll(seletoresSino).forEach(botao=>{
+   if(panel.classList.contains("aberto")){if(!botao.hasAttribute("data-hauy-sino-display"))botao.setAttribute("data-hauy-sino-display",botao.style.display||"");botao.style.setProperty("display","none","important");}
+   else if(botao.hasAttribute("data-hauy-sino-display")){const display=botao.getAttribute("data-hauy-sino-display");botao.style.removeProperty("display");if(display)botao.style.display=display;botao.removeAttribute("data-hauy-sino-display");}
+  });
+ };
+ const abrir=()=>{panel.classList.add("aberto");atualizarSino();abrirChat();};
  const inserirMenu=()=>{
   const nav=document.querySelector(".sidebar-nav, #nav, #menu, .sidebar nav");
   if(!nav||nav.querySelector("[data-hauy-chat-menu]"))return;
@@ -34,6 +41,9 @@ function criarInterface(){
  inserirMenu();
  const observer=new MutationObserver(inserirMenu);
  observer.observe(document.body,{childList:true,subtree:true});
+ const observadorSino=new MutationObserver(atualizarSino);
+ observadorSino.observe(document.body,{childList:true,subtree:true});
+ atualizarSino();
  document.addEventListener("click",e=>{const menu=e.target.closest("nav button, nav a, .sidebar button[data-page], .sidebar button[data-p], .sidebar button[data-tela]");if(menu&&!menu.hasAttribute("data-hauy-chat-menu")){panel.classList.remove("aberto","expandido");expand.hidden=false;close.hidden=true;}},true);
  tabs.addEventListener("click",e=>{const b=e.target.closest("button[data-aba]");if(!b)return;state.aba=b.dataset.aba;state.conversa=null;state.mensagens=[];render();});
  search.addEventListener("input",()=>renderLista());
