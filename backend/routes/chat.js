@@ -192,6 +192,7 @@ router.get("/chat/configuracao", exigirUsuarioAtivo, async (req, res) => {
         return res.json({
             sucesso: true,
             usuarioID: req.chatUser.id,
+            usuarioNome: req.chatUser.nome,
             modoRestritoADM: Boolean(configuracao.adm_restricted_mode),
             podeAlterar: isAdm(req.chatUser),
         });
