@@ -37,7 +37,7 @@ function criarInterface(){
   if(!nav||nav.querySelector("[data-hauy-chat-menu]"))return;
   const item=el("button","hauy-chat-menu-item");
   item.type="button";item.dataset.hauyChatMenu="true";
-  item.innerHTML='<span class="hauy-chat-menu-icone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg><span class="hauy-chat-menu-contador" hidden></span></span><span>Chat</span>';
+  item.innerHTML='<span class="hauy-chat-menu-icone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 11.7a8.2 8.2 0 0 1-12.1 7.2L3 20l1.2-4.9A8.2 8.2 0 1 1 20.2 11.7Z"/><path d="M9 8.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.8c.1.2.1.4-.1.6l-.6.7c-.2.2-.2.4 0 .7.5.9 1.3 1.6 2.2 2.1.2.1.4.1.6-.1l.8-.9c.2-.2.4-.2.7-.1l1.7.8c.3.1.4.3.4.6 0 .5-.2 1.2-.7 1.6-.5.5-1.2.7-1.9.6-1.1-.2-2.5-.9-3.8-2.1-1.2-1.1-2.1-2.5-2.4-3.5-.3-.9-.1-1.8.4-2.4.2-.2.5-.4.8-.4Z"/></svg><span class="hauy-chat-menu-contador" hidden></span></span><span>Chat</span>';
   item.addEventListener("click",abrir);nav.append(item);
  };
  inserirMenu();
