@@ -3100,3 +3100,38 @@ button, .primary-button, .secondary-button, .refresh, .text-btn { font-size: 13p
     border-color: #e9ddd2 !important;
     box-shadow: 0 5px 18px #3522190a !important;
 }
+
+
+/* Padronização dos menus: sem brilho, hover marrom e seleção laranja. */
+.sidebar-nav .nav-item,
+.sidebar-nav .nav-item:hover,
+.sidebar-nav .nav-item.ativo,
+.sidebar-nav .nav-item.active,
+.sidebar-nav .nav-item.on,
+.sidebar .nav-link,
+.sidebar .menu button,
+.sidebar nav button,
+.sidebar nav a,
+.sidebar .navegacao button,
+.sidebar .navegacao a,
+#menu button,
+#nav button {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
+.sidebar-nav .nav-item:hover:not(.active):not(.ativo):not(.on),
+.sidebar .nav-link:hover:not(.active):not(.ativo):not(.on),
+.sidebar .menu button:hover:not(.active):not(.ativo):not(.on),
+.sidebar nav button:hover:not(.active):not(.ativo):not(.on),
+.sidebar nav a:hover:not(.active):not(.ativo):not(.on),
+.sidebar .navegacao button:hover:not(.active):not(.ativo):not(.on),
+.sidebar .navegacao a:hover:not(.active):not(.ativo):not(.on),
+#menu button:hover:not(.active):not(.ativo):not(.on),
+#nav button:hover:not(.active):not(.ativo):not(.on) {
+    background: #3f3029 !important;
+    color: #fff !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
