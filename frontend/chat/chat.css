@@ -50,10 +50,8 @@
 
 /* Ajustes de dimensionamento do Chat para todos os painéis. */
 .hauy-chat-area:has(> .hauy-chat-painel.aberto) {
-    height: 100vh;
-    height: 100dvh;
-    min-height: 100vh;
-    min-height: 100dvh;
+    min-height: 0;
+    height: 100%;
     overflow: hidden;
 }
 .hauy-chat-painel {
@@ -96,17 +94,15 @@
 
 /* Correção de layout do Chat: painel em viewport e compositor sempre visível. */
 .hauy-chat-painel.aberto {
-    position: fixed !important;
+    position: absolute !important;
     inset: 0 !important;
-    z-index: 100000 !important;
+    z-index: 20 !important;
     display: flex !important;
     flex-direction: column !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    height: 100dvh !important;
+    width: 100% !important;
+    height: 100% !important;
     min-height: 0 !important;
-    max-height: 100vh !important;
-    max-height: 100dvh !important;
+    max-height: 100% !important;
     overflow: hidden !important;
 }
 .hauy-chat-painel.aberto .hauy-chat-corpo {
