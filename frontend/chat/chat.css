@@ -147,7 +147,7 @@
     flex-direction: column !important;
     min-width: 0 !important;
     min-height: 0 !important;
-    height: 100% !important;
+    height: auto !important;
     overflow: hidden !important;
 }
 .hauy-chat-painel.aberto .hauy-chat-mensagens {
