@@ -50,9 +50,14 @@
 
 /* Ajustes de dimensionamento do Chat para todos os painéis. */
 .hauy-chat-area:has(> .hauy-chat-painel.aberto) {
-    min-height: 0;
-    height: 100%;
-    overflow: hidden;
+    position: relative !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    isolation: isolate;
 }
 .hauy-chat-painel {
     min-width: 0;
