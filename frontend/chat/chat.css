@@ -46,3 +46,49 @@
 .hauy-chat-menu-icone svg{width:23px;height:23px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8}
 .hauy-chat-menu-contador{position:absolute;top:-8px;right:-10px;min-width:17px;height:17px;padding:0 4px;border:2px solid #fffdfa;border-radius:999px;background:#bd4a42;color:#fff;font-size:10px;font-weight:800;line-height:13px;text-align:center;box-sizing:border-box}
 .hauy-chat-menu-contador[hidden]{display:none}
+
+
+/* Ajustes de dimensionamento do Chat para todos os painéis. */
+.hauy-chat-area:has(> .hauy-chat-painel.aberto) {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+}
+.hauy-chat-painel {
+    min-width: 0;
+}
+.hauy-chat-corpo {
+    grid-template-columns: 260px minmax(0, 1fr);
+    width: 100%;
+    min-width: 0;
+}
+.hauy-chat-lateral,
+.hauy-chat-conversa {
+    min-width: 0;
+    min-height: 0;
+}
+.hauy-chat-mensagens {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+.hauy-chat-balao {
+    box-sizing: border-box;
+    min-width: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+.hauy-chat-compositor {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    background: #fff;
+}
+.hauy-chat-compositor textarea {
+    min-width: 0;
+    box-sizing: border-box;
+}
