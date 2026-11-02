@@ -37,7 +37,7 @@ function criarInterface(){
   if(!nav||nav.querySelector("[data-hauy-chat-menu]"))return;
   const item=el("button","hauy-chat-menu-item");
   item.type="button";item.dataset.hauyChatMenu="true";
-  item.innerHTML='<span class="hauy-chat-menu-icone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 11.7a8.2 8.2 0 0 1-12.1 7.2L3 20l1.2-4.9A8.2 8.2 0 1 1 20.2 11.7Z"/><path d="M9 8.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.8c.1.2.1.4-.1.6l-.6.7c-.2.2-.2.4 0 .7.5.9 1.3 1.6 2.2 2.1.2.1.4.1.6-.1l.8-.9c.2-.2.4-.2.7-.1l1.7.8c.3.1.4.3.4.6 0 .5-.2 1.2-.7 1.6-.5.5-1.2.7-1.9.6-1.1-.2-2.5-.9-3.8-2.1-1.2-1.1-2.1-2.5-2.4-3.5-.3-.9-.1-1.8.4-2.4.2-.2.5-.4.8-.4Z"/></svg><span class="hauy-chat-menu-contador" hidden></span></span><span>Chat</span>';
+  item.innerHTML='<span class="hauy-chat-menu-icone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 4.5h9.1a3.2 3.2 0 0 1 3.2 3.2v5.1a3.2 3.2 0 0 1-3.2 3.2h-1.1l-3.1 2.5v-2.5H8.2A3.2 3.2 0 0 1 5 12.8V7.7a3.2 3.2 0 0 1 3.2-3.2Z"/><path d="M5.1 8.1H4.7a2.7 2.7 0 0 0-2.7 2.7v5a2.7 2.7 0 0 0 2.7 2.7h1.1l2.7 2.1v-2.1h5.1"/></svg><span class="hauy-chat-menu-contador" hidden></span></span><span>Chat</span>';
   item.addEventListener("click",abrir);nav.append(item);
  };
  inserirMenu();
