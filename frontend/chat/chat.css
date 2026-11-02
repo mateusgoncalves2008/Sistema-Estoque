@@ -92,3 +92,98 @@
     min-width: 0;
     box-sizing: border-box;
 }
+
+
+/* Correção de layout do Chat: painel em viewport e compositor sempre visível. */
+.hauy-chat-painel.aberto {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 100000 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-corpo {
+    display: grid !important;
+    grid-template-columns: minmax(260px, 28%) minmax(0, 1fr) !important;
+    flex: 1 1 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: hidden !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-lateral {
+    display: flex !important;
+    flex-direction: column !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-pesquisa {
+    display: block !important;
+    flex: 0 0 auto !important;
+    width: calc(100% - 24px) !important;
+    max-width: calc(100% - 24px) !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-lista {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: auto !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-conversa {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-mensagens {
+    display: flex !important;
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: auto !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-compositor {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-compositor textarea {
+    display: block !important;
+    flex: 1 1 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-balao {
+    max-width: min(78%, 720px) !important;
+    min-width: 0 !important;
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
+}
+@media (max-width: 620px) {
+    .hauy-chat-painel.aberto .hauy-chat-corpo {
+        grid-template-columns: minmax(112px, 34%) minmax(0, 1fr) !important;
+    }
+    .hauy-chat-painel.aberto .hauy-chat-balao {
+        max-width: 90% !important;
+    }
+}
