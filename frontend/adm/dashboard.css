@@ -1837,3 +1837,38 @@ body.modal-detalhe-atividade-aberto { overflow: hidden; }
     .fechar-detalhe-atividade-admin { width: 34px; height: 34px; }
     .grade-detalhe-atividade-admin { grid-template-columns: minmax(0, 1fr); }
 }
+
+
+/* Padronização dos menus: sem brilho, hover marrom e seleção laranja. */
+.sidebar-nav .nav-item,
+.sidebar-nav .nav-item:hover,
+.sidebar-nav .nav-item.ativo,
+.sidebar-nav .nav-item.active,
+.sidebar-nav .nav-item.on,
+.sidebar .nav-link,
+.sidebar .menu button,
+.sidebar nav button,
+.sidebar nav a,
+.sidebar .navegacao button,
+.sidebar .navegacao a,
+#menu button,
+#nav button {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
+.sidebar-nav .nav-item:hover:not(.active):not(.ativo):not(.on),
+.sidebar .nav-link:hover:not(.active):not(.ativo):not(.on),
+.sidebar .menu button:hover:not(.active):not(.ativo):not(.on),
+.sidebar nav button:hover:not(.active):not(.ativo):not(.on),
+.sidebar nav a:hover:not(.active):not(.ativo):not(.on),
+.sidebar .navegacao button:hover:not(.active):not(.ativo):not(.on),
+.sidebar .navegacao a:hover:not(.active):not(.ativo):not(.on),
+#menu button:hover:not(.active):not(.ativo):not(.on),
+#nav button:hover:not(.active):not(.ativo):not(.on) {
+    background: #3f3029 !important;
+    color: #fff !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
