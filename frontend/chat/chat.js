@@ -31,7 +31,7 @@ function criarInterface(){
    else if(botao.hasAttribute("data-hauy-sino-display")){const display=botao.getAttribute("data-hauy-sino-display");botao.style.removeProperty("display");if(display)botao.style.display=display;botao.removeAttribute("data-hauy-sino-display");}
   });
  };
- const abrir=()=>{panel.classList.add("aberto");atualizarSino();abrirChat();atualizarPresenca();};
+ const abrir=()=>{panel.classList.add("aberto");document.querySelector("[data-hauy-chat-menu]")?.classList.add("ativo");atualizarSino();abrirChat();atualizarPresenca();};
  const inserirMenu=()=>{
   const nav=document.querySelector(".sidebar-nav, #nav, #menu, .sidebar nav");
   if(!nav||nav.querySelector("[data-hauy-chat-menu]"))return;
