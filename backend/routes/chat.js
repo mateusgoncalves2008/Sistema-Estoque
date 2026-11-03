@@ -1,290 +1,246 @@
-const express = require("express");
-const router = express.Router();
-const sheets = require("../database/googleSheets");
-const postgres = require("../database/postgres");
-const rateLimit = require("express-rate-limit");
-
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
-const MAX_MENSAGEM = 2000;
-const TIPOS_ADM = new Set(["ADM", "ADMIN", "ADMINISTRADOR"]);
-const digitandoPorConversa = new Map();
-let presencaTabelaPronta = null;
-let usuariosAtivosCache = { dados: null, atualizadoEm: 0 };
-const CACHE_USUARIOS_ATIVOS_MS = 30000;
-
-// Polling do chat é permitido, mas limitado para evitar abuso do serviço gratuito.
-router.use(rateLimit({
-    windowMs: 60 * 1000,
-    limit: 300,
-    standardHeaders: "draft-8",
-    legacyHeaders: false,
-    message: { sucesso: false, mensagem: "Muitas solicitações ao chat. Aguarde um pouco e tente novamente." },
-}));
-
-function normalizar(valor) {
-    return String(valor ?? "").trim().toUpperCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-
-function texto(valor) {
-    return String(valor ?? "").trim();
-}
-
-function isAdm(usuario) {
-    return TIPOS_ADM.has(normalizar(usuario?.tipoUsuario)) ||
-        TIPOS_ADM.has(normalizar(usuario?.perfil));
-}
-
-function erro(status, mensagem) {
-    const e = new Error(mensagem);
-    e.status = status;
-    return e;
-}
-
-async function carregarUsuariosAtivos() {
-    if (usuariosAtivosCache.dados && Date.now() - usuariosAtivosCache.atualizadoEm < CACHE_USUARIOS_ATIVOS_MS) {
-        return usuariosAtivosCache.dados;
-    }
-    if (!SPREADSHEET_ID) throw erro(503, "Cadastro de usuários indisponível.");
-    const resposta = await sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEET_ID,
-        range: "01_USUARIOS!A2:K",
-    });
-    const usuarios = (resposta.data.values || [])
-        .filter((linha) => normalizar(linha[8]) === "ATIVO" && texto(linha[0]))
-        .map((linha) => ({
-            id: texto(linha[0]),
-            nome: texto(linha[1]),
-            email: texto(linha[2]),
-            tipoUsuario: texto(linha[5]),
-            perfil: texto(linha[6]),
-            setorID: texto(linha[7]),
-            ativo: true,
-        }));
-    usuariosAtivosCache = { dados: usuarios, atualizadoEm: Date.now() };
-    return usuarios;
-}
-
-async function exigirUsuarioAtivo(req, res, next) {
+router.post("/chat/conversas/:id/mensagens", exigirUsuarioAtivo, async (req, res) => {
     try {
-        const id = texto(req.session?.usuario?.id);
-        if (!id) return res.status(401).json({ sucesso: false, mensagem: "Faça login para acessar o chat." });
-
-        const usuarios = await carregarUsuariosAtivos();
-        const usuario = usuarios.find((item) => item.id === id);
-        if (!usuario) {
-            return res.status(403).json({ sucesso: false, mensagem: "Sua conta está inativa ou não está mais cadastrada." });
-        }
-
-        req.chatUser = usuario;
-        next();
-    } catch (e) {
-        console.error("Falha ao validar usuário do chat:", e.message);
-        return res.status(e.status || 500).json({
-            sucesso: false,
-            mensagem: e.status ? e.message : "Não foi possível validar sua conta para o chat.",
-        });
-    }
-}
-
-function exigirAdm(req, res, next) {
-    if (!isAdm(req.chatUser)) {
-        return res.status(403).json({ sucesso: false, mensagem: "Acesso permitido somente ao administrador." });
-    }
-    next();
-}
-
-async function garantirTabelaPresenca() {
-    if (!presencaTabelaPronta) {
-        presencaTabelaPronta = postgres.pool.query(`
-            CREATE TABLE IF NOT EXISTS chat_presence (
-                user_id VARCHAR(100) PRIMARY KEY,
-                last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            )
-        `).catch((e) => {
-            presencaTabelaPronta = null;
-            throw e;
-        });
-    }
-    return presencaTabelaPronta;
-}
-
-async function obterConfiguracao(db = postgres.pool) {
-    const resultado = await db.query(
-        "SELECT adm_restricted_mode FROM chat_settings WHERE id = 1",
-    );
-    return resultado.rows[0] || { adm_restricted_mode: false };
-}
-
-async function existeBloqueio(db, primeiroID, segundoID) {
-    const resultado = await db.query(
-        `SELECT 1
-           FROM chat_blocks
-          WHERE (blocker_id = $1 AND blocked_id = $2)
-             OR (blocker_id = $2 AND blocked_id = $1)
-          LIMIT 1`,
-        [primeiroID, segundoID],
-    );
-    return resultado.rowCount > 0;
-}
-
-async function executarTransacao(callback) {
-    if (!postgres.pool) throw erro(503, "Banco de dados do chat não configurado.");
-    const client = await postgres.pool.connect();
-    try {
-        await client.query("BEGIN");
-        const resultado = await callback(client);
-        await client.query("COMMIT");
-        return resultado;
-    } catch (e) {
-        await client.query("ROLLBACK");
-        throw e;
-    } finally {
-        client.release();
-    }
-}
-
-function responderErro(res, e, mensagem) {
-    if (!e.status) console.error(mensagem, e.message);
-    return res.status(e.status || 500).json({
-        sucesso: false,
-        mensagem: e.status ? e.message : mensagem,
-    });
-}
-
-async function buscarConversaDoUsuario(db, conversaID, usuario) {
-    const resultado = await db.query(
-        `SELECT id, participant_one_id, participant_two_id, created_by,
-                conversation_type, status, created_at, updated_at,
-                last_message_at, accepted_at, rejected_at
-           FROM chat_conversations
-          WHERE id = $1
-            AND (participant_one_id = $2 OR participant_two_id = $2)`,
-        [conversaID, usuario.id],
-    );
-    const conversa = resultado.rows[0];
-    if (!conversa) throw erro(404, "Conversa não encontrada.");
-    const outroID = conversa.participant_one_id === usuario.id
-        ? conversa.participant_two_id
-        : conversa.participant_one_id;
-    if (!isAdm(usuario) && await existeBloqueio(db, usuario.id, outroID)) {
-        throw erro(404, "Conversa não encontrada.");
-    }
-    return { conversa, outroID };
-}
-
-async function inserirMensagem(db, conversaID, remetenteID, corpo) {
-    const inserida = await db.query(
-        `INSERT INTO chat_messages (conversation_id, sender_id, body)
-         VALUES ($1, $2, $3)
-         RETURNING id, conversation_id, sender_id, body, created_at, read_at`,
-        [conversaID, remetenteID, corpo],
-    );
-    await db.query(
-        "UPDATE chat_conversations SET updated_at = NOW(), last_message_at = NOW() WHERE id = $1",
-        [conversaID],
-    );
-    return inserida.rows[0];
-}
-
-// Lista de contatos com solicitação pendente ou conversa ainda sem resposta.
-router.get("/chat/contatos", exigirUsuarioAtivo, async (req, res) => {
-    try {
-        const usuarios = await carregarUsuariosAtivos();
-        const vinculados = await postgres.pool.query(
-            "SELECT c.id, c.participant_one_id, c.participant_two_id, c.status, c.accepted_at, COUNT(DISTINCT m.sender_id)::int AS remetentes FROM chat_conversations c LEFT JOIN chat_messages m ON m.conversation_id = c.id WHERE (c.participant_one_id = $1 OR c.participant_two_id = $1) AND c.status IN ($2, $3) GROUP BY c.id HAVING c.status = $2 OR (c.accepted_at IS NULL AND COUNT(DISTINCT m.sender_id) < 2)",
-            [req.chatUser.id, "PENDING", "ACTIVE"],
-        );
-        const idsContatos = new Set(vinculados.rows.map((item) => item.participant_one_id === req.chatUser.id ? item.participant_two_id : item.participant_one_id));
-        const bloqueios = await postgres.pool.query(
-            "SELECT blocker_id, blocked_id FROM chat_blocks",
-        );
-        const bloqueados = new Set(bloqueios.rows.map((item) => `${item.blocker_id}|${item.blocked_id}`));
-        const contatos = usuarios
-            .filter((item) => idsContatos.has(item.id))
-            .filter((item) => {
-                if (isAdm(req.chatUser)) return true;
-                return !bloqueados.has(`${item.id}|${req.chatUser.id}`) &&
-                    !bloqueados.has(`${req.chatUser.id}|${item.id}`);
-            })
-            .map(({ id, nome, tipoUsuario, perfil }) => ({ id, nome, tipoUsuario, perfil }));
-        return res.json({ sucesso: true, contatos });
-    } catch (e) {
-        return responderErro(res, e, "Não foi possível carregar os contatos.");
-    }
-});
-
-router.get("/chat/novos-contatos", exigirUsuarioAtivo, async (req, res) => {
-    try {
-        const usuarios = await carregarUsuariosAtivos();
-        const existentes = await postgres.pool.query(
-            "SELECT CASE WHEN participant_one_id = $1 THEN participant_two_id ELSE participant_one_id END AS outro_id FROM chat_conversations WHERE (participant_one_id = $1 OR participant_two_id = $1) AND status IN ($2, $3)",
-            [req.chatUser.id, "PENDING", "ACTIVE"],
-        );
-        const idsExistentes = new Set(existentes.rows.map((item) => item.outro_id));
-        const bloqueios = await postgres.pool.query("SELECT blocker_id, blocked_id FROM chat_blocks");
-        const bloqueados = new Set(bloqueios.rows.map((item) => `${item.blocker_id}|${item.blocked_id}`));
-        const contatos = usuarios.filter((item) => item.id !== req.chatUser.id && !idsExistentes.has(item.id))
-            .filter((item) => isAdm(req.chatUser) || (!bloqueados.has(`${item.id}|${req.chatUser.id}`) && !bloqueados.has(`${req.chatUser.id}|${item.id}`)))
-            .map(({ id, nome, tipoUsuario, perfil }) => ({ id, nome, tipoUsuario, perfil }));
-        return res.json({ sucesso: true, contatos });
-    } catch (e) {
-        return responderErro(res, e, "Não foi possível carregar novos contatos.");
-    }
-});
-
-// Configuração é legível por qualquer usuário autenticado para exibir o estado correto do chat.
-router.get("/chat/configuracao", exigirUsuarioAtivo, async (req, res) => {
-    try {
-        const configuracao = await obterConfiguracao();
-        return res.json({
-            sucesso: true,
-            usuarioID: req.chatUser.id,
-            usuarioNome: req.chatUser.nome,
-            modoRestritoADM: Boolean(configuracao.adm_restricted_mode),
-            podeAlterar: isAdm(req.chatUser),
-        });
-    } catch (e) {
-        return responderErro(res, e, "Não foi possível carregar as configurações do chat.");
-    }
-});
-
-router.patch("/chat/configuracao/modo-restrito", exigirUsuarioAtivo, exigirAdm, async (req, res) => {
-    try {
-        if (typeof req.body?.ativo !== "boolean") {
-            throw erro(400, "Informe se o modo restrito deve ficar ativo ou inativo.");
-        }
-        const resultado = await postgres.pool.query(
-            `UPDATE chat_settings
-                SET adm_restricted_mode = $1, updated_by = $2, updated_at = NOW()
-              WHERE id = 1
-              RETURNING adm_restricted_mode`,
-            [req.body.ativo, req.chatUser.id],
-        );
-        return res.json({
-            sucesso: true,
-            modoRestritoADM: Boolean(resultado.rows[0]?.adm_restricted_mode),
-            mensagem: req.body.ativo ? "Modo restrito do ADM ativado." : "Modo restrito do ADM desativado.",
-        });
-    } catch (e) {
-        return responderErro(res, e, "Não foi possível alterar o modo restrito.");
-    }
-});
-
-// Abre uma conversa ou envia a primeira mensagem. No modo restrito, a primeira mensagem ao ADM vira solicitação.
-router.post("/chat/conversas", exigirUsuarioAtivo, async (req, res) => {
-    try {
-        const destinatarioID = texto(req.body?.destinatarioID);
         const corpo = texto(req.body?.mensagem);
-        if (!destinatarioID) throw erro(400, "Escolha para quem deseja enviar a mensagem.");
+        const responderA = req.body?.responderA ? String(req.body.responderA) : null;
         if (!corpo || corpo.length > MAX_MENSAGEM) throw erro(400, "A mensagem deve ter entre 1 e 2.000 caracteres.");
-        if (destinatarioID === req.chatUser.id) throw erro(400, "Você não pode iniciar uma conversa consigo mesmo.");
+        const mensagem = await executarTransacao(async (db) => {
+            const { conversa, outroID } = await buscarConversaDoUsuario(db, req.params.id, req.chatUser);
+            if (await existeBloqueio(db, req.chatUser.id, outroID)) throw erro(404, "Conversa não encontrada.");
+            if (conversa.status !== "ACTIVE") {
+                throw erro(403, "Esta conversa ainda não foi aceita pelo ADM.");
+            }
+            if (responderA) {
+                const original = await db.query("SELECT id FROM chat_messages WHERE id = $1 AND conversation_id = $2", [responderA, conversa.id]);
+                if (!original.rowCount) throw erro(400, "A mensagem escolhida para responder não existe nesta conversa.");
+            }
+            const inserida = await inserirMensagem(db, conversa.id, req.chatUser.id, corpo);
+            if (responderA) await db.query("UPDATE chat_messages SET reply_to_message_id = $1 WHERE id = $2", [responderA, inserida.id]);
+            return inserida;
+        });
+        return res.status(201).json({ sucesso: true, mensagem });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível enviar a mensagem.");
+    }
+});
 
+// Solicitações pendentes são visíveis somente ao ADM destinatário.
+router.get("/chat/solicitacoes", exigirUsuarioAtivo, exigirAdm, async (req, res) => {
+    try {
+        const resultado = await postgres.pool.query(
+            `SELECT r.id, r.conversation_id, r.sender_id, r.requested_at,
+                    c.status AS conversation_status
+               FROM chat_requests r
+               JOIN chat_conversations c ON c.id = r.conversation_id
+              WHERE r.admin_id = $1 AND r.status = 'PENDING'
+              ORDER BY r.requested_at ASC`,
+            [req.chatUser.id],
+        );
         const usuarios = await carregarUsuariosAtivos();
-        const destinatario = usuarios.find((item) => item.id === destinatarioID);
-        if (!destinatario) throw erro(404, "Usuário não encontrado ou inativo.");
+        const porID = new Map(usuarios.map((item) => [item.id, item]));
+        const solicitacoes = resultado.rows.map((item) => {
+            const remetente = porID.get(item.sender_id);
+            return {
+                id: item.id,
+                conversaID: item.conversation_id,
+                solicitante: remetente ? { id: remetente.id, nome: remetente.nome, tipoUsuario: remetente.tipoUsuario, perfil: remetente.perfil } : { id: item.sender_id, nome: "Usuário" },
+                solicitadaEm: item.requested_at,
+            };
+        });
+        return res.json({ sucesso: true, solicitacoes });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível carregar as solicitações.");
+    }
+});
 
+router.patch("/chat/solicitacoes/:id", exigirUsuarioAtivo, exigirAdm, async (req, res) => {
+    try {
+        const acao = normalizar(req.body?.acao);
+        if (!["ACEITAR", "RECUSAR"].includes(acao)) throw erro(400, "Ação inválida. Escolha aceitar ou recusar.");
         const resultado = await executarTransacao(async (db) => {
+            const solicitacao = await db.query(
+                `SELECT id, conversation_id, sender_id, admin_id, status
+                   FROM chat_requests
+                  WHERE id = $1 AND admin_id = $2
+                  FOR UPDATE`,
+                [req.params.id, req.chatUser.id],
+            );
+            const item = solicitacao.rows[0];
+            if (!item || item.status !== "PENDING") throw erro(404, "Solicitação não encontrada ou já respondida.");
+            const novoStatus = acao === "ACEITAR" ? "ACCEPTED" : "REJECTED";
+            await db.query(
+                "UPDATE chat_requests SET status = $1, responded_at = NOW() WHERE id = $2",
+                [novoStatus, item.id],
+            );
+            const statusConversa = acao === "ACEITAR" ? "ACTIVE" : "REJECTED";
+            await db.query(
+                `UPDATE chat_conversations
+                    SET status = $1::VARCHAR,
+                        accepted_at = CASE WHEN $1::VARCHAR = 'ACTIVE' THEN NOW() ELSE accepted_at END,
+                        rejected_at = CASE WHEN $1::VARCHAR = 'REJECTED' THEN NOW() ELSE rejected_at END,
+                        updated_at = NOW()
+                  WHERE id = $2::UUID`,
+                [statusConversa, item.conversation_id],
+            );
+            return { conversaID: item.conversation_id, status: novoStatus };
+        });
+        return res.json({
+            sucesso: true,
+            ...resultado,
+            mensagem: acao === "ACEITAR" ? "Solicitação aceita. A conversa está liberada." : "Solicitação recusada. O usuário poderá tentar novamente no futuro.",
+        });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível responder à solicitação.");
+    }
+});
+
+// Bloqueios permanentes administrados pelo ADM. O histórico continua acessível ao ADM.
+router.get("/chat/bloqueios", exigirUsuarioAtivo, exigirAdm, async (req, res) => {
+    try {
+        const resultado = await postgres.pool.query(
+            `SELECT blocker_id, blocked_id, created_at
+               FROM chat_blocks
+              WHERE blocker_id = $1
+              ORDER BY created_at DESC`,
+            [req.chatUser.id],
+        );
+        const usuarios = await carregarUsuariosAtivos();
+        const porID = new Map(usuarios.map((item) => [item.id, item]));
+        const bloqueios = resultado.rows.map((item) => {
+            const bloqueado = porID.get(item.blocked_id);
+            return {
+                usuarioID: item.blocked_id,
+                nome: bloqueado?.nome || "Usuário",
+                bloqueadoEm: item.created_at,
+            };
+        });
+        return res.json({ sucesso: true, bloqueios });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível carregar os bloqueios.");
+    }
+});
+
+router.post("/chat/bloqueios", exigirUsuarioAtivo, exigirAdm, async (req, res) => {
+    try {
+        const usuarioID = texto(req.body?.usuarioID);
+        if (!usuarioID || usuarioID === req.chatUser.id) throw erro(400, "Informe um usuário válido para bloquear.");
+        const usuarios = await carregarUsuariosAtivos();
+        if (!usuarios.some((item) => item.id === usuarioID)) throw erro(404, "Usuário não encontrado ou inativo.");
+        await executarTransacao(async (db) => {
+            await db.query(
+                `INSERT INTO chat_blocks (blocker_id, blocked_id)
+                 VALUES ($1, $2)
+                 ON CONFLICT (blocker_id, blocked_id) DO NOTHING`,
+                [req.chatUser.id, usuarioID],
+            );
+            await db.query(
+                `UPDATE chat_requests
+                    SET status = 'REJECTED', responded_at = NOW()
+                  WHERE admin_id = $1
+                    AND sender_id = $2
+                    AND status = 'PENDING'`,
+                [req.chatUser.id, usuarioID],
+            );
+            await db.query(
+                `UPDATE chat_conversations
+                    SET status = 'REJECTED', rejected_at = NOW(), updated_at = NOW()
+                  WHERE participant_one_id = $1
+                    AND participant_two_id = $2
+                    AND status = 'PENDING'`,
+                [usuarioID, req.chatUser.id],
+            );
+        });
+        return res.status(201).json({ sucesso: true, mensagem: "Usuário bloqueado no chat." });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível bloquear o usuário.");
+    }
+});
+
+router.patch("/chat/conversas/:id/silenciar", exigirUsuarioAtivo, async (req, res) => {
+    try {
+        if (typeof req.body?.silenciado !== "boolean") throw erro(400, "Informe se as notificações devem ficar silenciadas.");
+        await executarTransacao(async (db) => {
+            const { conversa } = await buscarConversaDoUsuario(db, req.params.id, req.chatUser);
+            await db.query(
+                `INSERT INTO chat_conversation_preferences
+                    (conversation_id, user_id, notifications_muted, updated_at)
+                 VALUES ($1, $2, $3, NOW())
+                 ON CONFLICT (conversation_id, user_id)
+                 DO UPDATE SET notifications_muted = EXCLUDED.notifications_muted,
+                               updated_at = NOW()`,
+                [conversa.id, req.chatUser.id, req.body.silenciado],
+            );
+        });
+        return res.json({ sucesso: true, silenciado: req.body.silenciado });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível atualizar as notificações da conversa.");
+    }
+});
+
+// Presença persistida no PostgreSQL para funcionar mesmo com reinícios ou mais de um processo.
+router.post("/chat/presenca", exigirUsuarioAtivo, async (req, res) => {
+    try {
+        await garantirTabelaPresenca();
+        await postgres.pool.query(
+            `INSERT INTO chat_presence (user_id, last_seen_at)
+             VALUES ($1, NOW())
+             ON CONFLICT (user_id)
+             DO UPDATE SET last_seen_at = NOW()`,
+            [req.chatUser.id],
+        );
+        return res.json({ sucesso: true });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível atualizar sua presença.");
+    }
+});
+router.get("/chat/presenca", exigirUsuarioAtivo, async (req, res) => {
+    try {
+        await garantirTabelaPresenca();
+        const resultado = await postgres.pool.query(
+            `SELECT user_id FROM chat_presence
+              WHERE last_seen_at > NOW() - INTERVAL '3 seconds'
+                AND user_id <> $1`,
+            [req.chatUser.id],
+        );
+        return res.json({ sucesso: true, online: resultado.rows.map((item) => item.user_id) });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível consultar a presença dos usuários.");
+    }
+});
+
+// Estado temporário de digitação. Expira automaticamente após 5 segundos.
+router.post("/chat/conversas/:id/digitando", exigirUsuarioAtivo, async (req, res) => {
+    try {
+        const { conversa, outroID } = await buscarConversaDoUsuario(postgres.pool, req.params.id, req.chatUser);
+        if (conversa.status !== "ACTIVE" || await existeBloqueio(postgres.pool, req.chatUser.id, outroID)) {
+            throw erro(404, "Conversa não encontrada.");
+        }
+        const ativo = req.body?.ativo === true;
+        const agora = Date.now();
+        const atuais = (digitandoPorConversa.get(conversa.id) || []).filter((item) => item.expiraEm > agora && item.usuarioID !== req.chatUser.id);
+        if (ativo) atuais.push({ usuarioID: req.chatUser.id, nome: req.chatUser.nome, expiraEm: agora + 5000 });
+        if (atuais.length) digitandoPorConversa.set(conversa.id, atuais);
+        else digitandoPorConversa.delete(conversa.id);
+        return res.json({ sucesso: true });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível atualizar o indicador de digitação.");
+    }
+});
+
+router.get("/chat/conversas/:id/digitando", exigirUsuarioAtivo, async (req, res) => {
+    try {
+        const { conversa, outroID } = await buscarConversaDoUsuario(postgres.pool, req.params.id, req.chatUser);
+        if (await existeBloqueio(postgres.pool, req.chatUser.id, outroID)) throw erro(404, "Conversa não encontrada.");
+        const agora = Date.now();
+        const atuais = (digitandoPorConversa.get(conversa.id) || []).filter((item) => item.expiraEm > agora && item.usuarioID !== req.chatUser.id);
+        if (atuais.length) digitandoPorConversa.set(conversa.id, atuais);
+        else digitandoPorConversa.delete(conversa.id);
+        return res.json({ sucesso: true, digitando: atuais.length > 0, nome: atuais[0]?.nome || "" });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível consultar quem está digitando.");
+    }
+});
+
+module.exports = router;ultado = await executarTransacao(async (db) => {
             if (await existeBloqueio(db, req.chatUser.id, destinatarioID)) {
                 throw erro(404, "Usuário não encontrado.");
             }
@@ -421,10 +377,15 @@ router.get("/chat/conversas/:id/mensagens", exigirUsuarioAtivo, async (req, res)
                 filtro = "AND id < $2";
             }
             const mensagens = await db.query(
-                `SELECT id, conversation_id, sender_id, body, created_at, read_at
-                   FROM chat_messages
-                  WHERE conversation_id = $1 ${filtro}
-                  ORDER BY id DESC
+                `SELECT m.id, m.conversation_id, m.sender_id, m.body, m.created_at, m.read_at,
+                        m.reply_to_message_id, original.body AS reply_body, original.sender_id AS reply_sender_id,
+                        COALESCE((SELECT json_agg(json_build_object('emoji', r.emoji, 'total', r.total))
+                          FROM (SELECT emoji, COUNT(*)::int AS total
+                                  FROM chat_message_reactions WHERE message_id = m.id GROUP BY emoji) r), '[]'::json) AS reactions
+                   FROM chat_messages m
+                   LEFT JOIN chat_messages original ON original.id = m.reply_to_message_id
+                  WHERE m.conversation_id = $1 ${filtro}
+                  ORDER BY m.id DESC
                   LIMIT ${limite}`,
                 parametros,
             );
@@ -453,6 +414,7 @@ router.get("/chat/conversas/:id/mensagens", exigirUsuarioAtivo, async (req, res)
 router.post("/chat/conversas/:id/mensagens", exigirUsuarioAtivo, async (req, res) => {
     try {
         const corpo = texto(req.body?.mensagem);
+        const responderA = req.body?.responderA ? String(req.body.responderA) : null;
         if (!corpo || corpo.length > MAX_MENSAGEM) throw erro(400, "A mensagem deve ter entre 1 e 2.000 caracteres.");
         const mensagem = await executarTransacao(async (db) => {
             const { conversa, outroID } = await buscarConversaDoUsuario(db, req.params.id, req.chatUser);
@@ -460,7 +422,13 @@ router.post("/chat/conversas/:id/mensagens", exigirUsuarioAtivo, async (req, res
             if (conversa.status !== "ACTIVE") {
                 throw erro(403, "Esta conversa ainda não foi aceita pelo ADM.");
             }
-            return inserirMensagem(db, conversa.id, req.chatUser.id, corpo);
+            if (responderA) {
+                const original = await db.query("SELECT id FROM chat_messages WHERE id = $1 AND conversation_id = $2", [responderA, conversa.id]);
+                if (!original.rowCount) throw erro(400, "A mensagem escolhida para responder não existe nesta conversa.");
+            }
+            const inserida = await inserirMensagem(db, conversa.id, req.chatUser.id, corpo);
+            if (responderA) await db.query("UPDATE chat_messages SET reply_to_message_id = $1 WHERE id = $2", [responderA, inserida.id]);
+            return inserida;
         });
         return res.status(201).json({ sucesso: true, mensagem });
     } catch (e) {
