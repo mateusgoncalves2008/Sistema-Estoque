@@ -245,5 +245,5 @@
 
 /* Aviso discreto quando a mensagem atinge o limite de caracteres. */
 .hauy-chat-compositor{position:relative}
-.hauy-chat-aviso-limite{position:absolute;left:50%;bottom:calc(100% + 30px);z-index:5;padding:10px 16px;border-radius:8px;background:#c95730;color:#fff;font-size:14px;font-weight:600;line-height:1.35;box-shadow:0 2px 8px rgba(53,34,25,.16);opacity:0;visibility:hidden;transform:translate(-50%,4px);transition:opacity .15s ease,transform .15s ease,visibility .15s ease;pointer-events:none;white-space:nowrap}
+.hauy-chat-aviso-limite{position:absolute;left:50%;bottom:calc(100% + 30px);z-index:5;padding:10px 16px;border-radius:8px;background:#352219;color:#fff;font-size:14px;font-weight:600;line-height:1.35;box-shadow:0 2px 8px rgba(53,34,25,.16);opacity:0;visibility:hidden;transform:translate(-50%,4px);transition:opacity .15s ease,transform .15s ease,visibility .15s ease;pointer-events:none;white-space:nowrap}
 .hauy-chat-aviso-limite.visivel{opacity:1;visibility:visible;transform:translate(-50%,0)}
