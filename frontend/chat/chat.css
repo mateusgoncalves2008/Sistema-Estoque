@@ -189,3 +189,49 @@
         max-width: 90% !important;
     }
 }
+
+
+/* Avatares e balões das mensagens. */
+.hauy-chat-mensagem-linha {
+    display: flex;
+    align-items: flex-end;
+    align-self: flex-start;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+.hauy-chat-mensagem-linha.propria {
+    flex-direction: row-reverse;
+    align-self: flex-end;
+}
+.hauy-chat-mensagem-avatar {
+    display: grid;
+    place-items: center;
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #e6d8cc;
+    color: #573b2c;
+    font-size: 12px;
+    font-weight: 700;
+}
+.hauy-chat-mensagem-linha.propria .hauy-chat-mensagem-avatar {
+    background: #f4eee7;
+    color: #8a786b;
+}
+.hauy-chat-mensagem-linha .hauy-chat-balao {
+    max-width: min(78%, 720px) !important;
+    margin: 0;
+}
+@media (max-width: 620px) {
+    .hauy-chat-mensagem-avatar {
+        flex-basis: 30px;
+        width: 30px;
+        height: 30px;
+        font-size: 11px;
+    }
+    .hauy-chat-mensagem-linha .hauy-chat-balao {
+        max-width: 90% !important;
+    }
+}
