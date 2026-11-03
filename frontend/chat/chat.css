@@ -221,8 +221,14 @@
     color: #8a786b;
 }
 .hauy-chat-mensagem-linha .hauy-chat-balao {
-    max-width: min(78%, 720px) !important;
+    flex: 0 1 auto;
+    width: fit-content;
+    max-width: min(calc(78% - 42px), 720px) !important;
+    min-width: 0;
     margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: normal;
 }
 @media (max-width: 620px) {
     .hauy-chat-mensagem-avatar {
