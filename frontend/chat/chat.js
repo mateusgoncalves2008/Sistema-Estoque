@@ -51,7 +51,7 @@ function criarInterface(){
  search.addEventListener("input",()=>renderLista());
  list.addEventListener("click",e=>{const b=e.target.closest("button[data-id]");if(!b)return;if(state.aba==="novos")iniciarConversa(b.dataset.id);else if(state.aba==="contatos")selecionarConversaPorContato(b.dataset.id);else if(state.aba==="solicitacoes")responderSolicitacao(b.dataset.id,e.target.dataset.acao);else if(state.aba==="bloqueios")return;else selecionarConversa(b.dataset.id);});
  conversation.addEventListener("click",e=>{const b=e.target.closest("[data-acao]");if(!b)return;if(b.dataset.acao==="enviar")enviarMensagem();if(b.dataset.acao==="silenciar")silenciar();if(b.dataset.acao==="bloquear")bloquear();});
- conversation.addEventListener("input",e=>{if(e.target.matches("textarea")&&state.conversa?.status==="ACTIVE")avisarDigitando(true);});
+ conversation.addEventListener("input",e=>{if(e.target.matches("textarea")){ajustarAlturaCampo(e.target);if(state.conversa?.status==="ACTIVE")avisarDigitando(true);}});
  conversation.addEventListener("keydown",e=>{if(e.target.matches("textarea")&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();enviarMensagem();}});
  panel._parts={tabs,search,list,conversation,addContact};
 }
@@ -97,6 +97,7 @@ function renderLista(){
   p.list.append(b);
  });
 }
+function ajustarAlturaCampo(campo){campo.style.height="auto";campo.style.height=campo.scrollHeight+"px";campo.style.overflowY="hidden";}
 function renderConversa(){
  const c=document.querySelector(".hauy-chat-painel")._parts.conversation;c.replaceChildren();
  if(state.aba==="novos"){c.append(el("p","hauy-chat-vazio","Escolha uma pessoa na lista para adicionar aos seus contatos."));return;}
@@ -145,7 +146,7 @@ async function atualizarChatEmSegundoPlano(){
    const novaArea=document.querySelector(".hauy-chat-painel")?._parts.conversation;
    const novaCaixa=novaArea?.querySelector(".hauy-chat-mensagens");
    if(pertoDoFim&&novaCaixa)novaCaixa.scrollTop=novaCaixa.scrollHeight;
-   const textarea=novaArea?.querySelector("textarea");if(textarea&&rascunho){textarea.value=rascunho;textarea.focus();}
+   const textarea=novaArea?.querySelector("textarea");if(textarea&&rascunho){textarea.value=rascunho;ajustarAlturaCampo(textarea);textarea.focus();}
   }
  }catch{}
 }
