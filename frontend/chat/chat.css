@@ -247,3 +247,31 @@
 .hauy-chat-compositor{position:relative}
 .hauy-chat-aviso-limite{position:absolute;left:50%;bottom:calc(100% + 30px);z-index:5;padding:10px 16px;border-radius:8px;background:#352219;color:#fff;font-size:14px;font-weight:600;line-height:1.35;box-shadow:0 2px 8px rgba(53,34,25,.16);opacity:0;visibility:hidden;transform:translate(-50%,4px);transition:opacity .15s ease,transform .15s ease,visibility .15s ease;pointer-events:none;white-space:nowrap}
 .hauy-chat-aviso-limite.visivel{opacity:1;visibility:visible;transform:translate(-50%,0)}
+
+.hauy-chat-mensagem-conteudo{position:relative;display:flex;flex-direction:column;gap:4px;min-width:0;max-width:calc(100% - 42px)}
+.hauy-chat-mensagem-linha.propria .hauy-chat-mensagem-conteudo{align-items:flex-end}
+.hauy-chat-acoes-mensagem{display:flex;align-items:center;gap:5px;position:relative;opacity:0;transition:opacity .15s ease}
+.hauy-chat-mensagem-linha:hover .hauy-chat-acoes-mensagem,.hauy-chat-acoes-mensagem:focus-within{opacity:1}
+.hauy-chat-icone-acao{position:relative;display:grid;place-items:center;width:27px;height:27px;padding:0;border:0;border-radius:50%;background:transparent;color:#79685d;font-size:19px;cursor:pointer}
+.hauy-chat-icone-acao:hover{background:#f4eee7;color:#352219}
+.hauy-chat-botao-reagir svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hauy-chat-botao-reagir svg .olho{fill:currentColor;stroke:none}
+.hauy-chat-tooltip-reagir{position:absolute;left:50%;top:calc(100% + 9px);z-index:10;transform:translateX(-50%) translateY(-3px);padding:6px 10px;border-radius:7px;background:#352219;color:#fff;font-size:11px;font-weight:600;white-space:nowrap;opacity:0;visibility:hidden;transition:opacity .15s ease,transform .15s ease}
+.hauy-chat-tooltip-reagir:before{content:"";position:absolute;left:50%;top:-5px;width:9px;height:9px;background:#352219;transform:translateX(-50%) rotate(45deg);border-radius:2px}
+.hauy-chat-botao-reagir:hover .hauy-chat-tooltip-reagir{opacity:1;visibility:visible;transform:translateX(-50%)}
+.hauy-chat-menu-mensagem{display:none;position:absolute;right:0;top:calc(100% + 5px);z-index:20;min-width:112px;padding:5px;background:#fff;border:1px solid #e6d8cc;border-radius:9px;box-shadow:0 5px 18px rgba(53,34,25,.14)}
+.hauy-chat-menu-mensagem.aberto{display:block}
+.hauy-chat-item-menu{width:100%;padding:8px 10px;border:0;border-radius:6px;background:transparent;color:#352219;text-align:left;font-size:12px;cursor:pointer}
+.hauy-chat-item-menu:hover{background:#f4eee7}
+.hauy-chat-seletor-reacoes{display:none;position:absolute;right:0;top:calc(100% + 7px);z-index:22;grid-template-columns:repeat(7,auto);gap:3px;padding:7px;background:#fff;border:1px solid #e6d8cc;border-radius:20px;box-shadow:0 5px 20px rgba(53,34,25,.16)}
+.hauy-chat-seletor-reacoes.aberto{display:grid}
+.hauy-chat-seletor-reacoes button{width:31px;height:31px;border:0;border-radius:50%;background:transparent;font-size:20px;cursor:pointer}
+.hauy-chat-seletor-reacoes button:hover{background:#f4eee7}
+.hauy-chat-seletor-reacoes .hauy-chat-mais-emojis{font-size:22px;color:#352219;background:#f4eee7}
+.hauy-chat-reacoes{display:flex;gap:4px;flex-wrap:wrap}
+.hauy-chat-reacao{border:1px solid #e6d8cc;border-radius:999px;background:#fffdfa;padding:3px 7px;font-size:11px;cursor:pointer}
+.hauy-chat-resposta-citacao,.hauy-chat-responder-preview{display:flex;flex-direction:column;gap:2px;padding:6px 9px;border-left:3px solid #c95730;border-radius:5px;background:#f4eee7;color:#352219;font-size:11px}
+.hauy-chat-resposta-citacao span,.hauy-chat-responder-preview span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px}
+.hauy-chat-responder-preview{position:relative;flex:1 0 100%;padding-right:35px}
+.hauy-chat-cancelar-resposta{position:absolute;right:7px;top:6px;border:0;background:transparent;color:#352219;font-size:20px;cursor:pointer}
+@media(max-width:620px){.hauy-chat-acoes-mensagem{opacity:1}.hauy-chat-seletor-reacoes{grid-template-columns:repeat(4,auto)}}
