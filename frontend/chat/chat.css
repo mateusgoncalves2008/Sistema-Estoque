@@ -248,9 +248,13 @@
 .hauy-chat-aviso-limite{position:absolute;left:50%;bottom:calc(100% + 30px);z-index:5;padding:10px 16px;border-radius:8px;background:#352219;color:#fff;font-size:14px;font-weight:600;line-height:1.35;box-shadow:0 2px 8px rgba(53,34,25,.16);opacity:0;visibility:hidden;transform:translate(-50%,4px);transition:opacity .15s ease,transform .15s ease,visibility .15s ease;pointer-events:none;white-space:nowrap}
 .hauy-chat-aviso-limite.visivel{opacity:1;visibility:visible;transform:translate(-50%,0)}
 
-.hauy-chat-mensagem-conteudo{position:relative;display:flex;flex-direction:column;gap:4px;min-width:0;max-width:calc(100% - 42px)}
+.hauy-chat-mensagem-conteudo{position:relative;display:flex;flex:1 1 0;flex-direction:column;gap:4px;min-width:0;max-width:calc(100% - 42px);width:0;overflow:visible}
 .hauy-chat-mensagem-linha.propria .hauy-chat-mensagem-conteudo{align-items:flex-end}
-.hauy-chat-acoes-mensagem{display:flex;align-items:center;gap:5px;position:relative;opacity:0;transition:opacity .15s ease}
+.hauy-chat-acoes-mensagem{display:flex;align-items:center;gap:5px;position:absolute;right:0;top:0;z-index:4;opacity:0;transition:opacity .15s ease}
+.hauy-chat-mensagem-linha.propria .hauy-chat-acoes-mensagem{right:auto;left:0}
+.hauy-chat-mensagem-conteudo>.hauy-chat-balao{max-width:calc(100% - 105px)!important}
+.hauy-chat-mensagem-linha.propria .hauy-chat-mensagem-conteudo>.hauy-chat-balao{align-self:flex-end}
+.hauy-chat-mensagem-conteudo>.hauy-chat-reacoes{max-width:calc(100% - 105px)}
 .hauy-chat-mensagem-linha:hover .hauy-chat-acoes-mensagem,.hauy-chat-acoes-mensagem:focus-within{opacity:1}
 .hauy-chat-icone-acao{position:relative;display:grid;place-items:center;width:27px;height:27px;padding:0;border:0;border-radius:50%;background:transparent;color:#79685d;font-size:19px;cursor:pointer}
 .hauy-chat-icone-acao:hover{background:#f4eee7;color:#352219}
