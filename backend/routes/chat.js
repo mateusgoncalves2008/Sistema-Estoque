@@ -24,6 +24,28 @@ router.post("/chat/conversas/:id/mensagens", exigirUsuarioAtivo, async (req, res
 });
 
 // Solicitações pendentes são visíveis somente ao ADM destinatário.
+
+router.post("/chat/mensagens/:id/reacoes", exigirUsuarioAtivo, async (req, res) => {
+    try {
+        const emoji = texto(req.body?.emoji);
+        if (!emoji || [...emoji].length > 8) throw erro(400, "Reação inválida.");
+        await executarTransacao(async (db) => {
+            const mensagem = await db.query(
+                "SELECT m.id FROM chat_messages m JOIN chat_conversations c ON c.id = m.conversation_id WHERE m.id = $1 AND (c.participant_one_id = $2 OR c.participant_two_id = $2) AND c.status = 'ACTIVE'",
+                [req.params.id, req.chatUser.id],
+            );
+            if (!mensagem.rowCount) throw erro(404, "Mensagem não encontrada.");
+            const existente = await db.query("SELECT emoji FROM chat_message_reactions WHERE message_id = $1 AND user_id = $2", [req.params.id, req.chatUser.id]);
+            if (existente.rows[0]?.emoji === emoji) {
+                await db.query("DELETE FROM chat_message_reactions WHERE message_id = $1 AND user_id = $2", [req.params.id, req.chatUser.id]);
+            } else {
+                await db.query("INSERT INTO chat_message_reactions (message_id, user_id, emoji) VALUES ($1, $2, $3) ON CONFLICT (message_id, user_id) DO UPDATE SET emoji = EXCLUDED.emoji, created_at = NOW()", [req.params.id, req.chatUser.id, emoji]);
+            }
+        });
+        return res.json({ sucesso: true });
+    } catch (e) { return responderErro(res, e, "Não foi possível registrar a reação."); }
+});
+
 router.get("/chat/solicitacoes", exigirUsuarioAtivo, exigirAdm, async (req, res) => {
     try {
         const resultado = await postgres.pool.query(
