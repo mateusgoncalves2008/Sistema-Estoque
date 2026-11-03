@@ -283,3 +283,37 @@
 .hauy-chat-responder-preview{position:relative;flex:1 0 100%;padding-right:35px}
 .hauy-chat-cancelar-resposta{position:absolute;right:7px;top:6px;border:0;background:transparent;color:#352219;font-size:20px;cursor:pointer}
 @media(max-width:620px){.hauy-chat-acoes-mensagem{opacity:1}.hauy-chat-seletor-reacoes{grid-template-columns:repeat(4,auto)}}
+
+
+/* Ações posicionadas junto ao balão, sem ocupar a largura da conversa. */
+.hauy-chat-mensagem-conteudo {
+    flex: 0 1 auto !important;
+    width: fit-content !important;
+    max-width: calc(100% - 42px) !important;
+}
+.hauy-chat-mensagem-conteudo > .hauy-chat-balao {
+    max-width: min(78vw, 620px) !important;
+}
+.hauy-chat-mensagem-linha.propria .hauy-chat-mensagem-conteudo > .hauy-chat-balao {
+    align-self: flex-end;
+}
+.hauy-chat-acoes-mensagem {
+    right: -96px !important;
+    left: auto !important;
+    top: 0;
+}
+.hauy-chat-mensagem-linha.propria .hauy-chat-acoes-mensagem {
+    right: auto !important;
+    left: -96px !important;
+}
+@media (max-width: 620px) {
+    .hauy-chat-acoes-mensagem {
+        right: -88px !important;
+    }
+    .hauy-chat-mensagem-linha.propria .hauy-chat-acoes-mensagem {
+        left: -88px !important;
+    }
+    .hauy-chat-mensagem-conteudo > .hauy-chat-balao {
+        max-width: min(68vw, 420px) !important;
+    }
+}
