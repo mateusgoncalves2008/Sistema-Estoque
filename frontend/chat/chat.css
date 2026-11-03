@@ -113,6 +113,7 @@
 .hauy-chat-painel.aberto .hauy-chat-corpo {
     display: grid !important;
     grid-template-columns: minmax(260px, 28%) minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
     flex: 1 1 0 !important;
     width: 100% !important;
     min-width: 0 !important;
