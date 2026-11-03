@@ -51,7 +51,7 @@ function criarInterface(){
  search.addEventListener("input",()=>renderLista());
  list.addEventListener("click",e=>{const b=e.target.closest("button[data-id]");if(!b)return;if(state.aba==="novos")iniciarConversa(b.dataset.id);else if(state.aba==="contatos")selecionarConversaPorContato(b.dataset.id);else if(state.aba==="solicitacoes")responderSolicitacao(b.dataset.id,e.target.dataset.acao);else if(state.aba==="bloqueios")return;else selecionarConversa(b.dataset.id);});
  conversation.addEventListener("click",e=>{const b=e.target.closest("[data-acao]");if(!b)return;if(b.dataset.acao==="enviar")enviarMensagem();if(b.dataset.acao==="silenciar")silenciar();if(b.dataset.acao==="bloquear")bloquear();});
- conversation.addEventListener("input",e=>{if(e.target.matches("textarea")){ajustarAlturaCampo(e.target);if(state.conversa?.status==="ACTIVE")avisarDigitando(true);}});
+ conversation.addEventListener("input",e=>{if(e.target.matches("textarea")){ajustarAlturaCampo(e.target);if(e.target.value.length>=500)mostrarAvisoMensagemLonga(e.target);if(state.conversa?.status==="ACTIVE")avisarDigitando(true);}});
  conversation.addEventListener("keydown",e=>{if(e.target.matches("textarea")&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();enviarMensagem();}});
  panel._parts={tabs,search,list,conversation,addContact};
 }
@@ -97,6 +97,7 @@ function renderLista(){
   p.list.append(b);
  });
 }
+function mostrarAvisoMensagemLonga(campo){const form=campo.closest(".hauy-chat-compositor");if(!form)return;let aviso=form.querySelector(".hauy-chat-aviso-limite");if(!aviso){aviso=el("div","hauy-chat-aviso-limite","Sua mensagem é muito longa");form.append(aviso);}aviso.classList.add("visivel");if(aviso._timer)clearTimeout(aviso._timer);aviso._timer=setTimeout(()=>aviso.classList.remove("visivel"),3000);}
 function ajustarAlturaCampo(campo){campo.style.height="auto";campo.style.height=campo.scrollHeight+"px";campo.style.overflowY="hidden";}
 function renderConversa(){
  const c=document.querySelector(".hauy-chat-painel")._parts.conversation;c.replaceChildren();
@@ -113,7 +114,7 @@ function renderConversa(){
  const messages=el("div","hauy-chat-mensagens");const usuarioAtualID=String(state.config.usuarioID??window.__hauyChatUsuarioID??"").trim();const nomeAtual=state.config.usuarioNome||"Você";const nomeContato=state.conversa.contato?.nome||"Outro usuário";state.mensagens.forEach(m=>{const remetenteID=String(m.sender_id??"").trim();const propria=Boolean(usuarioAtualID)&&remetenteID===usuarioAtualID;const nomeRemetente=propria?nomeAtual:nomeContato;const linha=el("div","hauy-chat-mensagem-linha"+(propria?" propria":""));linha.dataset.remetente=propria?"voce":"outro";const avatar=el("span","hauy-chat-mensagem-avatar",(nomeRemetente||"U").trim().charAt(0).toUpperCase());avatar.setAttribute("aria-hidden","true");const b=el("div","hauy-chat-balao"+(propria?" proprio":""));b.append(document.createTextNode(m.body));linha.append(avatar,b);messages.append(linha);});if(!state.mensagens.length)messages.append(el("p","hauy-chat-vazio","Envie a primeira mensagem desta conversa."));
  c.append(messages);
  const digitando=el("div","hauy-chat-digitando");digitando.hidden=true;digitando.append(el("span","hauy-chat-pontos","•••"),el("span","hauy-chat-digitando-texto","Está digitando"));c.append(digitando);
- if(state.conversa.status==="ACTIVE"){const form=el("form","hauy-chat-compositor"),area=el("textarea");area.maxLength=2000;area.rows=1;area.placeholder="Escreva uma mensagem...";const send=el("button","hauy-chat-btn","Enviar");send.type="button";send.dataset.acao="enviar";form.append(area,send);c.append(form);messages.scrollTop=messages.scrollHeight;}
+ if(state.conversa.status==="ACTIVE"){const form=el("form","hauy-chat-compositor"),area=el("textarea");area.maxLength=500;area.rows=1;area.placeholder="Escreva uma mensagem...";const send=el("button","hauy-chat-btn","Enviar");send.type="button";send.dataset.acao="enviar";form.append(area,send);c.append(form);messages.scrollTop=messages.scrollHeight;}
  else c.append(el("div","hauy-chat-alerta",state.conversa.status==="PENDING"?"Sua solicitação foi enviada. Aguarde o ADM aceitar.":"Esta solicitação foi recusada. Você pode iniciar uma nova solicitação pelo contato do ADM."));
 }
 async function selecionarConversaPorContato(id){const item=state.conversas.find(x=>x.contato?.id===id);if(item)await selecionarConversa(item.id);}
