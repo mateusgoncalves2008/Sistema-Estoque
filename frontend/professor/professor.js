@@ -617,20 +617,26 @@ function atualizarTabelas() {
 
     // LISTA DE RESERVAS PENDENTES
     if (listaReservas) {
-        const reservasPendentes = listaReservasDados.filter(
-            (reserva) => String(reserva.status || "").trim().toUpperCase() === "PENDENTE",
+        const reservasVisiveis = listaReservasDados.filter((reserva) =>
+            ["PENDENTE", "EXPIRADO", "EXPIRADA"].includes(
+                String(reserva.status || "").trim().toUpperCase(),
+            ),
         );
 
-        listaReservas.innerHTML = reservasPendentes.length
-            ? reservasPendentes.map((reserva) => {
+        listaReservas.innerHTML = reservasVisiveis.length
+            ? reservasVisiveis.map((reserva) => {
                 const situacao = situacaoReservaProfessor(reserva);
+                const statusNormalizado = String(reserva.status || "").trim().toUpperCase();
+                const textoStatus = ["EXPIRADO", "EXPIRADA"].includes(statusNormalizado)
+                    ? "Expirada"
+                    : situacao.texto;
                 return `
                     <tr>
                         <td>${escapeHtml(reserva.tipo || "Item")}</td>
                         <td>${escapeHtml(reserva.nome || "Item não identificado")}</td>
                         <td>${escapeHtml(reserva.dataInicio || "—")}</td>
                         <td>${escapeHtml(reserva.dataFim || "—")}</td>
-                        <td><span class="status ${situacao.classe}">${escapeHtml(situacao.texto)}</span></td>
+                        <td><span class="status ${statusNormalizado.startsWith("EXPIR") ? "expirada" : situacao.classe}">${escapeHtml(textoStatus)}</span></td>
                     </tr>
                 `;
             }).join("")
