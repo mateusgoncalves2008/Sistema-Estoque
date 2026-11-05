@@ -271,6 +271,75 @@ router.patch("/chat/configuracao/modo-restrito", exigirUsuarioAtivo, exigirAdm, 
     }
 });
 
+// Adiciona um contato sem exigir o envio de uma primeira mensagem.
+router.post("/chat/contatos", exigirUsuarioAtivo, async (req, res) => {
+    try {
+        const destinatarioID = texto(req.body?.destinatarioID);
+        if (!destinatarioID) throw erro(400, "Escolha quem deseja adicionar aos seus contatos.");
+        if (destinatarioID === req.chatUser.id) throw erro(400, "Você não pode adicionar a si mesmo.");
+
+        const usuarios = await carregarUsuariosAtivos();
+        const destinatario = usuarios.find((item) => item.id === destinatarioID);
+        if (!destinatario) throw erro(404, "Usuário não encontrado ou inativo.");
+
+        const resultado = await executarTransacao(async (db) => {
+            if (await existeBloqueio(db, req.chatUser.id, destinatarioID)) {
+                throw erro(404, "Usuário não encontrado.");
+            }
+
+            const existente = await db.query(
+                `SELECT id, status
+                   FROM chat_conversations
+                  WHERE LEAST(participant_one_id, participant_two_id) = LEAST($1, $2)
+                    AND GREATEST(participant_one_id, participant_two_id) = GREATEST($1, $2)
+                    AND status IN ('PENDING', 'ACTIVE')
+                  LIMIT 1
+                  FOR UPDATE`,
+                [req.chatUser.id, destinatarioID],
+            );
+            if (existente.rows[0]) {
+                throw erro(409, "Esse usuário já está nos seus contatos.");
+            }
+
+            const configuracao = await obterConfiguracao(db);
+            const solicitacaoADM = !isAdm(req.chatUser) &&
+                isAdm(destinatario) &&
+                Boolean(configuracao.adm_restricted_mode);
+            const status = solicitacaoADM ? "PENDING" : "ACTIVE";
+            const tipo = solicitacaoADM ? "ADM_REQUEST" : "DIRECT";
+            const criada = await db.query(
+                `INSERT INTO chat_conversations
+                    (participant_one_id, participant_two_id, created_by, conversation_type, status)
+                 VALUES ($1, $2, $1, $3, $4)
+                 RETURNING id, status, conversation_type`,
+                [req.chatUser.id, destinatarioID, tipo, status],
+            );
+            const conversa = criada.rows[0];
+
+            if (solicitacaoADM) {
+                await db.query(
+                    `INSERT INTO chat_requests (conversation_id, sender_id, admin_id, status)
+                     VALUES ($1, $2, $3, 'PENDING')`,
+                    [conversa.id, req.chatUser.id, destinatarioID],
+                );
+            }
+            return { conversaID: conversa.id, status: conversa.status, solicitacao: solicitacaoADM };
+        });
+
+        return res.status(201).json({
+            sucesso: true,
+            conversaID: resultado.conversaID,
+            status: resultado.status,
+            solicitacao: resultado.solicitacao,
+            mensagem: resultado.solicitacao
+                ? "Solicitação enviada ao ADM."
+                : "Contato adicionado com sucesso.",
+        });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível adicionar o contato.");
+    }
+});
+
 // Abre uma conversa ou envia a primeira mensagem. No modo restrito, a primeira mensagem ao ADM vira solicitação.
 router.post("/chat/conversas", exigirUsuarioAtivo, async (req, res) => {
     try {
