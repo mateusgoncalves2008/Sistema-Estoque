@@ -350,7 +350,7 @@
     min-width: 0 !important;
 }
 .hauy-chat-mensagem-linha.propria .hauy-chat-balao-linha {
-    flex-direction: row-reverse !important;
+    flex-direction: row !important;
 }
 .hauy-chat-balao-linha > .hauy-chat-balao {
     flex: 0 1 auto !important;
