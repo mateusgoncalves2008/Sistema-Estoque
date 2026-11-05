@@ -133,9 +133,10 @@ function carregarCalendarioProfessor(silencioso = false) {
         )
         .then((dados) => {
             const assinaturaAnterior = JSON.stringify(eventosCalendarioProfessor);
+            const primeiraCarga = !calendarioProfessorCarregado;
             eventosCalendarioProfessor = dados.eventos || [];
             calendarioProfessorCarregado = true;
-            if (!silencioso || assinaturaAnterior !== JSON.stringify(eventosCalendarioProfessor)) {
+            if (!silencioso || primeiraCarga || assinaturaAnterior !== JSON.stringify(eventosCalendarioProfessor)) {
                 renderizarCalendarioProfessor();
             }
             return true;
@@ -721,10 +722,11 @@ async function carregarReservasProfessor(silencioso = false) {
             throw new Error(resultado.mensagem || "Erro ao carregar reservas.");
         }
 
+        const primeiraCarga = !reservasProfessorCarregadas;
         reservas = Array.isArray(resultado.reservas) ? resultado.reservas : [];
         reservasProfessorCarregadas = true;
 
-        if (!silencioso) atualizarTabelas();
+        if (!silencioso || primeiraCarga) atualizarTabelas();
 
         return true;
     } catch (erro) {
@@ -758,9 +760,10 @@ async function carregarEmprestimosProfessor(silencioso = false) {
         }
 
         const assinaturaAnterior = JSON.stringify(emprestimos);
+        const primeiraCarga = !emprestimosProfessorCarregados;
         emprestimos = resultado.emprestimos || [];
         emprestimosProfessorCarregados = true;
-        if (!silencioso || assinaturaAnterior !== JSON.stringify(emprestimos)) {
+        if (!silencioso || primeiraCarga || assinaturaAnterior !== JSON.stringify(emprestimos)) {
             atualizarTabelaEmprestimos();
         }
         return true;
@@ -888,11 +891,12 @@ async function carregarHistoricoProfessor(silencioso = false) {
         if (!respostasHistorico[0].ok || !resultado.sucesso) throw new Error(resultado.mensagem || "Erro ao carregar empréstimos do histórico.");
         if (!respostasHistorico[1].ok || !resultadoReservas.sucesso) throw new Error(resultadoReservas.mensagem || "Erro ao carregar reservas do histórico.");
         const assinaturaAnterior = JSON.stringify(historicoProfessor);
+        const primeiraCarga = !historicoProfessorCarregado;
         const listaEmprestimosHistorico = Array.isArray(resultado.emprestimos) ? resultado.emprestimos.map((registro) => ({ ...registro, registroTipo: "emprestimos" })) : [];
         const listaReservasHistorico = Array.isArray(resultadoReservas.reservas) ? resultadoReservas.reservas.map((registro) => ({ ...registro, registroTipo: "reservas" })) : [];
         historicoProfessor = [...listaReservasHistorico, ...listaEmprestimosHistorico];
         historicoProfessorCarregado = true;
-        if (silencioso && assinaturaAnterior === JSON.stringify(historicoProfessor)) return true;
+        if (silencioso && !primeiraCarga && assinaturaAnterior === JSON.stringify(historicoProfessor)) return true;
 
         const escapar = (valor) =>
             String(valor ?? "").replace(
