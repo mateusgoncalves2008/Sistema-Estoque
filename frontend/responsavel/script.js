@@ -119,7 +119,7 @@ function getStatusClass(status) {
         return "pendente";
     }
 
-    if (/recus|cancel|indisponivel|atrasado|negado/.test(normalized)) {
+    if (/recus|cancel|indisponivel|atrasado|negado|expir/.test(normalized)) {
         return "recusada";
     }
 
@@ -127,7 +127,8 @@ function getStatusClass(status) {
 }
 
 function statusBadge(status) {
-    const text = String(status || "Não informado");
+    const valor = String(status || "Não informado");
+    const text = normalizeText(valor) === "expirado" ? "Expirada" : valor;
     const css = getStatusClass(text);
 
     return `<span class="pill ${css}">${escapeHTML(text)}</span>`;
