@@ -664,3 +664,89 @@ html body > .hauy-chat-modal-excluir .hauy-chat-modal-excluir-botoes button {
  display:block !important; width:100% !important;
  min-height:44px !important; margin:0 !important;
 }
+
+
+/* Modal compacto para escrever a primeira mensagem de uma conversa. */
+html body > .hauy-chat-modal-primeira-mensagem {
+ position:fixed !important;
+ inset:0 !important;
+ z-index:2147483646 !important;
+ display:flex !important;
+ align-items:center !important;
+ justify-content:center !important;
+ width:100vw !important;
+ height:100vh !important;
+ height:100dvh !important;
+ box-sizing:border-box !important;
+ margin:0 !important;
+ padding:20px !important;
+ background:rgba(25,18,15,.48) !important;
+}
+.hauy-chat-modal-primeira-mensagem-caixa {
+ width:min(100%,390px) !important;
+ box-sizing:border-box !important;
+ padding:22px !important;
+ border:1px solid #e6d8cc !important;
+ border-radius:13px !important;
+ background:#fffdfa !important;
+ color:#352219 !important;
+ box-shadow:0 10px 32px rgba(35,24,18,.2) !important;
+}
+.hauy-chat-modal-primeira-mensagem-caixa h2 {
+ margin:0 0 15px !important;
+ color:#352219 !important;
+ font-size:17px !important;
+ font-weight:700 !important;
+ line-height:1.4 !important;
+}
+.hauy-chat-primeira-mensagem-campo {
+ display:block !important;
+ width:100% !important;
+ min-height:104px !important;
+ box-sizing:border-box !important;
+ resize:vertical !important;
+ padding:11px 12px !important;
+ border:1px solid #d9c9bc !important;
+ border-radius:8px !important;
+ outline:none !important;
+ background:#fff !important;
+ color:#352219 !important;
+ font:inherit !important;
+ font-size:14px !important;
+ line-height:1.45 !important;
+}
+.hauy-chat-primeira-mensagem-campo:focus {
+ border-color:#c95730 !important;
+ box-shadow:0 0 0 2px rgba(201,87,48,.12) !important;
+}
+.hauy-chat-modal-primeira-mensagem-botoes {
+ display:flex !important;
+ justify-content:flex-end !important;
+ gap:9px !important;
+ margin-top:17px !important;
+}
+.hauy-chat-modal-primeira-mensagem-botoes button {
+ min-height:39px !important;
+ padding:0 16px !important;
+ border:1px solid transparent !important;
+ border-radius:8px !important;
+ font:inherit !important;
+ font-size:13px !important;
+ font-weight:600 !important;
+ cursor:pointer !important;
+}
+.hauy-chat-primeira-mensagem-cancelar {
+ border-color:#e6d8cc !important;
+ background:#f8f5f1 !important;
+ color:#49382f !important;
+}
+.hauy-chat-primeira-mensagem-enviar {
+ background:#c95730 !important;
+ color:#fff !important;
+}
+.hauy-chat-primeira-mensagem-enviar:hover {
+ background:#ad4828 !important;
+}
+@media(max-width:480px) {
+ .hauy-chat-modal-primeira-mensagem-caixa {padding:19px !important;}
+}
