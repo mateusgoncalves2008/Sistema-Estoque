@@ -2,6 +2,10 @@ const API_URL = "/api";
 let reservas = [];
 let emprestimos = [];
 let historicoProfessor = [];
+let reservasProfessorCarregadas = false;
+let emprestimosProfessorCarregados = false;
+let historicoProfessorCarregado = false;
+let perfilProfessorCarregado = false;
 let eventosCalendarioProfessor = [];
 let filtroCalendarioProfessor = "geral";
 let calendarioProfessorCarregado = false;
@@ -425,7 +429,7 @@ function aviso(texto) {
     setTimeout(() => toast.classList.remove("show"), 2500);
 }
 
-async function abrirPagina(nome) {
+function abrirPagina(nome) {
     document
         .querySelectorAll(".page")
         .forEach((p) => p.classList.remove("active"));
@@ -439,19 +443,21 @@ async function abrirPagina(nome) {
     document.getElementById("sidebar")?.classList.remove("open");
     window.scrollTo({ top: 0, behavior: "smooth" });
 
+    // A tela aparece imediatamente; os dados são atualizados em segundo plano.
     const carregadores = {
         pesquisar: () => iniciarPesquisa(),
-        reservas: () => carregarReservasProfessor(),
-        emprestimos: () => carregarEmprestimosProfessor(),
-        historico: () => carregarHistoricoProfessor(),
-        perfil: () => carregarPerfilProfessor(),
-        calendario: () => carregarCalendarioProfessor(),
+        reservas: () => reservasProfessorCarregadas ? null : carregarReservasProfessor(true),
+        emprestimos: () => emprestimosProfessorCarregados ? null : carregarEmprestimosProfessor(true),
+        historico: () => historicoProfessorCarregado ? null : carregarHistoricoProfessor(true),
+        perfil: () => perfilProfessorCarregado ? null : carregarPerfilProfessor(),
+        calendario: () => calendarioProfessorCarregado ? null : carregarCalendarioProfessor(true),
     };
-    const carregar = carregadores[nome];
-    if (!carregar) return;
 
     try {
-        await Promise.resolve(carregar());
+        const carregar = carregadores[nome];
+        if (carregar) Promise.resolve(carregar()).catch((erro) => {
+            console.error("Erro ao carregar os dados do menu do professor:", erro);
+        });
     } catch (erro) {
         console.error("Erro ao abrir o menu do professor:", erro);
     }
@@ -683,6 +689,18 @@ carregarPerfilProfessor();
 criarBotaoAvisosProfessor();
 carregarAvisosProfessor();
 
+// Antecipamos as consultas das telas em segundo plano para que os menus
+// já estejam prontos quando o usuário clicar neles.
+Promise.all([
+    carregarReservasProfessor(true),
+    carregarEmprestimosProfessor(true),
+    carregarHistoricoProfessor(true),
+    carregarCalendarioProfessor(true),
+    iniciarPesquisa(),
+]).catch((erro) => {
+    console.error("Erro ao preparar os menus do professor:", erro);
+});
+
 if (window.lucide) lucide.createIcons();
 
 async function carregarReservasProfessor(silencioso = false) {
@@ -704,6 +722,7 @@ async function carregarReservasProfessor(silencioso = false) {
         }
 
         reservas = Array.isArray(resultado.reservas) ? resultado.reservas : [];
+        reservasProfessorCarregadas = true;
 
         if (!silencioso) atualizarTabelas();
 
@@ -740,6 +759,7 @@ async function carregarEmprestimosProfessor(silencioso = false) {
 
         const assinaturaAnterior = JSON.stringify(emprestimos);
         emprestimos = resultado.emprestimos || [];
+        emprestimosProfessorCarregados = true;
         if (!silencioso || assinaturaAnterior !== JSON.stringify(emprestimos)) {
             atualizarTabelaEmprestimos();
         }
@@ -871,6 +891,7 @@ async function carregarHistoricoProfessor(silencioso = false) {
         const listaEmprestimosHistorico = Array.isArray(resultado.emprestimos) ? resultado.emprestimos.map((registro) => ({ ...registro, registroTipo: "emprestimos" })) : [];
         const listaReservasHistorico = Array.isArray(resultadoReservas.reservas) ? resultadoReservas.reservas.map((registro) => ({ ...registro, registroTipo: "reservas" })) : [];
         historicoProfessor = [...listaReservasHistorico, ...listaEmprestimosHistorico];
+        historicoProfessorCarregado = true;
         if (silencioso && assinaturaAnterior === JSON.stringify(historicoProfessor)) return true;
 
         const escapar = (valor) =>
@@ -1249,6 +1270,7 @@ async function carregarPerfilProfessor() {
         }
 
         const p = resultado.professor;
+        perfilProfessorCarregado = true;
         const nomeCompleto = String(
             p.nome || usuario.nome || usuario.nomeCompleto || "Professor",
         ).trim();
