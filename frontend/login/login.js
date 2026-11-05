@@ -244,8 +244,13 @@ async function realizarLogin() {
         return;
     }
 
-    const email = campoEmail.value.trim().toLowerCase();
+    let email = campoEmail.value.trim().toLowerCase();
     const senha = campoSenha.value;
+
+    // Se o usuário informar apenas a parte inicial, completa com @gmail.com.
+    if (email && !email.includes("@")) {
+        email = `${email}@gmail.com`;
+    }
 
     // --------------------------------------------------------
     // VALIDAÇÃO
