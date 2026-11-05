@@ -513,3 +513,17 @@
         max-width: min(calc(100% - 96px), 720px) !important;
     }
 }
+
+/* A prévia de resposta ocupa uma linha própria acima da barra de digitação. */
+.hauy-chat-painel.aberto .hauy-chat-responder-preview {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-responder-preview span {
+    max-width: calc(100% - 24px) !important;
+}
