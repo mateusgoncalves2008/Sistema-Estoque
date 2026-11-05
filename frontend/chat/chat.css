@@ -452,3 +452,41 @@
 .hauy-chat-painel.aberto .hauy-chat-balao-linha > .hauy-chat-acoes-mensagem {
     align-self: center !important;
 }
+
+/* Reações aparecem como etiquetas sobrepostas à borda inferior do balão. */
+.hauy-chat-painel.aberto .hauy-chat-balao {
+    position: relative !important;
+    overflow: visible !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-balao > .hauy-chat-reacoes {
+    position: absolute !important;
+    right: 9px !important;
+    bottom: -12px !important;
+    z-index: 5 !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 4px !important;
+    width: max-content !important;
+    max-width: min(240px, 90vw) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-balao > .hauy-chat-reacoes .hauy-chat-reacao {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 25px !important;
+    box-sizing: border-box !important;
+    padding: 3px 7px !important;
+    border: 1px solid #e6d8cc !important;
+    border-radius: 999px !important;
+    background: #fffdfa !important;
+    color: #352219 !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+    box-shadow: 0 2px 5px rgba(53,34,25,.12) !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-mensagem-linha:has(.hauy-chat-reacoes) {
+    margin-bottom: 9px !important;
+}
