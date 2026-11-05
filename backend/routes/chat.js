@@ -224,9 +224,21 @@ router.get("/chat/novos-contatos", exigirUsuarioAtivo, async (req, res) => {
         const idsExistentes = new Set(existentes.rows.map((item) => item.outro_id));
         const bloqueios = await postgres.pool.query("SELECT blocker_id, blocked_id FROM chat_blocks");
         const bloqueados = new Set(bloqueios.rows.map((item) => `${item.blocker_id}|${item.blocked_id}`));
+        const contarNome = (nome) => String(nome || "").trim().split(/\s+/)[0].normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR");
+        const frequenciaPrimeirosNomes = new Map();
+        usuarios.forEach((item) => {
+            const primeiroNome = contarNome(item.nome);
+            if (primeiroNome) frequenciaPrimeirosNomes.set(primeiroNome, (frequenciaPrimeirosNomes.get(primeiroNome) || 0) + 1);
+        });
         const contatos = usuarios.filter((item) => item.id !== req.chatUser.id && !idsExistentes.has(item.id))
             .filter((item) => isAdm(req.chatUser) || (!bloqueados.has(`${item.id}|${req.chatUser.id}`) && !bloqueados.has(`${req.chatUser.id}|${item.id}`)))
-            .map(({ id, nome, tipoUsuario, perfil }) => ({ id, nome, tipoUsuario, perfil }));
+            .map(({ id, nome, tipoUsuario, perfil }) => {
+                const partesNome = String(nome || "").trim().split(/\s+/).filter(Boolean);
+                const nomeExibicao = (frequenciaPrimeirosNomes.get(contarNome(nome)) || 0) > 1 && partesNome.length > 1
+                    ? partesNome.slice(0, 2).join(" ")
+                    : (partesNome[0] || nome);
+                return { id, nome, nomeExibicao, tipoUsuario, perfil };
+            });
         return res.json({ sucesso: true, contatos });
     } catch (e) {
         return responderErro(res, e, "Não foi possível carregar novos contatos.");
