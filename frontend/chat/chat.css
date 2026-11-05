@@ -382,3 +382,29 @@
         max-width: 90% !important;
     }
 }
+
+
+/* Alinha o conjunto balão + ações diretamente ao avatar. */
+.hauy-chat-mensagem-linha {
+    justify-content: flex-start !important;
+}
+.hauy-chat-mensagem-linha.propria {
+    justify-content: flex-start !important;
+}
+.hauy-chat-mensagem-conteudo {
+    flex: 0 1 auto !important;
+    width: fit-content !important;
+    max-width: calc(100% - 42px) !important;
+    margin: 0 !important;
+}
+.hauy-chat-mensagem-linha.propria .hauy-chat-mensagem-conteudo {
+    margin: 0 !important;
+}
+.hauy-chat-balao-linha {
+    width: fit-content !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+}
+.hauy-chat-balao-linha > .hauy-chat-balao {
+    max-width: 100% !important;
+}
