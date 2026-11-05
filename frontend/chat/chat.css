@@ -414,3 +414,36 @@
 .hauy-chat-painel.aberto .hauy-chat-balao-linha > .hauy-chat-balao {
     max-width: 100% !important;
 }
+
+/* Posiciona os botões junto ao balão, em lados opostos conforme o remetente.
+   Os elementos ficam no fluxo da linha; não usar right/left com calc(100%). */
+.hauy-chat-painel.aberto .hauy-chat-balao-linha {
+    display: inline-flex !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 4px !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-balao-linha > .hauy-chat-acoes-mensagem {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    margin: 0 !important;
+    flex: 0 0 auto !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-balao-linha > .hauy-chat-balao {
+    margin: 0 !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-mensagem-linha:not(.propria) .hauy-chat-balao-linha {
+    flex-direction: row !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-mensagem-linha.propria .hauy-chat-balao-linha {
+    flex-direction: row !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-mensagem-linha.propria .hauy-chat-balao-linha > .hauy-chat-acoes-mensagem {
+    order: 0 !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-mensagem-linha.propria .hauy-chat-balao-linha > .hauy-chat-balao {
+    order: 1 !important;
+}
