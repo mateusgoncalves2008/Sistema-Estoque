@@ -527,3 +527,18 @@
 .hauy-chat-painel.aberto .hauy-chat-responder-preview span {
     max-width: calc(100% - 24px) !important;
 }
+
+/* Limite visual do balão: ao atingir aproximadamente 10 palavras TESTE
+   na largura padrão, o texto continua automaticamente na linha seguinte. */
+.hauy-chat-painel.aberto .hauy-chat-balao-linha > .hauy-chat-balao {
+    width: fit-content !important;
+    max-width: min(calc(100% - 100px), 620px) !important;
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+}
+@media (max-width: 620px) {
+    .hauy-chat-painel.aberto .hauy-chat-balao-linha > .hauy-chat-balao {
+        max-width: min(calc(100% - 96px), 620px) !important;
+    }
+}
