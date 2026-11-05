@@ -2597,3 +2597,53 @@ body::-webkit-scrollbar-thumb {
         font-size: 27px;
     }
 }
+
+/* PADRONIZAÇÃO GLOBAL DOS CABEÇALHOS DOS MENUS DO PROFESSOR */
+#page-pesquisar .head,
+#page-reservas .reservas-header,
+#page-emprestimos .head,
+#page-historico .head,
+#page-perfil .perfil-cabecalho,
+#page-calendario .cal-prof-header {
+    margin-bottom: 26px;
+}
+
+#page-pesquisar .head h1,
+#page-reservas .reservas-header h1,
+#page-emprestimos .head h1,
+#page-historico .head h1,
+#page-perfil .perfil-cabecalho h1,
+#page-calendario .cal-prof-header h1 {
+    margin: 0 0 6px !important;
+    font-family: Inter, Arial, sans-serif !important;
+    color: #3c291f !important;
+    font-size: 32px !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -1px !important;
+}
+
+#page-pesquisar .head .sub,
+#page-reservas .reservas-header p,
+#page-emprestimos .head .sub,
+#page-historico .head .sub,
+#page-perfil .perfil-cabecalho p,
+#page-calendario .cal-prof-header p {
+    margin: 0 !important;
+    color: #8a786b !important;
+    font-family: Inter, Arial, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    line-height: 1.6 !important;
+}
+
+@media (max-width: 600px) {
+    #page-pesquisar .head h1,
+    #page-reservas .reservas-header h1,
+    #page-emprestimos .head h1,
+    #page-historico .head h1,
+    #page-perfil .perfil-cabecalho h1,
+    #page-calendario .cal-prof-header h1 {
+        font-size: 27px !important;
+    }
+}
