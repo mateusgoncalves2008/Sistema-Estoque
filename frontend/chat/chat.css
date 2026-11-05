@@ -641,3 +641,26 @@
         width: 100%;
     }
 }
+
+
+/* Confirmação de exclusão centralizada na janela, com botões empilhados. */
+html body > .hauy-chat-modal-excluir {
+ position:fixed !important; inset:0 !important; width:100vw !important;
+ height:100vh !important; height:100dvh !important; margin:0 !important;
+ padding:20px !important; display:flex !important; flex-direction:column !important;
+ align-items:center !important; justify-content:center !important;
+ box-sizing:border-box !important; z-index:2147483647 !important;
+}
+html body > .hauy-chat-modal-excluir > .hauy-chat-modal-excluir-caixa {
+ position:relative !important; flex:0 0 auto !important;
+ margin:0 auto !important; width:min(100%,440px) !important;
+}
+html body > .hauy-chat-modal-excluir .hauy-chat-modal-excluir-botoes {
+ display:flex !important; flex-direction:column !important;
+ align-items:stretch !important; justify-content:center !important;
+ width:100% !important; gap:10px !important;
+}
+html body > .hauy-chat-modal-excluir .hauy-chat-modal-excluir-botoes button {
+ display:block !important; width:100% !important;
+ min-height:44px !important; margin:0 !important;
+}
