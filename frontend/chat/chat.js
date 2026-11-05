@@ -180,26 +180,21 @@ function posicionarSeletorReacoes(botao,picker){
 async function selecionarConversaPorContato(id){const item=state.conversas.find(x=>x.contato?.id===id);if(item)await selecionarConversa(item.id);}
 async function abrirNovosContatos(){try{const r=await api("/novos-contatos");state.novosContatos=r.contatos||[];state.aba="novos";state.conversa=null;state.mensagens=[];render();}catch(e){mostrarErro(e.message);}}
 async function selecionarConversa(id){try{const item=state.conversas.find(x=>x.id===id);if(!item)return;state.conversa=item;const r=await api("/conversas/"+encodeURIComponent(id)+"/mensagens");state.mensagens=r.mensagens||[];render();}catch(e){mostrarErro(e.message);}}
-function solicitarPrimeiraMensagem(nome){
+function confirmarAdicionarContato(nome){
  return new Promise(resolve=>{
-  const overlay=el("div","hauy-chat-modal-primeira-mensagem");
-  overlay.setAttribute("role","presentation");
-  const caixa=el("div","hauy-chat-modal-primeira-mensagem-caixa");
+  const overlay=el("div","hauy-chat-modal-adicionar-contato");
+  const caixa=el("div","hauy-chat-modal-adicionar-contato-caixa");
   caixa.setAttribute("role","dialog");
   caixa.setAttribute("aria-modal","true");
-  caixa.setAttribute("aria-labelledby","hauy-chat-primeira-mensagem-titulo");
-  const titulo=el("h2","","Escreva a primeira mensagem para "+nome+":");
-  titulo.id="hauy-chat-primeira-mensagem-titulo";
-  const campo=el("textarea","hauy-chat-primeira-mensagem-campo");
-  campo.placeholder="Digite sua mensagem...";
-  campo.rows=4;
-  campo.maxLength=5000;
-  const botoes=el("div","hauy-chat-modal-primeira-mensagem-botoes");
-  const cancelar=el("button","hauy-chat-primeira-mensagem-cancelar","Cancelar");
-  const enviar=el("button","hauy-chat-primeira-mensagem-enviar","Enviar");
-  cancelar.type=enviar.type="button";
-  botoes.append(cancelar,enviar);
-  caixa.append(titulo,campo,botoes);
+  caixa.setAttribute("aria-labelledby","hauy-chat-adicionar-contato-titulo");
+  const titulo=el("h2","","Adicionar "+nome+" aos seus contatos?");
+  titulo.id="hauy-chat-adicionar-contato-titulo";
+  const botoes=el("div","hauy-chat-modal-adicionar-contato-botoes");
+  const adicionar=el("button","hauy-chat-adicionar-contato-confirmar","Adicionar");
+  const cancelar=el("button","hauy-chat-adicionar-contato-cancelar","Cancelar");
+  adicionar.type=cancelar.type="button";
+  botoes.append(adicionar,cancelar);
+  caixa.append(titulo,botoes);
   overlay.append(caixa);
   document.body.append(overlay);
   let finalizado=false;
@@ -210,27 +205,24 @@ function solicitarPrimeiraMensagem(nome){
    overlay.remove();
    resolve(valor);
   };
-  const teclaEsc=e=>{if(e.key==="Escape")concluir(null);};
-  cancelar.addEventListener("click",()=>concluir(null));
-  enviar.addEventListener("click",()=>concluir(campo.value.trim()||null));
-  campo.addEventListener("keydown",e=>{
-   if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();concluir(campo.value.trim()||null);}
-  });
-  overlay.addEventListener("click",e=>{if(e.target===overlay)concluir(null);});
+  const teclaEsc=e=>{if(e.key==="Escape")concluir(false);};
+  adicionar.addEventListener("click",()=>concluir(true));
+  cancelar.addEventListener("click",()=>concluir(false));
+  overlay.addEventListener("click",e=>{if(e.target===overlay)concluir(false);});
   document.addEventListener("keydown",teclaEsc);
-  requestAnimationFrame(()=>campo.focus());
+  adicionar.focus();
  });
 }
 async function iniciarConversa(id){
  const contato=state.novosContatos.find(x=>x.id===id);
  if(!contato)return;
- const mensagem=await solicitarPrimeiraMensagem(contato.nome);
- if(!mensagem)return;
+ const confirmado=await confirmarAdicionarContato(contato.nome);
+ if(!confirmado)return;
  try{
-  const r=await api("/conversas",{method:"POST",body:JSON.stringify({destinatarioID:id,mensagem})});
+  await api("/contatos",{method:"POST",body:JSON.stringify({destinatarioID:id})});
   await abrirChat();
-  const item=state.conversas.find(x=>x.id===r.conversaID);
-  if(item)selecionarConversa(item.id);else mostrarErro(r.mensagem);
+  state.aba="contatos";
+  render();
  }catch(e){mostrarErro(e.message);}
 }
 async function enviarMensagem(){const c=document.querySelector(".hauy-chat-painel")._parts.conversation;const area=c.querySelector("textarea");const mensagem=area?.value.trim();if(!mensagem||!state.conversa)return;const btn=c.querySelector('[data-acao="enviar"]');btn.disabled=true;try{await api("/conversas/"+encodeURIComponent(state.conversa.id)+"/mensagens",{method:"POST",body:JSON.stringify({mensagem,responderA:state.responder?.id||null})});state.responder=null;const r=await api("/conversas/"+encodeURIComponent(state.conversa.id)+"/mensagens");state.mensagens=r.mensagens||[];await atualizarConversas();render();}catch(e){mostrarErro(e.message);}finally{btn.disabled=false;}}
