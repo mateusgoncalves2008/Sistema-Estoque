@@ -1499,13 +1499,11 @@ function renderizarAvisosProfessor() {
         toggle.title = recolhido ? "Expandir menu" : "Recolher menu";
         if (window.lucide) window.lucide.createIcons();
     };
-    if (localStorage.getItem("painelProfessorSidebar") === "collapsed") {
-        document.body.classList.add("sidebar-collapsed");
-    }
+    // O painel sempre começa com o menu aberto ao entrar.
+    document.body.classList.remove("sidebar-collapsed");
     atualizarIcone();
     toggle.addEventListener("click", () => {
-        const recolhido = document.body.classList.toggle("sidebar-collapsed");
-        localStorage.setItem("painelProfessorSidebar", recolhido ? "collapsed" : "expanded");
+        document.body.classList.toggle("sidebar-collapsed");
         atualizarIcone();
     });
 })();
