@@ -408,3 +408,9 @@
 .hauy-chat-balao-linha > .hauy-chat-balao {
     max-width: 100% !important;
 }
+
+/* Evita que mensagens enviadas fiquem menores que a área do balão,
+   deixando um espaço vazio entre o texto e o avatar. */
+.hauy-chat-painel.aberto .hauy-chat-balao-linha > .hauy-chat-balao {
+    max-width: 100% !important;
+}
