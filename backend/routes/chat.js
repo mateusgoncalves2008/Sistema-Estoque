@@ -480,6 +480,34 @@ router.post("/chat/conversas/:id/mensagens", exigirUsuarioAtivo, async (req, res
     }
 });
 
+// Cancelamento definitivo: somente o autor pode apagar a própria mensagem.
+router.delete("/chat/mensagens/:id", exigirUsuarioAtivo, async (req, res) => {
+    try {
+        await executarTransacao(async (db) => {
+            const resultado = await db.query(
+                `SELECT m.id, m.sender_id
+                   FROM chat_messages m
+                   JOIN chat_conversations c ON c.id = m.conversation_id
+                  WHERE m.id = $1
+                    AND (c.participant_one_id = $2 OR c.participant_two_id = $2)
+                  FOR UPDATE OF m`,
+                [req.params.id, req.chatUser.id],
+            );
+            const mensagem = resultado.rows[0];
+            if (!mensagem || mensagem.sender_id !== req.chatUser.id) {
+                throw erro(404, "Mensagem não encontrada ou você não tem permissão para excluí-la.");
+            }
+
+            await db.query("DELETE FROM chat_message_reactions WHERE message_id = $1", [mensagem.id]);
+            await db.query("UPDATE chat_messages SET reply_to_message_id = NULL WHERE reply_to_message_id = $1", [mensagem.id]);
+            await db.query("DELETE FROM chat_messages WHERE id = $1", [mensagem.id]);
+        });
+        return res.json({ sucesso: true, mensagem: "Mensagem excluída permanentemente." });
+    } catch (e) {
+        return responderErro(res, e, "Não foi possível excluir a mensagem.");
+    }
+});
+
 router.post("/chat/mensagens/:id/reacoes", exigirUsuarioAtivo, async (req, res) => {
     try {
         const emoji = texto(req.body?.emoji);
