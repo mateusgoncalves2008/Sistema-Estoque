@@ -785,6 +785,8 @@ function textoStatusReserva(status) {
 
     const mapa = {
         PENDENTE: "Pendente",
+        EXPIRADO: "Expirada",
+        EXPIRADA: "Expirada",
         APROVADA: "Aprovada",
         APROVADO: "Aprovada",
         CONFIRMADA: "Confirmada",
