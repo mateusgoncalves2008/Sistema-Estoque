@@ -447,3 +447,8 @@
 .hauy-chat-painel.aberto .hauy-chat-mensagem-linha.propria .hauy-chat-balao-linha > .hauy-chat-balao {
     order: 1 !important;
 }
+
+/* Centraliza verticalmente as ações em relação à altura total do balão. */
+.hauy-chat-painel.aberto .hauy-chat-balao-linha > .hauy-chat-acoes-mensagem {
+    align-self: center !important;
+}
