@@ -216,7 +216,7 @@ function confirmarAdicionarContato(nome){
 async function iniciarConversa(id){
  const contato=state.novosContatos.find(x=>x.id===id);
  if(!contato)return;
- const confirmado=await confirmarAdicionarContato(contato.nome);
+ const confirmado=await confirmarAdicionarContato(contato.nomeExibicao||contato.nome.split(/\s+/)[0]);
  if(!confirmado)return;
  try{
   await api("/contatos",{method:"POST",body:JSON.stringify({destinatarioID:id})});
