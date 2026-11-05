@@ -2171,21 +2171,33 @@ body.sidebar-collapsed .logo-img {
     height: 48px;
     flex: 0 0 48px;
 }
+body.sidebar-collapsed .logo-img {
+    transition: opacity .16s ease, visibility .16s ease;
+}
 body.sidebar-collapsed .sidebar-toggle-professor {
     position: absolute;
-    inset: 0 auto auto 0;
+    top: 0;
+    left: 50%;
     z-index: 2;
     width: 48px;
     height: 48px;
     margin: 0;
+    transform: translateX(-50%);
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    background: var(--marrom);
-}body.sidebar-collapsed .logo:focus-within .sidebar-toggle-professor {
+    background: var(--laranja);
+}
+body.sidebar-collapsed .logo:hover .sidebar-toggle-professor,
+body.sidebar-collapsed .logo:focus-within .sidebar-toggle-professor {
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
-}body.sidebar-collapsed .logo:focus-within .logo-img {
+}
+body.sidebar-collapsed .logo:hover .logo-img,
+body.sidebar-collapsed .logo:focus-within .logo-img {
     opacity: 0;
+    visibility: hidden;
 }
 body.sidebar-collapsed .menu button {
     justify-content: center;
