@@ -323,3 +323,62 @@
         max-width: calc(100% - 38px) !important;
     }
 }
+
+
+/* Ações no fluxo do balão: a distância acompanha a largura real da mensagem. */
+.hauy-chat-mensagem-conteudo {
+    display: flex !important;
+    flex: 0 1 auto !important;
+    flex-direction: column !important;
+    align-self: flex-start !important;
+    align-items: flex-start !important;
+    width: fit-content !important;
+    max-width: calc(100% - 42px) !important;
+    min-width: 0 !important;
+}
+.hauy-chat-mensagem-linha.propria .hauy-chat-mensagem-conteudo {
+    align-self: flex-end !important;
+    align-items: flex-end !important;
+}
+.hauy-chat-balao-linha {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+.hauy-chat-mensagem-linha.propria .hauy-chat-balao-linha {
+    flex-direction: row-reverse !important;
+}
+.hauy-chat-balao-linha > .hauy-chat-balao {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: min(78%, 720px) !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+.hauy-chat-acoes-mensagem {
+    position: relative !important;
+    inset: auto !important;
+    flex: 0 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    opacity: 0 !important;
+    z-index: 4 !important;
+}
+.hauy-chat-mensagem-linha:hover .hauy-chat-acoes-mensagem,
+.hauy-chat-acoes-mensagem:focus-within {
+    opacity: 1 !important;
+}
+.hauy-chat-mensagem-conteudo > .hauy-chat-reacoes {
+    max-width: 100% !important;
+}
+@media (max-width: 620px) {
+    .hauy-chat-acoes-mensagem { opacity: 1 !important; }
+    .hauy-chat-balao-linha > .hauy-chat-balao {
+        max-width: 90% !important;
+    }
+}
