@@ -542,3 +542,14 @@
         max-width: min(calc(100% - 96px), 620px) !important;
     }
 }
+
+
+/* Mensagens com até 60 caracteres permanecem em uma única linha. */
+.hauy-chat-painel.aberto .hauy-chat-balao.mensagem-curta {
+    white-space: pre !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    width: max-content !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+}
