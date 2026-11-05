@@ -285,35 +285,39 @@
 @media(max-width:620px){.hauy-chat-acoes-mensagem{opacity:1}.hauy-chat-seletor-reacoes{grid-template-columns:repeat(4,auto)}}
 
 
-/* Ações posicionadas junto ao balão, sem ocupar a largura da conversa. */
+/* Ações ancoradas na largura real do balão, com apenas 4px de distância. */
 .hauy-chat-mensagem-conteudo {
+    position: relative !important;
+    display: flex !important;
     flex: 0 1 auto !important;
+    flex-direction: column !important;
+    align-self: flex-start;
     width: fit-content !important;
     max-width: calc(100% - 42px) !important;
+    min-width: 0 !important;
+    overflow: visible !important;
 }
-.hauy-chat-mensagem-conteudo > .hauy-chat-balao {
-    max-width: min(78vw, 620px) !important;
-}
-.hauy-chat-mensagem-linha.propria .hauy-chat-mensagem-conteudo > .hauy-chat-balao {
+.hauy-chat-mensagem-linha.propria .hauy-chat-mensagem-conteudo {
     align-self: flex-end;
+    align-items: flex-end;
+}
+.hauy-chat-painel.aberto .hauy-chat-mensagem-conteudo > .hauy-chat-balao {
+    width: fit-content !important;
+    max-width: min(78%, 620px) !important;
 }
 .hauy-chat-acoes-mensagem {
-    right: -96px !important;
-    left: auto !important;
-    top: 0;
+    position: absolute !important;
+    top: 0 !important;
+    right: auto !important;
+    left: calc(100% + 4px) !important;
+    z-index: 4;
 }
 .hauy-chat-mensagem-linha.propria .hauy-chat-acoes-mensagem {
-    right: auto !important;
-    left: -96px !important;
+    right: calc(100% + 4px) !important;
+    left: auto !important;
 }
 @media (max-width: 620px) {
-    .hauy-chat-acoes-mensagem {
-        right: -88px !important;
-    }
-    .hauy-chat-mensagem-linha.propria .hauy-chat-acoes-mensagem {
-        left: -88px !important;
-    }
-    .hauy-chat-mensagem-conteudo > .hauy-chat-balao {
-        max-width: min(68vw, 420px) !important;
+    .hauy-chat-painel.aberto .hauy-chat-mensagem-conteudo > .hauy-chat-balao {
+        max-width: min(68%, 420px) !important;
     }
 }
