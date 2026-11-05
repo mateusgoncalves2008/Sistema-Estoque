@@ -490,3 +490,26 @@
 .hauy-chat-painel.aberto .hauy-chat-mensagem-linha:has(.hauy-chat-reacoes) {
     margin-bottom: 9px !important;
 }
+
+/* Limita o balão ao espaço disponível, reservando a largura das ações.
+   Textos longos quebram linha em vez de avançar sobre o outro lado da conversa. */
+.hauy-chat-painel.aberto .hauy-chat-balao-linha {
+    display: inline-flex !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+.hauy-chat-painel.aberto .hauy-chat-balao-linha > .hauy-chat-balao {
+    box-sizing: border-box !important;
+    flex: 0 1 auto !important;
+    width: fit-content !important;
+    min-width: 0 !important;
+    max-width: min(calc(100% - 100px), 720px) !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+}
+@media (max-width: 620px) {
+    .hauy-chat-painel.aberto .hauy-chat-balao-linha > .hauy-chat-balao {
+        max-width: min(calc(100% - 96px), 720px) !important;
+    }
+}
