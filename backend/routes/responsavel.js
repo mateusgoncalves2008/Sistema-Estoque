@@ -40,6 +40,70 @@ function dataHojeBR() {
     return dataAtual();
 }
 
+function converterDataHoraReserva(valor) {
+    const textoData = String(valor ?? "").trim();
+    if (!textoData) return null;
+
+    let ano, mes, dia, hora = 0, minuto = 0, segundo = 0;
+    let match = textoData.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?/);
+    if (match) {
+        [, dia, mes, ano] = match;
+        hora = Number(match[4] || 0);
+        minuto = Number(match[5] || 0);
+        segundo = Number(match[6] || 0);
+        if (!match[4]) {
+            hora = 23; minuto = 59; segundo = 59;
+        }
+    } else {
+        match = textoData.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+        if (!match) return null;
+        [, ano, mes, dia] = match;
+        hora = Number(match[4] || 0);
+        minuto = Number(match[5] || 0);
+        segundo = Number(match[6] || 0);
+        if (!match[4]) {
+            hora = 23; minuto = 59; segundo = 59;
+        }
+    }
+
+    // Os horários da planilha são do Brasil (UTC-3), independentemente
+    // do fuso horário configurado no servidor.
+    const data = new Date(Date.UTC(
+        Number(ano), Number(mes) - 1, Number(dia),
+        hora + 3, minuto, segundo
+    ));
+    return Number.isNaN(data.getTime()) ? null : data;
+}
+
+async function expirarReservasPendentes() {
+    const reservas = await lerAba("08_RESERVAS!A:L");
+    const agora = new Date();
+    const atualizacoes = [];
+
+    for (let i = 1; i < reservas.length; i++) {
+        const linha = reservas[i];
+        if (normalizar(linha[9]) !== "PENDENTE") continue;
+
+        const retirada = converterDataHoraReserva(linha[6]);
+        if (!retirada || retirada > agora) continue;
+
+        atualizacoes.push({
+            range: `08_RESERVAS!J${i + 1}`,
+            values: [["EXPIRADO"]],
+        });
+    }
+
+    if (atualizacoes.length) {
+        await sheets.spreadsheets.values.batchUpdate({
+            spreadsheetId: SPREADSHEET_ID,
+            requestBody: {
+                valueInputOption: "USER_ENTERED",
+                data: atualizacoes,
+            },
+        });
+    }
+}
+
 function dataPlanilhaParaISO(valor) {
     const textoValor = String(valor || "").trim();
 
@@ -157,6 +221,7 @@ async function carregarVinculo(usuarioSessao) {
 }
 
 async function carregarDashboard(vinculo) {
+    await expirarReservasPendentes();
     // Carrega os dados do painel em uma única chamada de leitura, reduzindo
     // o consumo da cota da API sem alterar os dados exibidos.
     const resposta = await sheets.spreadsheets.values.batchGet({
@@ -466,6 +531,7 @@ function gerarDevolucaoID(devolucoes) {
 }
 
 async function atualizarReserva(reservaID, acao, usuario) {
+    await expirarReservasPendentes();
     const resposta = await sheets.spreadsheets.values.batchGet({
         spreadsheetId: SPREADSHEET_ID,
         ranges: [
