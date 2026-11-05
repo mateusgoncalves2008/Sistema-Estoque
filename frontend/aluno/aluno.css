@@ -3415,29 +3415,3 @@ button, .btn { font-size: 13px; }
     text-shadow: none !important;
     filter: none !important;
 }
-
-
-/* Cabeçalho de Minhas Reservas — padrão entre os painéis */
-#page-reservas .head h1 {
-    margin: 0 0 6px;
-    font-family: "Plus Jakarta Sans", sans-serif;
-    color: #3c291f;
-    font-size: 32px;
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -0.035em;
-}
-
-#page-reservas .head .sub {
-    margin: 0;
-    color: #8a786b;
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 1.6;
-}
-
-@media (max-width: 600px) {
-    #page-reservas .head h1 {
-        font-size: 27px;
-    }
-}
