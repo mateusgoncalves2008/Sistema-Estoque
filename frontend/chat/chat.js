@@ -122,7 +122,7 @@ async function salvarReacao(id,emoji){try{await api("/mensagens/"+encodeURICompo
 function abrirMaisEmojis(id){const emojis=["😄","😁","🥰","😍","🤣","🙂","😉","🤔","😎","😭","😡","👏","🎉","🔥","💯","🙏","💔","✨","🙌","🤝","👀","💪","🥳","🤗"];const botao=document.querySelector('.hauy-chat-botao-reagir[data-message-id="'+id+'"]');if(!botao)return;let picker=botao.parentElement.querySelector(".hauy-chat-seletor-reacoes");if(!picker){picker=el("div","hauy-chat-seletor-reacoes");botao.parentElement.append(picker);}picker.replaceChildren();emojis.forEach(emoji=>{const bt=el("button","",emoji);bt.type="button";bt.dataset.chatAction="choose-reaction";bt.dataset.messageId=id;bt.dataset.emoji=emoji;picker.append(bt);});picker.classList.add("aberto");posicionarSeletorReacoes(botao,picker);}
 function posicionarSeletorReacoes(botao,picker){
  const pai=picker.parentElement;
- const area=conversation;
+ const area=botao.closest(".hauy-chat-conversa")||document.querySelector(".hauy-chat-conversa");
  if(!pai||!area||!botao)return;
  const botaoRect=botao.getBoundingClientRect();
  const paiRect=pai.getBoundingClientRect();
